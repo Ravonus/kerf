@@ -18,7 +18,7 @@ export function makeHandler(
   return async (incoming: Request): Promise<Response> =>
     secured(await handle(incoming), incoming, options)
   async function handle(incoming: Request): Promise<Response> {
-    const request = options.auth ? stamped(incoming) : incoming
+    const request = options.auth ? stamped(incoming, options.site?.trustProxy) : incoming
     await services.loadExtensions()
     services.check()
     const scope = exec.createScope(request, services.scopeOptions)

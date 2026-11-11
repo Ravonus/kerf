@@ -114,6 +114,7 @@ export const me = query({
 })
 
 export const signUp = mutation({
+  auth: 'public',
   input: credentials.extend({ name: z.string().trim().min(1) }),
   run: async ({ input, ctx }) => {
     const response = auth.api.signUpEmail({
@@ -127,6 +128,7 @@ export const signUp = mutation({
 })
 
 export const signIn = mutation({
+  auth: 'public',
   input: credentials,
   run: async ({ input, ctx }) => {
     const response = auth.api.signInEmail({
@@ -140,6 +142,7 @@ export const signIn = mutation({
 })
 
 export const signOut = mutation({
+  auth: 'public',
   run: async ({ ctx }) => {
     const response = auth.api.signOut({
       headers: ctx.request.headers,
@@ -402,6 +405,7 @@ import { z } from 'zod'
 import auth from '#/auth.server'
 
 export const quickSignIn = mutation({
+  auth: 'public',
   input: z.object({ email: z.email(), password: z.string().min(8) }),
   run: async ({ input, ctx }) => {
     const response = auth.api.signInEmail({
@@ -424,6 +428,7 @@ import { z } from 'zod'
 import auth from '#/auth.server'
 
 export const quickSignIn = mutation({
+  auth: 'public',
   input: z.object({ email: z.email(), password: z.string().min(8) }),
   run: async ({ input, ctx }) => {
     const response = auth.api.signInEmail({

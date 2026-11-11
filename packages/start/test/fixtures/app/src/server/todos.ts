@@ -67,6 +67,7 @@ export const toggleTodo = mutation({
 
 /** Sets a cookie and redirects: the shape a sign-in takes. */
 export const signIn = mutation({
+  auth: 'public',
   run: ({ ctx }) => {
     ctx.response.headers.append('set-cookie', 'session=abc; Path=/; HttpOnly')
     invalidate('session')

@@ -118,7 +118,7 @@ export async function roundTrip({
       return { ok: true, ms, untested }
     }
     const denied =
-      url && !(cookie && !other && !fn.def.auth)
+      url && !(cookie && !other && !(fn.def.auth && fn.def.auth !== 'public'))
         ? await subscribe(url, fn.$id, input, other, ac.signal).catch(() => undefined)
         : undefined
 

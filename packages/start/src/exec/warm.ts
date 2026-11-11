@@ -3,6 +3,7 @@
 // edit's cost. Only queries every visitor shares (no `auth`, no `scope: 'user'`) qualify: a warm run has no user.
 import type { Fn } from '../data'
 import type { Scope } from './scope'
+import { signedIn } from './errors'
 
 type Warm = { fn: Fn; input: unknown; tags: string[] }
 
@@ -11,7 +12,7 @@ const known = new Map<string, Warm>()
 const MOST = 500
 
 /** Whether `fn`'s stored value should come back warm after an invalidation. */
-export const warms = (fn: Fn) => !!fn.def.cache?.warm && !fn.def.cache.scope && !fn.def.auth
+export const warms = (fn: Fn) => !!fn.def.cache?.warm && !fn.def.cache.scope && !signedIn(fn)
 
 export function remember(key: string, fn: Fn, input: unknown, tags: string[]) {
   known.delete(key)

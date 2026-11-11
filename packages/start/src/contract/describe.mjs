@@ -86,7 +86,7 @@ function implOf(f, report) {
     ctx:
       f.def.cache && f.def.cache.scope !== 'user'
         ? 'shared'
-        : f.def.auth === 'user'
+        : f.def.auth && f.def.auth !== 'public'
           ? 'user'
           : 'ctx',
     output: output ? wire(output, '`output`') : {},
@@ -152,7 +152,8 @@ function describeFunction(f, rust, diagnostics) {
   }
   const errors = [
     ...(f.def.input ? ['Q002'] : []),
-    ...(f.def.auth ? ['A002'] : []),
+    ...(f.def.auth && f.def.auth !== 'public' ? ['A002'] : []),
+    ...(typeof f.def.auth === 'object' ? ['A006'] : []),
     ...(f.kind === 'mutation' ? ['Q010'] : []),
     ...Object.keys(f.def.errors ?? {}),
   ]
@@ -203,7 +204,12 @@ function describeFunction(f, rust, diagnostics) {
       : f.kind === 'mutation'
         ? { invalidates: tagsOf(f.def.invalidates) }
         : {}),
-    auth: f.def.auth ?? 'public',
+    auth:
+      typeof f.def.auth === 'object'
+        ? 'role' in f.def.auth
+          ? { role: [f.def.auth.role].flat() }
+          : 'policy'
+        : (f.def.auth ?? (f.kind === 'mutation' ? 'default' : 'public')),
     errors,
   }
 }

@@ -61,6 +61,12 @@ export interface SiteConfig {
    * `Cross-Origin-Opener-Policy` and, on https, HSTS. Name a header to change it, `false` to drop it, or `false` for none.
    */
   security?: false | Record<string, string | false>
+  /**
+   * Behind a load balancer, CDN or reverse proxy: `true` for one, or how many sit in front. The client's address then
+   * comes from `X-Forwarded-For` (that many entries from the right), so auth's rate limit isn't one bucket for everyone.
+   * Leave it off when nothing sits in front: a client could write the header itself.
+   */
+  trustProxy?: boolean | number
   name?: string
   /** Absolute `http(s)` origin (and base path) for canonical, og:url and relative images. Without it a relative image is H001. */
   url?: string

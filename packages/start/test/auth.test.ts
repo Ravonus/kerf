@@ -228,6 +228,30 @@ test('A001: a short or missing secret on a production server; dev and tests pass
   }
 })
 
+test('A007: a production server with no URL of its own; BETTER_AUTH_URL or options.baseURL settles it', () => {
+  const url = process.env.BETTER_AUTH_URL
+  delete process.env.BETTER_AUTH_URL
+  vi.stubEnv('NODE_ENV', 'production')
+  try {
+    const bare = createAuth({ db, secret, options: { database: drizzleAuth(db, schema) } })
+    expect(() => bare.$weft.check()).toThrow(/A007/)
+    expect(() => auth.$weft.check()).not.toThrow()
+    vi.stubEnv('BETTER_AUTH_URL', base)
+    const fromEnv = createAuth({ db, secret, options: { database: drizzleAuth(db, schema) } })
+    expect(() => fromEnv.$weft.check()).not.toThrow()
+  } finally {
+    vi.unstubAllEnvs()
+    if (url !== undefined) process.env.BETTER_AUTH_URL = url
+  }
+})
+
+test('the JWT signing key rotates every 30 days unless the app says otherwise', () => {
+  const jwt = auth.options.plugins?.find((p) => p.id === 'jwt') as {
+    options?: { jwks?: { rotationInterval?: number } }
+  }
+  expect(jwt.options?.jwks?.rotationInterval).toBe(60 * 60 * 24 * 30)
+})
+
 test('a build with no secret gives Better Auth one of its own, so a production build loads auth; a server still needs the real one', () => {
   const options = { database: drizzleAuth(db, schema), baseURL: base }
   expect(createAuth({ db, options }).options.secret).toBeUndefined()
@@ -321,6 +345,7 @@ describe('the handler', () => {
   const { ran, handler, found, call } = handlerFixture()
   mutation({
     $id: 'login',
+    auth: 'public',
     input: credentials,
     run: ({ input, ctx }) =>
       forward(
@@ -330,6 +355,7 @@ describe('the handler', () => {
   })
   mutation({
     $id: 'silentLogin',
+    auth: 'public',
     input: credentials,
     run: ({ input, ctx }) =>
       forward(

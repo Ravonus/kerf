@@ -224,6 +224,7 @@ import { z } from 'zod'
 import auth from '#/auth.server'
 
 export const signIn = mutation({
+  auth: 'public',
   input: z.object({ email: z.email(), password: z.string().min(8) }),
   run: async ({ input, ctx }) => {
     await forward(ctx, auth.api.signInEmail({

@@ -861,6 +861,7 @@ import { z } from 'zod'
 import auth from '#/auth.server'
 
 export const signIn = mutation({
+  auth: 'public',
   input: z.object({ email: z.email(), password: z.string().min(8) }),
   run: async ({ input, ctx }) => {
     await forward(
@@ -876,6 +877,29 @@ export const signIn = mutation({
   },
 })
 ```
+
+**Who may call a function.** `auth` takes four forms:
+
+| `auth`                          | Who gets through                                    | Everyone else             |
+| ------------------------------- | --------------------------------------------------- | ------------------------- |
+| `'user'`                        | Anyone signed in                                    | A002 (401)                |
+| `{ role: 'admin' }` or an array | A signed-in user with one of the roles              | A002 (401) or A006 (403)  |
+| `{ can: (ctx) => boolean }`     | A signed-in user your check passes (it may be async) | A002 (401) or A006 (403)  |
+| `'public'`                      | Anyone                                              |                           |
+
+Roles are read from `ctx.user.role`, as Better Auth's `admin` plugin writes it (`'admin'`, or `'admin,user'`); an
+array works too.
+
+**In an app with auth, a mutation needs someone signed in unless it says otherwise.** When `ctx` has a `user` field
+(it does once `session(auth, request)` is in `src/context.server.ts`), a mutation with no `auth` acts as `auth: 'user'`.
+Sign-in, sign-up, sign-out and anything else a visitor may send say `auth: 'public'`. Queries stay open unless they say
+otherwise, since a page's data is usually for anyone. An app without auth is unchanged.
+
+**Behind a proxy.** Better Auth rate-limits sign-in by the client's address. Behind a load balancer or CDN, every
+request comes from the proxy, so set `site.trustProxy` (`true` for one proxy, or how many) and the address comes from
+`X-Forwarded-For` instead. In production `createAuth` also needs its own URL (`BETTER_AUTH_URL` or `options.baseURL`,
+A007): without it Better Auth trusts each request's `Host` header for the links in its emails. The JWT signing key
+rotates every 30 days (`api: { jwks: { rotationInterval } }` changes it).
 
 > [!WARNING]
 > **`auth: 'user'` says who is calling, not what they may touch.** A `run` that takes a row's id must check that row
@@ -1136,6 +1160,7 @@ export default defineConfig({
 | `site`               | object                                         |                | Metadata defaults: `name`, `url`, `title` (with `%s`), `description`, `locale`, `image`, `twitter`, `card` |
 | `site.headers`       | `{ [pattern]: headers }`                       |                | Response headers by route pattern, static files included                                     |
 | `site.security`      | `false` \| `{ [header]: string \| false }`     | see below      | Headers every response gets unless it sets its own; name one to change it, `false` drops it |
+| `site.trustProxy`    | `boolean` \| `number`                          | `false`        | Proxies in front: the client's address comes from `X-Forwarded-For` (rate limits)          |
 | `site.limits`        | `{ body, upload }` (bytes)                     | 1 MB, 25 MB    | Largest JSON and multipart (file) request body; past it, 413 (Q018) before the rest is read |
 | `site.inlineCss`     | `boolean`                                      | `true`         | First-paint CSS in a `<style>`; `false` for plain links (strict CSP)                         |
 | `site.criticalCss`   | `boolean`                                      | `true`         | One hashed sheet plus first-paint CSS; `false` splits by chunk and inlines up to 48 KB       |
@@ -1276,7 +1301,9 @@ from the environment only: one written into the config or a host file is E008. A
 | Q016 (503)                           | The database is down, or a migration failed                              | Start it, check `DATABASE_URL`, or fix the migration; no restart needed |
 | Q018 (413)                           | A request body over `site.limits`                                        | Send less, or raise `site.limits.body` / `.upload`                      |
 | A001                                 | The auth secret is missing or under 32 characters in production          | Set `BETTER_AUTH_SECRET`                                                |
-| A002 (401)                           | `auth: 'user'` called with no session                                    | Sign in first, or guard the route in a layout's `load`                  |
+| A002 (401)                           | `auth: 'user'` (or a mutation in an app with auth) called with no session | Sign in first, or guard the route in a layout's `load`                  |
+| A006 (403)                           | A signed-in user without the `role`, or `can` said no                    | Sign in as a user it allows, or change the rule                         |
+| A007                                 | No `BETTER_AUTH_URL` or `options.baseURL` in production                  | Set `BETTER_AUTH_URL` to the site's https URL                           |
 | A004                                 | A mutation changed the session cookie without a redirect                 | `redirect()` after sign-in or sign-out                                  |
 | A005                                 | `createAuth` has no store                                                | Pass `options.database`                                                 |
 | H007 (500)                           | `meta` or a card read a deferred `load` field                           | Await it in `load`, or leave it out of `meta`                           |

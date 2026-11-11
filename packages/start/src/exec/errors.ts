@@ -1,9 +1,24 @@
 import { FnError, StartError, type Context, type Fn } from '../data'
 import { unavailable } from '../db/core'
 
-/** `auth: 'user'`: A003 when `ctx` has no `user` at all, A002 when no one is signed in. */
-export function guard(fn: Fn, ctx: Context) {
-  if (fn.def.auth !== 'user') return
+/** Whether a function names a rule that needs someone signed in (`'public'` and none don't). */
+export const signedIn = (fn: Fn) => !!fn.def.auth && fn.def.auth !== 'public'
+
+/** The roles a user has: Better Auth's `admin` plugin stores `'admin,user'`; an array works too. */
+const rolesOf = (user: { role?: unknown }) =>
+  Array.isArray(user.role)
+    ? user.role.map(String)
+    : typeof user.role === 'string'
+      ? user.role.split(',').map((r) => r.trim())
+      : []
+
+/**
+ * A function's `auth`: A003 when it needs a user and `ctx` has none at all, A002 when no one is signed in, A006 when
+ * the user lacks the role or fails `can`. A mutation that says nothing, in an app with auth, needs a signed-in user.
+ */
+export async function guard(fn: Fn, ctx: Context) {
+  const rule = fn.def.auth ?? (fn.kind === 'mutation' && 'user' in ctx ? 'user' : undefined)
+  if (!rule || rule === 'public') return
   if (!('user' in ctx))
     throw new StartError(
       'A003',
@@ -15,8 +30,23 @@ export function guard(fn: Fn, ctx: Context) {
     throw new StartError(
       'A002',
       `\`${fn.$id}\` needs a signed-in user`,
-      'sign in first, or guard the route with `redirect()` in its `load`',
+      fn.def.auth
+        ? 'sign in first, or guard the route with `redirect()` in its `load`'
+        : "sign in first; a mutation anyone may call (sign-in, sign-up) says `auth: 'public'`",
       { status: 401 },
+    )
+  if (rule === 'user') return
+  const user = (ctx as { user: { role?: unknown } }).user
+  const allowed =
+    'role' in rule
+      ? [rule.role].flat().some((r) => rolesOf(user).includes(r))
+      : await rule.can(ctx as never)
+  if (!allowed)
+    throw new StartError(
+      'A006',
+      `\`${fn.$id}\` refused this user (${'role' in rule ? `needs role ${[rule.role].flat().join(' or ')}` : '`can` said no'})`,
+      'sign in as a user it allows',
+      { status: 403 },
     )
 }
 

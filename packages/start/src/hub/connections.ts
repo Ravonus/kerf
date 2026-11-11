@@ -1,5 +1,5 @@
 import { StartError, type Context } from '../data'
-import { createScope, guard, type Scope, type ScopeOptions } from '../exec'
+import { createScope, guard, signedIn, type Scope, type ScopeOptions } from '../exec'
 import type { Source } from '../changes'
 import type { Body, Channel, Conn, HubOptions, Limits, Sink, Sub } from './types'
 
@@ -38,7 +38,7 @@ function close(deps: Dependencies, c: Conn) {
 
 async function recheck(deps: Dependencies, c: Conn) {
   const { conns, fail } = deps
-  const authed = [...c.subs.values()].filter((s) => s.fn.def.auth)
+  const authed = [...c.subs.values()].filter((s) => signedIn(s.fn))
   if (!authed.length) return
   const ctx = await createScope(authed[0]!.request, authed[0]!.options)
     .ctx()
@@ -46,7 +46,7 @@ async function recheck(deps: Dependencies, c: Conn) {
   if (!conns.has(c.k)) return
   for (const s of authed) {
     try {
-      guard(s.fn, ctx)
+      await guard(s.fn, ctx)
     } catch (e) {
       fail(c, s, e)
     }
