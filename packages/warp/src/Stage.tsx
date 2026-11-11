@@ -72,6 +72,8 @@ interface Director {
   /** Bumped when the surface goes, so a build that finishes after it is thrown away. */
   generation: number
   queue: Promise<void>
+  /** The clock frame and the time it was last drawn, for the fps cap and the governor's frame times. */
+  frame: number
   last: number
   active: ActiveScene | null
   /** Whether the canvas shows, so a still frame writes nothing. */
@@ -168,15 +170,20 @@ function report(d: Director, h: Handover, positions: readonly number[]) {
   d.props.onActive?.(now)
 }
 
-/** The governor's turn: frame times in, levers and pixel ratio out. False when the fps cap skips this frame. */
-function govern(d: Director) {
-  const now = performance.now()
-  const ms = d.last ? now - d.last : 0
+/**
+ * The governor's turn: frame times in, levers and pixel ratio out. A new clock frame inside the fps cap is skipped;
+ * a repaint of the same frame (a scroll, a build, a seek) always draws.
+ */
+function govern(d: Director, frame: number) {
   const governor = d.props.governor
   if (!governor) return true
-  if (ms && ms < 1000 / governor.fps - 4) return false
-  d.last = now
-  if (ms && ms < 250) governor.frame(ms)
+  if (frame !== d.frame) {
+    if (frame - d.frame < 60 / governor.fps - 0.5) return false
+    d.frame = frame
+    const now = performance.now()
+    if (d.last && now - d.last < 250) governor.frame(now - d.last)
+    d.last = now
+  }
   if (governor.levers !== d.levers) {
     d.levers = governor.levers
     for (const entry of d.entries) entry.live?.setQuality(d.levers)
@@ -186,8 +193,8 @@ function govern(d: Director) {
   return true
 }
 
-function tick(d: Director) {
-  if (!d.entries.length || !govern(d)) return
+function tick(d: Director, frame: number) {
+  if (!d.entries.length || !govern(d, frame)) return
   const positions = d.entries.map((entry) => entry.scroll.value)
   const h = handover(
     positions,
@@ -206,7 +213,8 @@ function attach(d: Director, s: SurfaceBase) {
     if (d.s === s && made) d.blend = made
     else made?.dispose?.()
   })
-  s.frame(() => tick(d))
+  // Untracked: the stage repaints on its own schedule, not when a box it reads changes.
+  s.frame((time) => untrack(() => tick(d, time.frame)))
   s.invalidate()
   return () => {
     d.generation++
@@ -251,6 +259,7 @@ function director(props: StageProps): Director {
     pointer: null,
     generation: 0,
     queue: Promise.resolve(),
+    frame: -1e9,
     last: 0,
     active: null,
     shown: null,
