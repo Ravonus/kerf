@@ -150,6 +150,14 @@ test('radius, fonts and tokens land on every scope, in a layer after the dial st
   expect(css).toContain('--warp-space-page:20px')
 })
 
+test('icons pins the icon drawing over every expression stop', () => {
+  const css = run({ dials: { expression: 'vivid' }, icons: 'balanced' }).tokens.css
+  // in warp.base, the layer after the stops, on every scope root
+  expect(css).toMatch(
+    /@layer warp\.base\{:root,\[data-expression\][^}]*--warp-icon-b:inline;--warp-icon-v:none/,
+  )
+})
+
 test('a token that breaks contrast fails D010 like a bad seed', () => {
   expect(code(() => run({ tokens: { '--warp-color-page': '#fafafa' } }))).toBe('D010') // dark text-on-page goes
   expect(
@@ -170,6 +178,7 @@ test.each([
   [{ dials: { nope: 'x' } }, 'dials.nope'],
   [{ dials: { density: 'huge' } }, 'dials.density'],
   [{ radius: 'pill' }, 'radius'],
+  [{ icons: 'loud' }, 'icons'],
   [{ fonts: { body: 'x;}' } }, 'fonts.body'],
   [{ tokens: { color: 'red' } }, 'tokens.color'],
   [{ tokens: { '--warp-color-page': 'red' } }, 'tokens.--warp-color-page'],

@@ -25,6 +25,8 @@ import {
 
 import {
   createScope,
+  finishScope,
+  finishing,
   frame,
   memoryStore,
   defaultStore,
@@ -44,8 +46,11 @@ import {
 } from './exec/touch'
 import { validate, formInput, checked, checkTags } from './exec/validation'
 import { landed, shown, said } from './exec/landing'
+import { remember, rewarm, warms } from './exec/warm'
 export {
   createScope,
+  finishScope,
+  finishing,
   frame,
   memoryStore,
   defaultStore,
@@ -117,7 +122,8 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
   entry.p = (async () => {
     const valid = await validate(fn, input)
     entry.tags = await tagsOf(fn, valid, scope)
-    const cached = fn.def.cache
+    // a preview's reads are its own: never served from the shared store, never written to it
+    const cached = scope.preview ? undefined : fn.def.cache
     const store = storeOf(scope)
     // Checked before the shared cache, so a value stored for one user is never answered to no one.
     const early = fn.def.auth || cached?.scope ? await scope.ctx() : undefined
@@ -149,13 +155,15 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
       missedTags(fn, 'read', touched.read, entry.tags, scope)
       reads.set(fn.$id, touched.read)
     }
-    if (cached)
+    if (cached) {
       await store.set(stored, {
         v,
         tags: entry.tags,
         versions,
         expires: Date.now() + seconds(cached.life) * 1000,
       })
+      if (warms(fn)) remember(stored, fn, input, entry.tags)
+    }
     return v
   })().then(
     (v) => Object.assign(entry, { done: true, v }),
@@ -357,6 +365,8 @@ export async function invalidate(scope: Scope, tags: string[]) {
   for (const [k, e] of scope.entries)
     if (e.tags.some((t) => tags.includes(t))) scope.entries.delete(k)
   await storeOf(scope).bump(tags)
+  if (!scope.preview)
+    rewarm(scope, tags, fetchQuery, (request) => createScope(request, scope.options))
   // After the bump, and after `run`: a refetch reads committed data and misses the shared cache (research 30 §5).
   // A bus that's down costs open pages a refresh, not this request its result.
   await runtime.poke?.(tags, scope.request.headers.get('x-weft-conn')).catch((e) =>

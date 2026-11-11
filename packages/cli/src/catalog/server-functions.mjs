@@ -82,6 +82,14 @@ export const serverFunctions = [
     fix: 'Call mutations through their stub, not a hand-made `fetch` or form',
   },
   {
+    code: 'Q017',
+    severity: 'error',
+    by: 'start',
+    catches:
+      '`preview.start()` or `preview.stop()` called outside a request: there is no response to set the cookie on',
+    fix: 'Call it in a server function or a route `load`',
+  },
+  {
     code: 'S011',
     severity: 'warning',
     by: 'runtime',

@@ -99,6 +99,9 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
   cache?: {
     life?: Life
     /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user'
+    /** When a change invalidates it, run it again at once in the background, so the next visitor finds it ready
+     * instead of paying for the miss. For what every visitor reads: a menu, settings, a search index. */
+    warm?: boolean
   }
   /** Named failures, for the client as `FnError.code` and `.data`. */
   errors?: Errors
@@ -208,7 +211,7 @@ export interface Fn {
     impl?: Impl
     errors?: Errors
     tags?: Tags<[input: unknown, ctx?: Context]>
-    cache?: { life?: Life; scope?: 'user' }
+    cache?: { life?: Life; scope?: 'user'; warm?: boolean }
     invalidates?: Tags<[unknown, unknown]>
     optimistic?: (args: { input: unknown }, cache: OptimisticCache) => void
     /** `channel` and `sharedState` (research 32). */

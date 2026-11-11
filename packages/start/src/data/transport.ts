@@ -117,5 +117,7 @@ async function fakeCall(
           e.status ?? 500,
         )
       : e
+  } finally {
+    await exec.finishScope(scope) // as the server does once the response is out
   }
 }

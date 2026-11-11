@@ -34,6 +34,13 @@ export function makeHandler(
         },
         { status: 503, headers: { 'cache-control': 'no-store' } },
       )
-    return compressed(request, await als.run(scope, () => route(request, scope)))
+    let response: Response
+    try {
+      response = await als.run(scope, () => route(request, scope))
+    } catch (e) {
+      void exec.finishScope(scope)
+      throw e
+    }
+    return compressed(request, exec.finishing(response, scope))
   }
 }
