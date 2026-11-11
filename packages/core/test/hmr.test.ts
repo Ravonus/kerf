@@ -381,5 +381,6 @@ describe('gate: HMR with 1k mounted components (PLAN §3.7, ≤ 50 ms p95)', () 
       `hmr gate (1k components, jsdom): p50 ${p(0.5).toFixed(2)} ms, p95 ${p(0.95).toFixed(2)} ms, max ${times.at(-1)!.toFixed(2)} ms`,
     )
     expect(p(0.95)).toBeLessThan(50)
-  })
+    // The budget is the p95 above. Compiling and mounting 1k components first takes a few seconds on a loaded gate.
+  }, 60_000)
 })

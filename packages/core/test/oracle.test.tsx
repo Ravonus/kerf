@@ -253,4 +253,5 @@ test.each(cases.map((c) => [c.name, c]))(
     dispose()
     mark('dispose')
   },
+  30_000, // the benchmark app's thousands of rows take seconds through jsdom on a loaded gate
 )
