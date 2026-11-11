@@ -24,6 +24,8 @@ export interface LitVector3 {
   lerp(to: LitVector3, amount: number): LitVector3
   /** Into the camera's normalised device coordinates: x and y in -1..1 across the view. */
   project(camera: LitCamera): LitVector3
+  /** Moves the point by a matrix: `new lit.Vector3(0, 0.13, 0.07).applyMatrix4(group.matrixWorld)`. */
+  applyMatrix4(matrix: LitMatrix4): LitVector3
   toArray(): [number, number, number]
 }
 
@@ -40,6 +42,15 @@ export interface LitNode {
   remove(...children: unknown[]): LitNode
   lookAt(x: number | LitVector3, y?: number, z?: number): void
   rotateZ(angle: number): LitNode
+  /** False draws it even when its bounds fall outside the camera's view: a full-frame backdrop, say. */
+  frustumCulled: boolean
+  /** Draw order among the scene's objects, lowest first; 0 by default. */
+  renderOrder: number
+  /** Where it is in the scene, after its parents': current once `updateMatrixWorld()` has run. */
+  readonly matrixWorld: LitMatrix4
+  updateMatrixWorld(force?: boolean): void
+  /** Bakes a matrix into its position, rotation and scale. */
+  applyMatrix4(matrix: LitMatrix4): LitNode
   /** Calls `fn` on this node and every node under it. */
   traverse(fn: (node: LitNode) => void): void
 }
@@ -257,6 +268,9 @@ export interface LitRenderer {
   /** Where the next `render` draws: a target, or null for the canvas. */
   setRenderTarget(target: LitRenderTarget | null): void
   getRenderTarget(): LitRenderTarget | null
+  /** Limits drawing to a rectangle, CSS px from the bottom left, while `setScissorTest(true)`. */
+  setScissor(x: number, y: number, width: number, height: number): void
+  setScissorTest(on: boolean): void
   setClearColor(color: string | number | LitColor, alpha?: number): void
   clear(color?: boolean, depth?: boolean, stencil?: boolean): void
   render(scene: unknown, camera: unknown): void

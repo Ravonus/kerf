@@ -7,7 +7,7 @@ import { inflateSync } from 'node:zlib'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
 import { afterEach, describe, expect, it } from 'vitest'
-import { keelPaint, paintFile, png } from '../src/paint.mjs'
+import { createPaintPool, keelPaint, paintFile, png } from '../src/paint.mjs'
 
 const dirs: string[] = []
 const scratch = () => {
@@ -26,15 +26,15 @@ const recipe = (dir: string, body: object, name = 'ground.paint.json') => {
 }
 
 describe('png', () => {
-  it('writes RGBA rows a decoder reads back', () => {
-    const rgba = new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 9, 9, 9, 128])
+  it('writes RGB rows a decoder reads back, the alpha left out', () => {
+    const rgba = new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 9, 9, 9, 255])
     const bytes = png(rgba, 2, 2)
     expect([...bytes.subarray(1, 4)].map((c) => String.fromCharCode(c)).join('')).toBe('PNG')
-    expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)]).toEqual([2, 2])
+    expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20), bytes[25]]).toEqual([2, 2, 2])
     const data = bytes.subarray(41, 41 + bytes.readUInt32BE(33))
     const rows = inflateSync(data)
-    expect([...rows.subarray(1, 9)]).toEqual([...rgba.subarray(0, 8)])
-    expect([...rows.subarray(10, 18)]).toEqual([...rgba.subarray(8, 16)])
+    expect([...rows.subarray(1, 7)]).toEqual([255, 0, 0, 0, 255, 0])
+    expect([...rows.subarray(8, 14)]).toEqual([0, 0, 255, 9, 9, 9])
   })
 })
 
@@ -74,6 +74,33 @@ describe('paintFile', () => {
     await expect(
       paintFile(recipe(dir, { surface: 'velvet' }, 'c.paint.json'), cache),
     ).rejects.toThrow(/no surface `velvet`/)
+  })
+})
+
+describe('createPaintPool', () => {
+  it('paints on its threads the bytes this thread paints, side by side', async () => {
+    const dir = scratch()
+    const pool = createPaintPool(2)
+    try {
+      const files = ['paper', 'knit', 'paper'].map((surface, i) =>
+        recipe(dir, { surface, seed: i, width: 20 }, `${surface}-${i}.paint.json`),
+      )
+      const threaded = await Promise.all(
+        files.map((f) => paintFile(f, join(dir, 'a'), () => {}, pool)),
+      )
+      const here = await Promise.all(files.map((f) => paintFile(f, join(dir, 'b'))))
+      threaded.forEach((t, i) => {
+        expect(t.painted).toBe(true)
+        expect(readFileSync(t.file)).toEqual(readFileSync(here[i]!.file))
+      })
+      await expect(pool.paint({ surface: 'velvet' } as never)).rejects.toThrow(
+        /no surface `velvet`/,
+      )
+      const after = await pool.paint({ surface: 'paper', width: 8 })
+      expect([after.width, after.bytes[1]]).toEqual([8, 0x50])
+    } finally {
+      await pool.close()
+    }
   })
 })
 

@@ -2,6 +2,7 @@
 // visible scene through a lighter finish at the levers' `blendScale`), and the active section's pass through
 // section-post. `<Stage blend={keelBlend()}>`; the modules load once the stage's surface is up.
 import type { SurfaceBase, SurfaceContext } from '@weft-js/core/surface'
+import { createInset, type PanelInset } from './blend-inset'
 import type { BlendOptions, Levers, LiveScene, SceneBlend, ScenePost } from './scene'
 import type { LitFinish } from '../vendor/modules/lit-finish.mjs'
 import type { BlendSettings } from '../vendor/modules/scene-blend.mjs'
@@ -15,7 +16,14 @@ export interface KeelBlendOptions {
   readonly blend?: Partial<Omit<BlendSettings, 'scale'>>
   /** section-post's: the paper `colour`, `tear`, `fibre`, `shadow`, `grain`... */
   readonly post?: Partial<PostSettings>
+  /**
+   * Keeps the panel to a column, as the page's own panel is: CSS px from the frame's left and right edges, or a
+   * function of the frame's CSS size, `(width) => [left, right]`. Beside the column the scene shows untouched.
+   */
+  readonly inset?: PanelInset
 }
+
+export type { PanelInset }
 
 /** The less visible scene's finish: no ambient occlusion, bloom or TAA, which it would spend on pixels hardly seen. */
 const LIGHT = { ao: 0, bloom: 0, taa: false }
@@ -59,6 +67,7 @@ export function keelBlend(options: KeelBlendOptions = {}) {
     })
     const blend = blending.createSceneBlend(lit, renderer, { main, scaled }, options.blend)
     const post = posting.createSectionPost(lit, renderer, finishing, options.post)
+    const inset = options.inset && createInset(s, posting.POST_VERTEX_GLSL, options.inset)
     const spend = spender(main)
     let sized = ''
     let levers: Levers | null = null
@@ -88,14 +97,21 @@ export function keelBlend(options: KeelBlendOptions = {}) {
           ...(o.centre && { centre: o.centre }),
           ...(!o.lines && { lines: { in: 0, out: 0 } }),
         }
-        post.render(
-          () => blend.draw(shot(a), shot(b), t, look),
-          valuesOf(o.post, posting.displayColour),
-        )
+        const frame = () => blend.draw(shot(a), shot(b), t, look)
+        const values = valuesOf(o.post, posting.displayColour)
+        const { width, height } = s.size.value
+        // A column only while the panel shows: a frame with no panel draws straight to the canvas, whole.
+        const column =
+          inset && posting.panelShows(posting.frameOf(values, post.settings))
+            ? inset.column(width, height)
+            : null
+        if (column) inset!.draw(column, (drawn) => post.render(drawn, values), frame)
+        else post.render(frame, values)
       },
       dispose() {
         blend.dispose()
         post.dispose()
+        inset?.dispose()
         main.dispose()
         scaled.dispose()
       },

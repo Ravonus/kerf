@@ -38,7 +38,7 @@ export async function serveDemo(port = 0, baked = join(demo, 'posters')) {
       outDir: out,
       emptyOutDir: true,
       rolldownOptions: {
-        input: [join(demo, 'index.html'), join(demo, 'stage.html'), join(demo, 'paint.html')],
+        input: ['index', 'stage', 'paint', 'sitter'].map((page) => join(demo, `${page}.html`)),
       },
     },
   })

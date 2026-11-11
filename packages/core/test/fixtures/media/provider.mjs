@@ -1,10 +1,12 @@
 // A fake `media.build@1` provider for test/media.test.tsx: two widths, AVIF plus the source format.
 export function createMediaBuild(options) {
   return {
-    async build({ file, bytes }, ctx) {
+    async build({ file, bytes, photo }, ctx) {
       const name = file.split('/').pop()
       return {
         asset: {
+          // What the import asked for, echoed so the test can see it arrived.
+          ...(photo !== undefined && { hinted: { photo } }),
           kind: 'photo',
           src: 'hero-640.jpg',
           width: 640,

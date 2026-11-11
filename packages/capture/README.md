@@ -18,8 +18,8 @@ while the command runs; `--path /page.html` picks a page in it.
 ```bash
 weft capture stills dist --stops 0,hero@0.5,2@1 \
   --width 1440 --height 900 --dpr 2 --out shots --sheet
-weft capture frames dist --seconds 5 --speed 600 --cpu 4 \
-  --out frames.json
+weft capture frames dist --from pay@0 --seconds 5 \
+  --speed 600 --cpu 4 --out frames.json
 weft capture sheet shots/*.png --out sheet.png --cols 4
 weft capture bake dist --out src/posters --format avif
 ```
@@ -49,9 +49,9 @@ await browser.close()
 `data-stage-ready`), transitions have finished and the images in view have decoded. The stage's clock is frozen
 first (`seconds`, default 0), so the same stop on the same GPU gives the same PNG and the same hash.
 
-`frames` reports p5 fps, the median and p95 frame time, and the frames over 33 and 50 ms, with the machine's
-load before and after. Headless Chrome caps frames at 60 Hz, so read the slow end, not the median. Run one at a
-time on a quiet machine, and keep the load with the number.
+`frames` scrolls from `from` (a stop, default the top) and reports p5 fps, the median and p95 frame time, and
+the frames over 33 and 50 ms, with the machine's load before and after. Headless Chrome caps frames at 60 Hz, so
+read the slow end, not the median. Run one at a time on a quiet machine, and keep the load with the number.
 
 ## Baked posters
 

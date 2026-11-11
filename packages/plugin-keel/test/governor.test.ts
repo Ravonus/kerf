@@ -1,5 +1,5 @@
 // The governor on recorded devices: a tier's levers, fps and pixel-ratio cap, and the render scale under load.
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { keelGovernor } from '../src/governor'
 
 const DESKTOP = {
@@ -54,5 +54,29 @@ describe('keelGovernor', () => {
     const steady = governor.levers
     governor.frame(8)
     expect(governor.levers).toBe(steady)
+  })
+
+  describe('hold by width', () => {
+    afterEach(() => vi.unstubAllGlobals())
+
+    it('holds under its media query whatever the tier, and follows the query as it changes', async () => {
+      const query = { matches: true }
+      const asked: string[] = []
+      vi.stubGlobal('matchMedia', (q: string) => (asked.push(q), query))
+      const governor = keelGovernor({ signals: DESKTOP, hold: '(max-width: 767px)' })
+      await governor.start()
+      expect(asked).toEqual(['(max-width: 767px)'])
+      expect(governor.tier).toBe('high')
+      expect(governor.hold).toBe(true)
+      query.matches = false
+      expect(governor.hold).toBe(false)
+    })
+
+    it('holds only on a low tier without one', async () => {
+      vi.stubGlobal('matchMedia', () => ({ matches: true }))
+      const governor = keelGovernor({ signals: DESKTOP })
+      await governor.start()
+      expect(governor.hold).toBe(false)
+    })
   })
 })

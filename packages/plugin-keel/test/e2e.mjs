@@ -334,6 +334,39 @@ const settle = (page, k, p) =>
 }
 
 {
+  console.log('a panel kept to a column')
+  const page = await openStage({}, '?column')
+  await stand(page, 1, 1.5)
+  await settle(page, 1, 1.5)
+  const share = await page.evaluate(() => {
+    const canvas = document.querySelector('[data-surface] canvas')
+    globalThis.clock.seek(globalThis.clock.seconds)
+    const x = new OffscreenCanvas(canvas.width, canvas.height).getContext('2d')
+    x.drawImage(canvas, 0, 0)
+    const d = x.getImageData(0, 0, canvas.width, canvas.height).data
+    const paper = (from, to) => {
+      let n = 0
+      let all = 0
+      for (let y = 0; y < canvas.height; y += 8)
+        for (let c = Math.round(from * canvas.width); c < to * canvas.width; c += 8) {
+          const i = (y * canvas.width + c) * 4
+          n += d[i] > 205 && d[i + 1] > 200 && d[i + 2] > 190 ? 1 : 0
+          all++
+        }
+      return Math.round((n / all) * 100) / 100
+    }
+    return { left: paper(0.02, 0.23), middle: paper(0.27, 0.73), right: paper(0.77, 0.98) }
+  })
+  ok(
+    'the paper covers the column and leaves the scene beside it',
+    share.middle > 0.97 && share.left < 0.1 && share.right < 0.1,
+    JSON.stringify(share),
+  )
+  ok('no errors or warnings', page.problems.length === 0, page.problems.join(' | '))
+  await page.context().close()
+}
+
+{
   console.log('baked posters, and stills at three stops')
   const dir = mkdtempSync(join(tmpdir(), 'weft-posters-'))
   const baked = await bake({ url: `${served.base}/stage.html`, out: dir, browser })

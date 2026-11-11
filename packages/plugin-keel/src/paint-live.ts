@@ -1,10 +1,11 @@
 // The run-time path for a surface that can't be painted at build: a themed colour, a visitor's seed. Opt in with
-// `paintLive(recipe)`: it paints on a WebGL2 `OffscreenCanvas` (or on the CPU without one), encodes the albedo to a
-// blob and gives a media record whose `src` is its blob URL. Same recipe, same picture as `?paint`.
+// `paintLive(recipe)`: `generate` paints it in a worker (on a WebGL2 `OffscreenCanvas`, or on the CPU without one),
+// and this thread encodes the albedo to a blob and gives a media record whose `src` is its blob URL. Same recipe,
+// same picture as `?paint`.
 import type { MediaAsset } from '@weft-js/core/media'
-import { recipeOf, type PaintRecipe } from './paint-recipe.mjs'
-import type { Surface, SurfacePlan } from '../vendor/modules/surfaces.mjs'
-import type * as SurfacesModule from '../vendor/modules/surfaces.mjs'
+import type { Surface } from '../vendor/modules/surfaces.mjs'
+import { forget, generate, keyOf } from './generate'
+import type { PaintRecipe } from './paint-recipe.mjs'
 
 export type { PaintRecipe }
 
@@ -13,22 +14,7 @@ export type LiveAsset = MediaAsset & { readonly digest: string; revoke(): void }
 
 const painted = new Map<string, Promise<LiveAsset>>()
 
-type Surfaces = typeof SurfacesModule
-
-/** Paints a plan on a WebGL2 `OffscreenCanvas`, or on the CPU where there is none. */
-function paint(surfaces: Surfaces, plan: SurfacePlan): Surface {
-  const gl = new OffscreenCanvas(1, 1).getContext('webgl2')
-  if (!gl) return surfaces.paintPlan(plan)
-  const painter = surfaces.createSurfacePainter(gl)
-  try {
-    return painter.paintPlan(plan)
-  } finally {
-    painter.dispose()
-    gl.getExtension('WEBGL_lose_context')?.loseContext()
-  }
-}
-
-async function encode(surface: Surface, request: PaintRecipe): Promise<LiveAsset> {
+async function encode(surface: Surface, request: PaintRecipe, key: string): Promise<LiveAsset> {
   const { width, height, digest } = surface
   const canvas = new OffscreenCanvas(width, height)
   const pixels = new Uint8ClampedArray(surface.buffers[0])
@@ -47,25 +33,26 @@ async function encode(surface: Surface, request: PaintRecipe): Promise<LiveAsset
     digest,
     revoke() {
       URL.revokeObjectURL(src)
-      painted.delete(digest)
+      painted.delete(key)
+      forget('surface', request)
     },
   }
 }
 
 /**
- * Paints a surface in the page, once per digest while it is kept: `<Media src={await paintLive(recipe)} alt="" decorative />`.
- * Needs `OffscreenCanvas`; WebGL2 makes it quick, the CPU path takes a second or two at card size.
+ * Paints a surface off this thread, once per request while it is kept:
+ * `<Media src={await paintLive(recipe)} alt="" decorative />`. Needs `OffscreenCanvas` to encode.
  */
-export async function paintLive(request: PaintRecipe): Promise<LiveAsset> {
-  const surfaces = await import('../vendor/modules/surfaces.mjs')
-  const { recipe, settings } = recipeOf(request, surfaces)
-  const plan = surfaces.planSurface(recipe, settings)
-  let asset = painted.get(plan.digest)
-  if (!asset) painted.set(plan.digest, (asset = encode(paint(surfaces, plan), request)))
+export function paintLive(request: PaintRecipe): Promise<LiveAsset> {
+  const key = keyOf('surface', request)
+  let asset = painted.get(key)
+  if (!asset) {
+    painted.set(key, (asset = generate('surface', request).then((s) => encode(s, request, key))))
+  }
   return asset
 }
 
-/** A record as a CSS image: an `image-set` of each format's widest file, for a tile under `background-repeat`. */
+/** A record as a CSS image: an `image-set` of each format's widest file, for a tile under `background-image`. */
 export function cssImage(asset: MediaAsset): string {
   const widest = (srcset: string) => srcset.split(',').at(-1)!.trim().split(/\s+/)[0]!
   const sets = asset.sources.map((s) => `url("${widest(s.srcset)}") type("${s.type}")`)
