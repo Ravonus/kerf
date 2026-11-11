@@ -31,6 +31,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./canvas": "./src/canvas.ts",
+    "./timeline": "./src/timeline.ts",
     "./styles.css": "./styles/scroll.css"
   },
   "publishConfig": {

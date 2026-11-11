@@ -1,0 +1,200 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "tonemap",
+      "label": "Tone map",
+      "required": false,
+      "type": "select",
+      "options": [
+        {
+          "value": "agx",
+          "label": "AgX"
+        },
+        {
+          "value": "neutral",
+          "label": "PBR Neutral"
+        },
+        {
+          "value": "aces",
+          "label": "ACES"
+        }
+      ],
+      "default": "agx"
+    },
+    {
+      "key": "exposure",
+      "label": "Exposure",
+      "required": false,
+      "type": "number",
+      "min": 0,
+      "max": 16,
+      "step": 0.05,
+      "control": "slider",
+      "default": 1
+    },
+    {
+      "key": "ao",
+      "label": "Ambient occlusion",
+      "required": false,
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider",
+      "default": 0.8
+    },
+    {
+      "key": "aoRadius",
+      "label": "AO radius",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0.05,
+      "max": 8,
+      "step": 0.05,
+      "unit": "m",
+      "default": 1.2
+    },
+    {
+      "key": "hazeDensity",
+      "label": "Haze",
+      "required": false,
+      "help": "Air per metre; 0 draws none.",
+      "type": "number",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.001,
+      "control": "slider",
+      "default": 0.012
+    },
+    {
+      "key": "hazeGlow",
+      "label": "Haze glow",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "default": 0.9
+    },
+    {
+      "key": "saturation",
+      "label": "Saturation",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 2,
+      "step": 0.01,
+      "default": 1.05
+    },
+    {
+      "key": "contrast",
+      "label": "Contrast",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0.5,
+      "max": 2,
+      "step": 0.01,
+      "default": 1.18
+    },
+    {
+      "key": "warmth",
+      "label": "Warm lights, cool shadows",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.25
+    },
+    {
+      "key": "vignette",
+      "label": "Vignette",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.3
+    },
+    {
+      "key": "translucency",
+      "label": "Light through leaves",
+      "required": false,
+      "type": "number",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "control": "slider",
+      "default": 0.8
+    },
+    {
+      "key": "variation",
+      "label": "Colour variation",
+      "required": false,
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider",
+      "default": 0.5
+    },
+    {
+      "key": "mute",
+      "label": "Mute colours",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.2
+    },
+    {
+      "key": "bloom",
+      "label": "Bloom",
+      "required": false,
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "control": "slider",
+      "default": 0.12
+    },
+    {
+      "key": "bloomThreshold",
+      "label": "Bloom threshold",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 8,
+      "step": 0.05,
+      "default": 1
+    },
+    {
+      "key": "taa",
+      "label": "Temporal antialiasing",
+      "required": false,
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "key": "taaBlend",
+      "label": "TAA new-frame share",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0.02,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.1
+    }
+  ]
+}

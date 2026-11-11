@@ -1,0 +1,295 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "style",
+      "label": "Look",
+      "required": false,
+      "type": "select",
+      "options": [
+        {
+          "value": "smart",
+          "label": "Smart voxel"
+        },
+        {
+          "value": "pixel",
+          "label": "3D pixel art"
+        },
+        {
+          "value": "bayer",
+          "label": "Bayer cel"
+        },
+        {
+          "value": "soft",
+          "label": "Soft ordered"
+        },
+        {
+          "value": "halftone",
+          "label": "Halftone print"
+        },
+        {
+          "value": "engraving",
+          "label": "Engraving"
+        },
+        {
+          "value": "chunky",
+          "label": "Chunky 8-bit"
+        },
+        {
+          "value": "grain",
+          "label": "Noise grain"
+        },
+        {
+          "value": "blossom",
+          "label": "Blossom 16"
+        },
+        {
+          "value": "pocket",
+          "label": "Pocket green"
+        },
+        {
+          "value": "clean",
+          "label": "Clean cel"
+        },
+        {
+          "value": "crt",
+          "label": "CRT painted"
+        }
+      ],
+      "default": "smart"
+    },
+    {
+      "key": "pixel",
+      "label": "Pixel size",
+      "required": false,
+      "help": "CSS pixels per art pixel. 0 picks one from the frame size.",
+      "type": "number",
+      "min": 0,
+      "max": 12,
+      "step": 1,
+      "control": "slider",
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "key": "screen",
+      "label": "Dither screen",
+      "required": false,
+      "placement": "advanced",
+      "type": "select",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Auto (by depth band)"
+        },
+        {
+          "value": "bayer2",
+          "label": "Bayer 2x2"
+        },
+        {
+          "value": "bayer4",
+          "label": "Bayer 4x4"
+        },
+        {
+          "value": "bayer8",
+          "label": "Bayer 8x8"
+        },
+        {
+          "value": "halftone",
+          "label": "Halftone dots"
+        },
+        {
+          "value": "lines",
+          "label": "Lines"
+        },
+        {
+          "value": "diagonal",
+          "label": "Diagonal lines"
+        },
+        {
+          "value": "hatch",
+          "label": "Cross hatch"
+        },
+        {
+          "value": "ign",
+          "label": "Gradient noise"
+        },
+        {
+          "value": "stipple",
+          "label": "Stipple"
+        },
+        {
+          "value": "checker",
+          "label": "Checker"
+        },
+        {
+          "value": "none",
+          "label": "None (posterized)"
+        }
+      ]
+    },
+    {
+      "key": "shading",
+      "label": "Shading",
+      "required": false,
+      "placement": "advanced",
+      "type": "select",
+      "options": [
+        {
+          "value": "cel",
+          "label": "Cel (stepped light)"
+        },
+        {
+          "value": "smooth",
+          "label": "Smooth (dithered light)"
+        }
+      ]
+    },
+    {
+      "key": "levels",
+      "label": "Tone steps",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 2,
+      "max": 16,
+      "step": 1,
+      "control": "slider"
+    },
+    {
+      "key": "bands",
+      "label": "Cel bands",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "control": "slider"
+    },
+    {
+      "key": "outline",
+      "label": "Outline",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider"
+    },
+    {
+      "key": "crease",
+      "label": "Voxel creases",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider"
+    },
+    {
+      "key": "lift",
+      "label": "Shadow lift",
+      "required": false,
+      "help": "Raises the darkest tones toward a cool blue, so night never crushes to black.",
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 0.3,
+      "step": 0.01,
+      "control": "slider"
+    },
+    {
+      "key": "clump",
+      "label": "Clump",
+      "required": false,
+      "help": "Gathers sub-pixel speckle into masses of one tone, so foliage reads and does not shimmer.",
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider"
+    },
+    {
+      "key": "ramp",
+      "label": "Hue ramps",
+      "required": false,
+      "help": "Lights lean warm and shadows cool, as pixel artists paint ramps.",
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider"
+    },
+    {
+      "key": "scanlines",
+      "label": "Scanlines",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider"
+    },
+    {
+      "key": "chroma",
+      "label": "Colour fringe",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider"
+    },
+    {
+      "key": "glitch",
+      "label": "Glitch",
+      "required": false,
+      "help": "Signal bursts that tear rows and drop blocks of the frame. Timed by setTime.",
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "control": "slider"
+    },
+    {
+      "key": "palette",
+      "label": "Palette",
+      "required": false,
+      "help": "Up to 32 colors. When set, every pixel is one of them.",
+      "placement": "advanced",
+      "type": "palette",
+      "minItems": 0,
+      "maxItems": 32
+    },
+    {
+      "key": "accent",
+      "label": "Spot inks",
+      "required": false,
+      "help": "Up to 4 colors beside the palette. A pixel takes one only when it is already clearly of that hue and is not sky.",
+      "placement": "advanced",
+      "type": "palette",
+      "minItems": 0,
+      "maxItems": 4
+    },
+    {
+      "key": "skySaturation",
+      "label": "Sky push",
+      "required": false,
+      "help": "Pushes a light far band's saturation, so a fixed palette finds its blue instead of greys. Night skies are left alone.",
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 3,
+      "step": 0.1,
+      "control": "slider"
+    }
+  ]
+}

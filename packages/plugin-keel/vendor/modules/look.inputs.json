@@ -1,0 +1,23 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "prefer",
+      "label": "Look",
+      "required": false,
+      "help": "Where a target can draw both. A small or retro target always draws the pixel look.",
+      "type": "select",
+      "options": [
+        {
+          "value": "pixel",
+          "label": "Pixel art"
+        },
+        {
+          "value": "realism",
+          "label": "Realism"
+        }
+      ],
+      "default": "pixel"
+    }
+  ]
+}

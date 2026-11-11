@@ -1,0 +1,69 @@
+body {
+  margin: 0;
+  font: 16px/24px ui-sans-serif, system-ui, sans-serif;
+  color: rgb(24, 26, 22);
+  background: rgb(236, 232, 220);
+}
+/* The scene: a tall section whose surface stays pinned while the scroll scrubs it. */
+.scene {
+  position: relative;
+  height: 420vh;
+}
+.pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: rgb(60, 78, 62);
+}
+.pin [data-surface] {
+  position: absolute !important;
+  inset: 0;
+  aspect-ratio: auto !important;
+}
+/* No WebGL2, or the scene failed: the pinned panel keeps its colour and the page still reads. */
+.pin [data-surface-error]::after {
+  content: 'This scene needs WebGL2.';
+  position: absolute;
+  inset: auto 0 24px;
+  text-align: center;
+  color: rgb(236, 232, 220);
+}
+.title {
+  position: absolute;
+  inset: auto auto 12vh 6vw;
+  margin: 0;
+  color: rgb(250, 248, 240);
+  font: 700 clamp(48px, 11vw, 168px) / 0.9 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  text-shadow: 0 2px 24px rgb(0 0 0 / 0.25);
+}
+.controls {
+  position: absolute;
+  inset: 20px 20px auto auto;
+  display: flex;
+  gap: 8px;
+}
+.controls button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 1px solid rgb(250 248 240 / 0.6);
+  border-radius: 6px;
+  color: rgb(250, 248, 240);
+  background: rgb(20 24 20 / 0.45);
+  cursor: pointer;
+}
+.controls button[aria-pressed='true'] {
+  color: rgb(24, 26, 22);
+  background: rgb(250, 248, 240);
+}
+.paper {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 96px 24px 160px;
+}
+.paper h2 {
+  font: 400 44px/1.1 ui-serif, Georgia, serif;
+  margin: 0 0 24px;
+}

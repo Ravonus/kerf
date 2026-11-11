@@ -1,0 +1,75 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "species",
+      "label": "Species",
+      "required": false,
+      "type": "select",
+      "options": [
+        {
+          "value": "cherry",
+          "label": "Cherry"
+        },
+        {
+          "value": "oak",
+          "label": "Oak"
+        },
+        {
+          "value": "pine",
+          "label": "Pine"
+        },
+        {
+          "value": "birch",
+          "label": "Birch"
+        },
+        {
+          "value": "willow",
+          "label": "Willow"
+        },
+        {
+          "value": "acacia",
+          "label": "Acacia"
+        },
+        {
+          "value": "palm",
+          "label": "Coconut palm"
+        },
+        {
+          "value": "spruce",
+          "label": "Blue spruce"
+        },
+        {
+          "value": "redwood",
+          "label": "Redwood"
+        },
+        {
+          "value": "maple",
+          "label": "Maple"
+        },
+        {
+          "value": "jacaranda",
+          "label": "Jacaranda"
+        },
+        {
+          "value": "baobab",
+          "label": "Baobab"
+        }
+      ],
+      "default": "cherry"
+    },
+    {
+      "key": "maxNodes",
+      "label": "Internode budget",
+      "required": false,
+      "help": "More internodes make a finer crown and cost more to grow and draw.",
+      "placement": "advanced",
+      "type": "number",
+      "min": 64,
+      "max": 6000,
+      "step": 8,
+      "control": "slider",
+      "default": 4800
+    }
+  ]
+}

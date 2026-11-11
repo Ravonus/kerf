@@ -88,6 +88,7 @@ is the Weft component over it.
   - [Snap points](#snap-points)
   - [Nested areas](#nested-areas)
   - [Long lists](#long-lists)
+  - [Scrubbing a scene](#scrubbing-a-scene)
   - [Keys, focus and accessibility](#keys-focus-and-accessibility)
 - [API](#api)
 - [Performance](#performance)
@@ -423,6 +424,37 @@ const list = virtualizer(area.viewport, {
 })
 ```
 
+### Scrubbing a scene
+
+`@weft-js/scroll/timeline` drives a scene from how far a section has scrolled. It needs no scroll area: it
+reads the page's own scrolling, or any scroller's.
+
+`progress(el)` follows a section's position, 0 to 1, eased so the scene glides instead of stepping with the
+wheel. `timeline(tracks)` holds keyframes as data and gives every track's value at a position.
+
+```ts
+import { progress, timeline } from '@weft-js/scroll/timeline'
+
+const tracks = timeline({
+  zoom: [[0, 1], [0.6, 2.4], [1, 3, 'easeOut']],
+  fade: [[0.8, 1, 'linear'], [1, 0, 'linear']],
+})
+const scrub = progress(section, {
+  onChange(position) {
+    const at = tracks.at(position)
+    scene.style.scale = String(at.zoom)
+    scene.style.opacity = String(at.fade)
+  },
+})
+```
+
+A key is `[position, value, curve?]`. The curve shapes the move into that key and defaults to `easeInOut`; a
+value holds before the first key and after the last. With `range: 'pin'` (the default) the position is 0 when
+the section's top meets the top of the viewport and 1 when its bottom meets the bottom, which suits a tall
+section holding a `position: sticky` scene. `range: 'through'` runs from the section entering below to leaving
+above. `damp` sets how fast the eased position catches up; under `prefers-reduced-motion: reduce` it follows
+the scroll exactly. Call `scrub.destroy()` when the scene goes.
+
 ### Keys, focus and accessibility
 
 - **Keys:** arrows scroll a line, Page Up and Page Down most of a screen, Space and Shift+Space the same, Home and
@@ -509,6 +541,7 @@ Pure functions the engine uses, exported for your own bars and tests: `thumbLeng
 |---|---|
 | `@weft-js/scroll` | `scroller`, `wrap`, `domRenderer`, the helpers and the types |
 | `@weft-js/scroll/canvas` | `canvas`, `paintBar`, `cssColor` |
+| `@weft-js/scroll/timeline` | `timeline`, `progress`, `progressOf` |
 | `@weft-js/scroll/styles.css` | The layout and look of the root, viewport and bars |
 
 ## Performance

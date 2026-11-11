@@ -1,0 +1,68 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "climate",
+      "label": "Climate",
+      "required": false,
+      "type": "select",
+      "options": [
+        {
+          "value": "temperate",
+          "label": "Temperate"
+        },
+        {
+          "value": "maritime",
+          "label": "Maritime"
+        },
+        {
+          "value": "alpine",
+          "label": "Alpine"
+        },
+        {
+          "value": "monsoon",
+          "label": "Monsoon"
+        },
+        {
+          "value": "highland",
+          "label": "Highland"
+        },
+        {
+          "value": "desert",
+          "label": "Desert"
+        }
+      ],
+      "default": "temperate"
+    },
+    {
+      "key": "weather",
+      "label": "Weather",
+      "required": false,
+      "placement": "advanced",
+      "type": "select",
+      "options": [
+        {
+          "value": "clear",
+          "label": "Clear"
+        },
+        {
+          "value": "wind",
+          "label": "Wind"
+        },
+        {
+          "value": "leaves",
+          "label": "Blowing leaves"
+        },
+        {
+          "value": "rain",
+          "label": "Rain"
+        },
+        {
+          "value": "snow",
+          "label": "Snow"
+        }
+      ],
+      "default": "clear"
+    }
+  ]
+}
