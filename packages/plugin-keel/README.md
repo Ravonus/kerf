@@ -163,6 +163,8 @@ where `keelGovernor()` holds scenes still.
 tier, the tier the fps cap (30 on low) and the widest canvas (3840, 1920 or 1280 px), and `quality` the level,
 its page levers (`quality.levers`) and a render scale it lowers while frames run slow:
 `<Stage governor={keelGovernor()}>`.
+`keelGovernor({ hold: '(max-width: 767px)' })` also holds scenes where a media query matches, so a phone stands
+at each scene's `hold` with no camera override of its own.
 
 `keelBlend()` from `@weft-js/plugin-keel/blend` is the stage's blend: `<Stage blend={keelBlend()}>`. Every scene
 is drawn through `lit-finish`. A hand-over goes through `scene-blend`: the incoming scene arrives as line work
