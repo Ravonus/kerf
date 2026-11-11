@@ -356,7 +356,7 @@ engine mode; in native mode the browser's own wheel and touch handling decides t
 | Option | What it does | Default |
 |---|---|---|
 | `duration` | ms for a wheel notch, a key and a smooth `scrollTo` | `220` |
-| `easing` | `(t) => progress`; `easings` has `linear`, `easeOut`, `easeOutQuint`, `easeInOut`, `expo` | `easeOut` |
+| `easing` | `(t) => progress`; `easings` has `linear`, `easeOut`, `easeOutQuint`, `easeInOut`, `expo`; `bezier(x1, y1, x2, y2)` is a CSS `cubic-bezier` | `easeOut` |
 | `friction` | share of a fling's velocity kept per ms | `0.998` |
 | `momentum` | coast after a touch fling | `true` |
 | `overscroll` | `bounce` past the edges on touch, or `none` | `bounce` |
@@ -448,12 +448,23 @@ const scrub = progress(section, {
 })
 ```
 
-A key is `[position, value, curve?]`. The curve shapes the move into that key and defaults to `easeInOut`; a
-value holds before the first key and after the last. With `range: 'pin'` (the default) the position is 0 when
+A key is `[position, value, curve?]`. The curve shapes the move into that key: one of the named `easings`, a
+function, or the four handles of a CSS `cubic-bezier`, as `[1, 3, [0.5, 0, 0.5, 1]]`; it defaults to
+`easeInOut`. A value holds before the first key and after the last. With `range: 'pin'` (the default) the position is 0 when
 the section's top meets the top of the viewport and 1 when its bottom meets the bottom, which suits a tall
 section holding a `position: sticky` scene. `range: 'through'` runs from the section entering below to leaving
-above. `damp` sets how fast the eased position catches up; under `prefers-reduced-motion: reduce` it follows
-the scroll exactly. Call `scrub.destroy()` when the scene goes.
+above. `range: 'scene'` is `through` in viewports instead of 0 to 1, for a scene on a stage pinned behind the
+whole page: 0 as the section enters, 1 about as its top reaches the top, and `(height + viewport) / viewport`
+as it leaves. `early` starts it that many viewports sooner, and `viewport` names the element whose height is
+one viewport (a stage sized `100lvh`), where the window's height would move with a phone's toolbar. `damp`
+sets how fast the eased position catches up; under `prefers-reduced-motion: reduce` it follows the scroll
+exactly, and so does `touch: 'raw'` on a touch screen, whose own scrolling is already smooth. `velocity` is how
+fast the target moves, in its units per ms, for an effect that calms down while the page is moving. Call
+`scrub.destroy()` when the scene goes.
+
+To drive styles rather than a scene, `vars(el, tracks)` gives an `onChange` that writes every track to `el` as
+a custom property named after it, `--zoom` and `--fade` above, for the stylesheet to map:
+`progress(section, { onChange: vars(word, tracks) })` with `.word { scale: var(--zoom) }`.
 
 ### Keys, focus and accessibility
 
@@ -533,7 +544,7 @@ Moves `el`'s children into a viewport and content wrapper, then calls `scroller(
 ### Helpers
 
 Pure functions the engine uses, exported for your own bars and tests: `thumbLength`, `thumbOffset`, `dragRatio`,
-`progressAt`, `snapTo`, `snapStep`, `normalizeWheel`, `pageStep`, `coastDistance`, `rubber`, `easings`.
+`progressAt`, `snapTo`, `snapStep`, `normalizeWheel`, `pageStep`, `coastDistance`, `rubber`, `easings`, `bezier`.
 
 ### Entries
 
@@ -541,7 +552,7 @@ Pure functions the engine uses, exported for your own bars and tests: `thumbLeng
 |---|---|
 | `@weft-js/scroll` | `scroller`, `wrap`, `domRenderer`, the helpers and the types |
 | `@weft-js/scroll/canvas` | `canvas`, `paintBar`, `cssColor` |
-| `@weft-js/scroll/timeline` | `timeline`, `progress`, `progressOf` |
+| `@weft-js/scroll/timeline` | `timeline`, `progress`, `progressOf`, `vars` |
 | `@weft-js/scroll/styles.css` | The layout and look of the root, viewport and bars |
 
 ## Performance

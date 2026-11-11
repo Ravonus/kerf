@@ -2,7 +2,7 @@
 export { scroller } from './scroller'
 export { wrap } from './wrap'
 export { domRenderer } from './render'
-export { easings, easeOut, coastDistance, rubber } from './physics'
+export { easings, easeOut, bezier, coastDistance, rubber } from './physics'
 export { thumbLength, thumbOffset, dragRatio, progressAt } from './bar'
 export { snapTo, snapStep } from './snap'
 export { normalizeWheel, pageStep } from './wheel'

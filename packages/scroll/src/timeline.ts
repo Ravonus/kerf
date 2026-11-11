@@ -1,26 +1,39 @@
 // Keyframe tracks read at a position, and a section's scroll progress to drive them: the two halves of a
 // scroll-scrubbed scene. Pure maths in `timeline`; `progress` is the only part that touches the page.
-import { easings } from './physics'
+import { bezier, easings, Velocity } from './physics'
 import type { Easing } from './types'
 
-/** One keyframe: where on the timeline (0 to 1), the value there, and the curve used to arrive at it. */
-export type Key = readonly [at: number, value: number, ease?: Easing | keyof typeof easings]
+/** The handles of a CSS `cubic-bezier(x1, y1, x2, y2)`. */
+export type Handles = readonly [x1: number, y1: number, x2: number, y2: number]
+
+/** One keyframe: where on the timeline, the value there, and the curve used to arrive at it. */
+export type Key = readonly [
+  at: number,
+  value: number,
+  ease?: Easing | keyof typeof easings | Handles,
+]
 
 /** Named tracks of keyframes, as data: `{ fov: [[0, 40], [1, 28, 'easeInOut']] }`. */
 export type Tracks = Readonly<Record<string, readonly Key[]>>
 
 /** A set of tracks to read at any position. */
 export interface Timeline<T extends Tracks> {
-  /** Every track's value at `t` (0 to 1), written into one reused object. */
+  /** Every track's value at `t`, written into one reused object. */
   at(t: number): { [K in keyof T]: number }
   /** One track's value at `t`. */
   value(name: keyof T, t: number): number
 }
 
-const curve = (ease: Key[2]): Easing =>
-  typeof ease === 'function' ? ease : easings[ease ?? 'easeInOut']
+type Resolved = readonly [at: number, value: number, ease: Easing]
 
-function sample(keys: readonly Key[], t: number) {
+const curve = (ease: Key[2]): Easing =>
+  typeof ease === 'function'
+    ? ease
+    : typeof ease === 'object'
+      ? bezier(...ease)
+      : easings[ease ?? 'easeInOut']
+
+function sample(keys: readonly Resolved[], t: number) {
   const first = keys[0]!
   if (t <= first[0]) return first[1]
   for (let i = 1; i < keys.length; i++) {
@@ -28,20 +41,22 @@ function sample(keys: readonly Key[], t: number) {
     if (t > to[0]) continue
     const from = keys[i - 1]!
     const span = to[0] - from[0]
-    return span <= 0 ? to[1] : from[1] + (to[1] - from[1]) * curve(to[2])((t - from[0]) / span)
+    return span <= 0 ? to[1] : from[1] + (to[1] - from[1]) * to[2]((t - from[0]) / span)
   }
   return keys[keys.length - 1]![1]
 }
 
 /**
  * Keyframe tracks to scrub. Keys are sorted by position; a value holds before the first key and after the last.
- * A key's curve shapes the move into it and defaults to `easeInOut`.
+ * A key's curve shapes the move into it: a name, a function, or cubic-bezier handles; it defaults to `easeInOut`.
  */
 export function timeline<T extends Tracks>(tracks: T): Timeline<T> {
   const names = Object.keys(tracks) as (keyof T & string)[]
-  const sorted = new Map<keyof T, readonly Key[]>()
+  const sorted = new Map<keyof T, readonly Resolved[]>()
   for (const name of names) {
-    const keys = [...tracks[name]!].sort((a, b) => a[0] - b[0])
+    const keys = tracks[name]!.map((k): Resolved => [k[0], k[1], curve(k[2])]).sort(
+      (a, b) => a[0] - b[0],
+    )
     if (!keys.length) throw new Error(`timeline: track \`${name}\` has no keys`)
     sorted.set(name, keys)
   }
@@ -60,28 +75,45 @@ export interface ProgressOptions {
   /**
    * `pin` (default): 0 when the section's top reaches the top of the viewport, 1 when its bottom reaches the
    * bottom, for a tall section holding a sticky scene. `through`: 0 as it enters from below, 1 as it leaves above.
+   * `scene`: `through` in viewports instead of 0 to 1, for a scene on a stage pinned behind the page: 0 as the
+   * section enters, 1 about as its top reaches the top, `(height + viewport) / viewport` as it leaves.
    */
-  range?: 'pin' | 'through'
+  range?: 'pin' | 'through' | 'scene'
+  /** With `scene`: how many viewports before the section enters its position starts moving. Default 0. */
+  early?: number
+  /** The element whose height is one viewport, for a stage sized `100lvh`. Default: the window's. */
+  viewport?: Element
   /** Share of the remaining distance covered per 60 Hz frame, 0 to 1. Default 0.18; 1 follows the scroll exactly. */
   damp?: number
+  /** `raw`: on a touch screen, whose own scrolling is already smooth, follow the scroll exactly. Default `ease`. */
+  touch?: 'ease' | 'raw'
   /** Called with the eased position each time it moves, and once at the start. */
   onChange?: (value: number, target: number) => void
 }
 
 /** A section's live scroll progress. */
 export interface Progress {
-  /** The eased position, 0 to 1. */
+  /** The eased position, in `range`'s units. */
   readonly value: number
   /** Where the scroll is now, before easing. */
   readonly target: number
+  /** How fast `target` moves, in its units per ms; 0 once the scroll has paused. */
+  readonly velocity: number
   destroy(): void
 }
 
-/** Where `rect` stands in a viewport `height` tall, 0 to 1, by `range`. */
-export function progressOf(rect: { top: number; height: number }, height: number, range = 'pin') {
-  const span = range === 'pin' ? rect.height - height : rect.height + height
-  const done = range === 'pin' ? -rect.top : height - rect.top
-  return span <= 0 ? (done >= 0 ? 1 : 0) : Math.min(1, Math.max(0, done / span))
+/** Where `rect` stands in a viewport `height` tall, by `range`; `early` is `scene`'s lead, in viewports. */
+export function progressOf(
+  rect: { top: number; height: number },
+  height: number,
+  range = 'pin',
+  early = 0,
+) {
+  const lead = range === 'scene' ? height * early : 0
+  const span = range === 'pin' ? rect.height - height : rect.height + height + lead
+  const done = range === 'pin' ? -rect.top : height + lead - rect.top
+  const share = span <= 0 ? (done >= 0 ? 1 : 0) : Math.min(1, Math.max(0, done / span))
+  return range === 'scene' ? (share * (rect.height + height)) / height : share
 }
 
 /**
@@ -90,9 +122,12 @@ export function progressOf(rect: { top: number; height: number }, height: number
  * Under `prefers-reduced-motion: reduce` it follows the scroll exactly.
  */
 export function progress(el: Element, options: ProgressOptions = {}): Progress {
+  const matches = (query: string) => typeof matchMedia === 'function' && matchMedia(query).matches
   const still =
-    typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+    matches('(prefers-reduced-motion: reduce)') ||
+    (options.touch === 'raw' && matches('(pointer: coarse)'))
   const damp = still ? 1 : Math.min(1, Math.max(0.01, options.damp ?? 0.18))
+  const speed = new Velocity()
   let value = -1
   let target = 0
   let raf = 0
@@ -112,8 +147,16 @@ export function progress(el: Element, options: ProgressOptions = {}): Progress {
     if (settled) last = 0
     else raf = requestAnimationFrame(step)
   }
+  const where = () =>
+    progressOf(
+      el.getBoundingClientRect(),
+      options.viewport?.clientHeight ?? innerHeight,
+      options.range,
+      options.early,
+    )
   const read = () => {
-    target = progressOf(el.getBoundingClientRect(), innerHeight, options.range)
+    target = where()
+    speed.add(performance.now(), 0, target)
     raf ||= requestAnimationFrame(step)
   }
 
@@ -122,7 +165,7 @@ export function progress(el: Element, options: ProgressOptions = {}): Progress {
   // The section's own box too: a stylesheet or font that lands late changes where it stands without a scroll.
   const box = typeof ResizeObserver === 'function' ? new ResizeObserver(read) : null
   box?.observe(el)
-  target = progressOf(el.getBoundingClientRect(), innerHeight, options.range)
+  target = where()
   value = target
   options.onChange?.(value, target)
 
@@ -133,11 +176,25 @@ export function progress(el: Element, options: ProgressOptions = {}): Progress {
     get target() {
       return target
     },
+    get velocity() {
+      return speed.get(performance.now()).y
+    },
     destroy() {
       removeEventListener('scroll', read, { capture: true })
       removeEventListener('resize', read)
       box?.disconnect()
       if (raf) cancelAnimationFrame(raf)
     },
+  }
+}
+
+/**
+ * Every track's value at a position, written to `el` as custom properties named `--<track>`, so a stylesheet
+ * maps them to styles: `progress(section, { onChange: vars(word, tracks) })`.
+ */
+export function vars<T extends Tracks>(el: ElementCSSInlineStyle, tracks: Timeline<T>) {
+  return (t: number) => {
+    const at = tracks.at(t)
+    for (const name in at) el.style.setProperty(`--${name}`, String(at[name]))
   }
 }
