@@ -11,7 +11,14 @@ test('picks toggle, the list stays open, the trigger names them, and a form gets
   const on = state<string[]>([])
   const { c, trigger, value } = await mount(() => (
     <form>
-      <MultiSelect label="Fruit" name="fruit" placeholder="Anything" options={fruit} value={on} show={1} />
+      <MultiSelect
+        label="Fruit"
+        name="fruit"
+        placeholder="Anything"
+        options={fruit}
+        value={on}
+        show={1}
+      />
     </form>
   ))
   trigger.click()
@@ -26,7 +33,12 @@ test('picks toggle, the list stays open, the trigger names them, and a form gets
   expect(on.value).toEqual(['a', 'c'])
   expect(trigger.getAttribute('aria-expanded')).toBe('true')
   expect(value.textContent).toBe('Apple +1')
-  expect(rows.map((r) => r.getAttribute('aria-selected'))).toEqual(['true', 'false', 'true', 'false'])
+  expect(rows.map((r) => r.getAttribute('aria-selected'))).toEqual([
+    'true',
+    'false',
+    'true',
+    'false',
+  ])
   expect(new FormData(c.querySelector('form')!).getAll('fruit')).toEqual(['a', 'c'])
   rows[0]!.click()
   await tick()

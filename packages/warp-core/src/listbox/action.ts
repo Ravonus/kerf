@@ -205,9 +205,7 @@ export class ListboxAction {
       false,
     )
   }
-  #on(value: string) {
-    return this.#o.multiple ? !!this.#o.values?.includes(value) : value === this.#o.value
-  }
+  #on = (v: string) => (this.#o.multiple ? !!this.#o.values?.includes(v) : v === this.#o.value)
   #mark() {
     for (const r of this.#all) r.el.setAttribute('aria-selected', String(this.#on(r.item.value)))
   }
@@ -316,11 +314,7 @@ export class ListboxAction {
   }
   #pick(i: number, reason: ChangeReason) {
     const r = this.#rows[i]
-    // a list of many stays open: each pick turns one row on or off
-    if (this.#o.multiple) {
-      if (r) this.#o.onPick(r.item.value, reason)
-      return
-    }
+    if (this.#o.multiple) return void (r && this.#o.onPick(r.item.value, reason)) // a list of many stays open
     this.#hide(true)
     if (r && r.item.value !== this.#o.value) this.#o.onPick(r.item.value, reason)
   }
