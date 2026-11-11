@@ -74,23 +74,49 @@ message with its text, calls and results. The scaffolded `turn` stream carries i
 
 ## Bridges
 
-| Bridge               | Import                     | Runs tools                         | Available when             |
-| -------------------- | -------------------------- | ---------------------------------- | -------------------------- |
-| `anthropic()`        | `@weft-js/agent/anthropic` | the loop runs them                 | `ANTHROPIC_API_KEY` is set |
-| `claudeCli()`        | `@weft-js/agent/cli`       | itself, over MCP with a turn token | `claude` is on PATH        |
-| `rustBridge({ fn })` | `@weft-js/agent/rust`      | the loop runs them                 | always                     |
-| `fakeBridge(script)` | `@weft-js/agent/test`      | either                             | always                     |
+| Bridge              | Import                     | Runs tools         | Available when             |
+| ------------------- | -------------------------- | ------------------ | -------------------------- |
+| `rustBridge()`      | `@weft-js/agent/rust`      | the loop runs them | the daemon polled in 90s   |
+| `anthropic()`       | `@weft-js/agent/anthropic` | the loop runs them | `ANTHROPIC_API_KEY` is set |
+| `claudeCli()`       | `@weft-js/agent/cli`       | itself, over MCP   | `claude` is on PATH        |
+| `fnBridge({ fn })`  | `@weft-js/agent/fn`        | the loop runs them | always                     |
+| `fakeBridge(lines)` | `@weft-js/agent/test`      | either             | always                     |
 
-The first available bridge answers a new conversation. Each conversation keeps its own.
+A new conversation takes `AGENT_BRIDGE` (a bridge id) when that one can answer, else the first in `bridges` that can.
+Each conversation keeps its own and can swap at any time with `update({ bridge })`; when its bridge goes away (the
+daemon stops, the key is removed) it answers with the next one that can. So switching the whole app from the bridge to
+the API is one variable: `AGENT_BRIDGE=claude`, or back with `AGENT_BRIDGE=rust`.
 
-`rustBridge` turns any server function that takes `bridgeInput` and returns `bridgeOutput` into a bridge. Give it
-`impl: remote('rust://planner')` and the Rust sidecar gets serde types for both:
+### The Rust bridge
+
+`rustBridge()` sends each step to the Technomancy AI Bridge daemon, which runs it through the `claude` and `codex` CLIs
+signed in on its own machine and meters and caps the spend per site and per person. The app holds the job queue; the
+daemon long-polls it from outside, so the app can be deployed anywhere and the daemon's machine never listens publicly.
+
+1. `technomancy-bridge token` makes a token. Set it as `AGENT_BRIDGE_TOKEN` on the app.
+2. Add the app to the daemon's `bridge.toml`:
+
+```toml
+[[server]]
+name = "shop"
+url = "https://shop.example"
+token = "<the same token>"
+queues = ["/_weft/x/agent/bridges/rust/jobs"]
+```
+
+The picker offers it while the daemon polls. `model` picks the daemon's route: `claude` (the default) is Claude first,
+`terra`, `sol` or `luna` is Codex first. Its usage rows carry the tokens the daemon reports.
+
+### Your own function
+
+`fnBridge` turns any server function that takes `bridgeInput` and returns `bridgeOutput` into a bridge: a rules engine,
+a local model, or a Rust sidecar with `impl: remote('rust://planner')`, which gets serde types for both:
 
 <!-- example: skip fragments of a server module -->
 
 ```ts
-import { bridgeInput, bridgeOutput } from '@weft-js/agent/rust'
-import { rustBridge } from '@weft-js/agent/rust'
+import { bridgeInput, bridgeOutput } from '@weft-js/agent/fn'
+import { fnBridge } from '@weft-js/agent/fn'
 
 export const planner = mutation({
   input: bridgeInput,
@@ -99,8 +125,8 @@ export const planner = mutation({
 })
 
 // src/agent.server.ts
-const house = rustBridge({ fn: planner, label: 'House rules' })
-defineAgent({ bridges: [anthropic(), house], … })
+const house = fnBridge({ fn: planner, label: 'House rules' })
+defineAgent({ bridges: [rustBridge(), anthropic(), house], … })
 ```
 
 ## Outside agents: MCP and tokens

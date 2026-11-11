@@ -9,6 +9,8 @@ export interface BridgeTurn {
   messages: Message[]
   tools: ToolInfo[]
   signal: AbortSignal
+  /** Who the turn is for (the conversation's owner): a bridge that meters spend per person names them. */
+  who: string
   /** Words as they arrive: the page shows them as they're written. */
   text(delta: string): void
   /**
@@ -40,6 +42,11 @@ export interface Bridge {
   /** False when it can't run here (no key, no CLI): the picker leaves it out. */
   available?(): boolean
   step(turn: BridgeTurn): Promise<BridgeStep>
+  /**
+   * Requests to `/_weft/x/agent/bridges/<id>/<path>`: for a bridge that something outside calls in to, such as the
+   * Rust bridge daemon long-polling for jobs. It checks its own credentials.
+   */
+  serve?: (request: Request, path: string) => Response | Promise<Response>
 }
 
 /** A message's parts as plain text: what a bridge without structured history (the CLI, a Rust planner) reads. */

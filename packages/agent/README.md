@@ -8,7 +8,7 @@
 
 <p align="center">
   <strong>An assistant that runs your Weft app: your server functions are its tools, and grants decide what it may do.</strong><br>
-  Conversations, usage, tokens for outside agents over MCP, and bridges to Claude, the Claude CLI or your own Rust planner.
+  Conversations, usage, tokens for outside agents over MCP, and bridges to the Rust bridge daemon, Claude, the Claude CLI or your own planner.
 </p>
 
 <p align="center">
@@ -53,8 +53,9 @@ That's a tool named `setPrice` needing `menu.write`, held for the owner's approv
 - **Usage.** Input and output tokens per step, by bridge and model, and calls per token.
 - **MCP.** `/_weft/x/agent/mcp` serves the same tools to Claude Code, Codex or a script, with a token that never
   grants more than its creator holds.
-- **Bridges.** `anthropic()` (the API with native tool use), `claudeCli()` (the local CLI, which calls tools over
-  MCP), `rustBridge({ fn })` (any server function, such as a Rust sidecar) and `fakeBridge()` for tests.
+- **Bridges.** `rustBridge()` (the Technomancy AI Bridge daemon and its signed-in CLIs), `anthropic()` (the API
+  with native tool use), `claudeCli()` (the local CLI, which calls tools over MCP), `fnBridge({ fn })` (any server
+  function) and `fakeBridge()` for tests. `AGENT_BRIDGE=<id>` picks the default; each conversation can swap.
 
 Read the guide with `weft docs agent`, or in [`docs/agent.md`](./docs/agent.md).
 
