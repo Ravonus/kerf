@@ -1,6 +1,8 @@
 // The scene stage on a page: sections in order, posters under one pinned canvas, the active scene and its
 // neighbours built, far scenes freed, the cut at 0.5 and the governor's pixel ratio. Positions come from mocked
 // section boxes; the scenes are stand-ins that log what the stage asks of them.
+import { renderToString } from '@weft-js/core/ssr'
+import { clock } from '@weft-js/core/surface'
 import { clock as time, flush, render } from '@weft-js/core/test'
 import { Scene, Stage, type StageGovernor, type StageSceneDef } from '@weft-js/warp/scenes'
 import { FULL } from '@weft-js/warp-core/scenes'
@@ -123,4 +125,32 @@ test('a governor sets the pixel ratio and the levers every scene gets', async ()
   await frames()
   expect(log).toContain('quality a 0.5')
   expect(document.querySelector('canvas')!.width).toBe(150)
+})
+
+test('the server sends the sections, their posters and a sized place for the canvas, but no canvas', async () => {
+  // @ts-expect-error: query imports (@weft-js/core/vite)
+  const { StagePage } = await import('./fixtures/StagePage.tsx?weft-ssr')
+  const html = renderToString(() => StagePage())
+  expect(html).toContain('data-stage-viewport')
+  expect(html).toContain('data-surface="stage"')
+  expect(html).not.toContain('<canvas')
+  expect(html.match(/data-scene-poster/g)).toHaveLength(2)
+  expect(html).toContain('url(&quot;/second.avif&quot;)')
+  expect(html).toMatch(/<h2[^>]*>Second<\/h2>/)
+})
+
+test('a lost context frees every scene, and a restored one builds them again', async () => {
+  const { container } = page()
+  await frames()
+  const canvas = container.querySelector('canvas')!
+  log.length = 0
+  canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true }))
+  expect(log.filter((l) => l.startsWith('dispose')).sort()).toEqual(['dispose a', 'dispose b'])
+  log.length = 0
+  canvas.dispatchEvent(new Event('webglcontextrestored'))
+  await frames()
+  expect(log.filter((l) => l.startsWith('build'))).toEqual(['build a 0', 'build b 1'])
+  // The shared clock may be parked by an earlier test's fake timers: a seek paints every surface now.
+  clock.seek(clock.seconds)
+  expect(log).toContain('render a')
 })
