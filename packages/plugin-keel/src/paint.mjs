@@ -60,12 +60,13 @@ export async function paintFile(file, cacheDir, log = () => {}) {
     .digest('hex')
     .slice(0, 16)
   const stem = basename(file).replace(/\.paint\.json$|\.json$/, '')
-  const out = join(cacheDir, `${stem}-${key}.png`)
+  // In a folder named by the key, so the file keeps the recipe's name and the media built from it is `<name>-<w>-…`.
+  const out = join(cacheDir, key, `${stem}.png`)
   if (existsSync(out)) return { file: out, painted: false }
   const started = performance.now()
   const surface = surfaces.paintPlan(plan)
   const bytes = png(new Uint8Array(surface.buffers[0]), surface.width, surface.height)
-  mkdirSync(cacheDir, { recursive: true })
+  mkdirSync(dirname(out), { recursive: true })
   // Written aside and renamed, so a build stopped half-way leaves no torn file under the key.
   writeFileSync(`${out}.part`, bytes)
   renameSync(`${out}.part`, out)

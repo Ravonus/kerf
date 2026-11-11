@@ -2,7 +2,7 @@
 // media record.
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { basename, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { inflateSync } from 'node:zlib'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
@@ -45,7 +45,7 @@ describe('paintFile', () => {
     const file = recipe(dir, { surface: 'paper', seed: 1, width: 24 })
     const first = await paintFile(file, cache)
     expect(first.painted).toBe(true)
-    expect(first.file).toMatch(/ground-[0-9a-f]{16}\.png$/)
+    expect(first.file).toMatch(/[0-9a-f]{16}\/ground\.png$/)
     const again = await paintFile(file, cache)
     expect(again).toEqual({ file: first.file, painted: false })
     recipe(dir, { surface: 'paper', seed: 2, width: 24 })
@@ -53,7 +53,9 @@ describe('paintFile', () => {
     expect(changed.painted).toBe(true)
     expect(changed.file).not.toBe(first.file)
     expect(readdirSync(cache).sort((a, b) => a.localeCompare(b))).toEqual(
-      [first.file, changed.file].map((f) => basename(f)).sort((a, b) => a.localeCompare(b)),
+      [first.file, changed.file]
+        .map((f) => basename(dirname(f)))
+        .sort((a, b) => a.localeCompare(b)),
     )
   })
 
@@ -99,9 +101,10 @@ describe('keelPaint', () => {
     expect(code).toMatch(/width:40,height:20/)
     const image = readdirSync(join(out, 'assets')).find((f) => f.endsWith('.png'))!
     expect(image).toMatch(/^ground-/)
-    const painted = readdirSync(join(dir, '.weft', 'cache', 'paint'))
-    const stamp = statSync(join(dir, '.weft', 'cache', 'paint', painted[0]!)).mtimeMs
+    const [key] = readdirSync(join(dir, '.weft', 'cache', 'paint'))
+    const painted = join(dir, '.weft', 'cache', 'paint', key!, 'ground.png')
+    const stamp = statSync(painted).mtimeMs
     await run()
-    expect(statSync(join(dir, '.weft', 'cache', 'paint', painted[0]!)).mtimeMs).toBe(stamp)
+    expect(statSync(painted).mtimeMs).toBe(stamp)
   })
 })
