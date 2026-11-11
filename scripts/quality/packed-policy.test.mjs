@@ -123,8 +123,7 @@ function assertBridgeVersion(app) {
     realpathSync(join(app, 'node_modules/packed-bridge/package.json')),
   )
   assert.equal(
-    JSON.parse(readFileSync(fromBridge.resolve('@kerf/packed-test/package.json'), 'utf8'))
-      .version,
+    JSON.parse(readFileSync(fromBridge.resolve('@kerf/packed-test/package.json'), 'utf8')).version,
     '1.0.0',
   )
 }

@@ -23,11 +23,7 @@ export const STOPS = ['quiet', 'balanced', 'vivid']
 export const DEFAULT_STOP = 'balanced'
 const SKIP = new Set(['node_modules', 'dist', '.kerf', '.git', 'target', 'coverage'])
 const CODE = /\.[cm]?[jt]sx?$/
-const ICON_SOURCES = new Set([
-  '@kerf/veneer-icons/all',
-  '@kerf/veneer-icons/icon',
-  '@kerf/veneer',
-])
+const ICON_SOURCES = new Set(['@kerf/veneer-icons/all', '@kerf/veneer-icons/icon', '@kerf/veneer'])
 
 /** The variant flags `<Icon>` takes. */
 export const VARIANTS = ['solid']

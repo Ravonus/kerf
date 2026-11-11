@@ -85,7 +85,13 @@ const KINDS = {
   length: (v) => px(v),
   space: (v) => (SPACE.includes(v) ? `var(--veneer-space-${v})` : px(v)),
   radius: (v) =>
-    v === 'pill' ? '9999px' : v === 'none' ? '0px' : RADIUS[v] ? `var(--veneer-radius-${v})` : px(v),
+    v === 'pill'
+      ? '9999px'
+      : v === 'none'
+        ? '0px'
+        : RADIUS[v]
+          ? `var(--veneer-radius-${v})`
+          : px(v),
   time: (v) => (Number.isFinite(v) ? `${v}ms` : v),
   shadow: (v) =>
     SHADOW[v] === 'none'
@@ -227,7 +233,10 @@ export function themeOptions(input, tokenNames, checkTheme) {
     const seed =
       theme.seed && checkTheme.seed(theme.seed, `${at}.seed`, { ...input.colors, ...theme.colors })
     const neutral = seed?.neutral
-      ? { '--veneer-ref-neutral-h': seed.neutral.hue, '--veneer-ref-neutral-c': seed.neutral.chroma }
+      ? {
+          '--veneer-ref-neutral-h': seed.neutral.hue,
+          '--veneer-ref-neutral-c': seed.neutral.chroma,
+        }
       : {}
     out.themes[name] = {
       seed,

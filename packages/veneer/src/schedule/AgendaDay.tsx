@@ -1,10 +1,4 @@
-import {
-  agendaItems,
-  clock,
-  longDuration,
-  type AgendaItem,
-  type CalEvent,
-} from '@kerf/veneer-core'
+import { agendaItems, clock, longDuration, type AgendaItem, type CalEvent } from '@kerf/veneer-core'
 import { derived } from '@kerf/core'
 import { RepeatGlyph, tint } from './bits'
 

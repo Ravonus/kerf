@@ -1,8 +1,5 @@
 import { PayFrame } from '@kerf/veneer'
-import type {
-  OrderStage,
-  Permission,
-} from '@kerf/veneer'
+import type { OrderStage, Permission } from '@kerf/veneer'
 import {
   API_KEYS,
   AUDIT,

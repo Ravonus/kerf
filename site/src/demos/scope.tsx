@@ -1,8 +1,4 @@
-import {
-  defineState,
-  derived,
-  state,
-} from '@kerf/core'
+import { defineState, derived, state } from '@kerf/core'
 import { Badge, Button, Card } from '@kerf/veneer'
 
 // Any component can import this shared state. It is

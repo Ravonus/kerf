@@ -3,7 +3,10 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, sep } from 'node:path'
 import { test } from 'node:test'
-import { checkPackedCrate, forceWasmCompiler } from '../../packages/create-kerf/scripts/packed-paths.mjs'
+import {
+  checkPackedCrate,
+  forceWasmCompiler,
+} from '../../packages/create-kerf/scripts/packed-paths.mjs'
 
 function fixture(run) {
   const root = mkdtempSync(join(tmpdir(), 'kerf-packed-paths-'))
@@ -38,10 +41,7 @@ function nativeFixture(app, parent) {
   mkdirSync(core, { recursive: true })
   mkdirSync(addon, { recursive: true })
   writeFileSync(join(core, 'package.json'), '{"name":"@kerf/core"}')
-  writeFileSync(
-    join(addon, 'package.json'),
-    '{"name":"@kerf/compiler-test","main":"addon.node"}',
-  )
+  writeFileSync(join(addon, 'package.json'), '{"name":"@kerf/compiler-test","main":"addon.node"}')
   const native = join(addon, 'addon.node')
   writeFileSync(native, 'test marker; not loaded')
   symlinkSync(core, join(app, 'node_modules/@kerf/core'), 'junction')

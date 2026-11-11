@@ -41,7 +41,9 @@ export function Box({
         <>
           <strong>{projectOf(children)!.name}</strong>
           <span
-            style={'color:var(--veneer-color-text-subtle)'}
+            style={
+              'color:var(--veneer-color-text-subtle)'
+            }
           >
             {projectOf(children)!.region}
           </span>

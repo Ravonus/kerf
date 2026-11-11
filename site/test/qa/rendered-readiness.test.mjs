@@ -4,9 +4,9 @@ import { createRequire } from 'node:module'
 import { test } from 'node:test'
 import { checkRenderedBlocks, settleBlock } from './rendered-readiness.mjs'
 
-const { chromium } = createRequire(new URL('../../../packages/veneer/package.json', import.meta.url))(
-  'playwright-core',
-)
+const { chromium } = createRequire(
+  new URL('../../../packages/veneer/package.json', import.meta.url),
+)('playwright-core')
 const css = [
   '../../../packages/veneer-core/styles/veneer.css',
   '../../src/styles/site.css',

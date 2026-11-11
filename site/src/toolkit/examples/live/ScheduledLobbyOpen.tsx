@@ -1,9 +1,5 @@
 import { state } from '@kerf/core'
-import {
-  ScheduledLobby,
-  Stack,
-  Text,
-} from '@kerf/veneer'
+import { ScheduledLobby, Stack, Text } from '@kerf/veneer'
 
 export function ScheduledLobbyOpen() {
   const to = Date.now() + 2 * 60_000

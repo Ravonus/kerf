@@ -1,8 +1,4 @@
-import {
-  defineState,
-  derived,
-  state,
-} from '@kerf/core'
+import { defineState, derived, state } from '@kerf/core'
 import { Button, Card, Row, Tag } from '@kerf/veneer'
 
 const CITIES = ['Lisbon', 'Oslo', 'Osaka', 'Lima']

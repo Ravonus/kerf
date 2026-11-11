@@ -381,7 +381,9 @@ describe('kerf fix', () => {
       'D037',
     ])
     const text = readFileSync(join(root, 'src/Page.tsx'), 'utf8')
-    expect(text).toContain(`padding: 'var(--veneer-space-group)', gap: 'var(--veneer-space-related)'`)
+    expect(text).toContain(
+      `padding: 'var(--veneer-space-group)', gap: 'var(--veneer-space-related)'`,
+    )
     expect(text).toContain('tabindex="0"')
     expect(text).toContain('<div onClick') // D033 changes the element: the agent's call
   })

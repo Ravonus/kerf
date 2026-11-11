@@ -1,10 +1,6 @@
 import { state } from '@kerf/core'
 
-import {
-  RecurrenceField,
-  Stack,
-  Tag,
-} from '@kerf/veneer'
+import { RecurrenceField, Stack, Tag } from '@kerf/veneer'
 
 import { TODAY as _Shared0 } from './shared-event'
 

@@ -8,7 +8,8 @@ import type * as Playwright from 'playwright-core'
 const pw = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 const css =
-  read('../../veneer-core/styles/veneer.css') + read('../../veneer-core/styles/layout/scroll-rail.css')
+  read('../../veneer-core/styles/veneer.css') +
+  read('../../veneer-core/styles/layout/scroll-rail.css')
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const page = `<!doctype html><html><head><style>${css}</style></head><body style="margin:0">

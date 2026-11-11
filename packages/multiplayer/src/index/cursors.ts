@@ -1,12 +1,4 @@
-import {
-  derived,
-  onCleanup,
-  onMount,
-  state,
-  untrack,
-  type Derived,
-  type State,
-} from '@kerf/core'
+import { derived, onCleanup, onMount, state, untrack, type Derived, type State } from '@kerf/core'
 import type { CursorAt, Peer, Presence } from '../index'
 import { isServer, silent } from './shared'
 

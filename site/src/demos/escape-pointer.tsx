@@ -36,7 +36,8 @@ export default function Tracker() {
         ref={(el: HTMLElement) => (pad = el)}
         style={
           'block-size:6rem;' +
-          'border:1px dashed var(--veneer-color-border);' +
+          'border:1px dashed ' +
+          'var(--veneer-color-border);' +
           'border-radius:var(--veneer-radius-control)'
         }
       >

@@ -1,10 +1,4 @@
-import {
-  formatSeconds,
-  traceKey,
-  traceRows,
-  traceSummary,
-  type TraceSpan,
-} from '@kerf/veneer-core'
+import { formatSeconds, traceKey, traceRows, traceSummary, type TraceSpan } from '@kerf/veneer-core'
 import { derived, state, untrack } from '@kerf/core'
 import '../styles'
 import '@kerf/veneer-core/styles/app/tokens.css'

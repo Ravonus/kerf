@@ -37,7 +37,9 @@ export const LOOKS = {
       ctx.beginPath()
       ctx.roundRect(p.x, p.y, p.w, p.h, p.r)
       ctx.clip()
-      ctx.fillStyle = s.color('--veneer-color-accent-soft')
+      ctx.fillStyle = s.color(
+        '--veneer-color-accent-soft',
+      )
       ctx.fillRect(p.x, p.y, p.w, p.h)
       for (const [i, tone] of [
         '--veneer-color-accent-solid',

@@ -1,10 +1,5 @@
 import { state } from '@kerf/core'
-import {
-  Button,
-  Card,
-  Row,
-  Textarea,
-} from '@kerf/veneer'
+import { Button, Card, Row, Textarea } from '@kerf/veneer'
 
 type Contact = { id: number; name: string }
 const CONTACTS: Contact[] = [

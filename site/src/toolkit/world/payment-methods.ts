@@ -1,7 +1,4 @@
-import type {
-  Invoice,
-  PaymentMethod,
-} from '@kerf/veneer'
+import type { Invoice, PaymentMethod } from '@kerf/veneer'
 import { BILLS } from './bills'
 
 export const OVERDUE_BILLS: Invoice[] = [

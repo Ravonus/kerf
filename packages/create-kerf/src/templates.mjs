@@ -114,7 +114,8 @@ const DATA = {
   native: 'Tables are SQL in `migrations/`; `npx kerf db generate <name>` starts a new one.',
 }
 const LOOK = {
-  veneer: "The look is `veneer({ seed, dials, radius, fonts, tokens })` in the kerf config; `kerf check` fails with D010 if a pair can't pass.",
+  veneer:
+    "The look is `veneer({ seed, dials, radius, fonts, tokens })` in the kerf config; `kerf check` fails with D010 if a pair can't pass.",
   headless: "The look is `src/app.css`, over veneer's `--veneer-*` tokens.",
   tailwind: 'The look is Tailwind utilities; `src/app.css` is the entry.',
   none: 'The look is `src/app.css`.',

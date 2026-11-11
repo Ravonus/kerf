@@ -1,8 +1,4 @@
-import {
-  createRoot,
-  onCleanup,
-  state,
-} from '@kerf/core'
+import { createRoot, onCleanup, state } from '@kerf/core'
 import { interval } from '@kerf/core/browser'
 import { Button, Card, Row } from '@kerf/veneer'
 

@@ -78,9 +78,8 @@ export function icons() {
         },
         async handler(code, id) {
           const path = id.replace(/\?.*$/, '').replaceAll('\\', '/')
-          const generated = /(?:^|\/)veneer-icons\/src\/gen\/(index|all(?:-[a-z0-9-]+)?)\.tsx$/.exec(
-            path,
-          )
+          const generated =
+            /(?:^|\/)veneer-icons\/src\/gen\/(index|all(?:-[a-z0-9-]+)?)\.tsx$/.exec(path)
           // a build reads the pack as a namespace (rewrite), and this default would keep every icon alive
           if (generated?.[1] === 'index')
             return state.config.command === 'build' ? "export * from './all'\n" : null

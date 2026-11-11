@@ -1,11 +1,6 @@
 import { state } from '@kerf/core'
 
-import {
-  Row,
-  Stack,
-  Text,
-  TimeField,
-} from '@kerf/veneer'
+import { Row, Stack, Text, TimeField } from '@kerf/veneer'
 
 import type { IsoTime } from '@kerf/veneer'
 

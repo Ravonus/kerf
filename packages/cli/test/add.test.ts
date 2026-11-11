@@ -48,9 +48,7 @@ describe('kerf add rust', () => {
     const dir = app()
     const r = await rust(dir, 'image-tools')
     expect(r).toMatchObject({ ok: true, service: 'image-tools', kind: 'native' })
-    expect(read(dir, 'src/server/rust.ts')).toContain(
-      "import { native } from '@kerf/start/rust'",
-    )
+    expect(read(dir, 'src/server/rust.ts')).toContain("import { native } from '@kerf/start/rust'")
     expect(read(dir, 'src/server/rust.ts')).toContain(
       "export const imageTools = native('image-tools')",
     )

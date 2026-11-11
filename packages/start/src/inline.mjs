@@ -29,7 +29,8 @@ const SELECTOR_WORD =
 const ENTITY = /&(?!(?:amp|quot|lt|gt);)/
 const ANY_VALUE = '=*'
 // Set on <html> by a script or `setDial`, so the server's HTML can't vouch for them.
-const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|veneer|scope)$/
+const ROOT_ATTR =
+  /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|veneer|scope)$/
 // `dialScript` restores these before the first paint, so the server's HTML doesn't show their values.
 const DIAL = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields)$/
 // Rules that can't paint until someone acts, so the late sheet is soon enough for them. A state the server can render

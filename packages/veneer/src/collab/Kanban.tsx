@@ -170,7 +170,9 @@ function Column({ col, ctx, hint }: { col: () => KanbanColumn; ctx: Ctx; hint: s
       }
     >
       <header data-part="column-head">
-        {col().color !== undefined && <i style={`--_dc:var(--veneer-color-data-${col().color})`}></i>}
+        {col().color !== undefined && (
+          <i style={`--_dc:var(--veneer-color-data-${col().color})`}></i>
+        )}
         <h3 id={`${hint}-${id}`} style="margin-inline-end:auto">
           {col().title}
         </h3>

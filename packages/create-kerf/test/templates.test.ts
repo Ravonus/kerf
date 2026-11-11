@@ -192,7 +192,8 @@ describe('the overlay', () => {
     )
     const calls: TS.CallExpression[] = []
     const visit = (node: TS.Node) => {
-      if (ts.isCallExpression(node) && node.expression.getText(source) === 'veneer') calls.push(node)
+      if (ts.isCallExpression(node) && node.expression.getText(source) === 'veneer')
+        calls.push(node)
       ts.forEachChild(node, visit)
     }
     visit(source)

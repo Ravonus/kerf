@@ -17,7 +17,10 @@ export function drawRipples(
   )
     rings.shift()
   ctx.clearRect(0, 0, width, height)
-  ctx.strokeStyle = token(ctx, '--veneer-color-info-solid')
+  ctx.strokeStyle = token(
+    ctx,
+    '--veneer-color-info-solid',
+  )
   ctx.lineWidth = 2
   for (const r of rings) {
     const t = (time - r.at) / 1.6

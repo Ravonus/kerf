@@ -47,7 +47,11 @@ test('bugfix reference preserves medium behavior and starter plants only two doc
           "(['Enter a name', 'Enter a valid email', 'Enter 16 digits'][i] ?? '')",
         )
         .replace("['name', 'email', 'card'][first]!", "['name', 'email', 'card'][first] ?? ''")
-    assert.equal(compact(read(`reference/kerf-veneer/src/routes/${file}`)), compact(reference), file)
+    assert.equal(
+      compact(read(`reference/kerf-veneer/src/routes/${file}`)),
+      compact(reference),
+      file,
+    )
     let starter = reference
     if (file === 'shop-state.ts')
       starter = starter

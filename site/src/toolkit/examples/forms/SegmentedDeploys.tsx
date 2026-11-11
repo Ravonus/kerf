@@ -1,10 +1,5 @@
 import { derived, state } from '@kerf/core'
-import {
-  Row,
-  Segmented,
-  Stack,
-  Text,
-} from '@kerf/veneer'
+import { Row, Segmented, Stack, Text } from '@kerf/veneer'
 import { DEPLOYS } from '../../world'
 import { DEPLOY_FILTERS } from './shared'
 

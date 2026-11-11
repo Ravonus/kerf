@@ -16,11 +16,7 @@ import { StartError } from '@kerf/start/data'
 import { driver } from './driver'
 
 const { DeleteCommand, GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } =
-  await driver(
-    '@kerf/db/dynamodb',
-    '@aws-sdk/lib-dynamodb',
-    () => import('@aws-sdk/lib-dynamodb'),
-  )
+  await driver('@kerf/db/dynamodb', '@aws-sdk/lib-dynamodb', () => import('@aws-sdk/lib-dynamodb'))
 
 type Item = Record<string, unknown>
 

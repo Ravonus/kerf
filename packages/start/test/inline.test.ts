@@ -186,7 +186,9 @@ test('a whole-inline page has nothing deferred, so a chunk adds only what the he
 
 test("the layer order names veneer's own layers, as veneer.css does, so no component sheet can rank first", () => {
   const spec = /@layer (veneer\.tokens,[^;]+);/
-    .exec(readFileSync(new URL('../../veneer-core/styles/veneer.css', import.meta.url), 'utf8'))![1]!
+    .exec(
+      readFileSync(new URL('../../veneer-core/styles/veneer.css', import.meta.url), 'utf8'),
+    )![1]!
     .replace(/\s/g, '')
   expect(LAYER_ORDER).toContain(`@layer ${spec};`)
 })

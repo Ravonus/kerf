@@ -1,9 +1,4 @@
-import {
-  openIndex,
-  searchIndex,
-  type SearchIndex,
-  type SearchWire,
-} from '@kerf/veneer-core/search'
+import { openIndex, searchIndex, type SearchIndex, type SearchWire } from '@kerf/veneer-core/search'
 
 // The body index, off the main thread. A query that lands before the index waits for it; only the newest waiter runs.
 let index: SearchIndex | undefined

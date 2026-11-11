@@ -14,9 +14,9 @@ export default function Page() {
       <header>
         <h1>Theme studio</h1>
         <p>
-          Every control writes a key of <code data-scope="code">veneer()</code>, and the preview runs
-          veneer's own theme compiler, so what you see is what your build ships. Copy the config into
-          kerf.config.ts when it looks right.
+          Every control writes a key of <code data-scope="code">veneer()</code>, and the preview
+          runs veneer's own theme compiler, so what you see is what your build ships. Copy the
+          config into kerf.config.ts when it looks right.
         </p>
       </header>
       <ThemeStudio />

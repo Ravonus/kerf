@@ -1,10 +1,6 @@
 import { state } from '@kerf/core'
 
-import {
-  InlineCalendar,
-  Stack,
-  Text,
-} from '@kerf/veneer'
+import { InlineCalendar, Stack, Text } from '@kerf/veneer'
 
 import type { DateRange } from '@kerf/veneer'
 

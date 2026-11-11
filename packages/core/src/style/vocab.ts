@@ -68,11 +68,15 @@ export const VOCAB = {
     hairline: { border: 'var(--veneer-border-hairline) solid var(--veneer-color-border)' },
     strong: { border: 'var(--veneer-border-hairline) solid var(--veneer-color-border-strong)' },
     control: { border: 'var(--veneer-border-hairline) solid var(--veneer-color-border-control)' },
-    tone: { border: 'var(--veneer-border-hairline) solid var(--_border, var(--veneer-color-border))' },
+    tone: {
+      border: 'var(--veneer-border-hairline) solid var(--_border, var(--veneer-color-border))',
+    },
   },
   /** Row separators, for lists of rows. */
   divide: {
-    hairline: { 'border-block-end': 'var(--veneer-border-hairline) solid var(--veneer-color-border)' },
+    hairline: {
+      'border-block-end': 'var(--veneer-border-hairline) solid var(--veneer-color-border)',
+    },
   },
   elevation: {
     flat: { 'box-shadow': 'var(--veneer-elevation-0)' },

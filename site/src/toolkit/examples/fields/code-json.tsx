@@ -1,8 +1,4 @@
-import {
-  CodeInput,
-  Grid,
-  JsonEditor,
-} from '@kerf/veneer'
+import { CodeInput, Grid, JsonEditor } from '@kerf/veneer'
 import { Cell } from '../../world'
 import { SCRIPT } from './payment-card-code'
 

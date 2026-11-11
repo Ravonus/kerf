@@ -272,9 +272,7 @@ export async function check(root, options = {}) {
   // Style groups (research 23): the project's definitions first, so each file compiles with the groups it imports.
   const style = await styleModule(kerf)
   const sfiles = style ? styleFiles(root, config) : []
-  const scan = sfiles.some((f) =>
-    readFileSync(join(root, f), 'utf8').includes('@kerf/core/style'),
-  )
+  const scan = sfiles.some((f) => readFileSync(join(root, f), 'utf8').includes('@kerf/core/style'))
     ? style.scanProject(root, sfiles, (...a) => compiler.transform(...a))
     : null
 

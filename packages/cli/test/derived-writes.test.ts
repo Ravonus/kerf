@@ -104,8 +104,7 @@ describe('W007 aliases and repairs', () => {
       export type Derived<T> = { readonly [K in keyof State<T>]: State<T>[K] };
       export function derived<T>(read: () => T): Derived<T>;
     }`
-    const source =
-      "import { derived } from '@kerf/core'; const d = derived(() => 0); d.value = 1"
+    const source = "import { derived } from '@kerf/core'; const d = derived(() => 0); d.value = 1"
     expect(findings(source, { '/app/core.d.ts': mapped })).toMatchObject([{ code: 'W007' }])
   })
 

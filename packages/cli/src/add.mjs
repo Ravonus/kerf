@@ -306,8 +306,7 @@ export async function addCommand(
   if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   if (feature === 'auth') return addAuth(root, { dryRun, install })
-  const pkg =
-    ALIASES[feature] ?? (ADDONS.has(`@kerf/${feature}`) ? `@kerf/${feature}` : feature)
+  const pkg = ALIASES[feature] ?? (ADDONS.has(`@kerf/${feature}`) ? `@kerf/${feature}` : feature)
   const file = findConfig(root) ?? join(root, 'kerf.config.ts')
   const config = relative(root, file)
   const text = existsSync(file)

@@ -149,7 +149,8 @@ veneer({
   seed: { accent: '#c8102e' },
   tokens: {
     '--veneer-color-accent-solid': 'light-dark(#c8102e, #e5484d)',
-    '--veneer-color-accent-solid-hover': 'light-dark(#a50d26, #f2666a)',
+    '--veneer-color-accent-solid-hover':
+      'light-dark(#a50d26, #f2666a)',
   },
 })
 ```

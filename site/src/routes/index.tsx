@@ -168,9 +168,9 @@ function fullStack() {
     <section>
       <h2 data-flow="heading">One project, front to back</h2>
       <p data-part="intro">
-        A real shop keeps its products in a database. With <code>@kerf/start</code>, a server
-        query lives beside your components, and each file in <code>src/routes</code> is a page.
-        Database and sign-in are built in, so the whole app is one codebase.
+        A real shop keeps its products in a database. With <code>@kerf/start</code>, a server query
+        lives beside your components, and each file in <code>src/routes</code> is a page. Database
+        and sign-in are built in, so the whole app is one codebase.
       </p>
       <div
         data-part="server"

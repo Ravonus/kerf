@@ -1,9 +1,4 @@
-import {
-  Row,
-  Sparkline,
-  Stack,
-  Text,
-} from '@kerf/veneer'
+import { Row, Sparkline, Stack, Text } from '@kerf/veneer'
 
 import {
   ERRORS,

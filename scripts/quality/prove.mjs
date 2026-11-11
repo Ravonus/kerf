@@ -117,10 +117,7 @@ const PLANTS = [
     area: 'veneer-core imports no framework',
     step: 'lint',
     expect: 'no-restricted-imports',
-    ...ts(
-      'veneer-core/src/planted.ts',
-      "import { signal } from '@kerf/core'\nexport { signal }\n",
-    ),
+    ...ts('veneer-core/src/planted.ts', "import { signal } from '@kerf/core'\nexport { signal }\n"),
   },
   {
     area: 'veneer-core imports no framework (graph)',

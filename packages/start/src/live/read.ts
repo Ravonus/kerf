@@ -1,13 +1,4 @@
-import {
-  DEV,
-  createRoot,
-  derived,
-  effect,
-  getOwner,
-  onCleanup,
-  state,
-  untrack,
-} from '@kerf/core'
+import { DEV, createRoot, derived, effect, getOwner, onCleanup, state, untrack } from '@kerf/core'
 import type { Fn } from '../data'
 import { currentScope, rt, skip, StartError } from './api'
 import type { Sub, View } from './sub-types'

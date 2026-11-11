@@ -1,9 +1,5 @@
 import { state } from '@kerf/core'
-import {
-  Stack,
-  Segmented,
-  CodeBlock,
-} from '@kerf/veneer'
+import { Stack, Segmented, CodeBlock } from '@kerf/veneer'
 import { WAYS, STACKS } from './code-data'
 
 export function CodeBlockChooser() {

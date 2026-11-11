@@ -253,7 +253,10 @@ test('the frame outline also draws all the way round after a brief hover', async
   const read = () =>
     page.locator(outline).evaluate((n) => {
       const g = getComputedStyle(n)
-      return [+g.getPropertyValue('--veneer-frame-head'), +g.getPropertyValue('--veneer-frame-tail')]
+      return [
+        +g.getPropertyValue('--veneer-frame-head'),
+        +g.getPropertyValue('--veneer-frame-tail'),
+      ]
     })
   await page.hover('#frame')
   await step(page, outline, 50)

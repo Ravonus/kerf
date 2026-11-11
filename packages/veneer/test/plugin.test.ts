@@ -161,7 +161,9 @@ test('icons pins the icon drawing over every expression stop', () => {
 test('a token that breaks contrast fails D010 like a bad seed', () => {
   expect(code(() => run({ tokens: { '--veneer-color-page': '#fafafa' } }))).toBe('D010') // dark text-on-page goes
   expect(
-    code(() => run({ tokens: { '--veneer-color-text': '#ffffff', '--veneer-color-page': '#ffffff' } })),
+    code(() =>
+      run({ tokens: { '--veneer-color-text': '#ffffff', '--veneer-color-page': '#ffffff' } }),
+    ),
   ).toBe('D010')
   expect(code(() => run({ tokens: { '--veneer-color-accent-solid': '#ffffff' } }))).toBe('D010')
 })
