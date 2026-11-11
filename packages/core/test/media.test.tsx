@@ -462,6 +462,15 @@ function registerMediaAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
       body: [PNG.length],
     })
   })
+
+  test('`?media&photo` hands the provider the photo hint; plain `?media` none', async () => {
+    bind('media.build', { export: 'createMediaBuild', options: {} })
+    const { load } = plugin('build')
+    const hinted = record(await load(join(fixture.root, 'hero.png') + '?media&photo'))
+    expect(hinted.hinted).toEqual({ photo: true })
+    const plain = record(await load(join(fixture.root, 'hero.png') + '?media'))
+    expect(plain.hinted).toBeUndefined()
+  })
 }
 
 function registerFontAssetTests(fixture: ReturnType<typeof setupAssetTests>) {

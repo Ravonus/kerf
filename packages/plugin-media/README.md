@@ -195,6 +195,7 @@ For each `?media` import the build provider:
    rung. A 1000 px image with the default ladder gets 320, 640, 960 and 1000.
 3. Picks formats: the configured efficient formats, then the fallback. JPEG, AVIF, HEIF, TIFF and opaque WebP sources
    count as photos (JPEG fallback); everything else, and WebP with alpha, is a graphic (PNG fallback).
+   `?media&photo` encodes an opaque lossless source of photographic pixels (a painted or rendered PNG) as a photo.
 4. Searches quality once per format at the largest rung, between AVIF 20–90 or WebP/JPEG 40–95.
 5. Encodes every format at every width and names each file `<stem>-<width>-<hash>.<ext>`.
 6. Adds the placeholder and dominant colour.

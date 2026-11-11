@@ -151,6 +151,20 @@ it('a PNG with alpha is a graphic: AVIF plus a lossless PNG fallback', async () 
   expect(asset.sources.map((s: { type: string }) => s.type)).toEqual(['image/avif', 'image/png'])
 })
 
+it('`photo` encodes a lossless source as a photo: AVIF plus a JPEG fallback', async () => {
+  const bytes = new Uint8Array(
+    await sharp(await photo(300, 200))
+      .png()
+      .toBuffer(),
+  )
+  const build = createMediaBuild({ widths: [200], quality: { scorer: 'none' } })
+  const { asset } = await build.build({ file: '/x/ground.png', bytes, photo: true }, { cacheDir })
+  expect(asset).toMatchObject({ kind: 'photo', type: 'image/jpeg' })
+  expect(asset.sources.map((s: { type: string }) => s.type)).toEqual(['image/avif', 'image/jpeg'])
+  const plain = await build.build({ file: '/x/ground.png', bytes }, { cacheDir })
+  expect(plain.asset).toMatchObject({ kind: 'graphic', type: 'image/png' })
+})
+
 it('the cache keeps names apart: the same bytes under a new name come out under the new name', async () => {
   const bytes = await photo(240, 160)
   const build = createMediaBuild({ widths: [200], quality: { scorer: 'none' } })
