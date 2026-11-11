@@ -31,9 +31,17 @@ impl Emitter<'_> {
 
     pub(super) fn bind(&mut self, el: &str, dynamic: &[(&'static str, String, String)]) -> String {
         let bind = self.helper("bind");
+        // Hydratable: what each value writes, so the first run can check the claimed element instead of trusting it
+        // (`p:` a property, `a:` an attribute, empty for class and style, which the server's stand for).
+        let spec = |kind: &str, name: &str| match kind {
+            "class" | "style" => String::new(),
+            "prop" => format!("p:{name}"),
+            _ => format!("a:{name}"),
+        };
         if let [(kind, name, e)] = dynamic {
             let a = self.write(el, kind, name, "v", "p");
-            return format!("{bind}(() => ({e}), (v, p) => {{ v !== p && {a}; }});");
+            let check = if self.hydratable { format!(", {el}, {}", js_string(&spec(kind, name))) } else { String::new() };
+            return format!("{bind}(() => ({e}), (v, p) => {{ v !== p && {a}; }}{check});");
         }
         let values: Vec<&str> = dynamic.iter().map(|(_, _, e)| e.as_str()).collect();
         let mut body = String::new();
@@ -41,8 +49,14 @@ impl Emitter<'_> {
             let a = self.write(el, kind, name, &format!("v[{i}]"), &format!("p[{i}]"));
             let _ = write!(body, " v[{i}] !== p[{i}] && {a};");
         }
+        let check = if self.hydratable {
+            let specs: Vec<String> = dynamic.iter().map(|(k, n, _)| js_string(&spec(k, n))).collect();
+            format!(", {el}, [{}]", specs.join(", "))
+        } else {
+            String::new()
+        };
         format!(
-            "{bind}(() => [{}], (v, p = []) => {{{body} }});",
+            "{bind}(() => [{}], (v, p = []) => {{{body} }}{check});",
             values.join(", ")
         )
     }

@@ -1,5 +1,7 @@
 export {
   Beside,
+  Check,
+  CheckDirect,
   Holes,
   InBoundary,
   Keyed,

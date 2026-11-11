@@ -1,10 +1,12 @@
 // The helpers weft's own back end emits (research 19 §3): one job each, named for it. Hydratable output uses the
 // claiming versions of `tpl` and `child` from claim.ts (`htpl`, `hchild`), so client-only apps don't ship them.
-// Bindings here skip their first write while hydrating (the server wrote it). A template that missed was built fresh and
-// comes before its own bindings, so they write (`keys.miss`, which each claim and the end of each hole put back).
+// Bindings here write, on their first run while hydrating, only what the claimed element doesn't already show: the
+// server wrote the rest. A template that missed was built fresh and comes before its own bindings, so they write
+// (`keys.miss`, which each claim and the end of each hole put back).
 
 import { DEV, effect } from './index'
 import {
+  WORDS,
   addEvent,
   attrName,
   className,
@@ -36,14 +38,50 @@ export const child: (parent: Element, value: unknown, marker?: Node | null) => v
 
 // ---- bindings, events, components -----------------------------------------------------------------------------
 
-/** One element's dynamic attributes: `compute` reads them (a value, or an array of them), `apply` writes changes. */
-export function bind<T>(compute: () => T, apply: (value: T, prev: T | undefined) => void) {
+/**
+ * One element's dynamic attributes: `compute` reads them (a value, or an array of them), `apply` writes changes.
+ * Hydratable output also passes the element and what each value writes (`writes`: `p:name` a property, `a:name` an
+ * attribute, empty for class and style): the first run while hydrating writes only what the claimed element doesn't
+ * already show (`shows`). Without them it trusts the server and skips the first write.
+ */
+export function bind<T>(
+  compute: () => T,
+  apply: (value: T, prev: T | undefined) => void,
+  el?: Element,
+  writes?: string | string[],
+) {
   if (!keys.hydrating || keys.miss) return effect(compute, apply)
-  let skip = true // the server wrote these
+  let first = true
   effect(compute, (v, p) => {
-    if (skip) skip = false
-    else apply(v, p)
+    if (!first) return apply(v, p)
+    first = false
+    if (!el || writes === undefined) return
+    if (typeof writes === 'string') return showsAs(el, writes, v) || apply(v, STALE as T)
+    // a shown value passes as its own previous one, so `apply` leaves it; anything else is written
+    apply(v, (v as unknown[]).map((x, i) => (showsAs(el, writes[i]!, x) ? x : STALE)) as T)
   })
+}
+
+/** A previous value nothing equals: `apply` writes over it. */
+const STALE = Symbol()
+
+function showsAs(el: Element, spec: string, value: unknown) {
+  if (!spec) return true
+  const name = spec.slice(2)
+  return spec[0] === 'p' ? hasProperty(el, name, value) : hasAttribute(el, name, value)
+}
+
+const hasProperty = (el: Element, name: string, value: unknown) =>
+  (el as Element & Record<string, unknown>)[name] === (name === 'value' || name === 'defaultValue' ? (value ?? '') : value)
+
+/** The attribute reads as `setAttribute` would write `value`. Objects and functions aren't compared: the server's stand. */
+function hasAttribute(el: Element, name: string, value: unknown) {
+  if ((typeof value === 'object' && value !== null) || typeof value === 'function' || typeof value === 'symbol') return true
+  if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
+  const has = el.getAttribute(name)
+  if (value == null || value === false) return has === null
+  // oxlint-disable-next-line typescript/no-base-to-string -- a primitive by now: objects and functions returned above
+  return has === (value === true ? '' : String(value))
 }
 
 const NS: Record<string, string> = {
@@ -139,10 +177,22 @@ const ON = /^on[A-Z]/
 const CAPTURE = /(?<!Pointer)Capture$/
 
 /**
+ * Hydrating: whether the claimed element already shows `value` for `key`. The server's element is usually right, but a
+ * level claimed again after a mutation, or a box the server couldn't read (localStorage, a click before the claim),
+ * can hold something else, and a skipped write would leave the element showing the server's value. Class, style and
+ * markup are compared by nothing cheaper than writing them, so the server's stand.
+ */
+function shows(el: Element, key: string, value: unknown) {
+  if (key === 'class' || key === 'className' || key === 'style' || key === 'dangerouslySetInnerHTML') return true
+  if (key === 'autoFocus' || key === 'defaultValue' || key === 'defaultChecked') return true
+  return PROPERTIES.has(key) ? hasProperty(el, key, value) : hasAttribute(el, attrName(key), value)
+}
+
+/**
  * `<div {...rest} a={x}>`: `props` reads the element's attributes as one plain object (`{ a: x, ...rest }`, later
  * wins). One binding runs it and writes what changed; `onX` handlers are listeners (swapped when the value changes),
  * `ref` runs once. `children` isn't applied here: the compiler gives it its own hole. Hydrating, the first run
- * attaches handlers and refs only.
+ * attaches handlers and refs, and writes only what the claimed element doesn't already show (`shows`).
  */
 export function spread(el: Element, props: () => Record<string, unknown>) {
   const listeners: Record<string, EventListener> = {}
@@ -154,7 +204,7 @@ export function spread(el: Element, props: () => Record<string, unknown>) {
     delete v.key
     for (const k in p) if (!(k in v)) write(k, undefined, p[k])
     for (const k in v)
-      if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k))) write(k, v[k], p[k])
+      if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k) || !shows(el, k, v[k]))) write(k, v[k], p[k])
     hydrating = false
   })
 

@@ -284,3 +284,34 @@ test('a key that only differs in what the parser rewrites is still its own row',
   expect(hydration.misses).toBe(0)
   expect([...c.querySelectorAll('a')]).toEqual(nodes)
 })
+
+// A level re-claimed after a mutation, or a store the server can't see (localStorage), can hold a value the server
+// didn't render: a spread's first run writes what differs from the claimed element instead of trusting it.
+test('a claimed spread writes a property the client holds differently', () => {
+  const c = put(renderToString(() => <Server.Check on={{ value: false }} title="a" />))
+  const input = c.querySelector('input')!
+  expect(input.checked).toBe(false)
+  hydrate(() => <Client.Check on={{ value: true }} title="a" />, c)
+  expect(hydration.misses).toBe(0)
+  expect(c.querySelector('input')).toBe(input)
+  expect(input.checked).toBe(true)
+})
+
+test('a claimed spread writes an attribute the client holds differently, and leaves a matching one alone', () => {
+  const c = put(renderToString(() => <Server.Check on={{ value: true }} title="a" />))
+  const input = c.querySelector('input')!
+  const set = vi.spyOn(input, 'setAttribute')
+  hydrate(() => <Client.Check on={{ value: true }} title="b" />, c)
+  expect(input.getAttribute('data-title')).toBe('b')
+  expect(input.checked).toBe(true)
+  expect(set.mock.calls.map((x) => x[0])).toEqual(['data-title'])
+})
+
+test('a claimed binding writes what the client holds differently', () => {
+  const c = put(renderToString(() => <Server.CheckDirect on={{ value: false }} title="a" />))
+  const input = c.querySelector('input')!
+  hydrate(() => <Client.CheckDirect on={{ value: true }} title="b" />, c)
+  expect(c.querySelector('input')).toBe(input)
+  expect(input.checked).toBe(true)
+  expect(input.getAttribute('data-title')).toBe('b')
+})
