@@ -127,3 +127,35 @@ export interface ActiveScene extends Handover {
   /** The active scene's position, in viewports. */
   readonly position: number
 }
+
+/** `<Stage>`'s props. */
+export interface StageProps {
+  /** What the scenes show, for assistive tech. */
+  label: string
+  /** The surface kind the scenes draw on. Default `keel-lit`. */
+  kind?: string
+  /** Device tier, render scale, pixel ratio and fps cap. Without one: full levers, 60 fps, ratio up to 2. */
+  governor?: StageGovernor
+  /** The hand-over blend, made once the surface is up. Without one the stage cuts at the switch. */
+  blend?: (surface: SurfaceBase) => StageBlend | Promise<StageBlend>
+  /** Called when the active scene, its position or the hand-over moves. */
+  onActive?: (active: ActiveScene) => void
+  class?: string
+  children?: unknown
+}
+
+/** `<Scene>`'s props. */
+export interface SceneProps extends SceneLook {
+  use: StageSceneDef
+  /** A colour or an image URL, shown until the scene draws, and where it can't. */
+  poster?: string
+  /** How many viewports the blend into this scene lasts. Default 1. */
+  hero?: number
+  /** How many viewports before the section enters its position starts. Default 0.2. */
+  early?: number
+  seed?: number
+  id?: string
+  class?: string
+  label?: string
+  children?: unknown
+}
