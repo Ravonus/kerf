@@ -26,7 +26,8 @@ export function makeNavigation({
 }) {
   /** The route as JSON for client navigation, with deferred fields awaited. */
   return async function data(path: string, request: Request, scope: Scope): Promise<Response> {
-    const r = await resolve(path, request)
+    // Loads see the page's own URL, as on a full load, not `/_weft/data/<path>`: method, headers and signal carry over.
+    const r = await resolve(path, new Request(new URL(path, request.url), request))
     if (r.redirect) {
       const headers = new Headers(r.redirectHeaders)
       headers.delete('location')
