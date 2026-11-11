@@ -195,7 +195,7 @@ function page({ root, info, core, missing, tcodes, startApp, styled, dcodes, lis
       ? `Test checks (\`weft check\` on test files): ${ranges(tcodes)}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. To allow one: \`// weft-allow T00x: <reason>\`.`
       : '',
     '',
-    "Before a change is done, see it work (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). `weft build` audits its pages at phone and desktop width (L-codes) and fails on an error. More: `weft docs verify`.",
+    'Before a change is done, see it work (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). `weft build` audits its pages at phone and desktop width (L-codes) and fails on an error. More: `weft docs verify`.',
     '',
     'Before publishing, set `build.audit.indexing` (`public` or `private`) and audit the deployed URL: `weft audit --url <url> --indexing public`. Never drop a private noindex for a score.',
     '',
@@ -212,7 +212,10 @@ function page({ root, info, core, missing, tcodes, startApp, styled, dcodes, lis
     '',
     commandsPage(
       // the Styling section teaches `weft fix`
-      { ...list, tasks: list.tasks.filter((t) => !elsewhere.has(t.name) && !(styled && t.name === 'fix')) },
+      {
+        ...list,
+        tasks: list.tasks.filter((t) => !elsewhere.has(t.name) && !(styled && t.name === 'fix')),
+      },
       { planned: false },
     ),
     '',

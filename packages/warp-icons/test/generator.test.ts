@@ -70,7 +70,10 @@ test('the generator check rejects every missing and stale icon module', async ()
     ]) {
       for (const f of missing!) rmSync(join(dir, 'src/gen', f))
       for (const f of stale!)
-        writeFileSync(join(dir, 'src/gen', f), Buffer.concat([originals.get(f)!, Buffer.from('\n')]))
+        writeFileSync(
+          join(dir, 'src/gen', f),
+          Buffer.concat([originals.get(f)!, Buffer.from('\n')]),
+        )
       const result = check(dir)
       expect(result.status).toBe(1)
       expect(named(result.stderr)).toEqual([...files].sort())
