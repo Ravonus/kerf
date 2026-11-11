@@ -131,6 +131,36 @@ function renderedOf(html: string) {
   return r
 }
 
+/** A static level's HTML minus what its islands render: they refresh their own data, so a change there isn't the level's. */
+export function outsideIslands(h: string) {
+  let out = '',
+    at = 0
+  for (;;) {
+    const i = h.indexOf('<!--wi:', at)
+    if (i < 0) return out + h.slice(at)
+    const open = h.indexOf('-->', i) + 3
+    out += h.slice(at, open)
+    at = open
+    if (!h.startsWith('<!--[-->', open)) continue
+    let nest = 0,
+      j = open
+    for (;;) {
+      const a = h.indexOf('<!--[-->', j),
+        b = h.indexOf('<!--]-->', j)
+      if (b < 0) return out + h.slice(at)
+      if (a >= 0 && a < b) {
+        nest++
+        j = a + 8
+      } else {
+        nest--
+        j = b + 8
+        if (!nest) break
+      }
+    }
+    at = j
+  }
+}
+
 export function withLevels(
   payload: RoutePayload,
   html: string,
@@ -158,7 +188,7 @@ export function withLevels(
     return {
       ...rest,
       s: 1 as const,
-      x: (known.x[d] ??= hash(h.replaceAll(' aria-current="page"', ''))),
+      x: (known.x[d] ??= hash(outsideIslands(h).replaceAll(' aria-current="page"', ''))),
       ...(sendHtml && { h }),
     }
   })
