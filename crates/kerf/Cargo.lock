@@ -497,6 +497,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "kerf"
+version = "0.0.1"
+dependencies = [
+ "axum",
+ "base64",
+ "chrono",
+ "hmac",
+ "napi",
+ "napi-build",
+ "napi-derive",
+ "opentelemetry",
+ "prettyplease",
+ "regress 0.11.1",
+ "schemars",
+ "serde",
+ "serde_json",
+ "sha2",
+ "syn 3.0.9",
+ "tokio",
+ "tower",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+ "typify",
+ "uuid",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1242,34 +1270,6 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "kerf"
-version = "0.0.1"
-dependencies = [
- "axum",
- "base64",
- "chrono",
- "hmac",
- "napi",
- "napi-build",
- "napi-derive",
- "opentelemetry",
- "prettyplease",
- "regress 0.11.1",
- "schemars",
- "serde",
- "serde_json",
- "sha2",
- "syn 3.0.9",
- "tokio",
- "tower",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
- "typify",
- "uuid",
 ]
 
 [[package]]
