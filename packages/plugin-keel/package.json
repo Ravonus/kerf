@@ -36,6 +36,7 @@
       "types": "./src/paint.d.mts",
       "default": "./src/paint.mjs"
     },
+    "./paint-live": "./src/paint-live.ts",
     "./lit": {
       "types": "./vendor/lit.d.mts",
       "default": "./vendor/lit.mjs"
