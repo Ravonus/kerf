@@ -50,6 +50,7 @@
     "vendor": "node scripts/vendor.mjs"
   },
   "devDependencies": {
+    "@weft-js/capture": "workspace:*",
     "@weft-js/core": "workspace:*",
     "@weft-js/scroll": "workspace:*",
     "@weft-js/warp": "workspace:*",

@@ -1,4 +1,8 @@
 // The grove demo in real Chrome on the GPU: pixels, not recordings.   node test/e2e.mjs   (build ../core's compiler first)
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { bake, capture, open as openAt, sheet } from '@weft-js/capture'
 import { chromium } from 'playwright-core'
 import { serveDemo } from './serve.mjs'
 
@@ -327,6 +331,73 @@ const settle = (page, k, p) =>
   ok('every repaint of a hand-over was blended', blended.frames === 120, `${blended.frames}`)
   ok('no errors or warnings', page.problems.length === 0, page.problems.join(' | '))
   await page.context().close()
+}
+
+{
+  console.log('baked posters, and stills at three stops')
+  const dir = mkdtempSync(join(tmpdir(), 'weft-posters-'))
+  const baked = await bake({ url: `${served.base}/stage.html`, out: dir, browser })
+  const ids = Object.keys(baked.posters)
+  const all = ids.flatMap((id) =>
+    Object.entries(baked.posters[id]).map(([t, s]) => ({ id, t, ...s })),
+  )
+  for (const s of all)
+    console.log(`       ${s.id} ${s.t}: ${s.width}x${s.height} ${s.bytes} B, ${s.ms} ms`)
+  console.log(`       ${baked.format} q${baked.quality}, ${baked.ms} ms in all`)
+  ok(
+    'each scene bakes a wide and a tall poster',
+    ids.join() === 'orrery,rings,blocks' && all.length === 6,
+  )
+  ok(
+    'at the tiers sizes',
+    all.every((s) => (s.t === 'desktop' ? s.width === 1440 && s.height === 900 : s.width === 780)),
+  )
+  ok('each still is its own', new Set(all.map((s) => s.bytes)).size === 6)
+  const again = await serveDemo(0, dir)
+  const url = `${again.base}/stage.html`
+  const stops = [
+    { section: 0, at: 0 },
+    { section: 1, at: 0.5 },
+    { section: 2, at: 1 },
+  ]
+  const shots = await capture({ url, browser, stops, width: 1280, height: 720 })
+  const hashes = shots.stills.map((s) => s.hash)
+  ok(
+    'three stops draw three frames',
+    new Set(hashes).size === 3,
+    shots.stills.map((s) => s.y).join(),
+  )
+  const twice = await capture({ url, browser, stops: [stops[1]], width: 1280, height: 720 })
+  ok('the same stop draws the same frame', twice.stills[0].hash === hashes[1])
+  ok('no page errors', shots.problems.length === 0, shots.problems.join(' | '))
+  const tiles = shots.stills.map((s) => s.png)
+  const png = await sheet(browser, tiles, { labels: ['0@0', '1@0.5', '2@1'], width: 320, cols: 3 })
+  ok('a sheet of the three', png.readUInt32BE(16) === 3 * 320 + 4 * 4, `${png.length} B`)
+
+  const desk = await openAt(browser, { url, width: 1280, height: 720 })
+  const srcs = await desk.$$eval('[data-scene-poster] img', (imgs) => imgs.map((i) => i.src))
+  ok(
+    'the page carries the baked posters',
+    srcs.length === 3 && srcs.every((s) => s.endsWith('.avif')),
+  )
+  await desk.context().close()
+  const phone = await openAt(browser, { url, width: 390, height: 844, dpr: 2, mobile: true })
+  await phone.waitForFunction(() => document.querySelector('[data-stage-ready="poster"]'))
+  const shown = await phone.evaluate(async () => {
+    const img = document.querySelector('[data-scene-poster] img')
+    await img.decode()
+    const loaded = performance.getEntriesByType('resource').map((r) => r.name)
+    return {
+      canvases: document.querySelectorAll('canvas').length,
+      lit: loaded.filter((n) => /surface\.renderer|runtime-|tracks-|device-profile/.test(n)),
+      src: img.currentSrc,
+    }
+  })
+  ok('a phone shows the tall poster', /mobile/.test(shown.src), shown.src)
+  ok('and loads no renderer', shown.canvases === 0 && shown.lit.length === 0, shown.lit.join())
+  await phone.context().close()
+  again.close()
+  rmSync(dir, { recursive: true, force: true })
 }
 
 await browser.close()

@@ -203,13 +203,16 @@ Styles: `ambient`, `lofi`, `synthwave`, `chiptune`, `house`, `cinematic`, `folk`
 `demo/` is a pinned grove scrubbed by the scroll: the camera flies in while spring turns to autumn and
 morning to evening, in either look, with the band joining in as you go deeper. `demo/stage.html` is three sections over one
 stage, each with a scene of its own, blending into the next as its section arrives, with a straight-edged paper
-panel over the second scene and a torn one over the third. `stage.html?measure` times every frame drawn.
+panel over the second scene and a torn one over the third. `stage.html?measure` times every frame drawn. Its
+posters are baked from the scenes themselves with `@weft-js/capture`, and a phone gets only them, with no renderer
+loaded.
 
 ```bash
 node test/serve.mjs 4179
 ```
 
-`pnpm run test:e2e` runs it in Chrome on the GPU and checks its pixels.
+`pnpm run test:e2e` runs it in Chrome on the GPU and checks its pixels. It also bakes the stage's posters,
+rebuilds with them, and captures the stage at three scroll stops.
 
 ## Vendored code
 

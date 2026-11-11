@@ -22,6 +22,7 @@ import { listSurfaces } from './surface-checks.mjs'
 import { runTask, tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand } from './browser/cli.mjs'
+import { commandCapture } from './capture.mjs'
 import { metaTable } from './meta-table.mjs'
 import { audit } from './audit.mjs'
 import {
@@ -83,6 +84,8 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
                       [--base <ref>] [--budget <sec>] [--max-mutants <n>] [--refactor] [--no-mutation]
   browser <cmd>       drive the running app (\`weft browser help\`): open, snapshot, act, assert, net, time, record…
+  capture <cmd>       stills at scroll stops, frame times, contact sheets and scene poster bakes in headless Chrome
+                      on the GPU, from @weft-js/capture (\`weft capture help\`)
   lsp                 a language server for editors on TypeScript 7: tsc --lsp with inferred props
   tsc                 type-check the whole project with inferred props (tsc or tsgo; for CI)
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
@@ -263,6 +266,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
   const say = (text) => text && io.stderr.write(`${text}\n`)
   let args
   try {
+    if (argv[0] === 'capture') return await commandCapture(argv.slice(1), process.cwd())
     args = parse(argv)
     const context = { ...dependencies, args, print, say, io }
     switch (args.command) {

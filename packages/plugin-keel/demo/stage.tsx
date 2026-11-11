@@ -1,5 +1,8 @@
 // Three sections over one pinned canvas: each brings its own scene, and the next blends in as its section arrives. A
-// paper panel with a straight edge crosses the second scene, and one with a torn edge the third.
+// paper panel with a straight edge crosses the second scene, and one with a torn edge the third. Each poster is
+// baked from its own scene (`weft capture bake`); a phone gets the posters and no renderer.
+/// <reference types="@weft-js/capture/posters" />
+import 'virtual:weft/posters'
 import { render } from '@weft-js/core/dom'
 import { clock, type SurfaceBase, type SurfaceContext } from '@weft-js/core/surface'
 import { keelBlend } from '@weft-js/plugin-keel/blend'
@@ -58,18 +61,20 @@ function StagePage() {
       label="Three generated scenes"
       governor={governor}
       blend={watched}
+      tier="auto"
       onActive={(a) => (stageDemo.active = a)}
     >
-      <Scene use={orrery} class="chapter" poster="#20242c" label="Orrery">
+      <Scene id="orrery" use={orrery} class="chapter" poster="bake" label="Orrery">
         <div class="panel">
           <h1>Orrery</h1>
           <p>Gold spheres round a dark one, lit by a studio that is generated, not loaded.</p>
         </div>
       </Scene>
       <Scene
+        id="rings"
         use={rings}
         class="chapter"
-        poster="#173434"
+        poster="bake"
         label="Rings"
         mode="radial"
         centre={{ x: 0.3, y: 0.2 }}
@@ -83,7 +88,7 @@ function StagePage() {
           </p>
         </div>
       </Scene>
-      <Scene use={blocks} class="chapter" poster="#2a2018" label="Blocks">
+      <Scene id="blocks" use={blocks} class="chapter" poster="bake" label="Blocks">
         <div class="panel">
           <h2>Blocks</h2>
           <p>
