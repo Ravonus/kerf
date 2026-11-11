@@ -19,9 +19,9 @@ fn compiled_prop_helpers_use_the_internal_runtime_contract() {
         );
         assert!(out.diagnostics.is_empty(), "{:?}", out.diagnostics);
         let code = out.code.expect("compiled fixture");
-        let internal = code
-            .lines()
-            .find(|line| line.starts_with("import ") && line.contains("\"@kerf-js/core/internal\""));
+        let internal = code.lines().find(|line| {
+            line.starts_with("import ") && line.contains("\"@kerf-js/core/internal\"")
+        });
         let internal = internal.expect("an internal helper import");
         assert!(internal.contains("localProps as _$localProps"), "{code}");
         assert!(internal.contains("restOf as _$restOf"), "{code}");

@@ -2,7 +2,7 @@ import type { PluginEntry } from '@kerf-js/core/config'
 import type { Palette, PixelRenderer } from './vendor-types'
 
 /** The plugin for `kerf.config.ts`: adds the `keel-pixel` surface kind and KEEL's theme. */
-export declare const keel: () => PluginEntry
+export declare const keelPixel: () => PluginEntry
 
 /** `{ seed, culture, pins }` → KEEL's theme: palette ramps, frame, type, spacing and motion. */
 export declare function recipeTheme(recipe?: {
