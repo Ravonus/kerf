@@ -15,7 +15,8 @@ import { parseStop, stopName } from './stops.mjs'
 export const USAGE = `weft capture <command> <url | built folder> [options]
 
   stills <target>   a PNG at each stop     --stops 0,hero@0.5,2+300 --out dir --sheet
-  frames <target>   frame times as JSON    --seconds 5 --speed 600 --cpu 4 --driver scroll|wheel --out file
+  frames <target>   frame times as JSON    --from pay@0 --seconds 5 --speed 600 --cpu 4 --driver scroll|wheel
+                                           --out file
   sheet <png...>    one contact sheet      --out sheet.png --cols 4 --width 480
   bake <target>     scene posters          --out posters --format avif|webp --quality 50 --time 0
 
@@ -24,6 +25,7 @@ export const USAGE = `weft capture <command> <url | built folder> [options]
 const OPTIONS = {
   out: { type: 'string' },
   stops: { type: 'string' },
+  from: { type: 'string' },
   sheet: { type: 'boolean' },
   seconds: { type: 'string' },
   speed: { type: 'string' },
@@ -101,7 +103,12 @@ const COMMANDS = {
     try {
       const tab = await open(browser, at)
       await stageReady(tab, null)
-      const options = { seconds: num(v.seconds, 5), speed: num(v.speed, 600), cpu: num(v.cpu, 1) }
+      const options = {
+        seconds: num(v.seconds, 5),
+        speed: num(v.speed, 600),
+        cpu: num(v.cpu, 1),
+        from: parseStop(v.from ?? '0'),
+      }
       const result = {
         url: at.url,
         ...(await frames(tab, { ...options, driver: v.driver ?? 'scroll' })),
