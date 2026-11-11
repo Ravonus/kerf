@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  font: 16px/24px ui-sans-serif, system-ui, sans-serif;
+  color: rgb(250, 248, 240);
+  background: rgb(20, 22, 26);
+}
+/* Each section is two and a half viewports tall: room for its scene to move before the next arrives. */
+.chapter {
+  min-height: 250lvh;
+  padding: 40lvh 6vw 0;
+  box-sizing: border-box;
+}
+.panel {
+  max-width: 420px;
+  padding: 24px 28px;
+  border-radius: 8px;
+  background: rgb(14 16 18 / 0.6);
+}
+.panel h1,
+.panel h2 {
+  margin: 0 0 8px;
+  font: 700 44px/1.1 ui-sans-serif, system-ui, sans-serif;
+}

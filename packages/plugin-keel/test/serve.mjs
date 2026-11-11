@@ -24,7 +24,11 @@ export async function serveDemo(port = 0) {
     configFile: false,
     logLevel: 'error',
     plugins: [weft()],
-    build: { outDir: out, emptyOutDir: true },
+    build: {
+      outDir: out,
+      emptyOutDir: true,
+      rolldownOptions: { input: [join(demo, 'index.html'), join(demo, 'stage.html')] },
+    },
   })
   const server = createServer((req, res) => {
     const path = new URL(req.url, 'http://x').pathname

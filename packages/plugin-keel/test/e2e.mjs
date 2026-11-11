@@ -127,6 +127,116 @@ const scrub = async (page, to) => {
   await page.context().close()
 }
 
+// The scene stage: three sections over one pinned canvas.
+const openStage = async (options = {}) => {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, ...options })
+  const page = await ctx.newPage()
+  await page.addInitScript(inkScript)
+  page.problems = []
+  page.on('pageerror', (e) => page.problems.push(e.message))
+  page.on('console', (m) => {
+    if (['error', 'warning'].includes(m.type()) && !/GL Driver Message/.test(m.text()))
+      page.problems.push(m.text())
+  })
+  await page.goto(`${served.base}/stage.html`)
+  await page.waitForFunction(
+    () => document.querySelector('[data-surface]')?.style.opacity === '1',
+    null,
+    { timeout: 60_000 },
+  )
+  return page
+}
+/** Scrolls until scene `k` stands at position `p`, in viewports since its section began to enter. */
+const stand = async (page, k, p) => {
+  await page.evaluate(
+    ([index, at]) => {
+      const el = document.querySelectorAll('section')[index]
+      const h = el.offsetHeight
+      const vh = innerHeight
+      const lead = 0.2 * vh
+      const top = vh + lead - ((at * vh) / (h + vh)) * (h + vh + lead)
+      scrollTo(0, el.getBoundingClientRect().top + scrollY - top)
+    },
+    [k, p],
+  )
+}
+const settle = (page, k, p) =>
+  page.waitForFunction(
+    ([index, at]) => {
+      const a = globalThis.stageDemo.active
+      const near = (value) => Math.abs(value - at) < 0.01
+      return a && (a.active === index || a.to === index) && near(a.to === index ? a.t : a.position)
+    },
+    [k, p],
+  )
+
+{
+  console.log('the scene stage')
+  const page = await openStage()
+  const first = await page.evaluate(() => globalThis.inkOf())
+  ok('one canvas draws the first scene', first.colours > 20, `${first.colours} colours`)
+  ok('there is one canvas on the page', (await page.locator('canvas').count()) === 1)
+  await page.waitForFunction(() => globalThis.stageDemo.built.has('rings'))
+  ok('the next scene is built while the first shows', true)
+  await stand(page, 1, 0.3)
+  await settle(page, 1, 0.3)
+  const before = await page.evaluate(() => ({
+    ...globalThis.stageDemo.active,
+    ink: globalThis.inkOf(),
+  }))
+  ok(
+    'before the switch the first scene is active and drawn',
+    before.active === 0,
+    JSON.stringify(before),
+  )
+  await stand(page, 1, 0.7)
+  await settle(page, 1, 0.7)
+  const after = await page.evaluate(() => ({
+    ...globalThis.stageDemo.active,
+    marked: document.querySelector('[data-active]')?.getAttribute('aria-label'),
+    ink: globalThis.inkOf(),
+  }))
+  ok('past 0.5 the incoming scene is active', after.active === 1 && after.marked === 'Rings')
+  ok('and the canvas cuts to it', after.ink.hash !== before.ink.hash)
+  await stand(page, 2, 1.5)
+  await page.waitForFunction(() => {
+    const { built, active } = globalThis.stageDemo
+    return active.active === 2 && built.has('blocks') && !built.has('orrery')
+  })
+  ok('a scene two away is freed and the last one is built', true)
+  await page.evaluate(() => scrollTo(0, 0))
+  await page.waitForFunction(() => (globalThis.stageDemo.built.get('orrery') ?? 0) > 2)
+  ok('scrolling back builds and draws the first scene again', true)
+  ok('no errors or warnings', page.problems.length === 0, page.problems.join(' | '))
+  await page.context().close()
+}
+
+{
+  console.log('the scene stage under reduced motion')
+  const page = await openStage({ reducedMotion: 'reduce' })
+  const still = await page.evaluate(() => ({
+    playing: globalThis.clock.playing.value,
+    ink: globalThis.inkOf(),
+  }))
+  ok(
+    'the clock is paused and the first scene still draws',
+    !still.playing && still.ink.colours > 20,
+  )
+  await stand(page, 0, 1.6)
+  // Four frames: the scroll event, the position, the paint, and one to spare. Eased, it would still be moving.
+  const raw = await page.evaluate(async () => {
+    for (let i = 0; i < 4; i++) await new Promise(requestAnimationFrame)
+    return globalThis.stageDemo.active
+  })
+  ok(
+    'the position follows the scroll at once',
+    Math.abs(raw.position - 1.6) < 0.01,
+    `${raw.position}`,
+  )
+  ok('no errors or warnings', page.problems.length === 0, page.problems.join(' | '))
+  await page.context().close()
+}
+
 await browser.close()
 served.close()
 console.log(failed ? `\n${failed} failed` : '\nall passed')
