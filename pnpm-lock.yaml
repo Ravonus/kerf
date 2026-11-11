@@ -459,6 +459,9 @@ importers:
       '@weft-js/scroll':
         specifier: workspace:*
         version: link:../scroll
+      '@weft-js/warp':
+        specifier: workspace:*
+        version: link:../warp
       esbuild:
         specifier: 0.28.2
         version: 0.28.2

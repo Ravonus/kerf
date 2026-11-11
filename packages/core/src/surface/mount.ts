@@ -1,4 +1,4 @@
-import { DEV, effect, getOwner, onCleanup, state, within, type State } from '@weft-js/core'
+import { DEV, effect, getOwner, onCleanup, state, untrack, within, type State } from '@weft-js/core'
 import type { SurfaceDef, SurfaceBackend, SurfaceRenderer } from '../surface'
 import { integerFit } from './integer-fit'
 import { builtin } from './backends'
@@ -65,7 +65,8 @@ function fitCanvas({
 }) {
   return (width: number, height: number, deviceWidth?: number, deviceHeight?: number) => {
     const device = devicePixelRatio || 1
-    const d = Math.min(device, def.maxDpr ?? 2)
+    const cap = def.maxDpr ?? 2
+    const d = Math.min(device, typeof cap === 'number' ? cap : untrack(() => cap.value))
     if (def.pixel) {
       const f = integerFit(def.pixel.width, def.pixel.height, width, height)
       canvas.width = def.pixel.width
@@ -159,6 +160,18 @@ function startSurface(renderer: SurfaceRenderer, args: StartArgs) {
   }
 
   observeSize(host, fit, () => repaint())
+  const cap = def.maxDpr
+  // A page that owns the pixel ratio changes it without a resize: refit to the box as it stands.
+  if (typeof cap === 'object')
+    effect(
+      () => cap.value,
+      (_, prev) => {
+        if (prev === undefined) return
+        const b = host.getBoundingClientRect()
+        fit(b.width, b.height)
+        repaint()
+      },
+    )
 
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault()

@@ -57,7 +57,8 @@ export const Grove = defineSurface<{}, 'keel-lit'>({
 
 - `s.lit`: the keel/lit namespace. `Stage`, `Group`, `Mesh`, `Instances`, `PerspectiveCamera`, `SunLight`,
   `SkyLight`, `LitMaterial`, `ToonMaterial`, `CustomMaterial`, geometry functions (`box()`, `sphere()`,
-  `plane()`, `lathe()`, `extrude()` and more), render targets and fog.
+  `plane()`, `lathe()`, `extrude()` and more), render targets, fog, and environment light:
+  `stage.environment = new Environment(STUDIO, { size: 128 })`, a generated studio with no file.
 - `s.renderer`: its renderer, bound to the surface's canvas and sized with it.
 
 The surface's own rules still hold: the server renders a sized placeholder, an off-screen surface skips its
@@ -91,6 +92,8 @@ that never reaches that line never downloads it.
 | `lit-finish` | The realism look: ambient occlusion, aerial haze, light through leaves, TAA, bloom, tone map, grade. |
 | `band` | A seeded generative band in eight styles on plain Web Audio, layered by an energy dial. |
 | `quality`, `device-profile` | Detail levels by device, and a frame-time governor. |
+| `tracks` | Keyed tracks sampled at a position, eased by cubic-bezier handles. |
+| `camera-rail` | A camera on keyed tracks, with pointer pan and tilt. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 
@@ -112,6 +115,45 @@ s.frame(() => {
 })
 ```
 
+## Scenes on a stage
+
+`defineScene` from `@weft-js/plugin-keel/scene` declares one section's scene for warp's `<Stage>` and `<Scene>`
+(`@weft-js/warp/scenes`), which share one canvas across the page:
+
+```ts
+import { defineScene } from '@weft-js/plugin-keel/scene'
+
+export const orchard = defineScene({
+  tracks: [
+    {
+      target: 'camera',
+      property: 'eye',
+      keys: [[0, [0, 2, 9]], [2, [3, 2, 5]]],
+    },
+    { target: 'tree', property: 'sway', keys: [[0, 0], [2, 1]] },
+  ],
+  build({ lit }) {
+    const stage = new lit.Stage()
+    const camera = new lit.PerspectiveCamera(40, 1, 0.1, 100)
+    const tree = new lit.Group()
+    stage.add(tree, new lit.SkyLight('#fff', '#443', 1))
+    return { stage, camera, tree }
+  },
+  at(position, frame, values) {
+    this.tree.rotation.z = 0.1 * Number(values.tree?.sway ?? 0)
+  },
+})
+```
+
+The stage builds a scene when its section comes near and frees it two scenes away. Tracks that key a `camera`
+target drive the camera through `camera-rail`; `at` gets the other sampled values, with `this` the object
+`build` returned. A scene also takes `modules` (loaded before `build`), `setQuality(levers)`, `render()` for a
+finish of its own and `dispose()`; the stage's meshes, materials and textures are freed for it.
+
+`keelGovernor()` from `@weft-js/plugin-keel/governor` is the stage's governor: `device-profile` picks the
+tier, the tier the levers, the fps cap (30 on low) and the widest canvas (3840, 1920 or 1280 px), and
+`quality` lowers the render scale while frames run slow: `<Stage governor={keelGovernor()}>`.
+
 ## Music
 
 ```ts
@@ -130,7 +172,8 @@ Styles: `ambient`, `lofi`, `synthwave`, `chiptune`, `house`, `cinematic`, `folk`
 ## The demo
 
 `demo/` is a pinned grove scrubbed by the scroll: the camera flies in while spring turns to autumn and
-morning to evening, in either look, with the band joining in as you go deeper.
+morning to evening, in either look, with the band joining in as you go deeper. `demo/stage.html` is three sections over one
+stage, each with a scene of its own, handing over as each section arrives.
 
 ```bash
 node test/serve.mjs 4179

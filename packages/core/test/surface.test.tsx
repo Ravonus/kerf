@@ -298,6 +298,31 @@ test('WebGL context loss tears setup down, and restoring runs it again', async (
   expect(setups).toBe(2)
 })
 
+test('a page that owns the pixel ratio changes it without a resize', async () => {
+  const ratio = vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
+  const rect = vi
+    .spyOn(Element.prototype, 'getBoundingClientRect')
+    .mockReturnValue({ width: 100, height: 50 } as DOMRect)
+  const cap = state(1)
+  let dpr = 0
+  const Sharp = defineSurface({
+    name: 'sharp',
+    kind: 'canvas2d',
+    maxDpr: cap,
+    setup(s) {
+      s.draw(() => (dpr = s.dpr.value))
+    },
+  })
+  render(() => <Surface use={Sharp} label="Sharp" />)
+  await flush()
+  expect([canvas().width, canvas().height, dpr]).toEqual([100, 50, 1])
+  cap.value = 2.5
+  await flush()
+  expect([canvas().width, canvas().height]).toEqual([250, 125])
+  rect.mockRestore()
+  ratio.mockRestore()
+})
+
 test('the server renders the sized host and no canvas', () => {
   const html = renderToString(Sized)
   expect(html).toContain('data-surface="stars"')

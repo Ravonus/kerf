@@ -540,6 +540,31 @@ Anchors land below the sticky top bar; a page with a taller header, or none, set
 :root { --warp-scroll-offset: 96px; }
 ```
 
+### Scenes behind the page
+
+`@weft-js/warp/scenes` pins one canvas behind the whole page and draws a scene per section on it. Each `<Scene>`
+is a section; its scene comes from a renderer's bridge (`defineScene` in `@weft-js/plugin-keel/scene`).
+
+```tsx
+import { Scene, Stage } from '@weft-js/warp/scenes'
+import { orchard, harbour } from './scenes'
+
+<Stage label="An orchard, then a harbour">
+  <Scene use={orchard} poster="#2f4a3a">
+    <h2>Orchard</h2>
+  </Scene>
+  <Scene use={harbour} poster="/harbour.avif">
+    <h2>Harbour</h2>
+  </Scene>
+</Stage>
+```
+
+Each scene's position is in viewports since its section began to enter. The stage keeps the active scene and its
+neighbours built and frees one two away. As a section arrives its scene blends in over `hero` viewports; the
+active scene moves at the half-way point. Without a `blend` the stage cuts there. A `governor` sets the levers,
+the pixel ratio and the frame rate. A scene's `poster` is pinned behind its section: the first paint, and what
+shows without WebGL2.
+
 ## Component catalogue
 
 Every component exported from `@weft-js/warp`, grouped by what it is for. The docs site has a page for each one with its
@@ -1156,6 +1181,7 @@ A numeric spacing class off that scale, such as `p-3`, is D002. Names from `warp
 | `@weft-js/warp/theme-parts` | The table of parts, their states and where each property lands |
 | `@weft-js/warp/theme-context` | `themeContext()`: facts read from warp-core's stylesheet. Node only |
 | `@weft-js/warp/skeleton` | The skeleton CSS, for a page that uses `<Boundary pending="shape">` without a `<Skeleton>` |
+| `@weft-js/warp/scenes` | `<Stage>` and `<Scene>`: one WebGL canvas pinned behind the page, a scene per section |
 | `@weft-js/warp/ui` | How Warp draws an `interaction()` row. The Weft plugin imports it where `ui=` is used |
 | `@weft-js/warp/tailwind.css` | Warp's tokens as Tailwind v4 theme values |
 

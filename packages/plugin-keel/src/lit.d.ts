@@ -20,6 +20,10 @@ export interface LitVector3 {
   z: number
   set(x: number, y: number, z: number): LitVector3
   copy(from: LitVector3): LitVector3
+  clone(): LitVector3
+  lerp(to: LitVector3, amount: number): LitVector3
+  /** Into the camera's normalised device coordinates: x and y in -1..1 across the view. */
+  project(camera: LitCamera): LitVector3
   toArray(): [number, number, number]
 }
 
@@ -29,15 +33,67 @@ export interface LitNode {
   rotation: { x: number; y: number; z: number; set(x: number, y: number, z: number): void }
   scale: LitVector3
   visible: boolean
+  name: string
+  readonly children: LitNode[]
+  userData: Record<string, unknown>
   add(...children: unknown[]): LitNode
   remove(...children: unknown[]): LitNode
   lookAt(x: number | LitVector3, y?: number, z?: number): void
+  rotateZ(angle: number): LitNode
+  /** Calls `fn` on this node and every node under it. */
+  traverse(fn: (node: LitNode) => void): void
 }
 
 /** The root of a scene: `fog` and `background` live here. */
 export interface LitStage extends LitNode {
   fog: { color: LitColor; near: number; far: number } | null
   background: LitColor | null
+  /** Light from the room around the scene: an `Environment`. A metal reflects it; a rough surface takes its diffuse. */
+  environment: LitEnvironment | null
+  environmentIntensity: number
+  /** Turns the room: `environmentRotation.y = Math.PI / 6`. */
+  environmentRotation: {
+    x: number
+    y: number
+    z: number
+    set(x: number, y: number, z: number): void
+  }
+}
+
+/** One soft box of a studio: where it hangs, how big, its linear colour and strength. */
+export interface SoftBox {
+  /** A direction from the subject. */
+  readonly dir: readonly [number, number, number]
+  /** Half its width and height, as tangents of the angle it spans. */
+  readonly size: readonly [number, number]
+  readonly colour: readonly [number, number, number]
+  readonly intensity: number
+  /** Edge softness, 0 crisp to 0.5 very soft. */
+  readonly soft?: number
+  /** Turn about its own axis, radians. */
+  readonly roll?: number
+}
+
+/** A studio as data: a sky, horizon and ground gradient (linear) and its soft boxes. */
+export interface Studio {
+  readonly sky: readonly [number, number, number]
+  readonly horizon: readonly [number, number, number]
+  readonly ground: readonly [number, number, number]
+  readonly boxes: readonly SoftBox[]
+}
+
+/** Options for `Environment`. */
+export interface EnvironmentOptions {
+  /** A face's size at the sharpest level: a power of two, 16 or more. Default 128. */
+  size?: number
+  /** GGX samples per texel at the first blurred level. Default 384. */
+  samples?: number
+}
+
+/** A studio prefiltered for lit shading on the GPU the first frame that reads it. No file. */
+export interface LitEnvironment extends LitTexture {
+  studio: Studio
+  readonly size: number
 }
 
 /** A perspective camera. Call `updateProjectionMatrix()` after changing `fov` or `aspect`. */
@@ -71,6 +127,120 @@ export interface LitLight extends LitNode {
   }
 }
 
+/** Vertices and their attributes. `dispose()` frees its GPU buffers. */
+export interface LitGeometry {
+  dispose(): void
+}
+
+/** What every material shares. `dispose()` frees its programs. */
+export interface LitMaterialNode {
+  transparent: boolean
+  opacity: number
+  depthWrite: boolean
+  needsUpdate: boolean
+  dispose(): void
+}
+
+/** The physically based material's own fields. */
+export interface LitSurfaceMaterial extends LitMaterialNode {
+  color: LitColor
+  roughness: number
+  metalness: number
+  /** Its share of the stage's environment light. Default 1. */
+  envMapIntensity: number
+}
+
+/** A uniform the shader reads: set `value` and the next frame uploads it. */
+export interface LitUniform<T = unknown> {
+  value: T
+}
+
+/** Options for `CustomMaterial`. */
+export interface CustomMaterialOptions {
+  uniforms?: Record<string, LitUniform>
+  vertexShader: string
+  fragmentShader: string
+  transparent?: boolean
+  depthWrite?: boolean
+  depthTest?: boolean
+}
+
+/** A material from GLSL. */
+export interface LitCustomMaterial extends LitMaterialNode {
+  uniforms: Record<string, LitUniform>
+  vertexShader: string
+  fragmentShader: string
+}
+
+/** A mesh: geometry and material, and whether it throws and takes shadows. */
+export interface LitMesh extends LitNode {
+  geometry: LitGeometry
+  material: LitMaterialNode | LitMaterialNode[]
+  castShadow: boolean
+  receiveShadow: boolean
+}
+
+/** A 4×4 transform. */
+export interface LitMatrix4 {
+  identity(): LitMatrix4
+  makeTranslation(x: number, y: number, z: number): LitMatrix4
+  compose(position: LitVector3, rotation: LitQuaternion, scale: LitVector3): LitMatrix4
+}
+
+/** A rotation. */
+export interface LitQuaternion {
+  setFromAxisAngle(axis: LitVector3, angle: number): LitQuaternion
+}
+
+/** A mesh drawn many times. Set `instanceMatrix.needsUpdate` after `setMatrixAt`. */
+export interface LitInstances extends LitMesh {
+  count: number
+  instanceMatrix: { needsUpdate: boolean }
+  setMatrixAt(index: number, matrix: LitMatrix4): void
+  setColorAt(index: number, color: LitColor): void
+}
+
+/** An image the GPU samples. */
+export interface LitTexture {
+  needsUpdate: boolean
+  colorSpace: string
+  wrapS: string
+  wrapT: string
+  magFilter: string
+  minFilter: string
+  dispose(): void
+}
+
+/** Options for `RenderTarget`. */
+export interface LitRenderTargetOptions {
+  /** Multisampling: 0 is off. */
+  samples?: number
+  depthBuffer?: boolean
+  /** The texel type, such as `half` for half floats. */
+  type?: string
+  colorSpace?: string
+}
+
+/** An offscreen image to draw into. */
+export interface LitRenderTarget {
+  readonly width: number
+  readonly height: number
+  readonly texture: LitTexture
+  setSize(width: number, height: number): void
+  dispose(): void
+}
+
+/** A camera without perspective. */
+export interface LitOrthoCamera extends LitNode {
+  left: number
+  right: number
+  top: number
+  bottom: number
+  near: number
+  far: number
+  updateProjectionMatrix(): void
+}
+
 /** The renderer bound to a canvas. */
 export interface LitRenderer {
   domElement: HTMLCanvasElement
@@ -83,6 +253,12 @@ export interface LitRenderer {
   getPixelRatio(): number
   setPixelRatio(value: number): void
   setSize(width: number, height: number, updateStyle?: boolean): void
+  getContext(): WebGL2RenderingContext
+  /** Where the next `render` draws: a target, or null for the canvas. */
+  setRenderTarget(target: LitRenderTarget | null): void
+  getRenderTarget(): LitRenderTarget | null
+  setClearColor(color: string | number | LitColor, alpha?: number): void
+  clear(color?: boolean, depth?: boolean, stencil?: boolean): void
   render(scene: unknown, camera: unknown): void
   dispose(): void
   forceContextLoss(): void
@@ -124,20 +300,71 @@ export declare const Fog: new (
   near: number,
   far: number,
 ) => NonNullable<LitStage['fog']>
+/** The house studio: a big key upper left, two strips for the edges, a soft top, a low fill. */
+export declare const STUDIO: Studio
+/** A generated environment for `stage.environment`: `new Environment(STUDIO, { size: 128 })`. */
+export declare const Environment: new (
+  studio?: Studio,
+  options?: EnvironmentOptions,
+) => LitEnvironment
 /** A geometry drawn with a material. */
-export declare const Mesh: new (
+export declare const Mesh: new (geometry: unknown, material: unknown) => LitMesh
+/** The physically based material: `color`, `roughness`, `metalness`, `envMapIntensity`, maps. */
+export declare const LitMaterial: new (options?: Record<string, unknown>) => LitSurfaceMaterial
+/** Unlit colour or texture. */
+export declare const FlatMaterial: new (options?: Record<string, unknown>) => LitMaterialNode
+/** A material from GLSL: `uniforms`, `vertexShader`, `fragmentShader`, `transparent`, `depthWrite`. */
+export declare const CustomMaterial: new (options: CustomMaterialOptions) => LitCustomMaterial
+/** One geometry drawn `count` times, each with its own matrix and colour. */
+export declare const Instances: new (
   geometry: unknown,
   material: unknown,
-) => LitNode & {
-  castShadow: boolean
-  receiveShadow: boolean
-}
-/** The physically based material: `color`, `roughness`, `metalness`, maps. */
-export declare const LitMaterial: new (options?: Record<string, unknown>) => unknown
+  count: number,
+) => LitInstances
+/** An offscreen image to draw into: `renderer.setRenderTarget(target)`, then sample `target.texture`. */
+export declare const RenderTarget: new (
+  width: number,
+  height: number,
+  options?: LitRenderTargetOptions,
+) => LitRenderTarget
+/** A camera without perspective: left, right, top, bottom, near and far. */
+export declare const OrthoCamera: new (
+  left?: number,
+  right?: number,
+  top?: number,
+  bottom?: number,
+  near?: number,
+  far?: number,
+) => LitOrthoCamera
+/** A texture from raw texels, such as a seeded noise field. */
+export declare const DataTexture: new (
+  data: ArrayBufferView,
+  width: number,
+  height: number,
+) => LitTexture
+/** A texture drawn with a 2D canvas. Set `needsUpdate` after drawing again. */
+export declare const CanvasTexture: new (canvas: HTMLCanvasElement | OffscreenCanvas) => LitTexture
+/** A 4×4 transform. */
+export declare const Matrix4: new () => LitMatrix4
+/** A rotation. */
+export declare const Quaternion: new () => LitQuaternion
+/** A box: width, height and depth. */
+export declare function box(width?: number, height?: number, depth?: number): LitGeometry
+/** A sphere: radius, then segments round and down. */
+export declare function sphere(radius?: number, across?: number, down?: number): LitGeometry
+/** A torus: radius, tube radius, then segments round the tube and along it. */
+export declare function torus(
+  radius?: number,
+  tube?: number,
+  radial?: number,
+  tubular?: number,
+): LitGeometry
+/** An icosahedron: radius and subdivisions. */
+export declare function icosahedron(radius?: number, detail?: number): LitGeometry
 /** A flat rectangle in the XY plane. */
 export declare function plane(
   width: number,
   height: number,
   across?: number,
   down?: number,
-): unknown
+): LitGeometry

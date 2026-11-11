@@ -2,16 +2,28 @@
   "name": "@weft-js/warp",
   "version": "0.1.4",
   "description": "warp, the UI toolkit for weft: components over @weft-js/warp-core",
+  "keywords": [
+    "weft"
+  ],
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/warp#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ravonus/weft.git",
     "directory": "packages/warp"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/warp#readme",
-  "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
-  },
+  "files": [
+    "src",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "tailwind.css",
+    "tokens",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
   "sideEffects": [
     "*.css",
@@ -23,11 +35,15 @@
     ".": "./src/index.ts",
     "./skeleton": "./src/skeleton-css.ts",
     "./ui": "./src/ui.ts",
+    "./scenes": "./src/Stage.tsx",
     "./plugin": "./plugin.mjs",
     "./theme-parts": "./src/plugin/theme-parts.mjs",
     "./theme": "./src/plugin/theme.mjs",
     "./theme-context": "./src/plugin/theme-context.mjs",
     "./tailwind.css": "./tailwind.css"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "test": "vitest run",
@@ -41,9 +57,6 @@
     "@weft-js/warp-core": "workspace:*",
     "@weft-js/warp-icons": "workspace:*"
   },
-  "peerDependencies": {
-    "@weft-js/core": "*"
-  },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",
     "@testing-library/user-event": "14.6.8",
@@ -55,22 +68,10 @@
     "vite": "8.3.5",
     "vitest": "5.0.5"
   },
-  "publishConfig": {
-    "access": "public"
+  "peerDependencies": {
+    "@weft-js/core": "*"
   },
   "engines": {
     "node": ">=24"
-  },
-  "keywords": [
-    "weft"
-  ],
-  "files": [
-    "src",
-    "plugin.mjs",
-    "plugin.d.mts",
-    "tailwind.css",
-    "tokens",
-    "README.md",
-    "LICENSE"
-  ]
+  }
 }
