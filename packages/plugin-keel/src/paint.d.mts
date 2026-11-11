@@ -18,5 +18,5 @@ export declare function paintFile(
   log?: (line: string) => void,
 ): Promise<{ file: string; painted: boolean }>
 
-/** RGBA rows as an unfiltered PNG. */
+/** RGBA rows as an unfiltered RGB PNG (the alpha left out). */
 export declare function png(rgba: Uint8Array, width: number, height: number): Buffer

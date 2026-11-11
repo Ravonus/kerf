@@ -1,6 +1,6 @@
 // `import ground from './card.paint.json?paint'`: a surface painted from a seeded recipe at build time, handed on as a
-// `?media` image, so the page gets a media record (an AVIF ladder and a placeholder with `media()`, the PNG alone
-// without). Painting runs on the CPU in Node, with the arithmetic the GPU painter uses. A painted PNG is kept under
+// `?media&photo` image, so the page gets a media record (an AVIF ladder, a JPEG fallback and a placeholder with
+// `media()`, the PNG alone without). Painting runs on the CPU in Node, with the arithmetic the GPU painter uses. A painted PNG is kept under
 // `.weft/cache/paint`, keyed by the plan's digest and the module's version: an unchanged recipe paints nothing.
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
@@ -15,12 +15,12 @@ const VIRTUAL = '\0keel-paint:'
 const END = ':paint.mjs'
 const MODULE = fileURLToPath(new URL('../vendor/modules/surfaces.mjs', import.meta.url))
 /** Moves when the PNG written for the same pixels would change. */
-const ENCODING = 1
+const ENCODING = 2
 
 /** The module's version, from the header the vendor script writes. */
 const versionOf = (source) => /^\/\/ surfaces@(\S+)/.exec(source)?.[1] ?? '0'
 
-/** RGBA rows as a PNG: no filter, deflated. */
+/** RGBA rows as an RGB PNG, no filter, deflated: an albedo is opaque, so its alpha is left out. */
 export function png(rgba, width, height) {
   const chunk = (type, data) => {
     const out = Buffer.alloc(12 + data.length)
@@ -33,10 +33,17 @@ export function png(rgba, width, height) {
   const head = Buffer.alloc(13)
   head.writeUInt32BE(width, 0)
   head.writeUInt32BE(height, 4)
-  head.set([8, 6, 0, 0, 0], 8)
-  const row = width * 4
+  head.set([8, 2, 0, 0, 0], 8)
+  const row = width * 3
   const raw = Buffer.alloc((row + 1) * height)
-  for (let y = 0; y < height; y++) raw.set(rgba.subarray(y * row, (y + 1) * row), y * (row + 1) + 1)
+  for (let y = 0, at = 0; y < height; y++) {
+    at++
+    for (let x = 0, i = y * width * 4; x < width; x++, i += 4) {
+      raw[at++] = rgba[i]
+      raw[at++] = rgba[i + 1]
+      raw[at++] = rgba[i + 2]
+    }
+  }
   return Buffer.concat([
     Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     chunk('IHDR', head),
@@ -102,7 +109,8 @@ export function keelPaint(options = {}) {
       const file = id.slice(VIRTUAL.length, -END.length)
       this.addWatchFile(file)
       const painted = await paintFile(file, cacheDir, say)
-      return `export { default } from ${JSON.stringify(`${painted.file}?media`)}\n`
+      // A painting is photographic: a JPEG fallback, not a lossless PNG one.
+      return `export { default } from ${JSON.stringify(`${painted.file}?media&photo`)}\n`
     },
   }
 }

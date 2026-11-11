@@ -193,7 +193,7 @@ the column show the scene with no panel, darkening or blur.
 ## Painted grounds
 
 A seeded surface can be painted at build time and served as ordinary media. Add `keelPaint()` before weft's
-Vite plugin, and `media()` to `weft.config.ts` for the AVIF ladder and the placeholder:
+Vite plugin, and `media()` to `weft.config.ts` for the AVIF ladder, a JPEG fallback and the placeholder:
 
 ```json
 {
