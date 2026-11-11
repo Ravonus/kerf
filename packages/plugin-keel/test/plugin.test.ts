@@ -96,3 +96,12 @@ describe('the section-post module', () => {
     expect(post.idle(at(0.5))).toBe(false)
   })
 })
+
+describe('the motes module', () => {
+  it('places the same field from the same seed, and another from another', async () => {
+    const motes = await import('../vendor/modules/motes.mjs')
+    const field = motes.placeMotes({ seed: 4 })
+    expect(field).toEqual(motes.placeMotes({ seed: 4 }))
+    expect(field).not.toEqual(motes.placeMotes({ seed: 5 }))
+  })
+})

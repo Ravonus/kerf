@@ -4,7 +4,7 @@ Built by `scripts/vendor.mjs`. Don't edit these files: change the pin and run it
 
 - `lit.mjs`: keel/lit, KEEL's lit WebGL2 renderer, bundled from keel-engine af03486
   (`packages/lit`). MIT, see `LICENSE`. It ports Three.js r180 (MIT), see `NOTICE`.
-- `modules/`: camera-rail, device-profile, lit-finish, look, quality, scene-blend, section-post, tracks, tree-growth, tree-render, voxel-dither, world-light from the keel-modules catalog at a830285. MIT, see
+- `modules/`: camera-rail, device-profile, lit-finish, look, motes, quality, scene-blend, section-post, tracks, tree-growth, tree-render, voxel-dither, world-light from the keel-modules catalog at 884d31d. MIT, see
   `LICENSE-modules`. Each `.mjs` is the catalog's verified build, each `.d.ts` its types, and each
   `.inputs.json` the settings a host may offer (`keel-module-inputs@1`).
 - `modules/` also holds band: not in the catalog yet, so built here from the

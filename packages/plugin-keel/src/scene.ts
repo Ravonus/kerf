@@ -10,6 +10,7 @@ import type * as CameraRail from '../vendor/modules/camera-rail.mjs'
 import type * as DeviceProfile from '../vendor/modules/device-profile.mjs'
 import type * as LitFinish from '../vendor/modules/lit-finish.mjs'
 import type * as Look from '../vendor/modules/look.mjs'
+import type * as MotesModule from '../vendor/modules/motes.mjs'
 import type * as Quality from '../vendor/modules/quality.mjs'
 import type * as SceneBlendModule from '../vendor/modules/scene-blend.mjs'
 import type * as SectionPost from '../vendor/modules/section-post.mjs'
@@ -26,6 +27,7 @@ export interface KeelModules {
   'device-profile': typeof DeviceProfile
   'lit-finish': typeof LitFinish
   look: typeof Look
+  motes: typeof MotesModule
   quality: typeof Quality
   'scene-blend': typeof SceneBlendModule
   'section-post': typeof SectionPost
@@ -161,6 +163,7 @@ const LOAD: { [K in ModuleId]: () => Promise<KeelModules[K]> } = {
   'device-profile': () => import('../vendor/modules/device-profile.mjs'),
   'lit-finish': () => import('../vendor/modules/lit-finish.mjs'),
   look: () => import('../vendor/modules/look.mjs'),
+  motes: () => import('../vendor/modules/motes.mjs'),
   quality: () => import('../vendor/modules/quality.mjs'),
   'scene-blend': () => import('../vendor/modules/scene-blend.mjs'),
   'section-post': () => import('../vendor/modules/section-post.mjs'),
