@@ -115,7 +115,8 @@ type ParamNames<P extends string> = P extends `${string}[${infer N}]${infer Rest
   : never
 
 /**
- * What `load` gets. `request` is the incoming request (headers, cookies); `signal` aborts with it; `ctx` is what server
+ * What `load` gets. `request` is the incoming request (headers, cookies), its `url` the page's own on a full load and on
+ * a client navigation alike (never the `/_weft/data/<path>` endpoint the browser fetched); `signal` aborts with it; `ctx` is what server
  * functions get (the app's part from `src/context.server.ts`). `await listTodos.fetch()` here shares the request
  * cache with the page's `listTodos()`, and `redirect()` answers 307.
  */

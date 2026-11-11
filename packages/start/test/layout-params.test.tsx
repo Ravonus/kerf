@@ -67,3 +67,25 @@ test('a layout over a named param gets it, as before', async () => {
     ['/docs/v/$id', { id: '7' }],
   ])
 })
+
+test("a load reads the page's own URL on a full load and on a client navigation", async () => {
+  const urls: string[] = []
+  const h = createHandler({
+    manifest,
+    modules: {
+      layout: {
+        load: ({ request }) => {
+          urls.push(new URL(request.url).pathname + new URL(request.url).search)
+          return {}
+        },
+        default: (props: { children?: unknown }) => <nav>{props.children}</nav>,
+      },
+      rest: { default: () => <h1 /> },
+      one: { default: () => <h1 /> },
+    },
+    assets: { entry: '/entry.js' },
+  })
+  await h(new Request('http://localhost/docs/v/7?tab=a'))
+  await h(new Request('http://localhost/_weft/data/docs/v/7?tab=a'))
+  expect(urls).toEqual(['/docs/v/7?tab=a', '/docs/v/7?tab=a'])
+})
