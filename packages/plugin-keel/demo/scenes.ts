@@ -88,9 +88,19 @@ export const rings = defineScene({
   dispose: () => void built.delete('rings'),
 })
 
-/** A grid of blocks, drawn as one instanced mesh, rising row by row with the position. */
+/** A grid of blocks, drawn as one instanced mesh, rising row by row with the position. A torn panel crosses it. */
 export const blocks = defineScene({
   tracks: [
+    track('post', 'progress', [
+      [0.9, 0],
+      [1.5, 1],
+      [2.1, 2],
+    ]),
+    track('post', 'tear', [[0, 1]]),
+    track('post', 'darken', [
+      [0.9, 0],
+      [1.5, 0.35],
+    ]),
     track('camera', 'eye', [
       [0, [9, 7, 9]],
       [3, [4, 2.5, 7]],
