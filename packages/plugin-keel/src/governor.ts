@@ -1,5 +1,5 @@
-// The page's frame governor on KEEL's own modules: device-profile reads the device once, its tier picks the levers,
-// the fps cap and the pixel-ratio cap, and quality lowers the render scale while frames run slow.
+// The page's frame governor on KEEL's own modules: device-profile reads the device once, quality picks the level and
+// its page levers from the tier and lowers the render scale while frames run slow; the tier sets the fps and ratio caps.
 import type { Levers } from './scene'
 import type { DeviceSignals, DeviceTier } from '../vendor/modules/device-profile.mjs'
 import type { Quality } from '../vendor/modules/quality.mjs'
@@ -23,23 +23,14 @@ export interface KeelGovernor {
   readonly tier: DeviceTier
 }
 
-/** What each tier spends. Low draws at 30 fps, without bloom or TAA, and drops the outgoing scene to half scale. */
-const SPEND: Record<DeviceTier, { levers: Levers; fps: number; widest: number }> = {
-  high: {
-    levers: { renderScale: 1, bloom: true, motes: 1, blendScale: 1, taa: true, density: 1 },
-    fps: 60,
-    widest: 3840,
-  },
-  mid: {
-    levers: { renderScale: 1, bloom: true, motes: 0.6, blendScale: 0.75, taa: true, density: 0.7 },
-    fps: 60,
-    widest: 1920,
-  },
-  low: {
-    levers: { renderScale: 1, bloom: false, motes: 0.3, blendScale: 0.5, taa: false, density: 0.4 },
-    fps: 30,
-    widest: 1280,
-  },
+/** Everything at full, until the device is read. */
+const FULL: Levers = { renderScale: 1, bloom: 1, motes: 1, blendScale: 1, taa: true, density: 1 }
+
+/** What each tier's frames may cost: low draws at 30 fps, and a narrower canvas on a weaker device. */
+const PACE: Record<DeviceTier, { fps: number; widest: number }> = {
+  high: { fps: 60, widest: 3840 },
+  mid: { fps: 60, widest: 1920 },
+  low: { fps: 30, widest: 1280 },
 }
 
 /**
@@ -51,7 +42,7 @@ export function keelGovernor(options: GovernorOptions = {}): KeelGovernor {
   let device = 2
   let quality: Quality | null = null
   let start = 1
-  let levers = SPEND.high.levers
+  let levers = FULL
   return {
     async start() {
       const [profile, governor] = await Promise.all([
@@ -63,7 +54,7 @@ export function keelGovernor(options: GovernorOptions = {}): KeelGovernor {
       device = known.pixelRatio
       quality = governor.createQuality({ level: 'auto', tier, target: options.target ?? 1000 / 60 })
       start = quality.scale
-      levers = SPEND[tier].levers
+      levers = { ...quality.levers, renderScale: 1 }
     },
     frame(ms) {
       if (!quality) return
@@ -75,11 +66,11 @@ export function keelGovernor(options: GovernorOptions = {}): KeelGovernor {
       return levers
     },
     get fps() {
-      return SPEND[tier].fps
+      return PACE[tier].fps
     },
     get tier() {
       return tier
     },
-    pixelRatio: (width) => Math.min(device, 2, SPEND[tier].widest / Math.max(width, 1)),
+    pixelRatio: (width) => Math.min(device, 2, PACE[tier].widest / Math.max(width, 1)),
   }
 }

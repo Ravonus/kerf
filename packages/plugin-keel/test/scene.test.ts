@@ -4,7 +4,7 @@ import { defineScene, type Levers, type SceneHost } from '../src/scene'
 
 const LEVERS: Levers = {
   renderScale: 1,
-  bloom: true,
+  bloom: 1,
   motes: 1,
   blendScale: 1,
   taa: true,

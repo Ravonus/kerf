@@ -3,6 +3,7 @@
 import type { SurfaceContext } from '@weft-js/core/surface'
 import type { LitCamera, LitNode, LitStage } from './lit'
 import type { RailOptions } from '../vendor/modules/camera-rail.mjs'
+import type { Levers } from '../vendor/modules/quality.mjs'
 import type { Sampled, Track } from '../vendor/modules/tracks.mjs'
 import type * as Band from '../vendor/modules/band.mjs'
 import type * as CameraRail from '../vendor/modules/camera-rail.mjs'
@@ -33,19 +34,8 @@ export interface KeelModules {
 /** A module's id. */
 export type ModuleId = keyof KeelModules
 
-/** What a page lets its scenes spend. The page owns them; a scene reads them in `setQuality`. */
-export interface Levers {
-  /** Pixels drawn, as a share of the canvas's width and height. */
-  readonly renderScale: number
-  readonly bloom: boolean
-  /** The share of particles drawn, 0 to 1. */
-  readonly motes: number
-  /** The outgoing scene's render scale during a hand-over. */
-  readonly blendScale: number
-  readonly taa: boolean
-  /** The share of instanced detail drawn, 0 to 1. */
-  readonly density: number
-}
+/** What a page lets its scenes spend: quality's page levers. The page owns them; a scene reads them in `setQuality`. */
+export type { Levers }
 
 /** What the page knows this frame. */
 export interface SceneFrame {

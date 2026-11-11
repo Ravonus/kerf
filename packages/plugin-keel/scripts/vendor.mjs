@@ -21,7 +21,7 @@ const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 /** keel-engine: the lit renderer's source. keel-modules: the catalog that carries each built module. */
 export const PINS = {
   engine: 'af034863bceefa8a81bbff8fe64ab36435028c29',
-  modules: '258811f19f5a805227393b1da216058300ad8f15',
+  modules: 'a830285df59ada539c5461ef7f1b582e3132fe4e',
 }
 
 /** The keel-modules this package ships, each its own lazily loaded file. */

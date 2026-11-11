@@ -6,6 +6,7 @@
  *   const quality = createQuality({ level: "auto", tier: device.tier });
  *   quality.at({ under, depth, height, clearance })  -> what to draw this frame
  *   quality.frame(milliseconds)                      -> tell it how the last one went
+ *   quality.levers                                   -> what a scrolled page's scenes may spend
  *
  * Pure: nothing here reads a clock or a GPU, so the caller hands it frame times
  * and any run can be replayed from them.
@@ -36,6 +37,28 @@ export interface Settings {
     /** The share of the surf's spray drawn, from 0 to 1. */
     readonly spray: number;
 }
+/** What a scrolled page's scenes may spend: the levers a scene's `setQuality` takes, beside the settings above. */
+export interface Levers {
+    /** Pixels drawn, as a share of the screen's width and height: the governed scale. */
+    readonly renderScale: number;
+    /** Bloom, as a share of a scene's own: 0 turns it off. */
+    readonly bloom: number;
+    /** The share of a scene's motes and other particles drawn, 0 to 1. */
+    readonly motes: number;
+    /** The outgoing scene's scale during a hand-over between two scenes, as a share of `renderScale`. */
+    readonly blendScale: number;
+    /** Temporal antialiasing. */
+    readonly taa: boolean;
+    /** The share of a scene's detail (crowds, foliage, level of detail) drawn, 0 to 1. */
+    readonly density: number;
+}
+/**
+ * A level's page levers at a render scale.
+ *
+ * @param level The level in use.
+ * @param scale The render scale, as the governor holds it.
+ */
+export declare function leversFor(level: Level, scale: number): Levers;
 /** Where the camera is. */
 export interface Place {
     readonly under: boolean;
@@ -94,6 +117,8 @@ export interface Quality {
     readonly spray: boolean;
     /** Turns tracing, upscaling or spray on or off, or changes level, at once. */
     set(switches: Switches): void;
+    /** The page levers for the level in use, at the governed render scale. */
+    readonly levers: Levers;
 }
 /**
  * Picks a level, and keeps it to the frame rate by lowering the render scale.
