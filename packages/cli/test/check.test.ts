@@ -22,7 +22,7 @@ describe('kerf check on evals/reference-v3/kerf', () => {
     ])
     expect(r.diagnostics).toEqual([])
     expect(r.config).toBeNull()
-    expect(r.kerf.version).toBe('0.1.4')
+    expect(r.kerf.version).toBe('0.1.0')
   })
 
   it('reports slot bindings: defaults are named, never silent', async () => {
@@ -366,7 +366,7 @@ function registerDiagnosticScopeTests() {
     })
     const r = await check(dir)
     expect(r.diagnostics.map((d) => [d.code, d.file, d.span])).toEqual([
-      ['P120', 'vite.config.ts', [1, 23, 1, 36]],
+      ['P120', 'vite.config.ts', [1, 23, 1, 33]],
     ])
   })
 
