@@ -90,6 +90,7 @@ that never reaches that line never downloads it.
 | `quality`, `device-profile` | Detail levels by device, a frame-time governor, and the page levers a scene spends.                  |
 | `tracks`                    | Keyed tracks sampled at a position, eased by cubic-bezier handles.                                   |
 | `camera-rail`               | A camera on keyed tracks, with pointer pan and tilt.                                                 |
+| `scene-blend`               | A hand-over between two lit scenes: line work and a seeded noise or radial reveal, or a plain fade.  |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 

@@ -31,6 +31,7 @@ export const MODULES = [
   'lit-finish',
   'look',
   'quality',
+  'scene-blend',
   'tracks',
   'tree-growth',
   'tree-render',

@@ -72,3 +72,15 @@ describe('the tracks and camera-rail modules', () => {
     expect(rail.at(3)).toMatchObject({ eye: [0, 0, 4], fov: 50, roll: 0 })
   })
 })
+
+describe('the scene-blend module', () => {
+  it('switches at 0.5 and draws the same noise from the same seed', async () => {
+    const blend = await import('../vendor/modules/scene-blend.mjs')
+    expect(blend.currentAt(0.4999)).toBe('a')
+    expect(blend.currentAt(0.5)).toBe('b')
+    expect(blend.blendLines(0.5)).toEqual([0.5, 0])
+    expect(blend.blendSettings({ scale: 0.1 }).scale).toBe(0.25)
+    expect(blend.noiseTexels(7)).toEqual(blend.noiseTexels(7))
+    expect(blend.noiseTexels(7)).not.toEqual(blend.noiseTexels(8))
+  })
+})
