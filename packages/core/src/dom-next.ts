@@ -71,8 +71,18 @@ function showsAs(el: Element, spec: string, value: unknown) {
   return spec[0] === 'p' ? hasProperty(el, name, value) : hasAttribute(el, name, value)
 }
 
-const hasProperty = (el: Element, name: string, value: unknown) =>
-  (el as Element & Record<string, unknown>)[name] === (name === 'value' || name === 'defaultValue' ? (value ?? '') : value)
+/**
+ * The property already reads `value`. Markup (`innerHTML`) is the server's: the browser re-serializes it, so a string
+ * compare would rewrite every icon. A control the visitor changed before the claim (typed, ticked, autofill) keeps
+ * what they did, and the island catches up from it: only one still at the server's default takes the client's value.
+ */
+function hasProperty(el: Element, name: string, value: unknown) {
+  if (name === 'innerHTML' || name === 'outerHTML') return true
+  const node = el as Element & Record<string, unknown>
+  if (name === 'value' && 'defaultValue' in node && node.value !== node.defaultValue) return true
+  if (name === 'checked' && 'defaultChecked' in node && node.checked !== node.defaultChecked) return true
+  return node[name] === (name === 'value' || name === 'defaultValue' ? (value ?? '') : value)
+}
 
 /** The attribute reads as `setAttribute` would write `value`. Objects and functions aren't compared: the server's stand. */
 function hasAttribute(el: Element, name: string, value: unknown) {
