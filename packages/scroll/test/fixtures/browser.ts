@@ -112,16 +112,18 @@ export function runOn(
     beforeAll(async () => {
       await load()
       browser = await pw[name].launch()
-      context = await browser.newContext({ ...pw.devices[device] })
     })
     afterAll(async () => {
       await browser?.close()
     })
+    // A context per case, closed whole: WebKit as an iPhone never finishes `page.close()` (each one waited out the
+    // two-minute hook timeout), while closing its context takes a tenth of a second.
     beforeEach(async () => {
+      context = await browser.newContext({ ...pw.devices[device] })
       page = await context.newPage()
     })
     afterEach(async () => {
-      await page.close()
+      await context.close()
     })
     for (const [title, run] of Object.entries(cases)) test(title, () => run(page))
   })

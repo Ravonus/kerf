@@ -44,10 +44,11 @@ const planned = [
   'untrack',
   'batch',
 ]
-/** Commands AGENTS.md leaves to `kerf tasks --json`: rarely run by hand, or taught in their own section. */
+/** Commands AGENTS.md leaves to `kerf tasks --json`: rarely run by hand, or taught elsewhere in it (`kerf map` in the intro). */
 const elsewhere = new Set([
   'agents-md',
   'doctor',
+  'map',
   'mcp',
   'plugins',
   'start',
@@ -194,9 +195,9 @@ function page({ root, info, core, missing, tcodes, startApp, styled, dcodes, lis
       ? `Test checks (\`kerf check\` on test files): ${ranges(tcodes)}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking kerf, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. To allow one: \`// kerf-allow T00x: <reason>\`.`
       : '',
     '',
-    "Before a change is done, see it work (`kerf browser snapshot|act|assert`, or `__kerf__.agent` in your own browser) and run `kerf test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). `kerf build` ends by auditing the pages it built at a phone's and a desktop's width (L-codes: names, contrast, console, the head, sideways scroll, layout shift) and fails on an error; `kerf audit --url <deploy>` checks a live site. More: `kerf docs verify`.",
+    'Before a change is done, see it work (`kerf browser snapshot|act|assert`, or `__kerf__.agent` in your own browser) and run `kerf test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). `kerf build` audits its pages at phone and desktop width (L-codes) and fails on an error. More: `kerf docs verify`.',
     '',
-    'Before publishing, choose `build.audit.indexing`: `public` makes noindex an error; `private` preserves intentional exclusions. Audit the actual deployed URL with `kerf audit --url <url> --indexing public` for public search: a proxy header can override correct markup. Never remove private indexing directives just to improve a score.',
+    'Before publishing, set `build.audit.indexing` (`public` or `private`) and audit the deployed URL: `kerf audit --url <url> --indexing public`. Never drop a private noindex for a score.',
     '',
     ...(startApp ? ['## Full stack', '', fullStack(root), ''] : []),
     ...(styled
@@ -210,7 +211,11 @@ function page({ root, info, core, missing, tcodes, startApp, styled, dcodes, lis
     '## Commands',
     '',
     commandsPage(
-      { ...list, tasks: list.tasks.filter((t) => !elsewhere.has(t.name)) },
+      // the Styling section teaches `kerf fix`
+      {
+        ...list,
+        tasks: list.tasks.filter((t) => !elsewhere.has(t.name) && !(styled && t.name === 'fix')),
+      },
       { planned: false },
     ),
     '',
