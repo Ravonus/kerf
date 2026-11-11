@@ -37,6 +37,10 @@
       "default": "./src/paint.mjs"
     },
     "./paint-live": "./src/paint-live.ts",
+    "./gen": {
+      "types": "./src/gen/index.d.mts",
+      "default": "./src/gen/index.mjs"
+    },
     "./client": {
       "types": "./src/client.d.ts"
     },
@@ -55,6 +59,7 @@
   "scripts": {
     "test": "vitest run",
     "test:e2e": "node test/e2e.mjs && node test/paint-e2e.mjs",
+    "gen": "node src/gen/cli.mjs",
     "vendor": "node scripts/vendor.mjs"
   },
   "devDependencies": {
