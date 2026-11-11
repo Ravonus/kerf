@@ -144,3 +144,20 @@ test('Stripe charges each line and mails the guest a receipt', async () => {
     'payment_intent_data[metadata][weft_plan]': 'm1',
   })
 })
+
+test('onOrder hears who paid, with the card, when the rail says', async () => {
+  const heard: unknown[] = []
+  const pay = definePay({
+    catalog: [pro],
+    store: memoryPayStore(),
+    urls: { success: '/', cancel: '/', order: '/order/{ref}' },
+    onOrder: ({ state, payer }) => void heard.push({ state, payer }),
+  })
+  const fake = fakePay(pay)
+  await pay.order(ctx, { ref: 'p1', lines: [{ name: 'Pie', amount: 2400 }] })
+  const card = { fingerprint: 'fp_1', brand: 'visa', last4: '4242' }
+  await fake.complete(undefined, { email: 'sam@example.com', card })
+  expect(heard).toEqual([{ state: 'active', payer: { email: 'sam@example.com', card } }])
+  // the ledger keeps none of it
+  expect(JSON.stringify(await fake.purchases('guest:p1'))).not.toContain('fp_1')
+})

@@ -257,6 +257,35 @@ test('through the ledger: paid, a repeat is quiet, and a whole refund is heard',
   expect(heard).toEqual(['active', 'refunded'])
 })
 
+test('a card payment says who paid: the card’s fingerprint, brand and last four, and the email', async () => {
+  const { fetcher } = mock()
+  const [e] = await rail(fetcher).verify(
+    signed(
+      payment('COMPLETED', {
+        buyer_email_address: 'sam@example.com',
+        billing_address: { first_name: 'Sam', last_name: 'Lee' },
+        card_details: {
+          card: {
+            fingerprint: 'sq-1-abc',
+            card_brand: 'VISA',
+            last_4: '1111',
+            exp_month: 7,
+            exp_year: 2029,
+          },
+        },
+      }),
+    ),
+  )
+  expect(e!.payer).toEqual({
+    email: 'sam@example.com',
+    name: 'Sam Lee',
+    card: { fingerprint: 'sq-1-abc', brand: 'visa', last4: '1111', expMonth: 7, expYear: 2029 },
+  })
+  expect(
+    (await rail(fetcher).verify(signed(payment('COMPLETED', {}, 'evt_plain'))))[0]!.payer,
+  ).toBeUndefined()
+})
+
 test('a refund from the server refunds the order’s payment in full', async () => {
   const { calls, fetcher } = mock()
   await rail(fetcher).refund!({ purchase: 'ord_1' })

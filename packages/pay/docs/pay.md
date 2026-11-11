@@ -33,10 +33,7 @@ export default function Pricing() {
   const mine = entitlements.live()
   return (
     <section>
-      <button
-        type="button"
-        onClick={() => checkout({ product: 'pro', plan: 'year' })}
-      >
+      <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>
         Go Pro · {price(pro, 'year').display}
       </button>
       <button type="button" onClick={() => portal()}>
@@ -61,6 +58,13 @@ A bad signature answers 400; a failure answers 500, so the rail delivers it agai
 opens one payment for lines your server priced from its own tables, for a guest or a signed-in buyer. It grants nothing.
 `definePay({ onOrder({ ref, state, purchase }) })` hears each verified state, before the event is marked, so a throw
 redelivers. Each order event pokes `orders` and `orderTag(ref)`. `urls.order` and `urls.orderCancel` may hold `{ref}`.
+
+**Who paid.** A paid order's `onOrder` also gets `payer` when the rail says: `{ email?, name?, phone?, card?: { fingerprint,
+brand, last4, expMonth, expYear } }`. The card's `fingerprint` is the rail's stable id for that card number, never the
+number: the same card paying again gives the same one, so an app can know a returning customer (loyalty, a member's
+card on file) without asking them for anything. Stripe reads it from the payment's charge (one API read per paid
+checkout; if that read fails the order is still paid, without the card), Square from the payment. The ledger keeps none
+of it. `fakePay(pay).complete(user, payer)` delivers one in tests.
 
 **Enforce on the server.** What the client shows is decoration (PAY013):
 
@@ -113,7 +117,7 @@ before anything is sent (PAY032).
 
 - Stripe: `STRIPE_MODE=test` with `sk_test_…` keys (`live` with `sk_live_…`). Locally, `stripe listen --forward-to
   localhost:5173/_weft/x/pay/stripe` and use the `whsec_` it prints. Test card `4242 4242 4242 4242`.
-- Square: `SQUARE_ENVIRONMENT=sandbox` with the Developer Console's *Sandbox* tab token, a sandbox location, and
+- Square: `SQUARE_ENVIRONMENT=sandbox` with the Developer Console's _Sandbox_ tab token, a sandbox location, and
   optionally `SQUARE_APPLICATION_ID=sandbox-sq0idb-…`. Webhooks need a public tunnel URL in `SQUARE_WEBHOOK_URL`. Test
   card `4111 1111 1111 1111`, CVV `111`.
 - `await pay.sandbox()` says whether the bound rail is in test mode, for a banner. `fakePay` reports `true`.

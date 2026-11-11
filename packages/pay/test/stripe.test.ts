@@ -362,6 +362,53 @@ function verifyPayments() {
       (await rail().verify(signed(session({}, 'checkout.session.async_payment_failed'))))[0]!.state,
     ).toBe('expired')
   })
+
+  test('a paid checkout says who paid: the session details and the card from its charge', async () => {
+    const { calls, fetcher } = mock((url) => ({
+      body: url.includes('/v1/payment_intents/pi_1')
+        ? {
+            id: 'pi_1',
+            latest_charge: {
+              billing_details: { phone: '+15550100' },
+              payment_method_details: {
+                card: {
+                  fingerprint: 'fp_abc',
+                  brand: 'visa',
+                  last4: '4242',
+                  exp_month: 4,
+                  exp_year: 2030,
+                },
+              },
+            },
+          }
+        : {},
+    }))
+    const paid = session({
+      customer_details: { email: 'sam@example.com', name: 'Sam', phone: null },
+    })
+    const [e] = await rail({ fetch: fetcher }).verify(signed(paid))
+    expect(e!.payer).toEqual({
+      email: 'sam@example.com',
+      name: 'Sam',
+      phone: '+15550100',
+      card: { fingerprint: 'fp_abc', brand: 'visa', last4: '4242', expMonth: 4, expYear: 2030 },
+    })
+    expect(calls.map((c) => c.url)).toEqual([
+      'https://api.stripe.com/v1/payment_intents/pi_1?expand[]=latest_charge',
+    ])
+    // the card lookup failing keeps the payment and what the session knew
+    const down = mock(() => ({ status: 500, body: {} }))
+    const [kept] = await rail({ fetch: down.fetcher }).verify(signed(paid))
+    expect(kept).toMatchObject({
+      state: 'active',
+      payer: { email: 'sam@example.com', name: 'Sam' },
+    })
+    expect(kept!.payer!.card).toBeUndefined()
+    // a pending payment has no card to read yet
+    const pending = mock()
+    await rail({ fetch: pending.fetcher }).verify(signed(session({ payment_status: 'unpaid' })))
+    expect(pending.calls).toEqual([])
+  })
 }
 
 function verifyEvents() {

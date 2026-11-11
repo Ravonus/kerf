@@ -11,6 +11,7 @@ import {
   type PurchaseState,
   type RailEvent,
 } from './index'
+import { payerFrom } from './payer'
 
 /** Options of `squareRail()`. Secrets default to the environment, which is where they belong. */
 export interface SquareOptions {
@@ -50,6 +51,33 @@ interface SquarePayment {
   total_money?: Money
   amount_money?: Money
   refunded_money?: Money
+  buyer_email_address?: string
+  card_details?: {
+    card?: {
+      fingerprint?: string
+      card_brand?: string
+      last_4?: string
+      exp_month?: number
+      exp_year?: number
+    }
+  }
+  billing_address?: { first_name?: string; last_name?: string }
+}
+
+/** Who paid, from the payment itself: Square puts the card on every card payment. */
+const payerOf = (p: SquarePayment) => {
+  const c = p.card_details?.card
+  return payerFrom({
+    email: p.buyer_email_address,
+    name: [p.billing_address?.first_name, p.billing_address?.last_name].filter(Boolean).join(' '),
+    card: c && {
+      fingerprint: c.fingerprint,
+      brand: c.card_brand?.toLowerCase(),
+      last4: c.last_4,
+      expMonth: c.exp_month,
+      expYear: c.exp_year,
+    },
+  })
 }
 interface SquareEvent {
   event_id?: string
@@ -260,6 +288,8 @@ export function squareRail(options: SquareOptions = {}): PayRail {
         ...(await identity(p.order_id)),
         ...(p.customer_id && { customer: p.customer_id }),
       }
+      const payer = payerOf(p)
+      if (payer) out.payer = payer
       return [out]
     },
     async refund({ purchase }) {
