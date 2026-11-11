@@ -16,6 +16,7 @@ export const V = {
   migrations: 'virtual:weft/migrations',
   media: 'virtual:weft/media',
   realtime: 'virtual:weft/realtime',
+  cache: 'virtual:weft/cache',
   extensions: 'virtual:weft/extensions',
 }
 export const DEFAULT_FONTS = ['Inter:400,700']

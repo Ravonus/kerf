@@ -533,6 +533,26 @@ On the client, a failed call rejects with an `FnError` carrying `.message`, `.co
 `invalidate('todos')` drops those tags: on the server for this response and the shared cache, on the client by
 refetching what reads them. Tags can name one row: `tags: ({ id }) => ['todos', `todo:${id}`]`.
 
+### Where the shared cache lives
+
+`cache: { life }` values live in one process's memory by default. It keeps up to 10,000 values (the least recently
+used go first) and drops an expired one when it's read. When several requests miss the same value at once, the first
+runs the query and the rest wait for its answer instead of each running it.
+
+With more than one server instance, put the cache in Redis so they all read the same values and an invalidation on one
+reaches the others:
+
+```ts
+// src/cache.server.ts
+import { redisStore } from '@weft-js/realtime-redis'
+
+// REDIS_URL, or redisStore({ url, prefix })
+export default redisStore()
+```
+
+Any object with `get`, `set`, `versions` and `bump` works (the `Store` type from `@weft-js/start/cache`), and
+`memoryStore({ values, tags })` changes the memory store's limits.
+
 ## Forms
 
 `<Form of={mutation}>` renders a real `<form>` that posts to the mutation. Before JavaScript loads, it is a plain POST
@@ -897,7 +917,8 @@ otherwise, since a page's data is usually for anyone. An app without auth is unc
 
 **Behind a proxy.** Better Auth rate-limits sign-in by the client's address. Behind a load balancer or CDN, every
 request comes from the proxy, so set `site.trustProxy` (`true` for one proxy, or how many) and the address comes from
-`X-Forwarded-For` instead. In production `createAuth` also needs its own URL (`BETTER_AUTH_URL` or `options.baseURL`,
+`X-Forwarded-For` instead. With several instances, give it one store: `rateLimit: { customStorage: redisRateLimit() }` from
+`@weft-js/realtime-redis`. In production `createAuth` also needs its own URL (`BETTER_AUTH_URL` or `options.baseURL`,
 A007): without it Better Auth trusts each request's `Host` header for the links in its emails. The JWT signing key
 rotates every 30 days (`api: { jwks: { rotationInterval } }` changes it).
 
