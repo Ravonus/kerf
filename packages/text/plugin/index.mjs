@@ -37,7 +37,17 @@ function face(role, f) {
     if (typeof f[key] !== 'string' || !f[key]) fail(`${at}.${key}`, 'expected a non-empty string')
   for (const key of Object.keys(f))
     if (
-      !['family', 'src', 'fallback', 'display', 'weight', 'style', 'axes', 'preload'].includes(key)
+      ![
+        'family',
+        'src',
+        'fallback',
+        'display',
+        'weight',
+        'style',
+        'axes',
+        'preload',
+        'glyphs',
+      ].includes(key)
     )
       fail(`${at}.${key}`, 'unknown option')
   const display = f.display ?? 'swap'
@@ -55,7 +65,10 @@ function face(role, f) {
     if (!Array.isArray(range) || range.length !== 2 || !range.every(Number.isFinite))
       fail(`${at}.axes.${axis}`, 'expected [min, max]')
   }
+  if (f.glyphs !== undefined && !(typeof f.glyphs === 'string' && f.glyphs))
+    fail(`${at}.glyphs`, 'expected the characters the face draws, like "ABC"')
   return {
+    ...(f.glyphs !== undefined && { glyphs: f.glyphs }),
     family: f.family,
     src: f.src,
     fallback: f.fallback,

@@ -58,6 +58,26 @@ editing responds.
 `import 'weft:fonts'` still works and changes nothing. `import { preloads } from 'weft:fonts/preloads'` gives the preload
 list to a custom server.
 
+## A face for a few characters
+
+A face that draws a few letters, such as a script initial, needs only those. `glyphs` lists them: the face becomes one
+small file, and its `unicode-range` leaves every other character to the next face in the stack, so no character goes
+missing and none fetches the file it isn't in. It replaces `subsets` for that face, and applies in `weft dev` too.
+
+```ts
+text({
+  fonts: {
+    script: {
+      family: 'Mea Culpa',
+      src: 'assets/fonts/mea-culpa.ttf',
+      fallback: 'Georgia',
+      glyphs: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      preload: true,
+    },
+  },
+})
+```
+
 ## Using a face
 
 The build declares faces; it doesn't apply them. Name one in your CSS, with its fallback second:

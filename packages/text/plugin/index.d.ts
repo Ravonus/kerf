@@ -15,6 +15,11 @@ export interface Face {
   axes?: Record<string, [number, number]>
   /** Preload the latin subset. Default: true for `body` and `display`. */
   preload?: boolean
+  /**
+   * Only these characters: one small file whose `unicode-range` leaves every other character to the next face in the
+   * stack. For a face that draws a few letters, like a drop-cap initial: `glyphs: 'ABCR'`. Replaces `subsets`.
+   */
+  glyphs?: string
 }
 
 /** A Unicode range the fonts are cut to. */

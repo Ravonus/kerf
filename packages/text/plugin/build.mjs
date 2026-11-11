@@ -178,7 +178,7 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
       const seen = new Map() // family+src → its preload flag, so two roles on one face emit it once
 
       for (const [role, f] of Object.entries(fonts)) {
-        const key = `${f.family}\0${f.src}\0${f.weight}\0${f.style}`
+        const key = `${f.family}\0${f.src}\0${f.weight}\0${f.style}\0${f.glyphs ?? ''}`
         if (seen.has(key)) {
           if (f.preload && !seen.get(key).preload) seen.get(key).preload = true
           continue
@@ -197,7 +197,8 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
         const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
         const pins = trimming ? pinned(await readAxes(bytes), f.axes, scan) : {}
         entry.pins = pins
-        for (const { subset, text, range } of subsets.flatMap(parts)) {
+        const cuts = f.glyphs ? [glyphCut(f.glyphs)] : subsets.flatMap(parts)
+        for (const { subset, text, range } of cuts) {
           const inputs = createHash('sha256')
             .update(text)
             .update(JSON.stringify(pins))
@@ -238,6 +239,12 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
       }
     },
   }
+}
+
+/** A face that draws only `glyphs`: one file, and a `unicode-range` that leaves every other character to the stack. */
+function glyphCut(glyphs) {
+  const text = [...new Set(glyphs)].join('')
+  return { subset: 'glyphs', text, range: toRange(text) }
 }
 
 function subsetParts(source, trimming) {

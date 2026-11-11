@@ -101,6 +101,11 @@ function registerInvalidFontOptions() {
       [{ measure: 'on' }, 'measure', /'auto' or 'off'/],
       [{ engine: 'fast' }, 'engine', /'slim' \| 'pretext'/],
       [{ trim: 'no' }, 'trim', /true or false/],
+      [
+        { fonts: { body: { family: 'Inter', src: 'a', fallback: 'Arial', glyphs: '' } } },
+        'fonts.body.glyphs',
+        /characters the face draws/,
+      ],
     ]
     for (const [input, path, message] of bad) {
       let error
@@ -188,7 +193,33 @@ describe('createFontBuild().build()', () => {
     ).rejects.toThrow(/no metrics for fallback "Comic Neue Mono"/)
   })
   registerFontTrimmingTests(opts, () => cacheDir)
+  registerGlyphTests(opts, () => cacheDir)
 })
+
+function registerGlyphTests(opts: FontOptions, getCacheDir: () => string) {
+  describe('glyphs', () => {
+    it('cuts a face to the characters it lists, in a build and in dev', async () => {
+      const all = await fontBuild({ fonts: { body: opts.fonts.body! }, subsets: ['latin'] }).build({
+        root: '/',
+        cacheDir: getCacheDir(),
+        url: (n) => n,
+        source: '<p>Remember</p>',
+      })
+      for (const dev of [false, true]) {
+        const out = await fontBuild({
+          fonts: { initial: { ...opts.fonts.body!, glyphs: 'RRA', preload: true } },
+          subsets: ['latin', 'latin-ext'],
+        }).build({ root: '/', cacheDir: getCacheDir(), url: (n) => n, dev })
+        expect(out.files.map((f) => f.name.replace(/-[0-9a-f]{8}\.woff2$/, ''))).toEqual([
+          'inter-400-glyphs',
+        ])
+        expect(out.css).toContain('unicode-range:U+0041,U+0052}')
+        expect(out.preloads).toEqual([{ href: out.files[0]!.name, type: 'font/woff2' }])
+        expect(out.files[0]!.bytes.length).toBeLessThan(all.files[0]!.bytes.length / 4)
+      }
+    })
+  })
+}
 
 describe('axes', () => {
   const SOFT = { tag: 'SOFT', min: 0, default: 0, max: 100 }
