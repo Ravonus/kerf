@@ -1,0 +1,144 @@
+# @weft-js/plugin-keel
+
+KEEL generation for weft. It adds the `keel-lit` surface kind, a lit WebGL2 scene with physically based
+materials and soft shadows, and ships KEEL's generators as modules that load only where a page uses them.
+Nothing is an authored asset: trees are grown from a seed, light is the sun's for a place and hour, and
+music is scored from a seed.
+
+```ts
+// weft.config.ts
+import { defineConfig } from '@weft-js/core/config'
+import { keel } from '@weft-js/plugin-keel'
+
+export default defineConfig({ plugins: [keel()] })
+```
+
+```tsx
+import { defineSurface, Surface } from '@weft-js/core/surface'
+import { keelStage } from '@weft-js/plugin-keel/stage'
+
+export const Grove = defineSurface<{}, 'keel-lit'>({
+  name: 'grove',
+  kind: 'keel-lit',
+  setup(s) {
+    let draw = () => {}
+    void keelStage(s, { prefer: 'realism' }).then(async (stage) => {
+      const growth = await import(
+        '@weft-js/plugin-keel/modules/tree-growth'
+      )
+      const { createTreeRender } = await import(
+        '@weft-js/plugin-keel/modules/tree-render'
+      )
+      const model = growth.growTree({ species: 'oak', seed: 42 })
+      const tree = createTreeRender(s.lit as never, model, {
+        colors,
+        ground: { y: 0, radius: 4 },
+      })
+      stage.scene.add(tree.group)
+      stage.camera.position.set(0, 4, 14)
+      stage.camera.lookAt(0, 3, 0)
+      const year = growth.yearState({ species: 'oak', day: 170 })
+      const pose = growth.treeFrame(model, model.cycles * 0.8)
+      draw = () => {
+        const elapsed = s.clock.seconds
+        tree.update(pose, year, { elapsed, delta: 0, wind: 0.3 })
+        stage.render()
+      }
+      s.invalidate()
+    })
+    s.frame(() => draw())
+  },
+})
+```
+
+## The surface kind
+
+`kind: 'keel-lit'` gives `setup` two fields:
+
+- `s.lit`: the keel/lit namespace. `Stage`, `Group`, `Mesh`, `Instances`, `PerspectiveCamera`, `SunLight`,
+  `SkyLight`, `LitMaterial`, `ToonMaterial`, `CustomMaterial`, geometry functions (`box()`, `sphere()`,
+  `plane()`, `lathe()`, `extrude()` and more), render targets and fog.
+- `s.renderer`: its renderer, bound to the surface's canvas and sized with it.
+
+The surface's own rules still hold: the server renders a sized placeholder, an off-screen surface skips its
+paints, and under `prefers-reduced-motion: reduce` the clock starts paused on one still frame.
+
+## A stage with a look
+
+`keelStage(s, options)` from `@weft-js/plugin-keel/stage` sets up what most scenes need and draws them through
+one look recipe (`keel-look@1`):
+
+| | |
+| --- | --- |
+| `stage.scene`, `stage.camera`, `stage.sun`, `stage.sky` | Add to the scene; move the camera and lights. |
+| `stage.setLook('realism' \| 'pixel', recipe?)` | The same scene in lit full colour (ambient occlusion, haze, bloom, a tone map and grade) or dithered pixel art. Each pass loads the first time its look is used. |
+| `stage.light(worldLight(...))` | Sun, sky fill, background and air from `world-light`'s answer. |
+| `stage.look` | What the look asks of generators: `density`, `trees`, `kind`. |
+| `stage.render()` | Draws a frame. Call it inside `s.frame`. |
+
+## Modules
+
+Each is `@weft-js/plugin-keel/modules/<id>`, typed, and its own file: import it with `import()` and a page
+that never reaches that line never downloads it.
+
+| Module | What it makes |
+| --- | --- |
+| `tree-growth` | A tree grown from a species and a seed, posed for any age and day of the year. |
+| `tree-render` | Draws that tree, or a forest of them with levels of detail and impostor cards. |
+| `world-light` | The sun, moon, sky colours, fog and haze of a place and instant. |
+| `look` | Resolves a `keel-look@1` recipe for a target. |
+| `voxel-dither` | The dithered pixel look: palettes, screens, outlines, cel light. |
+| `lit-finish` | The realism look: ambient occlusion, aerial haze, light through leaves, TAA, bloom, tone map, grade. |
+| `band` | A seeded generative band in eight styles on plain Web Audio, layered by an energy dial. |
+| `quality`, `device-profile` | Detail levels by device, and a frame-time governor. |
+
+`vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
+
+## Scrubbing a scene
+
+`@weft-js/scroll/timeline` reads keyframe tracks at a position and follows a section's scroll progress:
+
+```ts
+import { progress, timeline } from '@weft-js/scroll/timeline'
+
+const tracks = timeline({
+  z: [[0, 54], [1, 8]],
+  fov: [[0, 34], [1, 50]],
+})
+const scrub = progress(section, { onChange: () => s.invalidate() })
+s.frame(() => {
+  const at = tracks.at(scrub.value)
+  stage.camera.position.set(0, 3, at.z)
+})
+```
+
+## Music
+
+```ts
+const { createBand, scoreOf } = await import(
+  '@weft-js/plugin-keel/modules/band'
+)
+// From a click: browsers start audio only from a gesture.
+const band = createBand(new AudioContext())
+band.start(scoreOf({ seed: 'grove', style: 'dream' }))
+band.setEnergy(0.4) // fewer parts
+```
+
+Styles: `ambient`, `lofi`, `synthwave`, `chiptune`, `house`, `cinematic`, `folk`, `dream`. `scoreOf` and
+`eventsAt` are pure, so a visual can read what plays at any sixteenth note and move with it.
+
+## The demo
+
+`demo/` is a pinned grove scrubbed by the scroll: the camera flies in while spring turns to autumn and
+morning to evening, in either look, with the band joining in as you go deeper.
+
+```bash
+node test/serve.mjs 4179
+```
+
+`pnpm run test:e2e` runs it in Chrome on the GPU and checks its pixels.
+
+## Vendored code
+
+`vendor/` is generated by `scripts/vendor.mjs` from pinned commits of keel-engine and keel-modules (both MIT)
+and is held to `vendor/lock.json`. keel/lit ports Three.js r180 (MIT); see `vendor/NOTICE`.

@@ -1,0 +1,34 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "level",
+      "label": "Quality",
+      "required": false,
+      "type": "select",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Automatic"
+        },
+        {
+          "value": "low",
+          "label": "Low"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "high",
+          "label": "High"
+        },
+        {
+          "value": "ultra",
+          "label": "Ultra"
+        }
+      ],
+      "default": "auto"
+    }
+  ]
+}

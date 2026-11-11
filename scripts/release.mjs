@@ -10,7 +10,8 @@
 //
 //   --out <dir>       where tarballs go (default .release/, gitignored)
 //   --no-build        use the wasm, text and platform builds already on disk
-//   --ci              publish from GitHub Actions by trusted publishing (OIDC): no browser, no code, provenance attached
+//   --ci              publish from GitHub Actions by trusted publishing (OIDC): no browser, no code, provenance attached;
+//                     a package npm has never seen is left out with a warning, for its first publish by hand
 //
 // Platform packages come from packages/core/dist/platform/<name>/ (scripts/build-platform.mjs). A platform that isn't
 // there is left out of the core's optionalDependencies, and that platform runs the WASM build.
@@ -234,9 +235,25 @@ const isUp = (name, version) =>
     shell: process.platform === 'win32',
   }).stdout.trim() === version
 
+/** A name the registry has never seen. Trusted publishing can't send one: trust is set on a package that exists. */
+function isNew(name) {
+  const r = spawnSync(npm, ['view', name, 'name', '--registry', registry], {
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+  })
+  return r.status !== 0 && /E404/.test(r.stderr ?? '')
+}
+
 /** Exits non-zero on the first refusal: everything after it depends on it. */
 function send(tgz, name, version) {
   if (isUp(name, version)) return say(`${name}@${version} is already up`)
+  if (ci && publish && isNew(name)) {
+    // One new package must not hold back the rest; nothing published depends on a package that never was.
+    console.log(
+      `::warning::${name} is not on npm yet: publish it by hand once, then scripts/trust-nightly.mjs`,
+    )
+    return say(`${name} is new to npm: left for its first publish by hand`)
+  }
   if (useOtp && publish && otp === undefined)
     otp = ask('6-digit code from your authenticator app: ')
   const auth = local || ci ? [] : useOtp ? (otp ? [`--otp=${otp}`] : []) : ['--auth-type=web']
