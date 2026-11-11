@@ -10,6 +10,7 @@ function serverSite(z) {
     security: z
       .union([z.literal(false), z.record(z.string(), z.union([z.string(), z.literal(false)]))])
       .optional(),
+    trustProxy: z.union([z.boolean(), z.int().positive()]).optional(),
   }
 }
 

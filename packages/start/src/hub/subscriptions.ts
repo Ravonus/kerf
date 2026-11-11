@@ -2,6 +2,7 @@ import { enter, fns, StartError, type Context, type Fn } from '../data'
 import {
   createScope,
   guard,
+  signedIn,
   liveQueries,
   missedFeed,
   tagsOf,
@@ -108,7 +109,7 @@ async function add(
     const valid = await validate(fn, input)
     if (s.ac.signal.aborted) return
     if (kind === 's') return void stream(deps, c, s, valid, cursor)
-    guard(fn, fn.def.auth ? await createScope(request, scoped).ctx() : ({} as Context))
+    await guard(fn, signedIn(fn) ? await createScope(request, scoped).ctx() : ({} as Context))
     if (s.ac.signal.aborted) return
     s.tags = await tagsOf(fn, valid, createScope(request, scoped))
     for (const t of s.tags) c.tags.set(t, (c.tags.get(t) ?? 0) + 1)
@@ -140,7 +141,7 @@ async function stream(deps: Dependencies, c: Conn, s: Sub, input: unknown, curso
         : scope
       await enter(frame, async () => {
         const ctx = await scope.ctx()
-        guard(s.fn, ctx)
+        await guard(s.fn, ctx)
         const replaced = s.options.handlers?.get(s.fn.$id) as
           | ((
               input: unknown,

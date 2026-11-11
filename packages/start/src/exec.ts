@@ -35,7 +35,7 @@ import {
   type ScopeEntry,
   type Touched,
 } from './exec/scope'
-import { guard, dbError } from './exec/errors'
+import { guard, dbError, signedIn } from './exec/errors'
 import {
   tracker,
   untouched,
@@ -56,6 +56,7 @@ export {
   memoryStore,
   defaultStore,
   guard,
+  signedIn,
   dbError,
   liveQueries,
   missedFeed,
@@ -127,8 +128,8 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     const cached = scope.preview ? undefined : fn.def.cache
     const store = storeOf(scope)
     // Checked before the shared cache, so a value stored for one user is never answered to no one.
-    const early = fn.def.auth || cached?.scope ? await scope.ctx() : undefined
-    if (early) guard(fn, cached ? shared(early, fn, scope) : early)
+    const early = signedIn(fn) || cached?.scope ? await scope.ctx() : undefined
+    if (early) await guard(fn, cached ? shared(early, fn, scope) : early)
     const stored = cached?.scope
       ? `${key}@${String((early as { user?: { id?: string | number } } | undefined)?.user?.id ?? '')}`
       : key
@@ -193,7 +194,7 @@ export async function tagsOf(fn: Fn, input: unknown, scope: Pick<Scope, 'ctx'>):
   if (typeof tags !== 'function') return [...(tags ?? [])]
   if (tags.length < 2) return [...tags(input)]
   const ctx = await scope.ctx()
-  guard(fn, ctx)
+  await guard(fn, ctx)
   return [...tags(input, ctx)]
 }
 
@@ -256,7 +257,7 @@ async function call(
 ) {
   const { touched } = track
   const added = track.added ?? []
-  guard(fn, ctx)
+  await guard(fn, ctx)
   claimed(fn, scope)
   try {
     for (const e of scope.options.extensions ?? [])

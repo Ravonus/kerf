@@ -13,6 +13,7 @@ export const me = query({
 })
 
 export const signUp = mutation({
+  auth: 'public',
   input: credentials.extend({ name: z.string().trim().min(1) }),
   run: async ({ input, ctx }) => {
     await forward(
@@ -24,6 +25,7 @@ export const signUp = mutation({
 })
 
 export const signIn = mutation({
+  auth: 'public',
   input: credentials,
   run: async ({ input, ctx }) => {
     await forward(
@@ -35,6 +37,7 @@ export const signIn = mutation({
 })
 
 export const signOut = mutation({
+  auth: 'public',
   run: async ({ ctx }) => {
     await forward(ctx, auth.api.signOut({ headers: ctx.request.headers, asResponse: true }))
     redirect('/login')

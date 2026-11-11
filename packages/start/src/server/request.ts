@@ -1,10 +1,26 @@
 import { CLIENT_IP, decodeForm, StartError } from '../data'
 import type { Scope } from '../exec'
 
-/** The request with the socket's address in CLIENT_IP, replacing any the client sent. Nitro's server sets `.ip`. */
-export function stamped(request: Request): Request {
-  const headers = new Headers(request.headers)
+/**
+ * Who sent the request. Without `trustProxy` it's the socket's address (Nitro's server sets `.ip`). Behind `n` proxies
+ * it's the `n`th address from the right of `X-Forwarded-For`: each proxy appends who it heard from, so the entries left
+ * of that are whatever the client wrote, and the socket is the nearest proxy itself.
+ */
+export function clientIp(request: Request, trustProxy?: boolean | number): string | undefined {
   const { ip } = request as Request & { ip?: string }
+  const hops = trustProxy === true ? 1 : trustProxy || 0
+  if (!hops) return ip
+  const chain = (request.headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((a) => a.trim())
+    .filter(Boolean)
+  return chain[chain.length - hops] ?? chain[0] ?? ip
+}
+
+/** The request with the client's address (`clientIp`) in CLIENT_IP, replacing any the client sent. */
+export function stamped(request: Request, trustProxy?: boolean | number): Request {
+  const headers = new Headers(request.headers)
+  const ip = clientIp(request, trustProxy)
   headers.delete(CLIENT_IP)
   if (ip) headers.set(CLIENT_IP, ip)
   // `new Request(request, …)` refuses the server's request wrapper; the parts are enough.

@@ -1,6 +1,6 @@
 // Request limits, default security headers, header merging and the card-image SSRF guard, without a server.
 import { describe, expect, test } from 'vitest'
-import { bodyLimit, LIMITS, limited, withHeaders } from '../src/server/request'
+import { bodyLimit, clientIp, LIMITS, limited, withHeaders } from '../src/server/request'
 import { secured, securityHeaders } from '../src/server/security'
 import { privateAddress, publicHttps, loadImages } from '../src/og/images.mjs'
 import type { HandlerOptions } from '../src/server/types'
@@ -166,5 +166,22 @@ describe('card images', () => {
     expect(fetched).toBe(0)
     expect(images).toEqual([])
     expect(failed.map((f: { reason: string }) => f.reason)).toEqual(['not allowed', 'not allowed'])
+  })
+})
+
+describe('client address', () => {
+  const req = (xff?: string) =>
+    Object.assign(new Request('http://x/', { headers: xff ? { 'x-forwarded-for': xff } : {} }), {
+      ip: '10.0.0.2',
+    })
+
+  test("without trustProxy it's the socket, whatever X-Forwarded-For says", () => {
+    expect(clientIp(req('6.6.6.6'))).toBe('10.0.0.2')
+  })
+
+  test('behind n proxies it is the nth entry from the right, so what the client wrote is skipped', () => {
+    expect(clientIp(req('6.6.6.6, 203.0.113.9'), true)).toBe('203.0.113.9')
+    expect(clientIp(req('6.6.6.6, 203.0.113.9, 10.0.0.1'), 2)).toBe('203.0.113.9')
+    expect(clientIp(req(), true)).toBe('10.0.0.2')
   })
 })

@@ -58,6 +58,7 @@ export const SignIn = z.object({
   password: z.string().min(8, 'At least 8 characters'),
 })
 export const signIn = mutation({
+  auth: 'public',
   input: SignIn,
   errors: {
     INVALID_CREDENTIALS: z.object({}),

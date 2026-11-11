@@ -44,9 +44,19 @@ export interface SchemaIssue {
 /** `'minutes'` etc. or seconds: how long the shared server cache keeps a value (research 27 §4). */
 export type Life = 'seconds' | 'minutes' | 'hours' | 'days' | 'max' | number
 
-/** `auth: 'user'` narrows `ctx.user` to non-null in `run` (A002 answers a call with no session). */
-export type AuthScope = 'user'
-type Ctx<A> = A extends 'user'
+/** What `ctx.user` carries for a role check: Better Auth's `admin` plugin writes `role` as `'admin'` or `'admin,user'`. */
+type Signed = Context extends { user: infer U } ? NonNullable<U> : { id: string; role?: unknown }
+/**
+ * Who may call a function. `'user'`: anyone signed in (A002 otherwise). `'public'`: anyone, said out loud (a mutation
+ * in an app with auth needs it, since there the default is `'user'`). `{ role }`: a signed-in user with one of these
+ * roles. `{ can }`: a signed-in user your check passes. Both answer 403 (A006) to anyone else.
+ */
+export type AuthScope =
+  | 'user'
+  | 'public'
+  | { role: string | readonly string[] }
+  | { can: (ctx: Omit<Context, 'user'> & { user: Signed }) => boolean | Promise<boolean> }
+type Ctx<A> = A extends 'user' | { role: unknown } | { can: unknown }
   ? Context extends { user: infer U }
     ? Omit<Context, 'user'> & { user: NonNullable<U> }
     : Context
@@ -83,7 +93,7 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
   input?: S
   /** The result's shape: checked in dev and tests (C002), and the contract's `output`. */
   output?: StandardSchemaV1
-  /** `'user'`: refuse a call with no session (A002). The contract's auth scope. */
+  /** Who may call it (`AuthScope`): `'user'`, `'public'`, `{ role }` or `{ can }`. The contract's auth scope. */
   auth?: A
   /** An example result, for what `output` can't say: sizes a pending view (research 31 §2). */
   shape?: O extends (infer R)[] ? DeepPartial<R>[] : DeepPartial<O>
@@ -126,6 +136,7 @@ export type ImplMutationDef<S, OS extends StandardSchemaV1, A = undefined> = Omi
 export interface MutationDef<S, O, A = undefined> extends FnOptions {
   input?: S
   output?: StandardSchemaV1
+  /** Who may call it. In an app with auth (`ctx.user` exists) a mutation needs a signed-in user unless it says `'public'`. */
   auth?: A
   /** Tags whose queries the response refreshes (single-flight) and whose cached values it drops. */
   invalidates?: Tags<[input: Out<S>, result: Awaited<O>]>

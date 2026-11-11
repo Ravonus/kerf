@@ -16,6 +16,7 @@ const HELD = /^\/_weft\/(rt|ws|x\/)/
 const FN = '/_weft/fn/'
 const ANONYMOUS = { user: null, session: null }
 const TABLES = ['user', 'session', 'account', 'verification', 'jwks']
+const ROTATE = 60 * 60 * 24 * 30
 
 /** A cache too big for one cookie is no cache: that session just reads the database. An expired chunk still goes out. */
 const oversized = (line: string) =>
@@ -177,6 +178,35 @@ function requireStore(db: { $weft: DbHandle }, options: BetterAuthOptions | unde
     )
 }
 
+/** The `jwt` plugin: a new signing key every 30 days; old ones keep verifying for Better Auth's grace period (30 days). */
+function apiTokens(access: Omit<ApiAccess, 'functions'>, claims: JwtOptions['jwt']) {
+  return jwt({
+    ...access,
+    jwks: { rotationInterval: ROTATE, ...access.jwks },
+    jwt: claims,
+    disableSettingJwtHeader: true,
+  })
+}
+
+/** A production server's secret (A001) and its own URL (A007). */
+function checkServer(secret: string | undefined, origin: unknown) {
+  if (process.env.NODE_ENV !== 'production') return
+  if ((secret?.length ?? 0) < 32)
+    throw new StartError(
+      'A001',
+      'the auth secret is missing or under 32 characters',
+      "set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) in the server's environment",
+    )
+  // Without it Better Auth takes its origin from each request's Host header: a forged Host would steer the links in
+  // reset and verification emails, and the origin check, to another site.
+  if (!origin)
+    throw new StartError(
+      'A007',
+      "the auth server's own URL is missing",
+      "set `BETTER_AUTH_URL` (`https://your.site`) in the server's environment, or pass `options.baseURL`",
+    )
+}
+
 /** A Better Auth instance with Weft's defaults, on the store `options.database` names. */
 export function createAuth<
   S extends Record<string, unknown>,
@@ -220,7 +250,7 @@ export function createAuth<
     plugins: [
       ...(options?.plugins ?? []),
       cacheRules,
-      ...(api === false ? [] : [jwt({ ...access, jwt: claims, disableSettingJwtHeader: true })]),
+      ...(api === false ? [] : [apiTokens(access, claims)]),
     ],
     // The server stamps this header from the socket (server.tsx), so rate limits aren't one bucket for everyone.
     // Its schema check runs when this module loads. On Kysely that connects, in a build, and before a fresh database has
@@ -243,14 +273,7 @@ export function createAuth<
     session: sessionReader(auth, methods, claims, functions, api),
     $weft: {
       /** On the first request (never in a build, which holds no secrets). */
-      check() {
-        if (process.env.NODE_ENV === 'production' && (secret?.length ?? 0) < 32)
-          throw new StartError(
-            'A001',
-            'the auth secret is missing or under 32 characters',
-            "set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) in the server's environment",
-          )
-      },
+      check: () => checkServer(secret, origin ?? options?.baseURL),
     },
   })
 }

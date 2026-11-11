@@ -124,6 +124,7 @@ const context = async ({ request }: { request: Request }) => ({
 })
 mutation({
   $id: 'cache.out',
+  auth: 'public',
   run: ({ ctx }) =>
     forward(ctx, auth.api.signOut({ headers: ctx.request.headers, asResponse: true })).then(
       () => null,
