@@ -9,6 +9,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
 import { hex, luminance, toLinear } from './tokens/color.mjs'
+import { ICONS } from './src/plugin/icons.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { DEFAULT, normalizeSeed, seedByName } from './src/plugin/seed.mjs'
@@ -23,12 +24,6 @@ const DIALS = {
   theme: ['light', 'dark'],
 }
 const RADII = { sharp: [2, 2, 2], soft: [8, 12, 4], round: [14, 20, 6] }
-// The icon tier each expression stop draws (warp.css §2: --warp-icon-*): `icons` pins one whatever the expression.
-const ICONS = {
-  quiet: { o: 'inline', q: 'inline', b: 'none', v: 'none', fine: 'none', weft: 1.5 },
-  balanced: { o: 'inline', q: 'none', b: 'inline', v: 'none', fine: 'inline', weft: 2 },
-  vivid: { o: 'none', q: 'none', b: 'none', v: 'inline', fine: 'inline', weft: 2 },
-}
 const FONTS = {
   body: ['sans', 'ui-sans-serif, system-ui, sans-serif'],
   display: ['display', 'ui-sans-serif, system-ui, sans-serif'],
@@ -72,10 +67,9 @@ function options(input) {
     if (!RADII[input.radius]) throw bad('radius', `must be one of ${Object.keys(RADII).join(', ')}`)
     out.radius = input.radius
   }
-  if (input.icons !== undefined) {
-    if (!ICONS[input.icons]) throw bad('icons', `must be one of ${Object.keys(ICONS).join(', ')}`)
-    out.icons = input.icons
-  }
+  if (input.icons !== undefined && !ICONS[input.icons])
+    throw bad('icons', `must be one of ${Object.keys(ICONS).join(', ')}`)
+  if (input.icons) out.icons = input.icons
   for (const [font, value] of Object.entries(input.fonts ?? {})) {
     if (!FONTS[font])
       throw bad(`fonts.${font}`, `unknown font; use ${Object.keys(FONTS).join(', ')}`)

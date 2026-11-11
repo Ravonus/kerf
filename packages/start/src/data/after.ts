@@ -21,7 +21,11 @@ export function after(fn: () => unknown): void {
 const here = (what: string) => {
   const scope = server()
   if (!scope)
-    throw new StartError('Q017', `\`preview.${what}\` needs a request`, 'call it in a server function or a `load`')
+    throw new StartError(
+      'Q017',
+      `\`preview.${what}\` needs a request`,
+      'call it in a server function or a `load`',
+    )
   return scope
 }
 
@@ -45,6 +49,9 @@ export const preview = {
     )
   },
   stop() {
-    here('stop').headers.append('set-cookie', `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`)
+    here('stop').headers.append(
+      'set-cookie',
+      `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`,
+    )
   },
 }

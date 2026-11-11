@@ -39,7 +39,7 @@ export function rewarm(
         scope.options.onDiagnostic?.({
           code: 'E_WARM',
           severity: 'warning',
-          message: `warming \`${w.fn.$id}\` after ${tags.join(', ')} failed: ${e instanceof Error ? e.message : e}`,
+          message: `warming \`${w.fn.$id}\` after ${tags.join(', ')} failed: ${e instanceof Error ? e.message : String(e)}`,
         }),
       )
   })

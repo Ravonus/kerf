@@ -6,10 +6,9 @@ import * as exec from '../src/exec'
 import { forgetWarm } from '../src/exec/warm'
 
 const scope = (cookie?: string) =>
-  exec.createScope(
-    new Request('http://localhost/', { headers: cookie ? { cookie } : {} }),
-    { store: exec.memoryStore() },
-  )
+  exec.createScope(new Request('http://localhost/', { headers: cookie ? { cookie } : {} }), {
+    store: exec.memoryStore(),
+  })
 /** Run `fn` with `s` as the request in progress, as the server's AsyncLocalStorage would. */
 function enter(s: exec.Scope, fn: () => void) {
   const was = runtime.scope
@@ -20,14 +19,24 @@ function enter(s: exec.Scope, fn: () => void) {
     runtime.scope = was
   }
 }
-const settle = () => new Promise((r) => setTimeout(r, 5))
+const settle = () =>
+  new Promise((r) => {
+    setTimeout(r, 5)
+  })
 
 afterEach(() => forgetWarm())
 
 test('a warm query runs again in the background when its tag is invalidated, so the next reader hits', async () => {
   let menu = 'old'
   let runs = 0
-  const read = fnOf(query({ $id: 'warmMenu', tags: ['menu'], cache: { life: 'hours', warm: true }, run: () => (runs++, menu) }))
+  const read = fnOf(
+    query({
+      $id: 'warmMenu',
+      tags: ['menu'],
+      cache: { life: 'hours', warm: true },
+      run: () => (runs++, menu),
+    }),
+  )
   const store = exec.memoryStore()
   const make = () => exec.createScope(new Request('http://localhost/'), { store })
   expect((await exec.fetchQuery(make(), read, undefined)).v).toBe('old')
@@ -41,7 +50,9 @@ test('a warm query runs again in the background when its tag is invalidated, so 
 
 test('a query without warm waits for its next reader', async () => {
   let runs = 0
-  const read = fnOf(query({ $id: 'coldMenu', tags: ['menu'], cache: { life: 'hours' }, run: () => ++runs }))
+  const read = fnOf(
+    query({ $id: 'coldMenu', tags: ['menu'], cache: { life: 'hours' }, run: () => ++runs }),
+  )
   const store = exec.memoryStore()
   const make = () => exec.createScope(new Request('http://localhost/'), { store })
   await exec.fetchQuery(make(), read, undefined)
@@ -52,10 +63,14 @@ test('a query without warm waits for its next reader', async () => {
 
 test('a preview request neither reads nor writes the shared cache', async () => {
   let value = 'published'
-  const read = fnOf(query({ $id: 'previewMenu', tags: ['menu'], cache: { life: 'hours' }, run: () => value }))
+  const read = fnOf(
+    query({ $id: 'previewMenu', tags: ['menu'], cache: { life: 'hours' }, run: () => value }),
+  )
   const store = exec.memoryStore()
   const make = (cookie?: string) =>
-    exec.createScope(new Request('http://localhost/', { headers: cookie ? { cookie } : {} }), { store })
+    exec.createScope(new Request('http://localhost/', { headers: cookie ? { cookie } : {} }), {
+      store,
+    })
   expect((await exec.fetchQuery(make(), read, undefined)).v).toBe('published')
   value = 'draft'
   const p = make('a=1; weft-preview=7')

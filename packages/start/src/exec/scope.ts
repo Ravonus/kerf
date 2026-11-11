@@ -197,7 +197,7 @@ export async function finishScope(scope: Scope) {
       scope.options.onDiagnostic?.({
         code: 'E_AFTER',
         severity: 'error',
-        message: `an \`after()\` task failed: ${e instanceof Error ? e.message : e}`,
+        message: `an \`after()\` task failed: ${e instanceof Error ? e.message : String(e)}`,
       })
     }
 }
