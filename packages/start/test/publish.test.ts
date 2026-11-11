@@ -130,7 +130,7 @@ test("a mutation's refreshes read with the preview the response leaves on, or wi
       new Request('http://localhost/_weft', { method: 'POST', headers: { cookie } }),
       { store: exec.memoryStore() },
     )
-  const refresh: [string, unknown][] = [['previewRead', undefined]]
+  const refresh: [string, unknown][] = [[read.$id, undefined]]
   // the server's AsyncLocalStorage, so the scope survives awaits
   const als = new AsyncLocalStorage<exec.Scope>()
   const was = { scope: runtime.scope, enter: runtime.enter }
