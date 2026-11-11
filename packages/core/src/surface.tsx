@@ -77,8 +77,8 @@ export interface SurfaceDef<P = {}, K extends string = string> {
   pixel?: { width: number; height: number }
   /** Ticks per second of `s.frame`. Default 60. */
   fps?: number
-  /** Default 2. */
-  maxDpr?: number
+  /** The highest pixel ratio drawn. Default 2. A `State` hands it to the page: the canvas refits when it changes. */
+  maxDpr?: number | State<number>
   /** canvas2d: keep the last frame instead of clearing before each paint. */
   clear?: boolean
   /** `getContext` attributes. */

@@ -101,7 +101,8 @@ The server renders a sized placeholder, so nothing shifts when the canvas mounts
 - `return () => ...` from `setup` to clean up
 
 `defineSurface` also takes `fps` (default 60), `maxDpr` (default 2), `clear: false`, `context` (`getContext` attributes),
-and `pixel: { width, height }` for a fixed target with integer scale and nearest sampling.
+and `pixel: { width, height }` for a fixed target with integer scale and nearest sampling. `maxDpr` may be a `State`:
+a page that governs its frame rate writes it, and the canvas refits without waiting for a resize.
 
 **The clock** is shared: `import { clock } from '@weft-js/core/surface'`, then `clock.pause()`, `clock.play()`, `clock.seek(seconds)`.
 `seek` paints every animated surface now, so a capture is deterministic. Under `prefers-reduced-motion: reduce` it
