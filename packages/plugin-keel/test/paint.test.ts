@@ -7,7 +7,7 @@ import { inflateSync } from 'node:zlib'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
 import { afterEach, describe, expect, it } from 'vitest'
-import { keelPaint, paintFile, png } from '../src/paint.mjs'
+import { createPaintPool, keelPaint, paintFile, png } from '../src/paint.mjs'
 
 const dirs: string[] = []
 const scratch = () => {
@@ -74,6 +74,33 @@ describe('paintFile', () => {
     await expect(
       paintFile(recipe(dir, { surface: 'velvet' }, 'c.paint.json'), cache),
     ).rejects.toThrow(/no surface `velvet`/)
+  })
+})
+
+describe('createPaintPool', () => {
+  it('paints on its threads the bytes this thread paints, side by side', async () => {
+    const dir = scratch()
+    const pool = createPaintPool(2)
+    try {
+      const files = ['paper', 'knit', 'paper'].map((surface, i) =>
+        recipe(dir, { surface, seed: i, width: 20 }, `${surface}-${i}.paint.json`),
+      )
+      const threaded = await Promise.all(
+        files.map((f) => paintFile(f, join(dir, 'a'), () => {}, pool)),
+      )
+      const here = await Promise.all(files.map((f) => paintFile(f, join(dir, 'b'))))
+      threaded.forEach((t, i) => {
+        expect(t.painted).toBe(true)
+        expect(readFileSync(t.file)).toEqual(readFileSync(here[i]!.file))
+      })
+      await expect(pool.paint({ surface: 'velvet' } as never)).rejects.toThrow(
+        /no surface `velvet`/,
+      )
+      const after = await pool.paint({ surface: 'paper', width: 8 })
+      expect([after.width, after.bytes[1]]).toEqual([8, 0x50])
+    } finally {
+      await pool.close()
+    }
   })
 })
 

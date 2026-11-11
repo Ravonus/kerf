@@ -216,8 +216,9 @@ import floral from './floral.paint.json?paint'
 ```
 
 A recipe names a preset (`paper`, `knit`, `painted-floral`, `painted-cloth`) with `with` laid over it, or
-gives a whole `recipe`. The PNG is painted on the CPU in Node and kept in `.weft/cache/paint` under the plan's
-digest and the module's version, so a rebuild with the recipe unchanged paints nothing. Add
+gives a whole `recipe`. The PNG is painted on the CPU, on worker threads so a page's recipes paint side by side
+(`keelPaint({ threads })`, default one fewer than the cores up to 4), and kept in `.weft/cache/paint` under the
+plan's digest and the module's version, so a rebuild with the recipe unchanged paints nothing. Add
 `"@weft-js/plugin-keel/client"` to `types` for the `?paint` declaration. `paper` and `knit` tile: `cssImage`
 from `paint-live` gives an `image-set` of each format's widest file, for `background-image`.
 
