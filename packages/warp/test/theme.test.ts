@@ -141,7 +141,13 @@ describe('the parts table', () => {
 
 describe('the compiler without the plugin', () => {
   test('runs from the stylesheet facts alone, with no Node import', async () => {
-    for (const f of ['theme.mjs', 'theme-css.mjs', 'theme-parts.mjs', 'seed.mjs'])
+    for (const f of [
+      'theme.mjs',
+      'theme-css.mjs',
+      'theme-parts.mjs',
+      'theme-values.mjs',
+      'seed.mjs',
+    ])
       expect(readFileSync(new URL(`../src/plugin/${f}`, import.meta.url), 'utf8')).not.toMatch(
         /from 'node:/,
       )

@@ -5,8 +5,8 @@
 import { contrast, fromHex, toLinear } from '../../tokens/color.mjs'
 import { themeCss } from './theme-css.mjs'
 import { PARTS, STATES, allParts, propsOf, statesOf } from './theme-parts.mjs'
+import { NAME, bad, fontValue, plain, px, safe } from './theme-values.mjs'
 
-const NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 const BUILTIN = new Set(['white', 'black', 'transparent', 'currentColor', 'inherit'])
 const WARP_COLORS = [
   'page',
@@ -59,9 +59,7 @@ const SYSTEM = {
 }
 const UNITLESS = new Set(['weight', 'leading', 'stroke'])
 
-export const bad = (path, message) => Object.assign(new Error(message), { path })
-const plain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
-const safe = (v) => (typeof v === 'string' && v !== '' && !/[;{}<>]/.test(v)) || Number.isFinite(v)
+export { bad }
 
 // -- reading values ------------------------------------------------------------------------------------------------
 
@@ -79,7 +77,6 @@ function colorValue(value, colors, path) {
   throw bad(path, `unknown colour \`${value}\`; name it in \`colors\`, or use #rrggbb`)
 }
 
-const px = (v) => (Number.isFinite(v) ? `${v}px` : v)
 const KINDS = {
   color: colorValue,
   length: (v) => px(v),
@@ -94,11 +91,9 @@ const KINDS = {
         ? `var(--warp-elevation-${SHADOW[v]})`
         : v,
   ease: (v) => (EASE.includes(v) ? `var(--warp-ease-${v})` : v),
-  font: (v) => (['sans', 'display', 'mono'].includes(v) ? `var(--warp-font-${v})` : stack(v)),
+  font: fontValue,
   plain: (v) => String(v),
 }
-const stack = (v) =>
-  v.includes(',') ? v : `${JSON.stringify(v)}, ui-sans-serif, system-ui, sans-serif`
 
 function read(kind, value, colors, path) {
   if (!safe(value)) throw bad(path, 'must be a CSS value or a number')
