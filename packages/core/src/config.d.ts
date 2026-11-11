@@ -51,6 +51,16 @@ export interface SiteConfig {
    * `style-src-attr 'unsafe-inline'`.
    */
   csp?: 'strict'
+  /**
+   * Request body limits, in bytes. `body`: a server function's or realtime request's JSON (1 MB). `upload`: a multipart
+   * body, a form with files (25 MB). A bigger body is refused with 413 (Q018) before the rest of it is read.
+   */
+  limits?: { body?: number; upload?: number }
+  /**
+   * Headers every server response gets unless it set its own: `nosniff`, `Referrer-Policy`, framing only by this site,
+   * `Cross-Origin-Opener-Policy` and, on https, HSTS. Name a header to change it, `false` to drop it, or `false` for none.
+   */
+  security?: false | Record<string, string | false>
   name?: string
   /** Absolute `http(s)` origin (and base path) for canonical, og:url and relative images. Without it a relative image is H001. */
   url?: string

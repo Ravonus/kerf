@@ -62,6 +62,8 @@ export default defineConfig({
 | `site` | Page metadata defaults and CSS delivery. P007 `url` not absolute http(s), `title` without `%s`, `locale` not `en_US` style; H001 no `url`; H003 no `description`; H004 a title over 60 or a description over 160 (warnings) |
 | `site.card` | The generated share card's colours and fonts. P007 a colour that isn't `#rrggbb`, a font family that isn't a name. `weft docs meta` has the rest |
 | `site.headers` | Response headers by route pattern |
+| `site.security` | Headers every Start response gets unless it sets its own (`nosniff`, `Referrer-Policy`, `X-Frame-Options: SAMEORIGIN`, COOP, HSTS on https). Name a header to change it, `false` to drop it, or `security: false` for none |
+| `site.limits` | `{ body, upload }` in bytes: the largest JSON (1 MB) and multipart (25 MB) request body. Past it, 413 (Q018) |
 | `runtime` | `node`, `bun` or `deno`: what `weft build` targets (`weft docs start`) |
 | `hydration` | `'lazy'` (default): islands load when needed; `'partial'`: every island loads with the page; `'full'`: every route hydrates whole |
 | `rust` | `unions` and `services` for Rust bodies (`weft docs rust`) |

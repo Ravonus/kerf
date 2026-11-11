@@ -4,6 +4,7 @@ import type { Scope } from '../exec'
 import { hub } from '../hub'
 import { compressed } from './compression'
 import { stamped } from './request'
+import { secured } from './security'
 import type { makeServices } from './services'
 import type { HandlerOptions } from './types'
 
@@ -14,7 +15,9 @@ export function makeHandler(
   services: ReturnType<typeof makeServices>,
   route: (request: Request, scope: Scope) => Promise<Response>,
 ) {
-  return async (incoming: Request): Promise<Response> => {
+  return async (incoming: Request): Promise<Response> =>
+    secured(await handle(incoming), incoming, options)
+  async function handle(incoming: Request): Promise<Response> {
     const request = options.auth ? stamped(incoming) : incoming
     await services.loadExtensions()
     services.check()

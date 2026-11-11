@@ -229,7 +229,10 @@ describe('share cards', () => {
   })
 
   test('build mode: the server lists the cards to prerender (static routes and `prerender` params)', async () => {
-    const res = await get('/_weft/og-routes')
+    expect((await get('/_weft/og-routes')).status).toBe(404) // only Nitro's prerender gets the list
+    const res = await get('/_weft/og-routes', {
+      headers: { 'x-nitro-prerender': '/_weft/og-routes' },
+    })
     const list = res.headers.get('x-nitro-prerender')!.split(',')
     expect(list).toContain('/_weft/og/index.png')
     expect(list).toContain('/_weft/og/about.png')
