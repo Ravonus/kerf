@@ -1,6 +1,7 @@
 import { EXTENSION, type ServerExtension } from '../extension'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
+import { enter } from '../data/foundation'
 import { rtRoute } from '../hub'
 import { socketRoute } from '../socket'
 import { serverFunction } from './functions'
@@ -38,6 +39,8 @@ export function makeDispatch({
     return extension.handle(request, rest.join('/'), {
       invalidate: (tags) => exec.invalidate(scope, tags),
       report: (d) => options.onDiagnostic?.(d),
+      ctx: () => scope.ctx(),
+      call: (id, input) => enter(scope, () => exec.callById(scope, id, input)),
     })
   }
 

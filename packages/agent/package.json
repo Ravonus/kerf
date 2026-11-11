@@ -1,0 +1,75 @@
+{
+  "name": "@weft-js/agent",
+  "version": "0.1.4",
+  "description": "@weft-js/agent: an assistant that runs your app. Server functions become its tools by opting in, with grants per role and per token, conversations, usage, and bridges to Claude, the Claude CLI or your own Rust",
+  "keywords": [
+    "agent",
+    "claude",
+    "mcp",
+    "weft"
+  ],
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/agent#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/agent"
+  },
+  "files": [
+    "src",
+    "docs",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./drizzle": "./src/drizzle.ts",
+    "./anthropic": "./src/bridges/anthropic.ts",
+    "./cli": "./src/bridges/cli.ts",
+    "./rust": "./src/bridges/rust.ts",
+    "./test": "./src/test.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "typescript": "6.0.3"
+  },
+  "devDependencies": {
+    "@weft-js/cli": "workspace:*",
+    "@weft-js/core": "workspace:*",
+    "@weft-js/start": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "vitest": "5.0.5",
+    "zod": "4.6.7"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": "^1.0.0",
+    "@weft-js/core": "*",
+    "@weft-js/start": "*",
+    "drizzle-orm": "^0.45.0",
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "drizzle-orm": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

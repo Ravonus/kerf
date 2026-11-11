@@ -69,6 +69,7 @@ where it has one.
 
 | Package | What it is | Status | Source |
 | --- | --- | --- | --- |
+| [`@weft-js/agent`](https://www.npmjs.com/package/@weft-js/agent) | An assistant that runs the app: server functions opt in as tools, grants per role and token, conversations, usage, MCP, and bridges to Claude, the Claude CLI or a Rust planner. | New | [agent/](https://github.com/Ravonus/weft/tree/main/packages/agent) |
 | [`@weft-js/pay`](https://www.npmjs.com/package/@weft-js/pay) | Products, one ledger for every payment rail, and entitlements, with a Stripe rail. Weft's reference plugin: read it to build your own. | Published on npm | [pay/](https://github.com/Ravonus/weft/tree/main/packages/pay) |
 
 ## Working on a package

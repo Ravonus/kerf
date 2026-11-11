@@ -108,8 +108,8 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
       (ctx ??= Promise.resolve()
         .then(() => options.context?.({ request }) ?? {})
         .then(
-          (app) =>
-            extended(
+          async (app) =>
+            await extended(
               {
                 ...app,
                 request,
@@ -125,9 +125,12 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   }
 }
 
-/** Each extension's part of `ctx`, once the app's is there: an extension reads `ctx.user` to say what it adds. */
-function extended(ctx: Context, options: ScopeOptions): Context {
-  for (const e of options.extensions ?? []) Object.assign(ctx, e.context?.(ctx))
+/**
+ * Each extension's part of `ctx`, once the app's is there: an extension reads `ctx.user` to say what it adds. One may
+ * look something up first (an agent's token), so each is awaited, in order.
+ */
+async function extended(ctx: Context, options: ScopeOptions): Promise<Context> {
+  for (const e of options.extensions ?? []) Object.assign(ctx, await e.context?.(ctx))
   return ctx
 }
 

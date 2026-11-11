@@ -23,6 +23,7 @@ export {
   invalidate,
   after,
   preview,
+  serverCall,
   cache,
   skip,
   isRedirect,
