@@ -42,13 +42,12 @@ export async function open(
   body: string,
   options: object = {},
   dir = 'ltr',
-  paint = false,
-  prepare?: () => void,
+  { paint = false, prepare }: { paint?: boolean; prepare?: () => void } = {},
 ) {
   await page.setContent(
     `<!doctype html><html dir="${dir}"><head><style>body{margin:0;font:16px/1 sans-serif}${css}</style></head><body>${body}</body></html>`,
   )
-  // Runs before the package loads: a case can take a browser feature away first.
+  // `prepare` runs before the package loads: a case can take a browser feature away first.
   if (prepare) await page.evaluate(prepare)
   await page.addScriptTag({ content: bundle })
   await page.evaluate(

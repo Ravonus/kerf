@@ -14,7 +14,7 @@ const open = (
   options: Scroll.ScrollOptions = {},
   dir = 'ltr',
   paint = false,
-) => openArea(page, body, { mode: 'engine', ...options }, dir, paint)
+) => openArea(page, body, { mode: 'engine', ...options }, dir, { paint })
 
 /** Each case gets a fresh page in each browser. */
 const cases: Record<string, Case> = {

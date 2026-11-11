@@ -76,10 +76,12 @@ const cases: Record<string, Case> = {
   },
 
   'without CSS scroll timelines the thumb is drawn by script and follows': async (page) => {
-    await open(page, AREA(rows(50)), {}, 'ltr', false, () => {
-      const supports = CSS.supports.bind(CSS)
-      CSS.supports = (...a: [string, string?]) =>
-        a.join(' ').includes('timeline') ? false : supports(...(a as [string]))
+    await open(page, AREA(rows(50)), {}, 'ltr', {
+      prepare: () => {
+        const supports = CSS.supports.bind(CSS)
+        CSS.supports = (...a: [string, string?]) =>
+          a.join(' ').includes('timeline') ? false : supports(...(a as [string]))
+      },
     })
     const timeline = await page.$eval('#root', (r) => r.hasAttribute('data-timeline'))
     expect(timeline).toBe(false)
@@ -90,10 +92,13 @@ const cases: Record<string, Case> = {
   },
 }
 
+// WebKit runs with WEFT_WEBKIT=1, as the other suites do: the release gate installs it, the merge gate doesn't.
 runOn(
-  [
-    ['webkit', 'iPhone 15'],
-    ['chromium', 'Pixel 7'],
-  ],
+  process.env.WEFT_WEBKIT
+    ? [
+        ['webkit', 'iPhone 15'],
+        ['chromium', 'Pixel 7'],
+      ]
+    : [['chromium', 'Pixel 7']],
   cases,
 )

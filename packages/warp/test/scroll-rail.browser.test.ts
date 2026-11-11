@@ -50,10 +50,15 @@ const activate = (p: Playwright.Page) =>
     document.querySelector('[data-scope="scroll-rail"]')!.setAttribute('data-active', ''),
   )
 
-describe.each([
-  ['webkit', 'iPhone 15'],
-  ['chromium', 'Pixel 7'],
-] as const)('%s as %s', (name, device) => {
+// WebKit runs with WEFT_WEBKIT=1, as the other suites do: the release gate installs it, the merge gate doesn't.
+const phones = process.env.WEFT_WEBKIT
+  ? ([
+      ['webkit', 'iPhone 15'],
+      ['chromium', 'Pixel 7'],
+    ] as const)
+  : ([['chromium', 'Pixel 7']] as const)
+
+describe.each(phones)('%s as %s', (name, device) => {
   let browser: Playwright.Browser
   beforeAll(async () => {
     browser = await pw[name].launch()
