@@ -57,6 +57,10 @@ export interface WarpTheme {
 }
 
 type Len = number | string
+/** The handles of `cubic-bezier(x1, y1, x2, y2)`, the same shape a scroll timeline's key takes. */
+export type Handles = readonly [x1: number, y1: number, x2: number, y2: number]
+/** A CSS easing, or cubic-bezier handles. */
+type Ease = string | Handles
 type Color = string
 /** Text roles warp sets type for. */
 type TextRole =
@@ -108,15 +112,13 @@ export interface WarpSystem {
   /** warp's roles, and any role the app names (`narrative`): each becomes `--warp-text-<role>-*` and `data-role="<role>"`. */
   text?: { [R in TextRole]?: TextStyle } & Record<string, TextStyle>
   shadow?: { 0?: string; 1?: string; 2?: string; 3?: string; sm?: string; md?: string; lg?: string }
-  duration?: { instant?: Len; fast?: Len; base?: Len; slow?: Len }
-  ease?: {
-    in?: string
-    out?: string
-    'in-out'?: string
-    pop?: string
-    spring?: string
-    sheet?: string
-  }
+  /** warp's steps, and any the app names (`glide: 300`): `--warp-duration-<name>`, exact, ms for a number. */
+  duration?: { instant?: Len; fast?: Len; base?: Len; slow?: Len } & Record<string, Len>
+  /** warp's curves, and any the app names: `--warp-ease-<name>`, a CSS easing or cubic-bezier handles. */
+  ease?: { [E in 'in' | 'out' | 'in-out' | 'pop' | 'spring' | 'sheet']?: Ease } & Record<
+    string,
+    Ease
+  >
   border?: { hairline?: Len; emphasis?: Len }
   icon?: { sm?: Len; md?: Len; stroke?: number | string }
 }
@@ -140,8 +142,10 @@ export interface PartProps {
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 0 | 1 | 2 | 3 | (string & {})
   opacity?: number
   scale?: number
+  /** ms for a number; a name from `system.duration` reads its token. */
   duration?: Len
-  easing?: string
+  /** A name from `system.ease`, a CSS easing, or cubic-bezier handles. */
+  easing?: Ease
   font?: 'sans' | 'display' | 'mono' | (string & {})
   fontSize?: Len
   weight?: number | string

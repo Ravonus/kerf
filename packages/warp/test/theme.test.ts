@@ -179,6 +179,40 @@ describe('text roles by width', () => {
   })
 })
 
+describe('motion tokens', () => {
+  test('the app names durations and curves; parts and themes read them by name', () => {
+    const css =
+      run({
+        system: {
+          duration: { state: 150, glide: 300, fast: 150 },
+          ease: { ui: [0.4, 0, 0.2, 1], scrub: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+        },
+        parts: { button: { duration: 'glide', easing: 'ui' }, card: { easing: [0.2, 0, 0, 1] } },
+        themes: {
+          calm: { system: { duration: { linger: 900 } }, parts: { card: { duration: 'linger' } } },
+        },
+      }).tokens.css ?? ''
+    expect(css).toContain('--warp-duration-state:150ms;--warp-duration-glide:300ms')
+    expect(css).toContain('--warp-duration-fast:150ms')
+    expect(css).toContain('--warp-ease-ui:cubic-bezier(0.4, 0, 0.2, 1)')
+    expect(css).toContain('--warp-ease-scrub:cubic-bezier(0.65, 0, 0.35, 1)')
+    expect(css).toContain(
+      'transition-duration:var(--warp-duration-glide);transition-timing-function:var(--warp-ease-ui)',
+    )
+    expect(css).toContain('transition-timing-function:cubic-bezier(0.2, 0, 0, 1)')
+    expect(css).toContain('--warp-duration-linger:900ms')
+    expect(css).toContain('transition-duration:var(--warp-duration-linger)')
+  })
+
+  test("refuses a name warp already uses, a name it can't read and handles out of range", () => {
+    expect(fails({ system: { duration: { 'exit-k': 2 } } }).path).toBe('system.duration.exit-k')
+    expect(fails({ system: { duration: { Glide: 300 } } }).path).toBe('system.duration.Glide')
+    expect(fails({ system: { ease: { ui: [2, 0, 0, 1] } } }).path).toBe('system.ease.ui')
+    expect(fails({ system: { ease: { ui: [0.4, 0] } } }).path).toBe('system.ease.ui')
+    expect(fails({ parts: { card: { duration: [1, 2, 3, 4] } } }).path).toBe('parts.card.duration')
+  })
+})
+
 describe('theming checks', () => {
   test('refuses what it cannot read', () => {
     expect(fails({ colors: { Brand: '#e8590c' } }).path).toMatch(/colors/)

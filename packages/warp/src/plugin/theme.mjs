@@ -5,6 +5,7 @@
 import { contrast, fromHex, toLinear } from '../../tokens/color.mjs'
 import { themeCss } from './theme-css.mjs'
 import { PARTS, STATES, allParts, propsOf, statesOf } from './theme-parts.mjs'
+import { motionNames, motionRef, motionToken, motionValue } from './theme-motion.mjs'
 import { textTokens } from './theme-text.mjs'
 import { NAME, bad, fontValue, plain, px, safe } from './theme-values.mjs'
 
@@ -36,7 +37,6 @@ const RADIUS = {
   none: null,
 }
 const SHADOW = { none: 'none', 0: 0, 1: 1, 2: 2, 3: 3, sm: 1, md: 2, lg: 3 }
-const EASE = ['in', 'out', 'in-out', 'pop', 'spring', 'sheet']
 const SYSTEM = {
   radius: (k) => RADIUS[k] !== undefined && RADIUS[k] !== null && `--warp-radius-${k}`,
   space: (k) => SPACE.includes(k) && `--warp-space-${k}`,
@@ -45,8 +45,6 @@ const SYSTEM = {
   font: (k) => ['sans', 'display', 'mono'].includes(k) && `--warp-font-${k}`,
   shadow: (k) =>
     SHADOW[k] !== undefined && typeof SHADOW[k] === 'number' && `--warp-elevation-${SHADOW[k]}`,
-  duration: (k) => ['instant', 'fast', 'base', 'slow'].includes(k) && `--warp-duration-${k}`,
-  ease: (k) => EASE.includes(k) && `--warp-ease-${k}`,
   border: (k) => ['hairline', 'emphasis'].includes(k) && `--warp-border-${k}`,
   icon: (k) => ['sm', 'md', 'stroke'].includes(k) && `--warp-icon-${k}`,
 }
@@ -76,21 +74,21 @@ const KINDS = {
   space: (v) => (SPACE.includes(v) ? `var(--warp-space-${v})` : px(v)),
   radius: (v) =>
     v === 'pill' ? '9999px' : v === 'none' ? '0px' : RADIUS[v] ? `var(--warp-radius-${v})` : px(v),
-  time: (v) => (Number.isFinite(v) ? `${v}ms` : v),
   shadow: (v) =>
     SHADOW[v] === 'none'
       ? 'none'
       : SHADOW[v] !== undefined
         ? `var(--warp-elevation-${SHADOW[v]})`
         : v,
-  ease: (v) => (EASE.includes(v) ? `var(--warp-ease-${v})` : v),
   font: fontValue,
   plain: (v) => String(v),
 }
 
-function read(kind, value, colors, path) {
+/** A part's value as CSS. `names` holds the configured colour and motion names. */
+function read(kind, value, names, path) {
+  if (kind === 'time' || kind === 'ease') return motionRef(kind, value, { names, at: path })
   if (!safe(value)) throw bad(path, 'must be a CSS value or a number')
-  return kind === 'color' ? colorValue(value, colors, path) : KINDS[kind](value)
+  return kind === 'color' ? colorValue(value, names.colors, path) : KINDS[kind](value)
 }
 
 // -- options -------------------------------------------------------------------------------------------------------
@@ -123,32 +121,28 @@ function systemTokens(system = {}, ctx, path) {
         textTokens(key, value, { ...ctx, out, at })
         continue
       }
+      if (group === 'duration' || group === 'ease') {
+        out[motionToken(group, key, { ...ctx, at })] = motionValue(group, value, at)
+        continue
+      }
       const token = SYSTEM[group]?.(key)
       if (!token)
         throw bad(
           at,
           SYSTEM[group]
             ? 'unknown step'
-            : `unknown group; use text, ${Object.keys(SYSTEM).join(', ')}`,
+            : `unknown group; use text, duration, ease, ${Object.keys(SYSTEM).join(', ')}`,
         )
       if (!safe(value)) throw bad(at, 'must be a CSS value or a number')
       out[token] =
-        group === 'duration'
-          ? KINDS.time(value)
-          : group === 'font'
-            ? KINDS.font(value)
-            : group === 'ease'
-              ? value
-              : UNITLESS.has(key)
-                ? String(value)
-                : px(value)
+        group === 'font' ? KINDS.font(value) : UNITLESS.has(key) ? String(value) : px(value)
     }
   }
   return out
 }
 
 /** Flattens a part's config to `{ key, part, prop, state, target, value }` rows, validating each. */
-function partRows(parts = {}, colors, path) {
+function partRows(parts = {}, names, path) {
   if (!plain(parts)) throw bad(path, 'must be an object of parts')
   const specs = new Map(allParts())
   const rows = []
@@ -168,7 +162,7 @@ function partRows(parts = {}, colors, path) {
           prop,
           state,
           target,
-          value: read(target.kind, value, colors, `${where}.${prop}`),
+          value: read(target.kind, value, names, `${where}.${prop}`),
         })
       }
     }
@@ -192,14 +186,14 @@ export function themeOptions(input, tokenNames, checkTheme) {
   const out = {}
   const colors = checkColors(input.colors, 'colors')
   if (Object.keys(colors).length) out.colors = colors
-  const names = (c) => new Set(Object.keys(c))
+  const names = (c, ...systems) => ({ colors: new Set(Object.keys(c)), ...motionNames(...systems) })
   // the app's own text roles, from the page's system and every theme's: each gets one rule. `media` holds the
   // tokens a breakpoint sets, per scope.
   out.roles = {}
   out.media = {}
   const ctx = { tokenNames, roles: out.roles }
   out.system = systemTokens(input.system, { ...ctx, media: out.media }, 'system')
-  out.rows = partRows(input.parts, names(colors), 'parts')
+  out.rows = partRows(input.parts, names(colors, input.system), 'parts')
   out.themes = {}
   if (input.themes !== undefined && !plain(input.themes))
     throw bad('themes', 'must be an object of named themes')
@@ -226,7 +220,11 @@ export function themeOptions(input, tokenNames, checkTheme) {
         ...checkTheme.tokens(theme.tokens, `${at}.tokens`),
       },
       media,
-      rows: partRows(theme.parts, names({ ...colors, ...own }), `${at}.parts`),
+      rows: partRows(
+        theme.parts,
+        names({ ...colors, ...own }, input.system, theme.system),
+        `${at}.parts`,
+      ),
     }
   }
   if (input.default !== undefined && !out.themes[input.default])

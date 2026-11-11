@@ -142,6 +142,42 @@ warp({
 })
 ```
 
+## Motion tokens
+
+`system.duration` and `system.ease` retune warp's steps (`instant fast base slow`) and curves (`in out in-out pop
+spring sheet`) and name your own. Each becomes `--warp-duration-<name>` or `--warp-ease-<name>`. A duration is ms for a
+number and exact: no dial rescales it. A curve is a CSS easing or cubic-bezier handles, `[x1, y1, x2, y2]`. A part's
+`duration` and `easing` take the names:
+
+```ts
+import { defineConfig } from '@weft-js/core/config'
+import { warp } from '@weft-js/warp/plugin'
+import { ui } from './src/motion'
+
+export default defineConfig({
+  plugins: [
+    warp({
+      system: {
+        duration: { state: 150, glide: 300 },
+        ease: { ui, scrub: [0.65, 0, 0.35, 1] },
+      },
+      parts: { button: { duration: 'state', easing: 'ui' } },
+    }),
+  ],
+})
+```
+
+Your own CSS reads them as `transition: opacity var(--warp-duration-glide) var(--warp-ease-ui)`. The handles are the
+shape a scroll timeline's key takes, so one constant serves both:
+
+```ts
+// src/motion.ts
+import { timeline } from '@weft-js/scroll/timeline'
+
+export const ui = [0.4, 0, 0.2, 1] as const
+export const reveal = timeline({ opacity: [[0, 0], [1, 1, ui]] })
+```
+
 ## Brutalist
 
 ```ts
