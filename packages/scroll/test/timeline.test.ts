@@ -1,5 +1,5 @@
 // Keyframe tracks and section progress: the maths a scroll-scrubbed scene reads.
-import { progress, progressOf, timeline } from '../src/timeline'
+import { progress, progressOf, timeline, vars } from '../src/timeline'
 
 describe('timeline', () => {
   test('holds before the first key and after the last', () => {
@@ -53,6 +53,27 @@ describe('timeline', () => {
   })
   test('a track without keys is an error', () => {
     expect(() => timeline({ x: [] })).toThrow('track `x` has no keys')
+  })
+})
+
+describe('vars', () => {
+  test('writes every track to the element as a custom property', () => {
+    const el = document.createElement('div')
+    const write = vars(
+      el,
+      timeline({
+        scale: [
+          [0, 1, 'linear'],
+          [1, 3, 'linear'],
+        ],
+        fade: [[0, 0.5]],
+      }),
+    )
+    write(0.5)
+    expect(el.style.getPropertyValue('--scale')).toBe('2')
+    expect(el.style.getPropertyValue('--fade')).toBe('0.5')
+    write(1)
+    expect(el.style.getPropertyValue('--scale')).toBe('3')
   })
 })
 

@@ -462,6 +462,10 @@ exactly, and so does `touch: 'raw'` on a touch screen, whose own scrolling is al
 fast the target moves, in its units per ms, for an effect that calms down while the page is moving. Call
 `scrub.destroy()` when the scene goes.
 
+To drive styles rather than a scene, `vars(el, tracks)` gives an `onChange` that writes every track to `el` as
+a custom property named after it, `--zoom` and `--fade` above, for the stylesheet to map:
+`progress(section, { onChange: vars(word, tracks) })` with `.word { scale: var(--zoom) }`.
+
 ### Keys, focus and accessibility
 
 - **Keys:** arrows scroll a line, Page Up and Page Down most of a screen, Space and Shift+Space the same, Home and
@@ -548,7 +552,7 @@ Pure functions the engine uses, exported for your own bars and tests: `thumbLeng
 |---|---|
 | `@weft-js/scroll` | `scroller`, `wrap`, `domRenderer`, the helpers and the types |
 | `@weft-js/scroll/canvas` | `canvas`, `paintBar`, `cssColor` |
-| `@weft-js/scroll/timeline` | `timeline`, `progress`, `progressOf` |
+| `@weft-js/scroll/timeline` | `timeline`, `progress`, `progressOf`, `vars` |
 | `@weft-js/scroll/styles.css` | The layout and look of the root, viewport and bars |
 
 ## Performance

@@ -187,3 +187,14 @@ export function progress(el: Element, options: ProgressOptions = {}): Progress {
     },
   }
 }
+
+/**
+ * Every track's value at a position, written to `el` as custom properties named `--<track>`, so a stylesheet
+ * maps them to styles: `progress(section, { onChange: vars(word, tracks) })`.
+ */
+export function vars<T extends Tracks>(el: ElementCSSInlineStyle, tracks: Timeline<T>) {
+  return (t: number) => {
+    const at = tracks.at(t)
+    for (const name in at) el.style.setProperty(`--${name}`, String(at[name]))
+  }
+}
