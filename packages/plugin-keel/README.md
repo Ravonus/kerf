@@ -184,6 +184,10 @@ tracks: [
 
 `keelBlend({ finish, blend, post })` passes settings to each module: `blend: { seed: 7, lineColour: '#ffffff' }`.
 
+A page whose own panel is a column keeps the paper to it with `inset`, CSS px from the frame's left and right
+edges or a function of its size: `keelBlend({ inset: (width) => [width / 4, width / 4] })`. The strips beside
+the column show the scene with no panel, darkening or blur.
+
 ## Painted grounds
 
 A seeded surface can be painted at build time and served as ordinary media. Add `keelPaint()` before weft's

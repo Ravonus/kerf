@@ -268,6 +268,9 @@ export interface LitRenderer {
   /** Where the next `render` draws: a target, or null for the canvas. */
   setRenderTarget(target: LitRenderTarget | null): void
   getRenderTarget(): LitRenderTarget | null
+  /** Limits drawing to a rectangle, CSS px from the bottom left, while `setScissorTest(true)`. */
+  setScissor(x: number, y: number, width: number, height: number): void
+  setScissorTest(on: boolean): void
   setClearColor(color: string | number | LitColor, alpha?: number): void
   clear(color?: boolean, depth?: boolean, stencil?: boolean): void
   render(scene: unknown, camera: unknown): void

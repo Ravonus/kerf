@@ -13,10 +13,15 @@ import { blocks, built, orrery, rings } from './scenes'
 import './stage.css'
 
 const governor = keelGovernor()
-const blend = keelBlend({ blend: { seed: 7 } })
+const query = new URLSearchParams(location.search)
+// `?column` keeps the paper panels to the middle half, as a page whose own panel is a column would.
+const blend = keelBlend({
+  blend: { seed: 7 },
+  ...(query.has('column') && { inset: (width: number) => [width / 4, width / 4] as const }),
+})
 /** Each drawn frame's time in ms, the GPU's included, kept with `?measure`: hand-overs apart from single scenes. */
 const timings = { blended: [] as number[], alone: [] as number[] }
-const measuring = new URLSearchParams(location.search).has('measure')
+const measuring = query.has('measure')
 /**
  * What the e2e test reads: where the page stands, which scenes are built, and the last hand-over drawn.
  */
