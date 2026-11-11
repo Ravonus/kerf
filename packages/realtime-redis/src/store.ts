@@ -13,7 +13,7 @@ export interface RedisStoreOptions {
   prefix?: string
 }
 
-function connect(options: RedisStoreOptions, what: string) {
+export function connect(options: RedisStoreOptions, what: string) {
   let url = options.url ?? process.env.REDIS_URL ?? ''
   if (!url && process.env.WEFT_BUILD) url = 'redis://localhost' // a build loads this module and never connects
   if (!/^rediss?:\/\//.test(url))

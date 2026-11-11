@@ -37,6 +37,7 @@ import { makeServices } from './server/services'
 import { makeDispatch } from './server/dispatch'
 import { makeHandler } from './server/handler'
 import { lifecycle, withRequestIds } from './server/lifecycle'
+import { useMailer } from './email'
 import { makeComplete } from './server/head'
 import { makePreview } from './server/preview'
 import { resolveRoute } from './server/resolver'
@@ -69,6 +70,7 @@ const PASSES = 1024
 /** The app as a `(Request) => Response`: pages, data, functions and cards. */
 export function createHandler(options: HandlerOptions) {
   options = withRequestIds(options, () => als.getStore()?.requestId)
+  useMailer(options.email, !!options.dev)
   const { manifest, site, byId, mod, comps, statics, heads, remember, originOf, stateOf, tree } =
     makeCore(options, als)
   const services = makeServices(options)

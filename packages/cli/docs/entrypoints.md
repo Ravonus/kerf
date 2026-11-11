@@ -45,6 +45,8 @@ The snapshots cover export paths, targets and conditions, not names or signature
 - `@weft-js/start/data`: Server function and data primitives.
 - `@weft-js/start/cache`: The shared query cache's `Store` type and `memoryStore()`, for `src/cache.server.ts`.
 - `@weft-js/start/cron`: `defineCron()` and the `CronJob` type, for `src/cron.server.ts`.
+- `@weft-js/start/email`: `sendEmail()` and the Resend, SMTP and dev-log mailers, for `src/email.server.ts`.
+- `@weft-js/start/jobs`: `defineJobs()`, `job()` and `memoryQueue()`, for `src/jobs.server.ts`.
 - `@weft-js/start/derive`: Server-side page metadata derivation.
 - `@weft-js/start/media`: Media schema and asset types.
 - `@weft-js/start/hub`: Realtime hub and topics; server.

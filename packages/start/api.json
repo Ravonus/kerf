@@ -5,6 +5,8 @@
     "./data": "./src/data.ts",
     "./cache": "./src/cache.ts",
     "./cron": "./src/cron.ts",
+    "./email": "./src/email.ts",
+    "./jobs": "./src/jobs.ts",
     "./derive": "./src/derive.mjs",
     "./media": "./src/media.ts",
     "./hub": "./src/hub.ts",

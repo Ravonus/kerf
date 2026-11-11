@@ -191,6 +191,7 @@ than in `url`.
 | `RedisBusOptions` | `@weft-js/realtime-redis` | Type: `{ url: string; prefix?: string }`. |
 | `redisStore(options?)` | `@weft-js/realtime-redis` | The shared query cache on Redis: default-export it from `src/cache.server.ts`. Values are JSON with their `life` as a TTL; tag versions live in Redis, so every instance sees an invalidation. |
 | `redisRateLimit(options?)` | `@weft-js/realtime-redis` | Better Auth's rate limit on Redis, counted once across instances: `createAuth({ options: { rateLimit: { customStorage: redisRateLimit() } } })`. |
+| `redisQueue(options?)` | `@weft-js/realtime-redis` | The job queue on Redis: `defineJobs(jobs, { queue: redisQueue() })`. Jobs survive restarts and every instance works them, each claimed by one at a time; `dead(count?)` lists dead jobs, newest first (the last `deadLimit`, default 1000). |
 | `RedisStoreOptions` | `@weft-js/realtime-redis` | Type: `{ url?: string; prefix?: string }`. `url` defaults to `REDIS_URL`. |
 | default export, `redis` | `@weft-js/realtime-redis/plugin` | The plugin for `weft.config.ts`. Takes the same options as `bus()`. |
 
@@ -222,6 +223,21 @@ export default createAuth({
   },
 })
 ```
+
+### Queued jobs on Redis
+
+```ts
+// src/jobs.server.ts
+import { defineJobs } from '@weft-js/start/jobs'
+import { redisQueue } from '@weft-js/realtime-redis'
+
+export default defineJobs(
+  { welcome: { run: ({ input }) => sendWelcome(input) } },
+  { queue: redisQueue() },
+)
+```
+
+Jobs are stored as JSON under `<prefix>q:`, so their input must be JSON too.
 
 ### Several apps on one Redis
 

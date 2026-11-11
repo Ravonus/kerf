@@ -1,7 +1,7 @@
 // redisStore and redisRateLimit on a real server (`WEFT_TEST_REDIS` names a `redis-server` binary; without it they skip).
 import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { spawn, type ChildProcess } from 'node:child_process'
-import { redisRateLimit, redisStore } from '../src/index'
+import { redisQueue, redisRateLimit, redisStore } from '../src/index'
 
 const binary = process.env.WEFT_TEST_REDIS
 let proc: ChildProcess | undefined
@@ -84,3 +84,31 @@ test('no URL is Q013, except in a build', () => {
     if (was !== undefined) process.env.REDIS_URL = was
   }
 })
+
+// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`.
+test.skipIf(!binary)(
+  'the job queue: keys, one claim per lease across instances, retry, dead',
+  async () => {
+    const a = redisQueue({ url, prefix: 'jobs:' })
+    const b = redisQueue({ url, prefix: 'jobs:' })
+    const input = { tags: [], n: 1 }
+    expect(await a.push({ id: '1', name: 'x', input, attempt: 0, runAt: 1000 }, 'k')).toBe(true)
+    expect(await b.push({ id: '2', name: 'x', input, attempt: 0, runAt: 1000 }, 'k')).toBe(false)
+    expect(await a.claim(999, 500, 10)).toEqual([])
+    const [job] = await a.claim(1000, 500, 10)
+    expect(job).toEqual({ id: '1', name: 'x', input, attempt: 1, runAt: 1000 }) // an empty array stays one
+    expect(await b.claim(1400, 500, 10)).toEqual([])
+    await a.retry(job!, 1450)
+    const [again] = await b.claim(1450, 500, 10)
+    expect(again?.attempt).toBe(2)
+    await b.fail(again!, 'Error: down')
+    expect((await a.dead()).map((d) => [d.id, d.attempt, d.error])).toEqual([
+      ['1', 2, 'Error: down'],
+    ])
+    expect(await a.claim(10_000, 500, 10)).toEqual([])
+    expect(await a.push({ id: '3', name: 'x', input, attempt: 0, runAt: 1000 }, 'k')).toBe(true) // its key is free
+    const [third] = await a.claim(1000, 500, 10)
+    await a.done(third!)
+    expect(await a.claim(10_000, 500, 10)).toEqual([])
+  },
+)

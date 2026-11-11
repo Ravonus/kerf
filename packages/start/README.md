@@ -906,6 +906,13 @@ export const signIn = mutation({
 | `'user'`                        | Anyone signed in                                    | Q019 (429)                           | A function's `limit` ran out for this caller                             | Wait `Retry-After` seconds, or raise `limit`                            |
 | J001                                 | A cron job threw                                                         | Fix the job; it runs again when next due                                |
 | J002                                 | A cron schedule that doesn't parse                                       | Five fields: `minute hour day month weekday`                            |
+| J003                                 | A queued job threw and will run again after its backoff                  | Fix the job; it retries until `retries` runs out                        |
+| J004                                 | A queued job is dead: out of retries, or no job by its name              | Fix it and enqueue again; the queue keeps the dead job and its error    |
+| J006                                 | `enqueue` got input the job's schema rejects (400)                       | Enqueue what the schema accepts                                         |
+| E001                                 | `sendEmail` in production with no mailer                                 | Set `RESEND_API_KEY` or `SMTP_URL`, or export a mailer                  |
+| E002                                 | An email with no sender                                                  | Set `EMAIL_FROM`, or pass `from`                                        |
+| E003                                 | Resend refused the message                                               | Check the key and that the sending domain is verified                   |
+| E004                                 | SMTP failed, or nodemailer is missing                                    | Check `SMTP_URL`; `pnpm add nodemailer`                                 |
 | A002 (401)                |
 | `{ role: 'admin' }` or an array | A signed-in user with one of the roles              | A002 (401) or A006 (403)  |
 | `{ can: (ctx) => boolean }`     | A signed-in user your check passes (it may be async) | A002 (401) or A006 (403)  |
@@ -1221,7 +1228,7 @@ line from that request names it, so a user's report leads to the line. Behind `s
 `x-request-id` is kept.
 
 **Shutdown.** On SIGTERM (a deploy or scale-down) the server stops taking requests and finishes the ones it has, the
-schedule stops, and realtime connections close as "going away", so open pages reconnect to an instance that's staying.
+schedule stops, queued jobs that are running finish, and realtime connections close as "going away", so open pages reconnect to an instance that's staying.
 
 **Scheduled jobs.** `src/cron.server.ts` default-exports the jobs:
 
@@ -1243,6 +1250,58 @@ the app's `ctx` and no signed-in user; a failure is logged (J001) and the job ru
 several instances and `redisStore()` in `src/cache.server.ts`, each job runs on one of them per minute; with the memory
 store, every instance runs it. Jobs run on server presets (`node`, `bun`, `deno`), not on function hosts, which only
 wake for requests: there, call a mutation from the host's own scheduler.
+
+**Email.** `sendEmail()` from `@weft-js/start/email` sends through whichever is set: `RESEND_API_KEY` (Resend's API,
+no package needed) or `SMTP_URL` (`smtps://user:pass@smtp.example.com:465`, through `nodemailer`, which you add). The
+sender is `EMAIL_FROM` unless a message passes `from`. In dev with neither, each message is printed to the server log,
+links and all. Better Auth's password-reset and verification emails go through it too, unless you pass your own.
+
+```ts
+import { sendEmail } from '@weft-js/start/email'
+
+await sendEmail({
+  to: user.email,
+  subject: 'Your export is ready',
+  text: url,
+})
+```
+
+To choose in code (another provider, a test double), default-export a mailer from `src/email.server.ts`:
+`resendMailer({ apiKey })`, `smtpMailer({ url })`, or any `{ name, send(message) }`.
+
+**Queued jobs.** Work that shouldn't hold up a response (emails, webhooks, image processing) goes on a queue.
+`src/jobs.server.ts` default-exports the jobs, and server code enqueues them:
+
+```ts
+// src/jobs.server.ts
+import { defineJobs, job } from '@weft-js/start/jobs'
+import { redisQueue } from '@weft-js/realtime-redis'
+import { z } from 'zod'
+
+export default defineJobs(
+  {
+    welcome: job({
+      input: z.object({ userId: z.string() }),
+      run: ({ ctx, input }) =>
+        sendWelcome(ctx.db, input.userId),
+    }),
+  },
+  { queue: redisQueue() }, // leave out for the in-memory queue
+)
+
+// in a mutation (import jobs from './jobs.server')
+await jobs.welcome.enqueue(
+  { userId },
+  { key: `welcome:${userId}` },
+)
+```
+
+`enqueue` checks the input against the schema (J006) and returns the job's id; `delay` holds it back, and `key` keeps one
+job per key until it has run. A job runs with the app's `ctx` and no signed-in user. When it throws it's logged (J003)
+and tried again after 2, 4, 8… seconds (`backoff`), up to `retries` more times (5); then it's dead (J004) and kept with
+its error. Jobs run at least once: a job whose instance dies is claimed again when its lease (5 minutes) ends, so make
+them safe to repeat. The memory queue loses its jobs on restart and isn't shared; `redisQueue()` keeps them in Redis,
+and every instance works the same queue. Like cron, the queue is worked on server presets (`node`, `bun`, `deno`).
 
 ## Runtimes, deploy targets and adapters
 

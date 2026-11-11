@@ -8,6 +8,8 @@ import type { RealtimeOptions } from '../hub'
 import type { Pieces } from '../first-paint'
 import type { Diagnostic } from './log'
 import type { CronJobs } from '../cron'
+import type { Mailer } from '../email'
+import type { Jobs } from '../jobs'
 
 /** A page route from the file tree. */
 export interface RouteEntry {
@@ -120,6 +122,10 @@ export interface HandlerOptions {
   media?: () => Promise<MediaServer>
   /** `src/cron.server.ts`'s default export: jobs on a schedule, run by a server preset (not in a build). */
   cron?: CronJobs
+  /** `src/email.server.ts`'s default export: the mailer `sendEmail` and auth's emails use. */
+  email?: Mailer
+  /** `src/jobs.server.ts`'s default export: queued jobs, worked by a server preset. */
+  jobs?: Jobs
   /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
   realtime?: RealtimeOptions
   /** `false`: never build URLs on the request's origin (`weft routes --meta`, whose requests aren't real). */

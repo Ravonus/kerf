@@ -1,22 +1,12 @@
 import { matcher, type CronJobs } from '../cron'
-import * as exec from '../exec'
-import type { Scope, ScopeOptions, Store } from '../exec'
+import { errorText, inScope, type BackgroundDeps } from './background'
 
 /**
  * Runs the app's cron jobs: a timer wakes at each minute, and every job due then runs once. With several instances
  * the cache store decides which one runs it (a window per job and minute, one call allowed): with `redisStore()`
  * that's exactly one; with the memory store each instance counts alone, so each runs it.
  */
-export function startCron(
-  jobs: CronJobs,
-  deps: {
-    scopeOptions: ScopeOptions
-    store: Store
-    boot: () => Promise<void>
-    origin: string
-    enter: (scope: Scope, run: () => Promise<void>) => Promise<void>
-  },
-): () => void {
+export function startCron(jobs: CronJobs, deps: BackgroundDeps): () => void {
   const due = Object.entries(jobs).map(([name, job]) => ({
     name,
     job,
@@ -38,21 +28,16 @@ export function startCron(
     }
   }
   const run = async (name: string, job: CronJobs[string], at: Date) => {
-    const request = new Request(`${deps.origin}/_weft/cron/${encodeURIComponent(name)}`)
-    const scope = exec.createScope(request, deps.scopeOptions)
     try {
-      await deps.boot()
-      await deps.enter(scope, async () => {
-        await job.run({ ctx: await scope.ctx(), name, at })
-      })
+      await inScope(deps, `/_weft/cron/${encodeURIComponent(name)}`, (ctx) =>
+        job.run({ ctx, name, at }),
+      )
     } catch (e) {
       deps.scopeOptions.onDiagnostic?.({
         code: 'J001',
         severity: 'error',
-        message: `J001: cron job \`${name}\` failed: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
+        message: `J001: cron job \`${name}\` failed: ${errorText(e)}`,
       })
-    } finally {
-      void exec.finishScope(scope)
     }
   }
   const arm = () => {

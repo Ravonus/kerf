@@ -81,3 +81,4 @@ export const bus = (options: Partial<RedisBusOptions> = {}) =>
   redisBus({ ...options, url: options.url ?? process.env.REDIS_URL ?? '' })
 
 export { redisRateLimit, redisStore, type RedisStoreOptions } from './store'
+export { redisQueue, type RedisQueueOptions } from './queue'

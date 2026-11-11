@@ -2,6 +2,7 @@
 // No client code: sign-in is a mutation, so nothing of Better Auth ships to the browser.
 
 import { betterAuth, type BetterAuthOptions, type BetterAuthPlugin } from 'better-auth'
+import { mailed } from './emails'
 import { createAuthMiddleware } from 'better-auth/api'
 import { expireCookie } from 'better-auth/cookies'
 import { jwt, type JwtOptions } from 'better-auth/plugins/jwt'
@@ -234,8 +235,8 @@ export function createAuth<
     // A build's prerender holds no environment; a server takes `BETTER_AUTH_URL`, or the request's origin.
     ...(process.env.WEFT_BUILD && { baseURL: 'http://localhost' }),
     telemetry: { enabled: false },
-    emailAndPassword: { enabled: true },
     ...options,
+    ...mailed(options),
     // Login stays an opaque token in the database. This only spares reads of it, for a window: see `session()`.
     session: {
       ...options?.session,

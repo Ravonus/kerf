@@ -74,14 +74,25 @@ function config({
           hooks: immutableCards(),
           plugins: [fileURLToPath(new URL('./range.mjs', import.meta.url))],
         }),
-        // The media route: sharp's addon, and css-tree and csso (under svgo) read JSON from their packages at runtime.
-        ...(existsSync(join(root, '.weft/slots/media.server.ts')) && {
-          traceDeps: ['css-tree*', 'csso*', 'sharp*'],
-        }),
+        ...traced(root),
         ...nitroOptions,
       }),
     ],
   }
+}
+
+/**
+ * Packages the server loads by name at runtime, which Nitro can't see to copy into the build: the media route's sharp
+ * (and css-tree and csso, under svgo, read JSON from their packages), and nodemailer for SMTP when the app has it.
+ */
+function traced(root) {
+  const deps = [
+    ...(existsSync(join(root, '.weft/slots/media.server.ts'))
+      ? ['css-tree*', 'csso*', 'sharp*']
+      : []),
+    ...(existsSync(join(root, 'node_modules/nodemailer')) ? ['nodemailer*'] : []),
+  ]
+  return deps.length ? { traceDeps: deps } : {}
 }
 
 /** Where the last build's Nitro wrote, known once it prerenders: a preset may move it (netlify serves `dist`). */

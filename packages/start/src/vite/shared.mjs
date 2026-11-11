@@ -18,6 +18,8 @@ export const V = {
   realtime: 'virtual:weft/realtime',
   cache: 'virtual:weft/cache',
   cron: 'virtual:weft/cron',
+  email: 'virtual:weft/email',
+  jobs: 'virtual:weft/jobs',
   extensions: 'virtual:weft/extensions',
 }
 export const DEFAULT_FONTS = ['Inter:400,700']

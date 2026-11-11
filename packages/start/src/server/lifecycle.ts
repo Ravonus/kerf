@@ -2,6 +2,7 @@ import * as exec from '../exec'
 import type { Scope } from '../exec'
 import { hub } from '../hub'
 import { startCron } from './cron'
+import { startJobs } from './jobs'
 import type { makeServices } from './services'
 import { onShutdown } from './shutdown'
 import type { HandlerOptions } from './types'
@@ -17,8 +18,8 @@ export function withRequestIds(
 }
 
 /**
- * What a serving process starts besides answering requests: the cron schedule, and on shutdown, stopping it and
- * closing realtime connections. A build, and `weft routes --meta`, load the server to read it, not to run it.
+ * What a serving process starts besides answering requests: the cron schedule and the job queue, and on shutdown,
+ * stopping both (letting running jobs finish) and closing realtime connections. A build, and `weft routes --meta`, load the server to read it, not to run it.
  */
 export function lifecycle(
   options: HandlerOptions,
@@ -26,17 +27,22 @@ export function lifecycle(
   enter: (scope: Scope, run: () => Promise<void>) => Promise<void>,
 ) {
   if (process.env.WEFT_BUILD || options.requestOrigin === false) return
-  const stopCron =
-    options.cron &&
-    startCron(options.cron, {
-      scopeOptions: services.scopeOptions,
-      store: options.store ?? exec.defaultStore,
-      boot: async () => {
-        await services.loadExtensions()
-        await services.boot()
-      },
-      origin: (options.site?.url ?? 'http://localhost').replace(/\/$/, ''),
-      enter,
+  const deps = {
+    scopeOptions: services.scopeOptions,
+    store: options.store ?? exec.defaultStore,
+    boot: async () => {
+      await services.loadExtensions()
+      await services.boot()
+    },
+    origin: (options.site?.url ?? 'http://localhost').replace(/\/$/, ''),
+    enter,
+  }
+  const stopCron = options.cron && startCron(options.cron, deps)
+  const stopJobs = options.jobs && startJobs(options.jobs, deps)
+  if (!options.dev)
+    onShutdown(async () => {
+      stopCron?.()
+      // Realtime goes first: open pages move to another instance while the jobs running here finish.
+      await Promise.all([hub().shutdown(), stopJobs?.()])
     })
-  if (!options.dev) onShutdown(() => (stopCron?.(), hub().shutdown()))
 }
