@@ -314,7 +314,7 @@ export class ListboxAction {
   }
   #pick(i: number, reason: ChangeReason) {
     const r = this.#rows[i]
-    if (this.#o.multiple) return void (r && this.#o.onPick(r.item.value, reason)) // a list of many stays open
+    if (this.#o.multiple) return r && this.#o.onPick(r.item.value, reason) // a list of many stays open
     this.#hide(true)
     if (r && r.item.value !== this.#o.value) this.#o.onPick(r.item.value, reason)
   }

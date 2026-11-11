@@ -54,7 +54,9 @@ function useMulti(p: MultiSelectProps) {
   const text = derived(() => {
     const names = items.value.filter((i) => v.value.includes(i.value)).map((i) => i.label)
     const n = p.show ?? 2
-    return names.length <= n ? names.join(', ') : `${names.slice(0, n).join(', ')} +${names.length - n}`
+    return names.length <= n
+      ? names.join(', ')
+      : `${names.slice(0, n).join(', ')} +${names.length - n}`
   })
   let trigger: HTMLButtonElement | undefined
   use(
@@ -121,7 +123,14 @@ export function MultiSelect(props: MultiSelectProps) {
           </button>
           {p0.name &&
             v.value.map((x) => (
-              <input key={x} type="hidden" name={p0.name} form={p0.form} value={x} disabled={p.rest.disabled} />
+              <input
+                key={x}
+                type="hidden"
+                name={p0.name}
+                form={p0.form}
+                value={x}
+                disabled={p.rest.disabled}
+              />
             ))}
         </>
       )}
