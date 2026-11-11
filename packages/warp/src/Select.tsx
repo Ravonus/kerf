@@ -361,8 +361,8 @@ const MULTI_OWN = [...OWN, 'show', 'name', 'form']
 
 /**
  * A Select of many: the same list, popover or sheet, where a pick turns a row on or off and the list stays open. The
- * trigger names what's on ("Oat milk, Vanilla +2"); a form gets one hidden input per value under `name`, as a
- * `<select multiple>` would post them.
+ * trigger names what's on ("Oat milk, Vanilla +2"); a form gets one hidden input per value under `name`, the
+ * way a multiple select posts them.
  */
 export function MultiSelect(props: MultiSelectProps) {
   const p0 = untrack(() => props)
