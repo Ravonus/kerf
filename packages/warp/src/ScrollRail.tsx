@@ -33,9 +33,9 @@ function dragThumb(
 /**
  * The page's scrollbar, drawn by warp on every device in place of the native one, from below a sticky header
  * (`--warp-scroll-rail-top`) instead of over it. The document still scrolls, so keys, anchors, scroll restore and a
- * phone's collapsing address bar work as ever. With a mouse or trackpad the thumb drags and a press on the rail jumps
- * by a page; on a touch screen the thumb shows while the page moves and can be grabbed then, and the rail never takes
- * a swipe. Put one in the root layout.
+ * phone's collapsing address bar work as ever. With a mouse or trackpad the thumb drags, and a press on the rail jumps
+ * the thumb to that spot and keeps dragging; on a touch screen the thumb always shows and always takes a finger, and
+ * the rest of the rail never takes a swipe. Put one in the root layout.
  *
  * `below` names the sticky header (a CSS selector). The rail then starts at that header's bottom edge wherever it is:
  * under a banner that scrolls away, at a height that changes with the width, or as it shrinks on scroll. Without it,
@@ -76,15 +76,20 @@ export function ScrollRail(props: { below?: string } = {}) {
       clearTimeout(idle)
       idle = setTimeout(() => rail.removeAttribute('data-active'), 900)
     }
+    // A press on the track jumps the thumb's middle to that spot, then drags from there; a press on the thumb drags.
     const press = (e: PointerEvent) => {
       if (e.button !== 0) return
       e.preventDefault()
+      const s = size()
       if (e.target !== thumb) {
-        const below = e.clientY > thumb.getBoundingClientRect().bottom
-        scrollBy({ top: (below ? 1 : -1) * innerHeight * 0.9 })
-        return
+        const span = Math.max(1, s.track - s.h)
+        const at = Math.min(
+          span,
+          Math.max(0, e.clientY - rail.getBoundingClientRect().top - s.h / 2),
+        )
+        scrollTo({ top: (at * s.total) / span, behavior: 'instant' })
       }
-      dragThumb(e, { rail, thumb }, size())
+      dragThumb(e, { rail, thumb }, s)
     }
     const grows = new ResizeObserver(moved)
     grows.observe(document.body)

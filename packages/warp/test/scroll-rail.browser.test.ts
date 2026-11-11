@@ -1,6 +1,6 @@
 // @vitest-environment node
 // ScrollRail's stylesheet on a phone and on a desktop: the rail is warp's on every device, in place of the native
-// page bar. On a touch screen it lets every swipe through, and its thumb takes a finger only while it shows.
+// page bar. On a touch screen it lets every swipe through except on its thumb, which always takes a finger.
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type * as Playwright from 'playwright-core'
@@ -73,11 +73,18 @@ describe.each(phones)('%s as %s', (name, device) => {
     expect(r.railX).toBeCloseTo(r.width, 0)
   })
 
-  test('at rest a touch on the thumb reaches the page; while it shows the thumb takes it', async () => {
+  test('the thumb takes a finger at rest as well as while the page moves; the rest of the rail lets it through', async () => {
+    // A thumb that only took touches while the page moved left a late finger on the page, which then scrolled the
+    // wrong way under it.
     const p = await open(browser, device)
-    expect(await read_(p)).toMatchObject({ on: 'content', beside: 'content' })
+    expect(await read_(p)).toMatchObject({ on: 'thumb', beside: 'thumb' })
     await activate(p)
     expect(await read_(p)).toMatchObject({ on: 'thumb', beside: 'thumb' })
+    const below = await p.evaluate(() => {
+      const r = document.querySelector('[data-part="thumb"]')!.getBoundingClientRect()
+      return document.elementFromPoint(r.x + r.width / 2, r.bottom + 60)?.id
+    })
+    expect(below).toBe('content')
   })
 })
 

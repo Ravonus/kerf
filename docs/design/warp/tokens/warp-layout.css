@@ -1111,9 +1111,9 @@
 @media print { :where([data-scope="sidenav"]) { display: none !important; } }
 
 /* ScrollRail — the page's scrollbar, drawn by warp on every device in place of the native one, from below a sticky
-   header (--warp-scroll-rail-top) rather than over it. A mouse or trackpad gets a rail that pages on a press and a
-   thumb that drags; a touch screen gets a thin thumb that shows while the page moves and can be grabbed then, on a
-   rail that never takes a swipe. */
+   header (--warp-scroll-rail-top) rather than over it. A mouse or trackpad gets a rail where a press jumps the thumb
+   to that spot (and keeps dragging) and a thumb that drags; a touch screen gets a thin thumb that always shows and
+   always takes a finger, on a rail that never takes a swipe. */
 /* The native page bar must stay hidden while the rail draws one, or the page shows two. !important inside this layer
    outranks an app's unlayered rules (an app commonly sets scrollbar-width or scrollbar-color on :root), so restyling
    the other scroll areas can't bring it back. */
@@ -1132,12 +1132,12 @@
 :where([data-scope="scroll-rail"][data-active] > [data-part="thumb"]) { opacity: 1; }
 :where([data-scope="scroll-rail"]:hover > [data-part="thumb"]),
 :where([data-scope="scroll-rail"][data-dragging] > [data-part="thumb"]) { opacity: 1; inline-size: 8px; background: color-mix(in oklab, var(--warp-color-text) 40%, transparent); }
-/* Touch: the rail lets every swipe through to the page. The thumb shows only while the page moves (or is dragged),
-   and only then takes a finger, over a touch-sized area (--warp-hit-min) wider than it paints. */
+/* Touch: the rail lets every swipe through to the page, but the thumb is always drawn and always takes a finger, over
+   a touch-sized area (--warp-hit-min) wider than it paints. A thumb that fades and stops taking touches leaves a late
+   finger on the page beneath, which then scrolls the wrong way. It brightens while the page moves or it is dragged. */
 @media (pointer: coarse) {
   :where([data-scope="scroll-rail"]) { pointer-events: none; }
-  :where([data-scope="scroll-rail"] > [data-part="thumb"]) { opacity: 0; }
-  :where([data-scope="scroll-rail"]:is([data-active], [data-dragging]) > [data-part="thumb"]) { opacity: 1; pointer-events: auto; }
+  :where([data-scope="scroll-rail"] > [data-part="thumb"]) { pointer-events: auto; }
   :where([data-scope="scroll-rail"] > [data-part="thumb"])::before { content: ""; position: absolute; inset-block: -8px; inset-inline: calc(12px - var(--warp-hit-min, 44px)) -6px; }
 }
 
