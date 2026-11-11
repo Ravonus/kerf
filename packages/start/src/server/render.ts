@@ -131,6 +131,40 @@ function renderedOf(html: string) {
   return r
 }
 
+/**
+ * A static level's HTML without what its islands rendered inside: an island's own data refreshes itself, so only the page
+ * around it and each island's props (in its `<!--wi:…-->` marker) say whether the level changed. Hashing all of it made a
+ * write that changed what an island shows swap the whole level for the server's copy, and with it the running island.
+ */
+export function outsideIslands(h: string) {
+  let out = '',
+    at = 0
+  for (;;) {
+    const i = h.indexOf('<!--wi:', at)
+    if (i < 0) return out + h.slice(at)
+    const open = h.indexOf('-->', i) + 3
+    out += h.slice(at, open)
+    at = open
+    if (!h.startsWith('<!--[-->', open)) continue
+    let depth = 0,
+      j = open
+    for (;;) {
+      const a = h.indexOf('<!--[-->', j),
+        b = h.indexOf('<!--]-->', j)
+      if (b < 0) return out + h.slice(at) // unbalanced: all of it counts
+      if (a >= 0 && a < b) {
+        depth++
+        j = a + 8
+      } else {
+        depth--
+        j = b + 8
+        if (!depth) break
+      }
+    }
+    at = j
+  }
+}
+
 export function withLevels(
   payload: RoutePayload,
   html: string,
@@ -158,7 +192,7 @@ export function withLevels(
     return {
       ...rest,
       s: 1 as const,
-      x: (known.x[d] ??= hash(h.replaceAll(' aria-current="page"', ''))),
+      x: (known.x[d] ??= hash(outsideIslands(h).replaceAll(' aria-current="page"', ''))),
       ...(sendHtml && { h }),
     }
   })
