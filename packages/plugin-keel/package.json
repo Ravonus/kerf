@@ -30,6 +30,7 @@
     "./runtime": "./src/runtime.ts",
     "./stage": "./src/stage.ts",
     "./scene": "./src/scene.ts",
+    "./governor": "./src/governor.ts",
     "./lit": {
       "types": "./vendor/lit.d.mts",
       "default": "./vendor/lit.mjs"
