@@ -33,6 +33,7 @@
     "./canvas": "./src/canvas.ts",
     "./stage": "./src/stage.ts",
     "./dither": "./src/dither/index.ts",
+    "./paint": "./src/paint/index.ts",
     "./search": "./src/search.ts",
     "./styles/*": "./styles/*"
   },

@@ -49,7 +49,7 @@ Use it when you want your own markup with Warp's behaviour, or when you're writi
   the rules it uses.
 - **Pure helpers you can test without a DOM.** Key-to-index maps, table sorting and paging, pivots, RRULE parsing, ISO
   dates and weeks, phone formatting, fuzzy ranking and a prebuilt search index.
-- **Opt-in heavy parts.** Charts, canvas, dither, motion and search are separate entries, so an app that doesn't use them
+- **Opt-in heavy parts.** Charts, canvas, dither, paint, motion and search are separate entries, so an app that doesn't use them
   loads none of them.
 
 ## Contents
@@ -720,6 +720,7 @@ Functions with no DOM, safe on a server and easy to test.
 | `@weft-js/warp-core/canvas` | `surface`: a canvas that tracks size and pixel ratio and shares one frame loop |
 | `@weft-js/warp-core/stage` | `stage`, `stageSelect`: a canvas that paints the page laid out over it |
 | `@weft-js/warp-core/dither` | Dithering as plain TS: `tile`, `quantize`, `diffuse`, `palette`, `ditherField` and more |
+| `@weft-js/warp-core/paint` | Hand-painted pixel art: `Raster` paints shapes in flat bands of a ramp with brushed seams and rings them; `ramp`, `light`, `rng`, `wave` |
 | `@weft-js/warp-core/search` | The search index on its own |
 | `@weft-js/warp-core/styles/*` | The CSS: `warp.css` and one file per component |
 
