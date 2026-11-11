@@ -33,7 +33,10 @@ export default function Pricing() {
   const mine = entitlements.live()
   return (
     <section>
-      <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>
+      <button
+        type="button"
+        onClick={() => checkout({ product: 'pro', plan: 'year' })}
+      >
         Go Pro · {price(pro, 'year').display}
       </button>
       <button type="button" onClick={() => portal()}>
@@ -117,7 +120,7 @@ before anything is sent (PAY032).
 
 - Stripe: `STRIPE_MODE=test` with `sk_test_…` keys (`live` with `sk_live_…`). Locally, `stripe listen --forward-to
   localhost:5173/_weft/x/pay/stripe` and use the `whsec_` it prints. Test card `4242 4242 4242 4242`.
-- Square: `SQUARE_ENVIRONMENT=sandbox` with the Developer Console's _Sandbox_ tab token, a sandbox location, and
+- Square: `SQUARE_ENVIRONMENT=sandbox` with the Developer Console's *Sandbox* tab token, a sandbox location, and
   optionally `SQUARE_APPLICATION_ID=sandbox-sq0idb-…`. Webhooks need a public tunnel URL in `SQUARE_WEBHOOK_URL`. Test
   card `4111 1111 1111 1111`, CVV `111`.
 - `await pay.sandbox()` says whether the bound rail is in test mode, for a banner. `fakePay` reports `true`.
