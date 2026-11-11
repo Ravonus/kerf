@@ -58,8 +58,11 @@ export async function tabs(root, { url } = {}) {
   return { url: base, agent: out.agent, tabs: out.tabs }
 }
 
-/** Wait until a tab is connected (after `launch` or `navigate`). */
-export async function waitForTab(root, { url, ms = 15_000, check } = {}) {
+/** Wait until a tab is connected (after `launch` or `navigate`). WEFT_BROWSER_WAIT_MS lengthens it: a cold Chrome on a busy CI runner can take longer. */
+export async function waitForTab(
+  root,
+  { url, ms = Number(process.env.WEFT_BROWSER_WAIT_MS) || 15_000, check } = {},
+) {
   const until = Date.now() + ms
   for (;;) {
     check?.()

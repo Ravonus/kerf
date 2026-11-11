@@ -90,8 +90,8 @@ export async function hotChecks(app, base, log, pass) {
     )
     await page.type('hello')
     await page.eval(
-      `document.querySelector('#raw').value = 'by hand'; document.querySelector('#i').focus(); document.querySelector('#i').setSelectionRange(2, 2); document.querySelector('#box').scrollTop = 120; document.scrollingElement.scrollTop = 400`,
-    )
+      `document.querySelector('#raw').value = 'by hand'; document.querySelector('#i').focus(); document.querySelector('#i').setSelectionRange(2, 2); document.querySelector('#box').scrollTo({ top: 120, behavior: 'instant' }); document.scrollingElement.scrollTo({ top: 400, behavior: 'instant' })`,
+    ) // instant: warp scrolls smoothly by default, and a scroll still under way would read as lost state
     const KEPT = JSON.stringify(await page.eval(STATE))
     if (!/"typed":"hello".*"raw":"by hand"/.test(KEPT))
       throw new Error(`the page wasn't set up: ${KEPT}`)

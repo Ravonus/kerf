@@ -121,6 +121,8 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
   const run: Run = (cmd, p) => browser(root, cmd, p)
 
   beforeAll(async () => {
+    // a cold Chrome on a shared CI runner sometimes takes longer than 15 s to open its first tab
+    process.env.WEFT_BROWSER_WAIT_MS ??= '45000'
     mkdirSync(tmpRoot, { recursive: true })
     root = mkdtempSync(join(tmpRoot, 'shop-'))
     cpSync(join(evals, 'reference-v3/weft/src'), join(root, 'src'), { recursive: true })
