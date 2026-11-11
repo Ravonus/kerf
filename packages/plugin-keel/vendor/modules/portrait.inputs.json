@@ -1,0 +1,111 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "seed",
+      "label": "Seed",
+      "required": false,
+      "help": "Decides the face's proportions and the hair's locks.",
+      "type": "number",
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "default": 7
+    },
+    {
+      "key": "face",
+      "label": "Face",
+      "required": false,
+      "type": "select",
+      "options": [
+        {
+          "value": "A",
+          "label": "Frontal, eyes to camera"
+        },
+        {
+          "value": "B",
+          "label": "Turned and looking down"
+        }
+      ],
+      "default": "A"
+    },
+    {
+      "key": "hand",
+      "label": "Hand",
+      "required": false,
+      "type": "select",
+      "options": [
+        {
+          "value": "pinch",
+          "label": "Card pinched"
+        },
+        {
+          "value": "point",
+          "label": "Card over a raised finger"
+        }
+      ],
+      "default": "pinch"
+    },
+    {
+      "key": "detail",
+      "label": "Detail",
+      "required": false,
+      "placement": "advanced",
+      "type": "select",
+      "options": [
+        {
+          "value": "hero",
+          "label": "Hero"
+        },
+        {
+          "value": "mid",
+          "label": "Mid"
+        },
+        {
+          "value": "far",
+          "label": "Far"
+        }
+      ],
+      "default": "hero"
+    },
+    {
+      "key": "cap",
+      "label": "Cap",
+      "required": false,
+      "type": "color",
+      "swatches": [
+        "#ff2f78",
+        "#2f6bff",
+        "#f2c14e",
+        "#1f1f24"
+      ],
+      "default": "#ff2f78"
+    },
+    {
+      "key": "hair",
+      "label": "Hair",
+      "required": false,
+      "type": "color",
+      "swatches": [
+        "#b0562a",
+        "#3a2418",
+        "#d9b26f",
+        "#1a1210"
+      ],
+      "default": "#b0562a"
+    },
+    {
+      "key": "card",
+      "label": "Card",
+      "required": false,
+      "placement": "advanced",
+      "type": "color",
+      "swatches": [
+        "#ff2a62",
+        "#e8e4d8",
+        "#20242a"
+      ],
+      "default": "#ff2a62"
+    }
+  ]
+}

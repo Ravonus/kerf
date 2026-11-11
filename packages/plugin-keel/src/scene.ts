@@ -6,10 +6,14 @@ import type { RailOptions } from '../vendor/modules/camera-rail.mjs'
 import type { Levers } from '../vendor/modules/quality.mjs'
 import type { Sampled, Track } from '../vendor/modules/tracks.mjs'
 import type * as Band from '../vendor/modules/band.mjs'
+import type * as ButterfliesModule from '../vendor/modules/butterflies.mjs'
 import type * as CameraRail from '../vendor/modules/camera-rail.mjs'
 import type * as DeviceProfile from '../vendor/modules/device-profile.mjs'
 import type * as LitFinish from '../vendor/modules/lit-finish.mjs'
 import type * as Look from '../vendor/modules/look.mjs'
+import type * as MotesModule from '../vendor/modules/motes.mjs'
+import type * as PlatePainterModule from '../vendor/modules/plate-painter.mjs'
+import type * as PortraitModule from '../vendor/modules/portrait.mjs'
 import type * as Quality from '../vendor/modules/quality.mjs'
 import type * as SceneBlendModule from '../vendor/modules/scene-blend.mjs'
 import type * as SectionPost from '../vendor/modules/section-post.mjs'
@@ -22,10 +26,14 @@ import type * as WorldLight from '../vendor/modules/world-light.mjs'
 /** The modules a scene can ask for, each loaded once, when the first scene that names it is built. */
 export interface KeelModules {
   band: typeof Band
+  butterflies: typeof ButterfliesModule
   'camera-rail': typeof CameraRail
   'device-profile': typeof DeviceProfile
   'lit-finish': typeof LitFinish
   look: typeof Look
+  motes: typeof MotesModule
+  'plate-painter': typeof PlatePainterModule
+  portrait: typeof PortraitModule
   quality: typeof Quality
   'scene-blend': typeof SceneBlendModule
   'section-post': typeof SectionPost
@@ -157,10 +165,14 @@ export interface SceneDef {
 
 const LOAD: { [K in ModuleId]: () => Promise<KeelModules[K]> } = {
   band: () => import('../vendor/modules/band.mjs'),
+  butterflies: () => import('../vendor/modules/butterflies.mjs'),
   'camera-rail': () => import('../vendor/modules/camera-rail.mjs'),
   'device-profile': () => import('../vendor/modules/device-profile.mjs'),
   'lit-finish': () => import('../vendor/modules/lit-finish.mjs'),
   look: () => import('../vendor/modules/look.mjs'),
+  motes: () => import('../vendor/modules/motes.mjs'),
+  'plate-painter': () => import('../vendor/modules/plate-painter.mjs'),
+  portrait: () => import('../vendor/modules/portrait.mjs'),
   quality: () => import('../vendor/modules/quality.mjs'),
   'scene-blend': () => import('../vendor/modules/scene-blend.mjs'),
   'section-post': () => import('../vendor/modules/section-post.mjs'),

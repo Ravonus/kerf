@@ -96,3 +96,43 @@ describe('the section-post module', () => {
     expect(post.idle(at(0.5))).toBe(false)
   })
 })
+
+describe('the motes module', () => {
+  it('places the same field from the same seed, and another from another', async () => {
+    const motes = await import('../vendor/modules/motes.mjs')
+    const field = motes.placeMotes({ seed: 4 })
+    expect(field).toEqual(motes.placeMotes({ seed: 4 }))
+    expect(field).not.toEqual(motes.placeMotes({ seed: 5 }))
+  })
+})
+
+describe('the butterflies module', () => {
+  it('plans the same flock from the same seed and flies it on the clock it is given', async () => {
+    const flock = await import('../vendor/modules/butterflies.mjs')
+    const flights = flock.planFlights({ seed: 3 })
+    expect(flights).toEqual(flock.planFlights({ seed: 3 }))
+    expect(flock.flyAt(flights[0]!, 2)).toEqual(flock.flyAt(flights[0]!, 2))
+    expect(flock.flyAt(flights[0]!, 2)).not.toEqual(flock.flyAt(flights[0]!, 3))
+  })
+})
+
+describe('the plate-painter module', () => {
+  it('plans the same plate, digest and all, from the same recipe and seed', async () => {
+    const painter = await import('../vendor/modules/plate-painter.mjs')
+    const plan = painter.planPlate(painter.LAKE_VALLEY, { seed: 11 })
+    expect(plan.digest).toBe(painter.planPlate(painter.LAKE_VALLEY, { seed: 11 }).digest)
+    expect(plan.digest).not.toBe(painter.planPlate(painter.LAKE_VALLEY, { seed: 12 }).digest)
+  })
+})
+
+describe('the portrait module', () => {
+  it('gives the same sitter and features from the same seed', async () => {
+    const portrait = await import('../vendor/modules/portrait.mjs')
+    const settings = portrait.portraitSettings({ seed: 21 })
+    expect(portrait.sitterOf(settings)).toEqual(
+      portrait.sitterOf(portrait.portraitSettings({ seed: 21 })),
+    )
+    expect(portrait.featuresOf(21)).toEqual(portrait.featuresOf(21))
+    expect(portrait.featuresOf(21)).not.toEqual(portrait.featuresOf(22))
+  })
+})

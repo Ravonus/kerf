@@ -1,0 +1,50 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "seed",
+      "label": "Seed",
+      "required": false,
+      "help": "Decides every peak, tree, cloud and leaf inside the recipe's bounds.",
+      "type": "number",
+      "min": 0,
+      "max": 999999,
+      "step": 1,
+      "default": 0
+    },
+    {
+      "key": "haze",
+      "label": "Haze",
+      "required": false,
+      "help": "How thick the air is: 1 is the recipe's.",
+      "type": "number",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "control": "slider",
+      "default": 1
+    },
+    {
+      "key": "clouds",
+      "label": "Clouds",
+      "required": false,
+      "help": "Below 0 clears the sky, above 0 fills it.",
+      "placement": "advanced",
+      "type": "number",
+      "min": -0.5,
+      "max": 0.5,
+      "step": 0.05,
+      "control": "slider",
+      "default": 0
+    },
+    {
+      "key": "foliage",
+      "label": "Near leaves",
+      "required": false,
+      "help": "Leave the near branch and leaves out when something else fills the foreground.",
+      "placement": "advanced",
+      "type": "boolean",
+      "default": true
+    }
+  ]
+}
