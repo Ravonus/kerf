@@ -2,7 +2,7 @@
 // keeps outside the store (its token and its reply in progress, for a bridge that calls tools over MCP).
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { createHash } from 'node:crypto'
-import type { Context } from '@weft-js/start'
+import { FnError, type Context } from '@weft-js/start'
 import type { Bridge } from '../bridge'
 import type { AgentCaller, Message, TurnEvent } from '../index'
 import type { AgentStore } from '../store'
@@ -28,10 +28,10 @@ export interface AgentOptions {
 }
 
 /** A refusal the client sees as it is: `answer` carries the code, message and status. */
-export class AgentError extends Error {
+export class AgentError extends FnError {
   answer: { code: string; message: string; status: number }
   constructor(code: string, message: string, status = 403) {
-    super(message)
+    super({ message, code }, status)
     this.answer = { code, message, status }
   }
 }

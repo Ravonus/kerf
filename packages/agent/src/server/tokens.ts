@@ -95,9 +95,13 @@ export function tokenApi(core: Core) {
 
 /** The caller behind a bearer token on the MCP endpoint: a turn's, or an API token's. */
 export async function bearer(core: Core, ctx: Context): Promise<object> {
-  if (!new URL(ctx.request.url).pathname.startsWith(MCP)) return {}
   const secret = /^Bearer\s+(\S+)$/i.exec(ctx.request.headers.get('authorization') ?? '')?.[1]
   if (!secret) return {}
+  if (!new URL(ctx.request.url).pathname.startsWith(MCP)) {
+    // an agent's token anywhere else would be ignored and the call made as nobody: say where it goes instead
+    if (/^w[at]_/.test(secret)) throw new AgentError('AGENT007', `Agents call tools through ${MCP}`)
+    return {}
+  }
   const t = turnTokens.get(secret)
   if (t && t.expires > Date.now())
     return {
