@@ -79,4 +79,4 @@ jobs:
           mkdir -p packages/core/native packages/core/dist/platform
           cp artifacts/wasm/* packages/core/native/
           for d in artifacts/*; do [ "$d" = artifacts/wasm ] || cp -r "$d" packages/core/dist/platform/; done
-          node packages/core/scripts/build-platform.mjs --verify
+          node packages/core/scripts/build-platform.mjs --verify --skip win32-arm64

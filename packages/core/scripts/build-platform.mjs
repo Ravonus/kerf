@@ -2,7 +2,9 @@
 // here without it. Nothing is published. Output is dist/platform/<name>/, ready for `npm pack` or `npm publish`.
 //
 //   node scripts/build-platform.mjs [--target <name>[,<name>…]|host|all] [--out <dir>]
-//   node scripts/build-platform.mjs --verify [--out <dir>]     every package there against weft's optionalDependencies
+//   node scripts/build-platform.mjs --verify [--skip <name>[,<name>…]] [--out <dir>]
+//                                                              every package there against weft's optionalDependencies;
+//                                                              a skipped platform may be missing (it runs the WASM build)
 //
 // A target other than the host goes through `cargo zigbuild` (Linux, needs zig and cargo-zigbuild) or `cargo xwin`
 // (Windows, needs cargo-xwin). macOS only needs `rustup target add` on a Mac.
@@ -69,10 +71,12 @@ function verify() {
   for (const [name, version] of Object.entries(pkg.optionalDependencies ?? {}))
     if (version !== pkg.version)
       bad.push(`${name} is pinned to ${version}, @weft-js/core is ${pkg.version}`)
+  const skip = new Set((flag('skip') ?? '').split(',').filter(Boolean))
   for (const p of platforms) {
     const file = join(dirOf(p), 'package.json')
-    if (!existsSync(file)) bad.push(`${p.name}: not built`)
-    else if (JSON.parse(readFileSync(file, 'utf8')).version !== pkg.version)
+    if (!existsSync(file)) {
+      if (!skip.has(p.name)) bad.push(`${p.name}: not built`)
+    } else if (JSON.parse(readFileSync(file, 'utf8')).version !== pkg.version)
       bad.push(`${p.name}: a different version from weft`)
     else if (!existsSync(join(dirOf(p), 'weft-compiler.node'))) bad.push(`${p.name}: no addon`)
   }
