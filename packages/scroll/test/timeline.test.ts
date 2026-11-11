@@ -27,6 +27,16 @@ describe('timeline', () => {
     expect(t.value('soft', 0.25)).toBeCloseTo(6.25)
     expect(t.value('soft', 0.5)).toBe(50)
   })
+  test('a key takes cubic-bezier handles', () => {
+    const t = timeline({
+      x: [
+        [0, 0],
+        [1, 100, [0.42, 0, 0.58, 1]],
+      ],
+    })
+    expect(t.value('x', 0.25)).toBeCloseTo(12.9162, 3)
+    expect(t.value('x', 0.5)).toBeCloseTo(50, 6)
+  })
   test('sorts keys, and reads every track at once', () => {
     const t = timeline({
       a: [

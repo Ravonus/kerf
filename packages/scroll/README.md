@@ -356,7 +356,7 @@ engine mode; in native mode the browser's own wheel and touch handling decides t
 | Option | What it does | Default |
 |---|---|---|
 | `duration` | ms for a wheel notch, a key and a smooth `scrollTo` | `220` |
-| `easing` | `(t) => progress`; `easings` has `linear`, `easeOut`, `easeOutQuint`, `easeInOut`, `expo` | `easeOut` |
+| `easing` | `(t) => progress`; `easings` has `linear`, `easeOut`, `easeOutQuint`, `easeInOut`, `expo`; `bezier(x1, y1, x2, y2)` is a CSS `cubic-bezier` | `easeOut` |
 | `friction` | share of a fling's velocity kept per ms | `0.998` |
 | `momentum` | coast after a touch fling | `true` |
 | `overscroll` | `bounce` past the edges on touch, or `none` | `bounce` |
@@ -448,8 +448,9 @@ const scrub = progress(section, {
 })
 ```
 
-A key is `[position, value, curve?]`. The curve shapes the move into that key and defaults to `easeInOut`; a
-value holds before the first key and after the last. With `range: 'pin'` (the default) the position is 0 when
+A key is `[position, value, curve?]`. The curve shapes the move into that key: one of the named `easings`, a
+function, or the four handles of a CSS `cubic-bezier`, as `[1, 3, [0.5, 0, 0.5, 1]]`; it defaults to
+`easeInOut`. A value holds before the first key and after the last. With `range: 'pin'` (the default) the position is 0 when
 the section's top meets the top of the viewport and 1 when its bottom meets the bottom, which suits a tall
 section holding a `position: sticky` scene. `range: 'through'` runs from the section entering below to leaving
 above. `damp` sets how fast the eased position catches up; under `prefers-reduced-motion: reduce` it follows
@@ -533,7 +534,7 @@ Moves `el`'s children into a viewport and content wrapper, then calls `scroller(
 ### Helpers
 
 Pure functions the engine uses, exported for your own bars and tests: `thumbLength`, `thumbOffset`, `dragRatio`,
-`progressAt`, `snapTo`, `snapStep`, `normalizeWheel`, `pageStep`, `coastDistance`, `rubber`, `easings`.
+`progressAt`, `snapTo`, `snapStep`, `normalizeWheel`, `pageStep`, `coastDistance`, `rubber`, `easings`, `bezier`.
 
 ### Entries
 

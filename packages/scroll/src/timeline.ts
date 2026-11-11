@@ -1,10 +1,17 @@
 // Keyframe tracks read at a position, and a section's scroll progress to drive them: the two halves of a
 // scroll-scrubbed scene. Pure maths in `timeline`; `progress` is the only part that touches the page.
-import { easings } from './physics'
+import { bezier, easings } from './physics'
 import type { Easing } from './types'
 
+/** The handles of a CSS `cubic-bezier(x1, y1, x2, y2)`. */
+export type Handles = readonly [x1: number, y1: number, x2: number, y2: number]
+
 /** One keyframe: where on the timeline (0 to 1), the value there, and the curve used to arrive at it. */
-export type Key = readonly [at: number, value: number, ease?: Easing | keyof typeof easings]
+export type Key = readonly [
+  at: number,
+  value: number,
+  ease?: Easing | keyof typeof easings | Handles,
+]
 
 /** Named tracks of keyframes, as data: `{ fov: [[0, 40], [1, 28, 'easeInOut']] }`. */
 export type Tracks = Readonly<Record<string, readonly Key[]>>
@@ -17,10 +24,16 @@ export interface Timeline<T extends Tracks> {
   value(name: keyof T, t: number): number
 }
 
-const curve = (ease: Key[2]): Easing =>
-  typeof ease === 'function' ? ease : easings[ease ?? 'easeInOut']
+type Resolved = readonly [at: number, value: number, ease: Easing]
 
-function sample(keys: readonly Key[], t: number) {
+const curve = (ease: Key[2]): Easing =>
+  typeof ease === 'function'
+    ? ease
+    : typeof ease === 'object'
+      ? bezier(...ease)
+      : easings[ease ?? 'easeInOut']
+
+function sample(keys: readonly Resolved[], t: number) {
   const first = keys[0]!
   if (t <= first[0]) return first[1]
   for (let i = 1; i < keys.length; i++) {
@@ -28,20 +41,22 @@ function sample(keys: readonly Key[], t: number) {
     if (t > to[0]) continue
     const from = keys[i - 1]!
     const span = to[0] - from[0]
-    return span <= 0 ? to[1] : from[1] + (to[1] - from[1]) * curve(to[2])((t - from[0]) / span)
+    return span <= 0 ? to[1] : from[1] + (to[1] - from[1]) * to[2]((t - from[0]) / span)
   }
   return keys[keys.length - 1]![1]
 }
 
 /**
  * Keyframe tracks to scrub. Keys are sorted by position; a value holds before the first key and after the last.
- * A key's curve shapes the move into it and defaults to `easeInOut`.
+ * A key's curve shapes the move into it: a name, a function, or cubic-bezier handles; it defaults to `easeInOut`.
  */
 export function timeline<T extends Tracks>(tracks: T): Timeline<T> {
   const names = Object.keys(tracks) as (keyof T & string)[]
-  const sorted = new Map<keyof T, readonly Key[]>()
+  const sorted = new Map<keyof T, readonly Resolved[]>()
   for (const name of names) {
-    const keys = [...tracks[name]!].sort((a, b) => a[0] - b[0])
+    const keys = tracks[name]!.map((k): Resolved => [k[0], k[1], curve(k[2])]).sort(
+      (a, b) => a[0] - b[0],
+    )
     if (!keys.length) throw new Error(`timeline: track \`${name}\` has no keys`)
     sorted.set(name, keys)
   }
