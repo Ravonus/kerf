@@ -157,6 +157,30 @@
 :where([data-scroll] [data-part='scrollbar'][data-active] > [data-part='thumb']) {
   background: var(--scroll-active-color, color-mix(in srgb, currentColor 60%, transparent));
 }
+/* Touch: a bar at the edge mustn't take the swipes that start there. A DOM thumb takes a finger only while it shows,
+   over a 44 px area across, wider than it paints; the rest of the bar lets touches through to the content. A canvas bar, with no
+   thumb element, keeps its whole track. */
+@media (pointer: coarse) {
+  :where([data-scroll] > [data-part='scrollbar']:has(> [data-part='thumb'])) {
+    pointer-events: none;
+  }
+  :where([data-scroll] > [data-part='scrollbar']:is([data-visible], [data-active]) > [data-part='thumb']) {
+    pointer-events: auto;
+  }
+  :where([data-scroll] [data-part='scrollbar'][data-orientation='vertical'] > [data-part='thumb'])::before {
+    content: '';
+    position: absolute;
+    inset-block: -8px;
+    inset-inline: -32px -6px;
+  }
+  :where([data-scroll] [data-part='scrollbar'][data-orientation='horizontal'] > [data-part='thumb'])::before {
+    content: '';
+    position: absolute;
+    inset-block: -32px -6px;
+    inset-inline: -8px;
+  }
+}
+
 /* Native mode with DOM bars: the viewport's scroll position drives each thumb through a scroll timeline, which the
    browser runs on the compositor, so the thumb keeps up while the main thread is busy. The script sets the two ends
    and only sets `data-timeline` where the browser supports it; elsewhere it moves the thumb itself. */

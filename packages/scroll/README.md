@@ -435,6 +435,9 @@ const list = virtualizer(area.viewport, {
   `aria-controls`.
 - **Reduced motion:** with `motion: 'auto'` (the default) and `prefers-reduced-motion: reduce`, animated scrolls
   are instant, bars stop fading and touch doesn't rubber-band.
+- **Touch screens:** the bars are still this package's, drawn in place of the native ones. With a coarse pointer a
+  DOM bar lets the swipes that start at the edge through to the content; its thumb takes a finger only while it
+  shows, over a 44 px area. A canvas bar keeps its whole track.
 - **Right to left:** `x` and `scrollLeft` run from 0 to negative, as the DOM's do. The vertical bar sits at the
   inline end and the horizontal thumb starts from the right.
 - **Selection:** dragging a text selection past the edge scrolls toward it, faster further out, and the selection

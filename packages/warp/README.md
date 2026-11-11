@@ -681,7 +681,7 @@ props, live examples and keyboard table. `weft plugins` lists the core catalogue
 | `HamburgerMenu` | A small-screen site menu: the bars become an X and open a full-screen menu |
 | `PaginationBar` | Rows per page, range, page buttons and Go to; collapses when narrow |
 | `LoadMore` | An infinite-scroll sentinel with a button that is always there as the fallback |
-| `ScrollRail` | The page scrollbar drawn below a sticky header instead of over it; `below=".header"` follows that header's bottom edge as the page scrolls |
+| `ScrollRail` | The page scrollbar, warp's on every device (touch included) in place of the native one, drawn below a sticky header instead of over it; `below=".header"` follows that header's bottom edge as the page scrolls |
 | `ScrollView` | A scroll area with Warp's bars, in the DOM or on a canvas, by [`@weft-js/scroll`](https://www.npmjs.com/package/@weft-js/scroll): the browser scrolls, the thumb keeps up on the compositor |
 
 </details>

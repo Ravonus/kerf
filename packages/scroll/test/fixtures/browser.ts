@@ -43,10 +43,13 @@ export async function open(
   options: object = {},
   dir = 'ltr',
   paint = false,
+  prepare?: () => void,
 ) {
   await page.setContent(
     `<!doctype html><html dir="${dir}"><head><style>body{margin:0;font:16px/1 sans-serif}${css}</style></head><body>${body}</body></html>`,
   )
+  // Runs before the package loads: a case can take a browser feature away first.
+  if (prepare) await page.evaluate(prepare)
   await page.addScriptTag({ content: bundle })
   await page.evaluate(
     ([o, canvas]) => {
@@ -89,6 +92,34 @@ export function run(cases: Record<string, Case>) {
     })
     beforeEach(async () => {
       page = await browser.newPage({ viewport: { width: 800, height: 600 } })
+    })
+    afterEach(async () => {
+      await page.close()
+    })
+    for (const [title, run] of Object.entries(cases)) test(title, () => run(page))
+  })
+}
+
+/** Run each case on a fresh page in each browser, as each named Playwright device (a phone: touch, a coarse pointer). */
+export function runOn(
+  targets: readonly (readonly ['chromium' | 'firefox' | 'webkit', string])[],
+  cases: Record<string, Case>,
+) {
+  vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
+  describe.each(targets)('%s as %s', (name, device) => {
+    let browser: Playwright.Browser
+    let context: Playwright.BrowserContext
+    let page: Playwright.Page
+    beforeAll(async () => {
+      await load()
+      browser = await pw[name].launch()
+      context = await browser.newContext({ ...pw.devices[device] })
+    })
+    afterAll(async () => {
+      await browser?.close()
+    })
+    beforeEach(async () => {
+      page = await context.newPage()
     })
     afterEach(async () => {
       await page.close()

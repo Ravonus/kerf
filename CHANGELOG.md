@@ -3,6 +3,16 @@
 Every `@weft-js` package is released together, at one version. Early releases (0.1.x) can change APIs between
 minor versions.
 
+## Unreleased
+
+### Packages
+
+- `@weft-js/warp`: `ScrollRail` draws the page's bar on every device, touch screens included, in place of the native
+  one (it was drawn only with a mouse or trackpad). On a touch screen the rail lets swipes through, and its thumb
+  shows while the page moves and can be grabbed then, over a 44 px area.
+- `@weft-js/scroll`: on a touch screen, a DOM bar at the edge no longer takes the swipes that start there; the thumb
+  takes a finger only while it shows, over a 44 px area.
+
 ## 0.1.4 (2026-11-10)
 
 From an outside team's trial of 0.1.3: their feedback, each point acted on.
