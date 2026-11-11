@@ -168,22 +168,33 @@ describe('progress', () => {
 describe('progressOf scene', () => {
   // Measured on a scroll-driven page at a 900 px viewport: a section's top and height, its lead in px, the
   // scroll offsets where its position is 0 and 1, and its position at the end, where its bottom meets the top.
-  const measured: [number, number, number, number, number, number, number][] = [
-    [0, 1350, 0, -900, 0, 1350, 2.5],
-    [9906, 2735, 0, 9006, 9906, 12641, 4.04],
-    [30778, 2192, 180, 29698, 30650, 32970, 3.44],
-    [38235, 2890, 180, 37155, 38098, 41125, 4.21],
-    [41125, 2404, 180, 40045, 40994, 43529, 3.67],
-    [45748, 8381, 180, 44668, 45585, 54129, 10.31],
+  const measured: {
+    top: number
+    height: number
+    lead: number
+    y0: number
+    y1: number
+    yEnd: number
+    end: number
+  }[] = [
+    { top: 0, height: 1350, lead: 0, y0: -900, y1: 0, yEnd: 1350, end: 2.5 },
+    { top: 9906, height: 2735, lead: 0, y0: 9006, y1: 9906, yEnd: 12641, end: 4.04 },
+    { top: 30778, height: 2192, lead: 180, y0: 29698, y1: 30650, yEnd: 32970, end: 3.44 },
+    { top: 38235, height: 2890, lead: 180, y0: 37155, y1: 38098, yEnd: 41125, end: 4.21 },
+    { top: 41125, height: 2404, lead: 180, y0: 40045, y1: 40994, yEnd: 43529, end: 3.67 },
+    { top: 45748, height: 8381, lead: 180, y0: 44668, y1: 45585, yEnd: 54129, end: 10.31 },
   ]
-  test.each(measured)('top %i, height %i, lead %i', (top, height, lead, y0, y1, yEnd, end) => {
-    const at = (y: number) => progressOf({ top: top - y, height }, 900, 'scene', lead / 900)
-    expect(at(y0)).toBeCloseTo(0, 9)
-    expect(at(y0 - 500)).toBe(0)
-    expect(at(y1)).toBeCloseTo(1, 2)
-    expect(at(yEnd)).toBeCloseTo(end, 2)
-    expect(at(yEnd + 900)).toBeCloseTo(end, 2)
-  })
+  test.each(measured)(
+    'top $top, height $height, lead $lead',
+    ({ top, height, lead, y0, y1, yEnd, end }) => {
+      const at = (y: number) => progressOf({ top: top - y, height }, 900, 'scene', lead / 900)
+      expect(at(y0)).toBeCloseTo(0, 9)
+      expect(at(y0 - 500)).toBe(0)
+      expect(at(y1)).toBeCloseTo(1, 2)
+      expect(at(yEnd)).toBeCloseTo(end, 2)
+      expect(at(yEnd + 900)).toBeCloseTo(end, 2)
+    },
+  )
   test('positions are viewports: keys at 0.4 and 2.1 sit 952 px per unit apart with a 0.2 lead', () => {
     const at = (y: number) => progressOf({ top: 30778 - y, height: 2192 }, 900, 'scene', 0.2)
     expect(at(30079)).toBeCloseTo(0.4, 2)
