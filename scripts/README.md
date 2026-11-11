@@ -100,7 +100,7 @@ pnpm run check --jobs=4         # how much to run at once (see jobs.mjs)
 | Flag | What it does |
 | ---- | ------------ |
 | `--fast` | Leaves out the steps marked slow: `guardrails`, `rust-tests` and `tests` |
-| `--release` | Adds the `instant-navigation` step, runs every test file (including the release-only ones in `check/tiers.mjs`), and tests WebKit. First it checks that WebKit can open a page, and fails at once with the reason if it can't |
+| `--release` | Adds the `instant-navigation` and `timing` steps (each alone, after the suites), runs every test file (including the release-only ones in `check/tiers.mjs`), and tests WebKit. First it checks that WebKit can open a page, and fails at once with the reason if it can't |
 | `--changed=<ref>` | Runs the `tests` step only for packages with a change since `<ref>`, plus every package that depends on them. A change outside `packages/` tests them all; changes in `docs/`, `site/`, `examples/`, `benchmarks/`, `evals/`, `.github/` or a top-level `.md` are ignored |
 | `--only=<ids>` | Only these steps, comma-separated. An unknown id exits 2 |
 | `--list` | Prints each step and what it covers, then exits |
@@ -155,8 +155,8 @@ The parts of `check.mjs`, split out so each can be tested.
 | File | What it does |
 | ---- | ------------ |
 | [`run.mjs`](check/run.mjs) | `run(cmd, args, cwd, env)` spawns a command from the repo root with `NO_COLOR=1` and keeps its output. `allJobs` runs a job per item with bounded concurrency, prints each failure's output, and reports the three slowest |
-| [`steps.mjs`](check/steps.mjs) | `runSteps` runs the chosen steps in two waves, prints one line per step in list order, then each failure with its fix |
-| [`tiers.mjs`](check/tiers.mjs) | `RELEASE_TESTS`: the heavy test files only `--release` runs (scaffolds, builds, mutation tests, benchmarks, cross-browser checks). `affected()` works out the packages `--changed` tests. `mergeArgs()` turns the release-only files into Vitest `--exclude` flags |
+| [`steps.mjs`](check/steps.mjs) | `runSteps` runs the chosen steps in three waves (static, suites, then the `alone` steps with timing budgets one at a time), prints one line per step in list order, then each failure with its fix |
+| [`tiers.mjs`](check/tiers.mjs) | `RELEASE_TESTS`: the heavy test files only `--release` runs (scaffolds, builds, mutation tests, benchmarks, cross-browser checks). `affected()` works out the packages `--changed` tests. `mergeArgs()` turns the release-only files into Vitest `--exclude` flags. `QUIET_TESTS`: files with a timing budget, which the release gate runs in the `timing` step instead of with their package |
 | [`types.mjs`](check/types.mjs) | Pulls `error TS` lines out of `tsc` output, leaving out `evals/`, `examples/` and `packages/text/gen/` |
 | [`webkit.mjs`](check/webkit.mjs) | `webkitWorks(root, ms = 30000)`: launches WebKit through `packages/start`'s playwright-core and opens a page. `--release` calls it first |
 | `*.test.mjs` | Tests for `run.mjs`, `types.mjs` and the Vitest cache |

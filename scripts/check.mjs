@@ -14,7 +14,7 @@ import { repoRoot } from './lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { run, allJobs } from './check/run.mjs'
 import { runSteps } from './check/steps.mjs'
-import { affected, mergeArgs } from './check/tiers.mjs'
+import { QUIET_TESTS, affected, mergeArgs, releaseArgs } from './check/tiers.mjs'
 import { typeProblems } from './check/types.mjs'
 import { webkitWorks } from './check/webkit.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
@@ -340,8 +340,30 @@ const STEPS = [
     covers: 'landing scaffold navigation on Fast and Slow 3G',
     slow: true,
     release: true,
+    // its budgets are paint times (response under 50 ms, skeleton under 100 ms): not beside the suites
+    alone: true,
     fix: 'Run `pnpm --filter @weft-js/create test:e2e` and inspect the failures.',
-    run: async () => lines(await run('pnpm', ['--filter', '@weft-js/create', 'test:e2e'])),
+    run: async () => {
+      // the error comes last, after the scaffold's install and build output
+      const r = await run('pnpm', ['--filter', '@weft-js/create', 'test:e2e'])
+      return { problems: r.code === 0 ? [] : r.out.trim().split('\n').slice(-60) }
+    },
+  },
+  {
+    id: 'timing',
+    covers: 'the test files that hold a timing budget (QUIET_TESTS in check/tiers.mjs), alone',
+    slow: true,
+    release: true,
+    alone: true,
+    fix: 'Run the file on its own: `cd packages/core && pnpm exec vitest run test/hmr.test.ts`.',
+    run: () =>
+      all(
+        Object.entries(QUIET_TESTS).flatMap(([dir, files]) => files.map((f) => `${dir}/${f}`)),
+        (path) => {
+          const [, dir, file] = /^(packages\/[^/]+)\/(.+)$/.exec(path)
+          return run('pnpm', ['exec', 'vitest', 'run', file], dir)
+        },
+      ),
   },
   {
     id: 'guardrails',
@@ -377,7 +399,8 @@ const STEPS = [
         )
           .filter((d) => !changedSince || testable.includes(d))
           .sort((a, b) => LONG.indexOf(b) - LONG.indexOf(a)),
-        (d) => run('pnpm', ['test', '--maxWorkers=4', ...(release ? [] : mergeArgs(d))], d),
+        (d) =>
+          run('pnpm', ['test', '--maxWorkers=4', ...(release ? releaseArgs(d) : mergeArgs(d))], d),
       ),
   },
 ]

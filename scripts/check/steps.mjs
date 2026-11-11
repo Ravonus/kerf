@@ -1,6 +1,6 @@
 // Runs the chosen steps of scripts/check.mjs and prints what failed and how to fix it. Returns the exit code.
 
-/** Run every step at once; report each in list order, then the failures. */
+/** Run the steps in waves; report each in list order, then the failures. */
 export async function runSteps(chosen, { requireTools, failOn }) {
   // The steps are independent: they run at once, and each reports in list order as the ones before it finish.
   const timed = async (step) => {
@@ -13,16 +13,35 @@ export async function runSteps(chosen, { requireTools, failOn }) {
     }
     return { result, seconds: ((performance.now() - started) / 1000).toFixed(1) }
   }
-  // Two waves: the static steps read the tree while test suites write temporary files into it (Vite's config
-  // timestamps, scaffolds), so the suites start once the static steps are done.
-  const first = chosen.filter((step) => !step.slow).map((step) => [step, timed(step)])
+  // Three waves: the static steps read the tree while test suites write temporary files into it (Vite's config
+  // timestamps, scaffolds), so the suites start once the static steps are done. Steps with timing budgets (`alone`)
+  // run last, one at a time, on a machine the suites have left.
+  const first = chosen
+    .filter((step) => !step.slow && !step.alone)
+    .map((step) => [step, timed(step)])
   const second = (async () => {
     await Promise.all(first.map(([, run]) => run))
-    return new Map(chosen.filter((step) => step.slow).map((step) => [step, timed(step)]))
+    return new Map(
+      chosen.filter((step) => step.slow && !step.alone).map((step) => [step, timed(step)]),
+    )
+  })()
+  const third = (async () => {
+    await Promise.all((await second).values())
+    const runs = new Map()
+    for (const step of chosen.filter((s) => s.alone)) {
+      const run = timed(step)
+      runs.set(step, run)
+      await run
+    }
+    return runs
   })()
   const firstRuns = new Map(first)
   const running = chosen.map(async (step) =>
-    firstRuns.has(step) ? firstRuns.get(step) : (await second).get(step),
+    firstRuns.has(step)
+      ? firstRuns.get(step)
+      : step.alone
+        ? (await third).get(step)
+        : (await second).get(step),
   )
   const results = []
   for (const [i, step] of chosen.entries()) {
