@@ -158,7 +158,8 @@ The catalogue in §6 adds the P2 effects with the same columns.
 ### 1.6 API
 
 ```ts
-import { defineEffect, fx, Effects } from "@kerf-js/veneer/expressive";
+import { defineEffect, fx, Effects } from
+  "@kerf-js/veneer/expressive";
 // any element: <h1><em use:fx="gradient-text">trust</em></h1>; fx()
 // returns the live state for custom work
 const state: State<FxState> = fx(el, "spotlight");

@@ -8,9 +8,15 @@ export function drawCells({
   height,
   time,
 }: CanvasFrame) {
-  ctx.fillStyle = token(ctx, '--veneer-color-surface-hover')
+  ctx.fillStyle = token(
+    ctx,
+    '--veneer-color-surface-hover',
+  )
   ctx.fillRect(0, 0, width, height)
-  ctx.fillStyle = token(ctx, '--veneer-color-accent-solid')
+  ctx.fillStyle = token(
+    ctx,
+    '--veneer-color-accent-solid',
+  )
   for (let x = 0; x < width; x++) {
     const top = Math.floor(
       height / 2 + Math.sin(x / 6 + time) * height * 0.3,

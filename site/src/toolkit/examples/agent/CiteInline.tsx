@@ -1,4 +1,9 @@
-import { Cite, Sources, Stack, Text } from '@kerf-js/veneer'
+import {
+  Cite,
+  Sources,
+  Stack,
+  Text,
+} from '@kerf-js/veneer'
 import { DEPLOY_SOURCES } from '../../world'
 import { CITED } from './shared'
 

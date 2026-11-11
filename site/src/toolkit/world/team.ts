@@ -1,4 +1,8 @@
-import type { Role, Member, Invite } from '@kerf-js/veneer'
+import type {
+  Role,
+  Member,
+  Invite,
+} from '@kerf-js/veneer'
 import { PEOPLE } from './people'
 
 export const NOW = '2026-10-31T17:00:00Z'

@@ -216,8 +216,9 @@ const flowSweep = (page) =>
         ),
     )
     const line =
-      parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--veneer-flow-top')) ||
-      57
+      parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--veneer-flow-top'),
+      ) || 57
     const seen = new Map()
     const seeing = (e) => {
       let o = 1

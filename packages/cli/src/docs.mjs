@@ -43,7 +43,8 @@ export const topics = {
     '@kerf-js/core/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',
   verify:
     'Check your work: drive the running app (kerf browser / __kerf__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
-  icons: '@kerf-js/veneer-icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
+  icons:
+    '@kerf-js/veneer-icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
   fonts:
     'Fonts with @kerf-js/text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
   meta: 'Page metadata and share cards: route `meta`, what is automatic, `site.url`, `.og.tsx`, `kerf routes --meta`; H001–H010, H011 (no description) to H017',

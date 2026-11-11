@@ -226,7 +226,8 @@ async function addAuth(root, { dryRun, install }) {
     )
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const db = database(root, layer).engine
-  const ui = '@kerf-js/veneer' in { ...pkg.dependencies, ...pkg.devDependencies } ? 'veneer' : 'none'
+  const ui =
+    '@kerf-js/veneer' in { ...pkg.dependencies, ...pkg.devDependencies } ? 'veneer' : 'none'
   const { authFiles, stackDeps } = await import('create-kerf/stack')
   const { files, context, tables } = authFiles({ db, layer: layer.layer, ui })
   const contextFile = join(root, 'src/context.server.ts')

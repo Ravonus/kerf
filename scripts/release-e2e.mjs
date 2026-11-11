@@ -26,7 +26,8 @@ const { values, positionals } = parseArgs({
 const [tarballs, empty] = positionals.map((p) => resolve(p))
 const here = dirname(fileURLToPath(import.meta.url))
 const script = resolve(
-  values['registry-script'] ?? join(here, '..', 'packages', 'create', 'scripts', 'registry.mjs'),
+  values['registry-script'] ??
+    join(here, '..', 'packages', 'create-kerf', 'scripts', 'registry.mjs'),
 )
 const windows = process.platform === 'win32'
 const pm = values.pm

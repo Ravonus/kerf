@@ -26,10 +26,22 @@ describe('the jwks table', () => {
   it('agents are told login is not a JWT only when the app has it', async () => {
     const { agentsFile } = await import('../src/templates.mjs')
     expect(
-      agentsFile({ ui: 'veneer', db: 'postgres', layer: 'drizzle', auth: true, shipped: undefined }),
+      agentsFile({
+        ui: 'veneer',
+        db: 'postgres',
+        layer: 'drizzle',
+        auth: true,
+        shipped: undefined,
+      }),
     ).toContain('never a JWT')
     expect(
-      agentsFile({ ui: 'veneer', db: 'postgres', layer: 'drizzle', auth: false, shipped: undefined }),
+      agentsFile({
+        ui: 'veneer',
+        db: 'postgres',
+        layer: 'drizzle',
+        auth: false,
+        shipped: undefined,
+      }),
     ).not.toContain('JWT')
   })
 })

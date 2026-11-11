@@ -1,4 +1,7 @@
-import type { Command, CommandMode } from '@kerf-js/veneer'
+import type {
+  Command,
+  CommandMode,
+} from '@kerf-js/veneer'
 import { PEOPLE, PROJECTS } from '../../world'
 
 export const COMMANDS: Command[] = [

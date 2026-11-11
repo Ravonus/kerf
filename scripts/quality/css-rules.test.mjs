@@ -131,7 +131,12 @@ export function untrimmed(css) {
 // takes the trim off and leaves k at 1 gets the padding with no trim to cancel, and the page moves when the font
 // lands (CLS).
 await test('a rule that takes a heading trim off zeroes the swap fix too', () => {
-  const dirs = ['docs/design/veneer/tokens', 'site/src', 'examples', 'packages/create-kerf/templates']
+  const dirs = [
+    'docs/design/veneer/tokens',
+    'site/src',
+    'examples',
+    'packages/create-kerf/templates',
+  ]
   const bad = []
   for (const dir of dirs)
     for (const file of cssFiles(join(root, dir)))

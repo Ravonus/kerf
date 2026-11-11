@@ -212,7 +212,8 @@ export function formatExplain(r) {
       )
   }
   out.push('', r.css.trimEnd())
-  if (r.contextTone) out.push('', 'Reads its tone from the nearest data-tone (veneer context tone).')
+  if (r.contextTone)
+    out.push('', 'Reads its tone from the nearest data-tone (veneer context tone).')
   return out.join('\n')
 }
 

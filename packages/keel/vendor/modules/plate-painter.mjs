@@ -64,12 +64,12 @@ vec3 sky(vec2 uv, int oct) {
   c = mix(c, uSkyCorner, corner * corner);
   c = mix(c, uSkyLow * 1.04, exp(-(uv.x - uCloud.z) * (uv.x - uCloud.z) * 4.84) * smoothstep(.05, .35, uv.y) * .35);
   vec2 cp = p * vec2(1.3, 2.6) + uSeedOff;
-  vec2 veneer = vec2(fbm(cp * .5, 3), fbm(cp * .5 + 7.3, 3));
-  float n = fbm(cp + veneer * 1.4, oct);
+  vec2 warp = vec2(fbm(cp * .5, 3), fbm(cp * .5 + 7.3, 3));
+  float n = fbm(cp + warp * 1.4, oct);
   float band = smoothstep(uCloud.x - .1, uCloud.x + .05, uv.y) * (1. - smoothstep(uCloud.y - .06, uCloud.y + .14, uv.y));
   float side = exp(-(uv.x - uCloud.z) * (uv.x - uCloud.z) * 3.24);
   float d = smoothstep(uCloud.w, uCloud.w + .3, n * (.55 + .45 * band) + band * side * .22);
-  float toward = fbm(cp + veneer * 1.4 + vec2(-.05, -.08), oct);
+  float toward = fbm(cp + warp * 1.4 + vec2(-.05, -.08), oct);
   float lit = clamp((n - toward) * 7. + .5, 0., 1.);
   c = mix(c, mix(uCloudShade, uCloudLit, lit), d * .88);
   float streak = fbm(vec2(p.x * 1.2, p.y * 26.) + uSeedOff * 1.7, 3);

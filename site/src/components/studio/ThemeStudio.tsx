@@ -36,7 +36,10 @@ function Contrast(props: { stage: () => HTMLElement | undefined; look: string })
     read.value = [
       ['Text on page', ratio(v('--veneer-color-text'), v('--veneer-color-page'))],
       ['Accent text', ratio(v('--veneer-color-accent-text'), v('--veneer-color-page'))],
-      ['Ink on accent', ratio(v('--veneer-color-accent-on-solid'), v('--veneer-color-accent-solid'))],
+      [
+        'Ink on accent',
+        ratio(v('--veneer-color-accent-on-solid'), v('--veneer-color-accent-solid')),
+      ],
     ]
     probe.remove()
   }

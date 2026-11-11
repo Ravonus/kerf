@@ -1,4 +1,4 @@
-// The shapes a scene stage and its scenes agree on. A renderer's bridge (plugin-keel's `defineScene`) fills them;
+// The shapes a scene stage and its scenes agree on. A renderer's bridge (keel's `defineScene`) fills them;
 // the stage needs nothing else from it, so veneer imports no renderer.
 import type { SurfaceBase } from '@kerf-js/core/surface'
 import type { MediaAsset } from '@kerf-js/core/media'
@@ -77,7 +77,7 @@ export interface SceneHost {
   readonly quality: Levers
 }
 
-/** A scene the stage can build: `defineScene(...)` from plugin-keel. */
+/** A scene the stage can build: `defineScene(...)` from @kerf-js/keel. */
 export interface StageSceneDef {
   /** Fetches what `build` needs, ahead of time. */
   load?(): Promise<void>

@@ -1,6 +1,10 @@
 import { state } from '@kerf-js/core'
 
-import { CommentAnchor, Stack, Text } from '@kerf-js/veneer'
+import {
+  CommentAnchor,
+  Stack,
+  Text,
+} from '@kerf-js/veneer'
 
 import { wait as _Shared0 } from './shared-wait'
 

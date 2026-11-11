@@ -1,5 +1,5 @@
 // The painted grounds demo in real Chrome: two cards and a paper tile painted at build (`?paint`) and encoded by
-// plugin-media, and one card painted in the page (`paintLive`).   node test/paint-e2e.mjs
+// @kerf-js/media, and one card painted in the page (`paintLive`).   node test/paint-e2e.mjs
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { chromium } from 'playwright-core'

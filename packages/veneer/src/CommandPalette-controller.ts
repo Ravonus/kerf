@@ -1,5 +1,12 @@
 // Per-instance palette state, search and keyboard navigation.
-import { dialog, listKey, moveShuttle, paletteHotkey, rankCommands, uid } from '@kerf-js/veneer-core'
+import {
+  dialog,
+  listKey,
+  moveShuttle,
+  paletteHotkey,
+  rankCommands,
+  uid,
+} from '@kerf-js/veneer-core'
 import { derived, flush, state, untrack, watch } from '@kerf-js/core'
 import { bindable } from './bind'
 import { use } from '@kerf-js/veneer-core/kerf'

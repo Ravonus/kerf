@@ -12,7 +12,8 @@ export async function writeTokens(root) {
   let plugin
   try {
     plugin = await import(
-      pathToFileURL(createRequire(join(root, 'package.json')).resolve('@kerf-js/veneer/plugin')).href
+      pathToFileURL(createRequire(join(root, 'package.json')).resolve('@kerf-js/veneer/plugin'))
+        .href
     )
   } catch {
     throw Object.assign(
@@ -21,8 +22,8 @@ export async function writeTokens(root) {
     )
   }
   const css =
-    (await loadConfig(root)).contributions.find((c) => c.name === '@kerf-js/veneer')?.manifest.tokens
-      ?.css ?? ''
+    (await loadConfig(root)).contributions.find((c) => c.name === '@kerf-js/veneer')?.manifest
+      .tokens?.css ?? ''
   const dir = join(root, '.kerf', 'tokens')
   mkdirSync(dir, { recursive: true })
   const files = plugin.dtcg(css)

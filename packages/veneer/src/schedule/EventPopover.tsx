@@ -1,4 +1,11 @@
-import { ClockIcon, InfoIcon, PinIcon, RepeatIcon, UsersIcon, VideoIcon } from '@kerf-js/veneer-icons'
+import {
+  ClockIcon,
+  InfoIcon,
+  PinIcon,
+  RepeatIcon,
+  UsersIcon,
+  VideoIcon,
+} from '@kerf-js/veneer-icons'
 import {
   clockRange,
   dateOf,

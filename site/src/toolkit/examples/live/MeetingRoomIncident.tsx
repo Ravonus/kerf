@@ -1,5 +1,9 @@
 import { state } from '@kerf-js/core'
-import { Button, Card, MeetingRoom } from '@kerf-js/veneer'
+import {
+  Button,
+  Card,
+  MeetingRoom,
+} from '@kerf-js/veneer'
 import { CALL, CALL_SELF } from '../../world'
 import { CHAT, SLIDE, INVITE } from './shared'
 

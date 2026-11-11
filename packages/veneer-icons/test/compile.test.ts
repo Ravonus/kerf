@@ -195,7 +195,9 @@ test('trimTiers keeps what the stops show', () => {
   )
 })
 
-const pack = (body: string) => ({ 'src/a.tsx': `import Icons from '@kerf-js/veneer-icons'\n${body}` })
+const pack = (body: string) => ({
+  'src/a.tsx': `import Icons from '@kerf-js/veneer-icons'\n${body}`,
+})
 test('a pack member is that icon', () =>
   expect(names(scan(pack(`export const A = () => <Icons.Bell />`)))).toEqual(['bell']))
 test('a pack variant', () =>

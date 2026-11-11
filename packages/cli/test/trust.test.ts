@@ -269,27 +269,24 @@ describe('kerf plugins audit', () => {
     expect(trust(await check(dir))).toEqual([])
   })
 
-  it.each(['text', 'plugin-media', 'plugin-surface-keel', 'veneer'])(
-    '%s declares what it uses',
-    async (name) => {
-      const dir = fileURLToPath(new URL(`../../${name}/`, import.meta.url))
-      const meta = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
-      const mod = await import(
-        pathToFileURL(
-          createRequire(join(dir, 'package.json')).resolve(
-            meta.exports['./plugin'] ? `${meta.name}/plugin` : meta.name,
-          ),
-        ).href
-      )
-      const instance = pluginFactory(mod, meta.name)!.value()
-      expect(
-        auditPackage(dir, dir, {
-          permissions: instance.permissions,
-          manifest: instance.contribute({ command: 'check', mode: 'development', root: dir }),
-        }).undeclared,
-      ).toEqual([])
-    },
-  )
+  it.each(['text', 'media', 'keel-pixel', 'veneer'])('%s declares what it uses', async (name) => {
+    const dir = fileURLToPath(new URL(`../../${name}/`, import.meta.url))
+    const meta = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
+    const mod = await import(
+      pathToFileURL(
+        createRequire(join(dir, 'package.json')).resolve(
+          meta.exports['./plugin'] ? `${meta.name}/plugin` : meta.name,
+        ),
+      ).href
+    )
+    const instance = pluginFactory(mod, meta.name)!.value()
+    expect(
+      auditPackage(dir, dir, {
+        permissions: instance.permissions,
+        manifest: instance.contribute({ command: 'check', mode: 'development', root: dir }),
+      }).undeclared,
+    ).toEqual([])
+  })
 })
 
 describe('kerf add', () => {

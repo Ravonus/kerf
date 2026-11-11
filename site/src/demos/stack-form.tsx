@@ -1,5 +1,10 @@
 import { flush, state } from '@kerf-js/core'
-import { Alert, Button, Card, Input } from '@kerf-js/veneer'
+import {
+  Alert,
+  Button,
+  Card,
+  Input,
+} from '@kerf-js/veneer'
 
 // Stands in for the server: schema checks, then a check
 // only the server can make (an email that is taken).

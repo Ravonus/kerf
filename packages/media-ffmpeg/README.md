@@ -31,7 +31,7 @@
 
 [`@kerf-js/media`](https://www.npmjs.com/package/@kerf-js/media) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/media)</sup> handles images on its own. For
 video, audio and animated GIFs it asks the `media.encode@1` slot, and this package fills that slot by running ffmpeg and
-ffprobe. It decides nothing about quality or ladders; plugin-media does that. This package knows each codec's encoder
+ffprobe. It decides nothing about quality or ladders; media does that. This package knows each codec's encoder
 names, CRF range and container, and turns a recipe into an ffmpeg command line.
 
 Kerf ships no ffmpeg. Builds with x264 or x265 are GPL, and H.264, HEVC and AAC fall under patent pools, so which binary
@@ -120,7 +120,7 @@ export default function Launch() {
 }
 ```
 
-The build gives `clip` an AV1 ladder (plugin-media's default `video.codecs`), an H.264 ladder for everything else, and
+The build gives `clip` an AV1 ladder (media's default `video.codecs`), an H.264 ladder for everything else, and
 a poster. The AV1 set ships only if it is at least 15% smaller than the H.264 one.
 
 ## How it plugs into Kerf
@@ -151,7 +151,7 @@ Options are validated when the config loads: an unknown key, a `sha256` that isn
 
 ## What each key encodes
 
-The knob is a CRF: lower is better quality. plugin-media searches between the minimum and maximum when a scorer is
+The knob is a CRF: lower is better quality. media searches between the minimum and maximum when a scorer is
 available, and uses the fixed value otherwise.
 
 | Key | Encoder (first found) | CRF min · max · fixed | Container | Audio with it | Extra arguments |
@@ -164,7 +164,7 @@ available, and uses the fixed value otherwise.
 | `audio/aac` | `aac` | (bitrate 128k) | M4A (MP4) | | |
 
 Video is scaled with Lanczos to the rung's width (height rounded to even) and converted to `yuv420p`. A `copy` recipe
-remuxes without re-encoding, which plugin-media uses for an H.264 source already at its top width and for audio already
+remuxes without re-encoding, which media uses for an H.264 source already at its top width and for audio already
 under its bitrate.
 
 ## API reference
@@ -185,7 +185,7 @@ under its bitrate.
 | `knob` | `{ min, max, fixed, higherIsBetter: false }` for the CRF. |
 | `ext` | `webm`, `mp4` or `m4a`. |
 | `encoderName()` | The encoder this binary would use, or `null` when it was built without one. Asks `ffmpeg -encoders` once per process. |
-| `versions()` | `{ ffmpeg, encoder }`: the first line of `ffmpeg -version` and the encoder. plugin-media puts it in its cache key, so a new ffmpeg means new output. |
+| `versions()` | `{ ffmpeg, encoder }`: the first line of `ffmpeg -version` and the encoder. media puts it in its cache key, so a new ffmpeg means new output. |
 | `info(file)` | ffprobe's view: `format`, `duration`, `video` (`codec`, `pix`, `width`/`height` after rotation, `fps`, `frames`, `string`, `hdr`) and `audio` (`codec`, `channels`, `bitrate`, `string`). |
 | `still(file, { at?, width? })` | One frame as PNG bytes, for posters and the quality search. |
 | `encode(file, { knob?, width?, copy?, audio?, loopVideo? })` | Encoded bytes. `audio` is a file to mux in, or `false` to drop the source's own. `loopVideo` loops the input for the length of that audio. |
@@ -227,7 +227,7 @@ import loop from './loop.gif?media&audio=./beat.opus'
   uploads, needs its own.
 - `video/h264` is required for any video: it is the compatible copy, so a binary without `libx264` can't build video.
   Other missing encoders only drop that codec (an M019 warning).
-- HDR and over-8-bit sources come out 8-bit SDR (plugin-media reports M015).
+- HDR and over-8-bit sources come out 8-bit SDR (media reports M015).
 - Inputs are read with `-protocol_whitelist file,pipe`: no network sources.
 - Audio bitrates are fixed: Opus 96 kbps, AAC-LC 128 kbps.
 
@@ -240,7 +240,7 @@ import loop from './loop.gif?media&audio=./beat.opus'
 | `M019 … is not the pinned binary: sha256 …` | The file at `binary` changed. The message prints the actual hash. |
 | `M019 No encoder for video/av1: it is left out of the ladder.` | A warning: the codec is skipped and the rest ships. |
 | `video/h264: ffmpeg failed: …` | ffmpeg exited with an error; the last three lines of its stderr follow. |
-| `P101 … needs media.encode` | Reported by plugin-media when this plugin isn't in `plugins`. |
+| `P101 … needs media.encode` | Reported by media when this plugin isn't in `plugins`. |
 
 ## Related packages
 
@@ -259,7 +259,7 @@ See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md)
 pnpm --filter @kerf-js/media-ffmpeg test
 ```
 
-The tests that run the binary skip where ffmpeg isn't on `PATH`. plugin-media's `test/video.test.ts` covers real
+The tests that run the binary skip where ffmpeg isn't on `PATH`. media's `test/video.test.ts` covers real
 encodes through this package.
 
 ## License

@@ -61,7 +61,11 @@ export function enter(el: HTMLElement, preset: Preset = 'rise'): Promise<void> {
   const reduce = reducedMotion(el)
   const ms = reduce
     ? 120
-    : token(el, preset.startsWith('slide') ? '--veneer-duration-slow' : '--veneer-duration-base', 200)
+    : token(
+        el,
+        preset.startsWith('slide') ? '--veneer-duration-slow' : '--veneer-duration-base',
+        200,
+      )
   const kf = reduce
     ? frames('fade', 0, 1)
     : frames(preset, token(el, '--veneer-motion-distance', 8), 0.97)

@@ -40,7 +40,7 @@ The renderer and theme code are vendored from KEEL's engine (keel-engine) at a p
 
 ## Highlights
 
-- **A new surface kind, nothing else to wire.** `keel()` in `plugins` registers `keel-pixel`; `defineSurface({ kind:
+- **A new surface kind, nothing else to wire.** `keelPixel()` in `plugins` registers `keel-pixel`; `defineSurface({ kind:
   'keel-pixel', pixel: { width, height } })` uses it.
 - **Loaded only where it's used.** The renderer sits behind the slot's `import()`, so only pages that mount a
   `keel-pixel` surface download it.
@@ -73,8 +73,8 @@ npx kerf add surface-keel
 ```
 
 The
-package has no `/plugin` entry and no default export, so `kerf add` writes `import { keel } from
-'@kerf-js/keel-pixel'` and adds `keel()` to `plugins`.
+package has no `/plugin` entry and no default export, so `kerf add` writes `import { keelPixel } from
+'@kerf-js/keel-pixel'` and adds `keelPixel()` to `plugins`.
 
 **What it needs:** a browser with WebGL2. There's no server or build-time dependency. If you draw canvas text with
 `s.text()` on a surface, add `text()` from `@kerf-js/text` too (the `text.measure` slot), as the demo does.
@@ -85,9 +85,9 @@ package has no `/plugin` entry and no default export, so `kerf add` writes `impo
 // kerf.config.ts
 import { defineConfig } from '@kerf-js/core/config'
 import { text } from '@kerf-js/text'
-import { keel } from '@kerf-js/keel-pixel'
+import { keelPixel } from '@kerf-js/keel-pixel'
 
-export default defineConfig({ plugins: [text(), keel()] })
+export default defineConfig({ plugins: [text(), keelPixel()] })
 ```
 
 ```tsx
@@ -224,7 +224,7 @@ import {
 
 | Export | Entry | What it is |
 | --- | --- | --- |
-| `keel()` | `@kerf-js/keel-pixel` | The plugin for `kerf.config.ts`. |
+| `keelPixel()` | `@kerf-js/keel-pixel` | The plugin for `kerf.config.ts`. |
 | `recipeTheme`, `themeTokens` | `@kerf-js/keel-pixel/theme` | KEEL's theme recipes (types come from the main entry's declarations). |
 | `renderer` | `@kerf-js/keel-pixel/runtime` | The `surface.renderer@1` provider. Loaded by the slot; you don't import it yourself. |
 | `styles.css` | `@kerf-js/keel-pixel/styles.css` | KEEL's UI styles, driven by the theme's CSS variables. |
@@ -271,7 +271,7 @@ export function Controls() {
 
 | Symptom | Cause and fix |
 | --- | --- |
-| The surface stays a placeholder and has `data-surface-error="keel-pixel"` | The renderer failed to load or set up; the browser console has the error. Check that `keel()` is in `plugins`, and that the browser has WebGL2. |
+| The surface stays a placeholder and has `data-surface-error="keel-pixel"` | The renderer failed to load or set up; the browser console has the error. Check that `keelPixel()` is in `plugins`, and that the browser has WebGL2. |
 | ``surface `<name>`: `keel-pixel` needs `pixel: { width, height }` `` | Add `pixel` to the definition. |
 | P101 for `text.measure` | `s.text()` on a canvas surface needs `text()` from `@kerf-js/text` in `plugins`. |
 | Blurry pixels | Put the canvas inside `.keel-canvas` and import `styles.css`, or set `image-rendering: pixelated` yourself. |

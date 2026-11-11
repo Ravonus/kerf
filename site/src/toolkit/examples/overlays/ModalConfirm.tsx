@@ -1,5 +1,10 @@
 import { state } from '@kerf-js/core'
-import { Button, Modal, Stack, Text } from '@kerf-js/veneer'
+import {
+  Button,
+  Modal,
+  Stack,
+  Text,
+} from '@kerf-js/veneer'
 
 export function ModalConfirm() {
   const open = state(false)

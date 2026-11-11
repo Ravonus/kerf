@@ -13,7 +13,6 @@ import { hydrate } from '@kerf-js/core/dom'
 import { flush, render } from '@kerf-js/core/test'
 import { hydration } from '../src/hydrate'
 import * as basics from './fixtures/next/Basics'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import * as basicsServer from './fixtures/next/Basics.tsx?kerf-ssr'
 import * as basicsClient from './fixtures/next/Basics.tsx?kerf-hydrate'
 import * as two from './fixtures/next/Step2'

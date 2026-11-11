@@ -1,5 +1,10 @@
 import { context, state, type State } from '@kerf-js/core'
-import { Button, Card, Row, Switch } from '@kerf-js/veneer'
+import {
+  Button,
+  Card,
+  Row,
+  Switch,
+} from '@kerf-js/veneer'
 
 // A box, so a change reaches every reader. The
 // fallback serves anything outside a provider.

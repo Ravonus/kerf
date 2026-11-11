@@ -101,7 +101,7 @@ export function cdnFindings(config = {}, { env } = {}) {
   const images = cdn.images
   if (images?.provider === 'cloudinary') {
     const plugins = (config.plugins ?? []).map((p) => p?.name ?? p)
-    if (!plugins.some((n) => typeof n === 'string' && n.includes('plugin-media')))
+    if (!plugins.some((n) => typeof n === 'string' && n.includes('@kerf-js/media')))
       add(
         'E012',
         'error',

@@ -60,7 +60,9 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
               ></span>
             )}
             {st.value === 'done' && <CheckIcon style="color:var(--veneer-color-positive-text)" />}
-            {st.value === 'approval' && <AlertIcon style="color:var(--veneer-color-caution-text)" />}
+            {st.value === 'approval' && (
+              <AlertIcon style="color:var(--veneer-color-caution-text)" />
+            )}
             {(st.value === 'failed' || st.value === 'denied') && (
               <XIcon style="color:var(--veneer-color-critical-text)" />
             )}

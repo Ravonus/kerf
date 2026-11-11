@@ -1,4 +1,10 @@
-import { cursorsLayer, firstName, peerColor, type CursorPeer, type Peer } from '@kerf-js/veneer-core'
+import {
+  cursorsLayer,
+  firstName,
+  peerColor,
+  type CursorPeer,
+  type Peer,
+} from '@kerf-js/veneer-core'
 import { derived } from '@kerf-js/core'
 import { use } from '@kerf-js/veneer-core/kerf'
 import { read, type Live } from './peer'

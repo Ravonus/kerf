@@ -36,7 +36,7 @@ export const resolveId = (s) => ({
   handler(source, importer) {
     // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
     if (source === 'sharp') {
-      if (s.dev || !importer?.includes('plugin-media')) return
+      if (s.dev || !/[\\/](@kerf-js[\\/]media|packages[\\/]media)[\\/]/.test(importer ?? '')) return
       try {
         createRequire(join(s.root, 'package.json')).resolve('sharp')
       } catch {

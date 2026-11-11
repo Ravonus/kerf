@@ -1,5 +1,10 @@
 import { state } from '@kerf-js/core'
-import { Button, Heading, Nav, Row } from '@kerf-js/veneer'
+import {
+  Button,
+  Heading,
+  Nav,
+  Row,
+} from '@kerf-js/veneer'
 import { PAGES } from './shared'
 
 export function NavProductHeader() {

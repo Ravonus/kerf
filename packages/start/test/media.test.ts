@@ -5,7 +5,7 @@ import { inject } from 'vitest'
 import { fnId } from '../src/vite.mjs'
 
 const url = inject('url')
-const sharp = createRequire(new URL('../../plugin-media/package.json', import.meta.url))('sharp')
+const sharp = createRequire(new URL('../../media/package.json', import.meta.url))('sharp')
 const png = (color = { r: 200, g: 60, b: 20 }) =>
   sharp({ create: { width: 200, height: 100, channels: 3, background: color } })
     .png()

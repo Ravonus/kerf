@@ -5,8 +5,7 @@ import { commands, eq, localPackages, makeCheck, repo, until } from '../lib/gate
 
 await test('local dependencies resolve to packages with the requested npm name', () => {
   const packageUrl = localPackages(repo)
-  for (const name of ['core', 'veneer-icons', 'create']) {
-    const expected = `@kerf-js/${name}`
+  for (const expected of ['@kerf-js/core', '@kerf-js/veneer-icons', 'create-kerf']) {
     const manifest = JSON.parse(
       readFileSync(new URL(`${packageUrl(expected)}/package.json`), 'utf8'),
     )

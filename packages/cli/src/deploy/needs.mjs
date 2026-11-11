@@ -98,8 +98,8 @@ export function needsOf(root, config = {}) {
     needs.uploads = { file: 'kerf.config.ts', what: "`media({ encoder: 'server' })`" }
   if (
     needs.uploads &&
-    !plugins.some((n) => n.includes('plugin-media')) &&
-    !configText.includes('plugin-media')
+    !plugins.some((n) => n.includes('@kerf-js/media')) &&
+    !configText.includes('@kerf-js/media')
   )
     delete needs.uploads // M017 says that one
   const db = read(join(root, 'src/db/index.server.ts'))

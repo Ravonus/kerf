@@ -3,7 +3,10 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, sep } from 'node:path'
 import { test } from 'node:test'
-import { checkPackedCrate, forceWasmCompiler } from '../../packages/create-kerf/scripts/packed-paths.mjs'
+import {
+  checkPackedCrate,
+  forceWasmCompiler,
+} from '../../packages/create-kerf/scripts/packed-paths.mjs'
 
 function fixture(run) {
   const root = mkdtempSync(join(tmpdir(), 'kerf-packed-paths-'))

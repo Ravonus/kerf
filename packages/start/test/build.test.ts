@@ -251,9 +251,7 @@ function registerBuildAFormWorksWithoutJSAndAn(getServer: GetServer) {
       body: add,
     })
     expect([done.status, done.headers.get('location')]).toEqual([303, '/notes'])
-    const sharp = createRequire(new URL('../../plugin-media/package.json', import.meta.url))(
-      'sharp',
-    )
+    const sharp = createRequire(new URL('../../media/package.json', import.meta.url))('sharp')
     const file = await sharp({
       create: { width: 200, height: 100, channels: 3, background: '#468' },
     })
@@ -334,7 +332,9 @@ function registerBuildAStreamedBoundaryComesAfterTheSheet(page: ReadPage) {
     const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]!)
     // Layers rank by first mention: veneer's whole order comes before any sheet's own statement.
     expect(
-      styles[0]!.startsWith('@layer veneer,app,theme,base,components,utilities;@layer veneer.tokens,'),
+      styles[0]!.startsWith(
+        '@layer veneer,app,theme,base,components,utilities;@layer veneer.tokens,',
+      ),
     ).toBe(true)
     const link = html.indexOf('<link rel="stylesheet" href=')
     const swap = html.indexOf('<template')

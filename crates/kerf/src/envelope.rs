@@ -157,7 +157,7 @@ mod tests {
     fn matches_the_typescript_signer() {
         assert_eq!(
             sign(b"s3cret", "f.abc", CTX, b"{\"input\":{\"q\":\"x\"}}"),
-            "1a4c89d125bdeda4db5f2dd02045bc1044ff4ecfacff00c7f42f602ceef3ad08"
+            "2f1e20f81794af5526c0209b9d5e225945ea0c48b2c1594f666b30a33d127b10"
         );
     }
 }

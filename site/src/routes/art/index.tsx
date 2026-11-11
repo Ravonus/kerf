@@ -27,8 +27,8 @@ export default function ArtGallery() {
         <h1>Art</h1>
         <p data-part="lede">
           Twenty-eight pieces drawn with <Link href="/components/canvas">Canvas</Link> and{' '}
-          <Link href="/components/dither-field">DitherField</Link>, in veneer's own inks. They follow
-          your theme and the dial, three at most move at a time, and the rest wait as stills.
+          <Link href="/components/dither-field">DitherField</Link>, in veneer's own inks. They
+          follow your theme and the dial, three at most move at a time, and the rest wait as stills.
         </p>
       </header>
       <nav aria-label="On this page" data-art="jump">

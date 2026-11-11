@@ -1,4 +1,7 @@
-import type { IconName, ShellProps } from '@kerf-js/veneer'
+import type {
+  IconName,
+  ShellProps,
+} from '@kerf-js/veneer'
 import { PEOPLE, PROJECTS, TRAFFIC } from '../../world'
 
 export const BOX =
@@ -41,7 +44,9 @@ export function Box({
         <>
           <strong>{projectOf(children)!.name}</strong>
           <span
-            style={'color:var(--veneer-color-text-subtle)'}
+            style={
+              'color:var(--veneer-color-text-subtle)'
+            }
           >
             {projectOf(children)!.region}
           </span>

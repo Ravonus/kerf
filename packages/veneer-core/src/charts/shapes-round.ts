@@ -183,7 +183,11 @@ export const radial: Form<RadialConfig> = {
                 'text',
                 { class: 'lab-sub', x: mid - 8, y: mid - R + 4, 'text-anchor': 'end' },
                 s('tspan', {}, `${d.name} `),
-                s('tspan', { style: 'font-weight:600;fill:var(--veneer-color-text)' }, pct(d.value)),
+                s(
+                  'tspan',
+                  { style: 'font-weight:600;fill:var(--veneer-color-text)' },
+                  pct(d.value),
+                ),
               ),
             ]
           }),
@@ -237,7 +241,11 @@ export const radar: Form<RadarConfig> = {
             'g',
             { class: 'grid', 'aria-hidden': 'true' },
             [0.25, 0.5, 0.75, 1].map((k) =>
-              s('polygon', { points: web(k), fill: 'none', stroke: 'var(--veneer-color-data-grid)' }),
+              s('polygon', {
+                points: web(k),
+                fill: 'none',
+                stroke: 'var(--veneer-color-data-grid)',
+              }),
             ),
             c.axes.map((_, i) => s('line', { x1: mid, y1: mid, x2: P(i, R)[0], y2: P(i, R)[1] })),
           ),

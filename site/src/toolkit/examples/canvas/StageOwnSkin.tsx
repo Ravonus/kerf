@@ -1,5 +1,9 @@
 import type { DitherPainter } from '@kerf-js/veneer'
-import { LEVEL, DitherStage, Stack } from '@kerf-js/veneer'
+import {
+  LEVEL,
+  DitherStage,
+  Stack,
+} from '@kerf-js/veneer'
 import { state } from '@kerf-js/core'
 
 // A skin of your own: a battery whose cells fill to the

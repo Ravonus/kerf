@@ -107,9 +107,8 @@ function overrides({ seed, radius, icons, fonts = {}, tokens = {}, theme }) {
       '--veneer-ref-neutral-c': seed.neutral.chroma,
     })
   if (radius)
-    [out['--veneer-radius-control'], out['--veneer-radius-surface'], out['--veneer-radius-mark']] = RADII[
-      radius
-    ].map((px) => `${px}px`)
+    [out['--veneer-radius-control'], out['--veneer-radius-surface'], out['--veneer-radius-mark']] =
+      RADII[radius].map((px) => `${px}px`)
   if (icons) for (const [k, v] of Object.entries(ICONS[icons])) out[`--veneer-icon-${k}`] = v
   for (const [font, value] of Object.entries(fonts))
     out[`--veneer-font-${FONTS[font][0]}`] = fontStack(value, FONTS[font][1])

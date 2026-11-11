@@ -1,11 +1,11 @@
 // The plugin's contract, without a browser: test/e2e.mjs renders it.
 import { describe, expect, it } from 'vitest'
-import { keel } from '../src/index.mjs'
+import { keelPixel } from '../src/index.mjs'
 import { recipeTheme, themeTokens } from '../src/theme.mjs'
 
-describe('keel()', () => {
+describe('keelPixel()', () => {
   it('provides the keel-pixel key of surface.renderer, loaded lazily', () => {
-    const p = keel()
+    const p = keelPixel()
     expect(p.provides).toEqual([{ slot: 'surface.renderer', key: 'keel-pixel' }])
     const [ref] = p.contribute({ command: 'check', mode: 'development', root: '' }).provides!
     expect(ref!.sides.client).toEqual({

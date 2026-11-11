@@ -53,7 +53,7 @@ export interface Mass {
     readonly light: string;
     /** How soft the edge is, how much the edge wanders, and how strong the brush streaks are in it. */
     readonly soft: number;
-    readonly veneer: number;
+    readonly warp: number;
     readonly streak: number;
     /** Streaks around the centre (a bloom's ruffled petals) instead of along the axis. */
     readonly ring?: boolean;
@@ -65,7 +65,7 @@ export interface Folds {
     readonly axis: Axis;
     /** Folds per height (0.5..16), and how much they wander (0..2). */
     readonly count: number;
-    readonly veneer: number;
+    readonly warp: number;
     readonly deep: string;
     readonly mid: string;
     readonly light: string;
@@ -95,14 +95,14 @@ export interface PaintedRecipe {
 }
 /** Every recipe a painter takes. */
 export type SurfaceRecipe = PaperRecipe | KnitRecipe | PaintedRecipe;
-/** Planned: veneered-noise veins through a stone, as marble. Tileable. */
+/** Planned: warped-noise veins through a stone, as marble. Tileable. */
 export interface VeinsRecipe {
     readonly kind: "veins";
     readonly base: string;
     readonly vein: string;
     /** Veins across the tile, how far they wander, and how sharp they are. */
     readonly count: number;
-    readonly veneer: number;
+    readonly warp: number;
     readonly sharpness: number;
     readonly depth: number;
 }

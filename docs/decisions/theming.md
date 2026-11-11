@@ -1257,7 +1257,8 @@ pnpm --filter @kerf-js/veneer exec tsc \
   -p test/theme-types.tsconfig.json --noEmit
 pnpm --filter @kerf-js/veneer-core exec vitest run \
   test/theme-contrast.test.ts
-pnpm --filter @kerf-js/veneer-core exec vitest run test/palette.test.ts
+pnpm --filter @kerf-js/veneer-core exec vitest run \
+  test/palette.test.ts
 pnpm --filter @kerf-js/veneer exec vitest run \
   test/plugin.test.ts test/themes.test.ts
 pnpm --filter @kerf-js/veneer exec vitest run test/theme-tone.test.tsx

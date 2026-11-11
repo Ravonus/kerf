@@ -1,5 +1,10 @@
 import { derived, state } from '@kerf-js/core'
-import { Button, Card, Input, Stack } from '@kerf-js/veneer'
+import {
+  Button,
+  Card,
+  Input,
+  Stack,
+} from '@kerf-js/veneer'
 
 export default function Labels() {
   const email = state('')

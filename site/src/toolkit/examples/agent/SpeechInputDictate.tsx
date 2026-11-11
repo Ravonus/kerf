@@ -1,4 +1,8 @@
-import { Prompt, SpeechInput, Stack } from '@kerf-js/veneer'
+import {
+  Prompt,
+  SpeechInput,
+  Stack,
+} from '@kerf-js/veneer'
 import type { PromptControl } from '@kerf-js/veneer'
 import { MICS, fakeEngine } from './shared'
 

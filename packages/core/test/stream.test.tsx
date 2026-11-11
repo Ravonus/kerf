@@ -6,7 +6,6 @@
 import { renderToStream, SWAP } from '@kerf-js/core/ssr'
 import { hydrate } from '@kerf-js/core/dom'
 import { hydration } from '../src/hydrate'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { Bare as ServerBare, Page as ServerPage } from './fixtures/ssr/Streamed.tsx?kerf-ssr'
 import { Page as ClientPage } from './fixtures/ssr/Streamed.tsx?kerf-hydrate'
 

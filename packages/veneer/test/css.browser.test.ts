@@ -133,7 +133,9 @@ test('the checkbox box keeps the mark radius in its sweep at radius round', asyn
     `<style>:root{--veneer-radius-control:14px;--veneer-radius-mark:6px}</style><label data-scope="checkbox"><input type="checkbox"><span id="c" data-part="control" data-sweep></span></label>`,
   )
   expect(
-    await p.$eval('#c', (n) => getComputedStyle(n).getPropertyValue('--veneer-sweep-radius').trim()),
+    await p.$eval('#c', (n) =>
+      getComputedStyle(n).getPropertyValue('--veneer-sweep-radius').trim(),
+    ),
   ).toBe('6px')
 })
 

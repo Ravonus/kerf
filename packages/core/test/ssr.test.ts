@@ -11,18 +11,15 @@ import { flush } from '@kerf-js/core/test'
 import { hydration } from '../src/hydrate'
 import { App as ServerApp } from '../../../evals/reference-v3/kerf/src/App.tsx?kerf-ssr'
 import { App as ClientApp } from '../../../evals/reference-v3/kerf/src/App.tsx?kerf-hydrate'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { Shop as ServerShop } from './fixtures/ssr/Shop.tsx?kerf-ssr'
 import { Shop as ClientShop } from './fixtures/ssr/Shop.tsx?kerf-hydrate'
 import type { Product } from '../../../evals/reference-v3/kerf/src/api'
 import { App as ServerScopeApp } from './fixtures/v3-scope/App.tsx?kerf-ssr'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import * as basicsS from './fixtures/next/Basics.tsx?kerf-ssr'
 import * as basicsC from './fixtures/next/Basics.tsx?kerf-hydrate'
 import * as twoS from './fixtures/next/Step2.tsx?kerf-ssr'
 import * as twoC from './fixtures/next/Step2.tsx?kerf-hydrate'
 import { Watched as WatchedS } from './fixtures/ssr/Watched.tsx?kerf-ssr'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { Watched as WatchedC } from './fixtures/ssr/Watched.tsx?kerf-hydrate'
 
 const products: Product[] = [

@@ -30,7 +30,11 @@ export const RELEASE_TESTS = {
     // every gallery component inside a Modal, Card, Popover and Alert (25 s)
     'test/compose-gallery.browser.test.ts',
   ],
-  'packages/veneer-icons': ['test/generator.test.ts', 'test/distinct.test.ts', 'test/shake.test.ts'],
+  'packages/veneer-icons': [
+    'test/generator.test.ts',
+    'test/distinct.test.ts',
+    'test/shake.test.ts',
+  ],
 }
 
 /** Paths whose change can't break a package's tests. */

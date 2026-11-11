@@ -1,4 +1,9 @@
-import { Grid, Stack, Dither, Text } from '@kerf-js/veneer'
+import {
+  Grid,
+  Stack,
+  Dither,
+  Text,
+} from '@kerf-js/veneer'
 import { SOFT } from './paint-primitives'
 
 export const ALGORITHMS = [

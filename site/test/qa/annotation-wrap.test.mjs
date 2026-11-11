@@ -4,9 +4,9 @@ import { createRequire } from 'node:module'
 import { test } from 'node:test'
 import { measureBlock, checkBlock } from './rendered-rows.mjs'
 
-const { chromium } = createRequire(new URL('../../../packages/veneer/package.json', import.meta.url))(
-  'playwright-core',
-)
+const { chromium } = createRequire(
+  new URL('../../../packages/veneer/package.json', import.meta.url),
+)('playwright-core')
 const site = readFileSync(new URL('../../src/styles/site.css', import.meta.url), 'utf8')
 const example = readFileSync(new URL('../../src/styles/example.css', import.meta.url), 'utf8')
 

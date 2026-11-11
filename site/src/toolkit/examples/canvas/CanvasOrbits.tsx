@@ -15,7 +15,10 @@ export function drawOrbits({
     cx = width / 2,
     cy = height / 2
   ctx.clearRect(0, 0, width, height)
-  ctx.fillStyle = token(ctx, '--veneer-color-accent-solid')
+  ctx.fillStyle = token(
+    ctx,
+    '--veneer-color-accent-solid',
+  )
   for (let i = 0; i < count; i++) {
     const ring = 30 + (i % 4) * 22,
       a =

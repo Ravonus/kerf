@@ -8,7 +8,7 @@ const renderer = defineSlot({
   sides: ['client'],
 })
 
-export const keel = definePlugin({
+export const keelPixel = definePlugin({
   name: '@kerf-js/keel-pixel',
   version: '0.1.0',
   kerf: '*',
@@ -26,7 +26,7 @@ export const keel = definePlugin({
     },
     catalog: [
       {
-        name: 'keel',
+        name: 'keelPixel',
         import: '@kerf-js/keel-pixel',
         summary: 'surface.renderer: keel-pixel',
       },

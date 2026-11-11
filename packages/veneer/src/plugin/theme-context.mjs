@@ -12,7 +12,7 @@ export function themeContext(core) {
   const layers = /@layer (veneer\.tokens[^;]*);/
     .exec(css)[1]
     .split(',')
-    .map((l) => l.trim().slice(5))
+    .map((l) => l.trim().slice('veneer.'.length))
   const scopes = /\n(:root, \[data-expression\][^{]*)\{/.exec(css)[1].replace(/\s+/g, ' ').trim()
   const tokenNames = new Set(css.match(/--veneer-[a-z0-9-]+(?=\s*:)/g))
   const formula = (name) =>

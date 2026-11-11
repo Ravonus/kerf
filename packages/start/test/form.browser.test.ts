@@ -176,7 +176,7 @@ test('a cookie box: server-rendered, hydrated 0/0, and it survives a reload', as
 })
 
 test('an upload with JS stays in the page, over multipart, and hydrates 0/0', async () => {
-  const sharp = createRequire(new URL('../../plugin-media/package.json', import.meta.url))('sharp')
+  const sharp = createRequire(new URL('../../media/package.json', import.meta.url))('sharp')
   const bytes = await sharp({
     create: { width: 200, height: 100, channels: 3, background: { r: 20, g: 90, b: 180 } },
   })

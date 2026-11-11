@@ -5,7 +5,6 @@ import { bind, derived, state, untrack } from '@kerf-js/core'
 import { renderToString } from '@kerf-js/core/ssr'
 import { hydrate } from '@kerf-js/core/dom'
 import { flush, render } from '@kerf-js/core/test'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { Price as ServerPrice } from './fixtures/ssr/Alias.tsx?kerf-ssr'
 import { Price as ClientPrice } from './fixtures/ssr/Alias.tsx?kerf-hydrate'
 import { Price } from './fixtures/ssr/Alias'

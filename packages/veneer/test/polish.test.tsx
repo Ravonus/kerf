@@ -16,7 +16,8 @@ const settle = async () => {
     })
   }
 }
-const css = (file: string) => readFileSync(join(process.cwd(), '../veneer-core/styles', file), 'utf8')
+const css = (file: string) =>
+  readFileSync(join(process.cwd(), '../veneer-core/styles', file), 'utf8')
 const flat = (file: string) => css(file).replace(/\s+/g, ' ')
 const OPTIONS = [
   { value: 'a', label: 'Alpha' },

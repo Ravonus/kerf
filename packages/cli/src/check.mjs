@@ -63,7 +63,8 @@ async function iconChecks(root) {
   let compile
   for (const from of [
     () => require.resolve('@kerf-js/veneer-icons/compile'),
-    () => createRequire(require.resolve('@kerf-js/veneer')).resolve('@kerf-js/veneer-icons/compile'),
+    () =>
+      createRequire(require.resolve('@kerf-js/veneer')).resolve('@kerf-js/veneer-icons/compile'),
   ]) {
     try {
       compile = from()

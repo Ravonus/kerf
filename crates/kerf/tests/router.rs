@@ -13,10 +13,10 @@ use axum::body::{Body, to_bytes};
 use axum::http::{Request, StatusCode};
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use kerf::{Ctx, Failed, Failure, Functions, SharedCtx, UserCtx, router_with, sign};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use tower::ServiceExt;
-use kerf::{Ctx, Failed, Failure, Functions, SharedCtx, UserCtx, router_with, sign};
 
 const SECRET: &[u8] = b"test-secret";
 

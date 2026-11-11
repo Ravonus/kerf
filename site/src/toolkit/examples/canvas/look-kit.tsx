@@ -212,11 +212,13 @@ export const words = (
 }
 
 // The colours a look starts from: an app's --stage-* if
-// it set one, else veneer's tokens, which follow light and
-// dark.
+// it set one, else veneer's tokens, which follow light
+// and dark.
 export const TOKENS = {
   ink: 'var(--stage-ink, var(--veneer-color-text))',
-  paper: 'var(--stage-paper, var(--veneer-color-surface))',
+  paper:
+    'var(--stage-paper, var(--veneer-color-surface))',
   accent:
-    'var(--stage-accent, var(--veneer-color-accent-solid))',
+    'var(--stage-accent, ' +
+    'var(--veneer-color-accent-solid))',
 }

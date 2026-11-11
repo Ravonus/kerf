@@ -50,6 +50,15 @@ test('the shared base brings the skeleton paint', () => {
 test("veneer()'s overrides land on every scope root, data-theme included", () => {
   const plugin = readFileSync(join(__dirname, '../plugin.mjs'), 'utf8')
   const scopes = /const SCOPES =\s*'([^']+)'/.exec(plugin)![1]!
-  for (const a of ['expression', 'density', 'form', 'pointer', 'motion', 'flair', 'theme', 'veneer'])
+  for (const a of [
+    'expression',
+    'density',
+    'form',
+    'pointer',
+    'motion',
+    'flair',
+    'theme',
+    'veneer',
+  ])
     expect(scopes).toContain(`[data-${a}]`)
 })

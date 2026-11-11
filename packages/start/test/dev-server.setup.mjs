@@ -30,7 +30,7 @@ export function bindProviders() {
     JSON.stringify({ plugin: '@test/fonts', version: '0.0.0', module, export: 'createFontBuild' }),
   )
   // The media route, as `kerf plugins sync` binds @kerf-js/media's media.server@1.
-  const media = fileURLToPath(new URL('../../plugin-media/src/server.mjs', import.meta.url))
+  const media = fileURLToPath(new URL('../../media/src/server.mjs', import.meta.url))
   writeFileSync(
     join(dir, 'media.server.ts'),
     `export const provider = { plugin: '@kerf-js/media' }\nexport const load = () => import(${JSON.stringify(media)}).then(m => m.createMediaServer({ formats: ['avif', 'webp'], widths: [64, 128] }))\n`,
