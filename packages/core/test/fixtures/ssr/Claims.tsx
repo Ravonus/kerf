@@ -103,3 +103,19 @@ export const Beside = ({ on }: { on: () => void }) => (
     <Row title="c" on={on} />
   </section>
 )
+
+/** A spread input, the way a component library passes its props through. */
+export const Check = (props: { on: { value: boolean }; title: string }) => {
+  const rest = () => ({ type: 'checkbox', checked: props.on.value, 'data-title': props.title })
+  return (
+    <label>
+      <input {...rest()} />
+      {props.title}
+    </label>
+  )
+}
+
+/** The same input with its props written straight on it. */
+export const CheckDirect = (props: { on: { value: boolean }; title: string }) => (
+  <input type="checkbox" checked={props.on.value} data-title={props.title} />
+)
