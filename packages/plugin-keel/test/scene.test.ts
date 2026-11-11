@@ -150,4 +150,29 @@ describe('defineScene for a blend', () => {
     ;(shot as () => void)()
     expect(own).toHaveBeenCalledOnce()
   })
+
+  it("resolves its `hold` to a position: as given, or its tracks' first or last key", async () => {
+    const tracks = [
+      {
+        target: 'ball',
+        property: 'y',
+        keys: [
+          [0.5, 0],
+          [2.5, 1],
+        ],
+      },
+    ] as const
+    const held = (hold?: number | 'first' | 'last') =>
+      defineScene({
+        tracks,
+        ...(hold !== undefined && { hold }),
+        build: () => ({ stage: node(), camera: node() }) as never,
+      })
+        .build(host().host)
+        .then((live) => live.hold)
+    expect(await held()).toBeUndefined()
+    expect(await held(1.2)).toBe(1.2)
+    expect(await held('first')).toBe(0.5)
+    expect(await held('last')).toBe(2.5)
+  })
 })

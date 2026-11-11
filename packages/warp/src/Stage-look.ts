@@ -1,5 +1,5 @@
 // What a stage frame looks like, apart from the page: the reduced-motion dissolve into a new active scene, the active
-// section's pass, and the hand-over's look as the incoming scene asks for it.
+// section's pass, a held scene's position, and the hand-over's look as the incoming scene asks for it.
 import type { Handover, Levers } from '@weft-js/warp-core/scenes'
 import type { BlendOptions, SceneLook, StagePointer, StagePost, StageScene } from './Stage-types'
 
@@ -41,6 +41,17 @@ export function postOf(
   const values = typeof look.post === 'function' ? look.post(position) : look.post
   const tracked = live?.post
   return values || tracked ? { ...values, ...tracked } : null
+}
+
+/** Where a scene is posed: its `hold` when the page holds scenes still and it has one, else its scroll position. */
+export function heldAt(
+  look: SceneLook,
+  live: StageScene | null,
+  position: number,
+  holding: boolean,
+) {
+  const hold = look.hold ?? live?.hold
+  return holding && hold !== undefined ? hold : position
 }
 
 /** The page's side of a frame's look. */

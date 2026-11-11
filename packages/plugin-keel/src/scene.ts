@@ -69,6 +69,8 @@ export type SceneShot = { readonly scene: LitStage; readonly camera: LitCamera }
 export interface LiveScene {
   readonly stage: LitStage
   readonly camera: LitCamera
+  /** Where it stands when the page holds scenes still (reduced motion, a low tier): its spec's `hold`, resolved. */
+  readonly hold?: number | undefined
   /** What tracks on the `post` target gave at the last `at`; null without them. */
   readonly post: ScenePost | null
   /** Poses the scene at `position`, in viewports since its section began to enter (1 ≈ one viewport). */
@@ -129,6 +131,11 @@ export interface SceneSpec<M extends ModuleId, B extends Built> {
    * (`progress`, `position`, `tear`, `colour`, `darken`, `blur`) feeds the section's pass.
    */
   readonly tracks?: readonly Track[]
+  /**
+   * Where the scene stands when the page holds scenes still, under reduced motion or on a low tier: a position, or the
+   * `first` or `last` key of its tracks.
+   */
+  readonly hold?: number | 'first' | 'last'
   /** The rail's pointer pan and tilt, default fov and path. */
   readonly rail?: Omit<RailOptions<readonly Track[]>, 'tracks'>
   build(ctx: SceneContext<M>): B | Promise<B>
@@ -177,6 +184,14 @@ export function disposeTree(root: LitNode) {
       m.dispose?.()
     }
   })
+}
+
+/** A hold as a position: as given, or the first or last key across the tracks (0 without any). */
+function stop(hold: number | 'first' | 'last' | undefined, tracks: readonly Track[]) {
+  if (typeof hold !== 'string') return hold
+  const keys = tracks.flatMap((track) => track.keys.map((key) => key[0]))
+  if (!keys.length) return 0
+  return hold === 'first' ? Math.min(...keys) : Math.max(...keys)
 }
 
 async function loadAll(ids: readonly ModuleId[]) {
@@ -228,6 +243,7 @@ export function defineScene<M extends ModuleId = never, B extends Built = Built>
       const live: LiveScene & { post: ScenePost | null } = {
         stage: built.stage,
         camera: built.camera,
+        hold: stop(spec.hold, tracks),
         post: null,
         at(position, frame) {
           if (rail && apply) apply(built.camera, rail.at(position, frame))

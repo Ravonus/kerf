@@ -48,12 +48,19 @@ export interface SceneLook {
   centre?: StagePointer
   /** False: the scene fills in without line work. */
   lines?: boolean
+  /**
+   * Under reduced motion, and where the governor holds (a low tier): the position the scene stands at, whatever the
+   * scroll. Its scene's own `hold` otherwise.
+   */
+  hold?: number
   /** The section's pass while it is active: values, or values for its position. Its scene's tracks override them. */
   post?: StagePost | ((position: number) => StagePost)
 }
 
 /** A built scene. */
 export interface StageScene {
+  /** Where the scene stands when the page holds it still, unless its `<Scene hold>` says. */
+  readonly hold?: number | undefined
   /** The section pass its own tracks gave at the last `at`, over the `<Scene post>` values; null without one. */
   readonly post?: StagePost | null
   at(position: number, frame: SceneFrame): void
@@ -109,6 +116,8 @@ export interface StageGovernor {
   /** The same object until a lever changes: the stage passes a new one to every scene. */
   readonly levers: Levers
   readonly fps: number
+  /** True where scenes should stand still rather than move with the scroll: those with a `hold` stand there. */
+  readonly hold?: boolean
   /** The highest pixel ratio for a canvas `width` CSS px wide, before the render scale. */
   pixelRatio(width: number): number
 }

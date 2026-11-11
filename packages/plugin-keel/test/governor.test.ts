@@ -29,6 +29,7 @@ describe('keelGovernor', () => {
     })
     expect(governor.pixelRatio(1440)).toBe(2)
     expect(governor.pixelRatio(2560)).toBe(1.5)
+    expect(governor.hold).toBe(false)
   })
 
   it('holds a low device to 30 fps, no bloom or TAA, and 1280 px across', async () => {
@@ -38,6 +39,7 @@ describe('keelGovernor', () => {
     expect(governor.fps).toBe(30)
     expect(governor.levers).toMatchObject({ bloom: 0, taa: false, blendScale: 0.5, density: 0.5 })
     expect(governor.pixelRatio(1280)).toBe(1)
+    expect(governor.hold).toBe(true)
   })
 
   it('lowers the render scale while frames run slow, and gives it back when they recover', async () => {

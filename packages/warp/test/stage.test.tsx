@@ -14,7 +14,7 @@ import {
   type StageSceneDef,
 } from '@weft-js/warp/scenes'
 import { FULL } from '@weft-js/warp-core/scenes'
-import { dissolve } from '../src/Stage-look'
+import { dissolve, heldAt } from '../src/Stage-look'
 
 const log: string[] = []
 /** Each built stand-in's name, and the section pass its tracks give. */
@@ -280,4 +280,34 @@ test('each section carries its scene position as `--scene-position`, for its own
     Number(container.querySelectorAll('section')[i]!.style.getPropertyValue('--scene-position'))
   expect(read(0)).toBeCloseTo(1.25, 2)
   expect(read(1)).toBeCloseTo(0.25, 2)
+})
+
+test('a scene with a `hold` stands there under reduced motion or a holding governor, and follows the scroll otherwise', async () => {
+  const posed = async (governor: StageGovernor) => {
+    log.length = 0
+    const { unmount } = render(() => (
+      <Stage label="Held" kind="canvas2d" governor={governor}>
+        <Scene use={SCENES[0]!} early={0} hold={0.4}>
+          <h2>a</h2>
+        </Scene>
+      </Stage>
+    ))
+    place([-0.5])
+    await frames(30)
+    unmount()
+    return log.filter((l) => l.startsWith('at a')).at(-1)
+  }
+  expect(await posed(UNGOVERNED)).toBe('at a 1.50')
+  expect(await posed({ ...UNGOVERNED, hold: true })).toBe('at a 0.40')
+  vi.spyOn(window, 'matchMedia').mockImplementation(
+    (query) => ({ matches: query.includes('reduce') }) as MediaQueryList,
+  )
+  expect(await posed(UNGOVERNED)).toBe('at a 0.40')
+})
+
+test("a `<Scene hold>` wins over its scene's own, which stands in without one", () => {
+  const live = { hold: 2 } as StageScene
+  expect(heldAt({}, live, 1, true)).toBe(2)
+  expect(heldAt({ hold: 0.5 }, live, 1, true)).toBe(0.5)
+  expect(heldAt({ hold: 0.5 }, live, 1, false)).toBe(1)
 })

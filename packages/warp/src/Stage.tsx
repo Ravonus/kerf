@@ -5,7 +5,7 @@ import { onCleanup, onMount, state, untrack, type State } from '@weft-js/core'
 import { defineSurface, Surface, type SurfaceBase } from '@weft-js/core/surface'
 import { progress, type Progress } from '@weft-js/scroll/timeline'
 import { FULL, handover, sceneWindow, type Handover, type Levers } from '@weft-js/warp-core/scenes'
-import { dissolve, lookOf, postOf, type Fade } from './Stage-look'
+import { dissolve, heldAt, lookOf, postOf, type Fade } from './Stage-look'
 import type {
   ActiveScene,
   SceneLook,
@@ -160,9 +160,10 @@ function draw(d: Director, h: Handover, positions: readonly number[]) {
     if (fade.moving) d.s!.invalidate()
     p = fade.shown
   }
+  const holding = d.reduced || !!d.props.governor?.hold
   const pose = (i: number) => {
-    const live = d.entries[i]!.live
-    live?.at(positions[i]!, frame)
+    const { live, props } = d.entries[i]!
+    live?.at(heldAt(props, live, positions[i]!, holding), frame)
     return live
   }
   const a = pose(p.from)

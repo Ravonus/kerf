@@ -162,7 +162,9 @@ export const orchard = defineScene({
 The stage builds a scene when its section comes near and frees it two scenes away. Tracks that key a `camera`
 target drive the camera through `camera-rail`; `at` gets the other sampled values, with `this` the object
 `build` returned. A scene also takes `modules` (loaded before `build`), `setQuality(levers)`, `render()` for a
-finish of its own and `dispose()`; the stage's meshes, materials and textures are freed for it.
+finish of its own and `dispose()`; the stage's meshes, materials and textures are freed for it. `hold` (a position, or
+`'first'` or `'last'` for its tracks' first or last key) is where it stands under reduced motion and on a low tier,
+where `keelGovernor()` holds scenes still.
 
 `keelGovernor()` from `@weft-js/plugin-keel/governor` is the stage's governor: `device-profile` picks the
 tier, the tier the fps cap (30 on low) and the widest canvas (3840, 1920 or 1280 px), and `quality` the level,

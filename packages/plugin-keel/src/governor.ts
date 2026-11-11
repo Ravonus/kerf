@@ -19,6 +19,8 @@ export interface KeelGovernor {
   readonly levers: Levers
   readonly fps: number
   pixelRatio(width: number): number
+  /** True on a low tier: scenes with a `hold` stand there rather than move with the scroll. */
+  readonly hold: boolean
   /** The device's tier once `start` resolved; `high` before. */
   readonly tier: DeviceTier
 }
@@ -70,6 +72,9 @@ export function keelGovernor(options: GovernorOptions = {}): KeelGovernor {
     },
     get tier() {
       return tier
+    },
+    get hold() {
+      return tier === 'low'
     },
     pixelRatio: (width) => Math.min(device, 2, PACE[tier].widest / Math.max(width, 1)),
   }
