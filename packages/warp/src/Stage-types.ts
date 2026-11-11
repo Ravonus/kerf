@@ -140,6 +140,8 @@ export interface StageProps {
   blend?: (surface: SurfaceBase) => StageBlend | Promise<StageBlend>
   /** Called when the active scene, its position or the hand-over moves. */
   onActive?: (active: ActiveScene) => void
+  /** Called when the scroll has settled and the scenes it wants have drawn: the frame a capture may take. */
+  onReady?: (active: ActiveScene) => void
   class?: string
   children?: unknown
 }
@@ -158,4 +160,29 @@ export interface SceneProps extends SceneLook {
   class?: string
   label?: string
   children?: unknown
+}
+
+/** A scene as a driver outside the page sees it. */
+export interface StageSceneInfo {
+  readonly index: number
+  readonly id: string | null
+  /** Its poster is `bake`. */
+  readonly bake: boolean
+  /** Its position when its section's top meets the viewport's top: where a baked poster is drawn without a hold. */
+  readonly rest: number
+}
+
+/** What a stage offers a driver outside the page, such as a capture harness or a poster bake: `root[STAGE]`. */
+export interface StageHandle {
+  /** `live` draws scenes, `poster` shows only posters; null until `tier="auto"` decides. */
+  readonly tier: 'live' | 'poster' | null
+  /** Every scene, in page order. */
+  scenes(): StageSceneInfo[]
+  /** Stops the shared clock at `seconds` and turns TAA off, so the same scroll draws the same frame. */
+  freeze(seconds: number): void
+  /**
+   * Draws scene `index` alone at `position` with the clock at `seconds`; resolves with a PNG data URL. Without a
+   * position it stands where its poster is drawn: its `hold`, else its `rest`.
+   */
+  still(index: number, position?: number, seconds?: number): Promise<string>
 }

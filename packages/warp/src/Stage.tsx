@@ -4,10 +4,13 @@
 import { onCleanup, onMount, untrack } from '@weft-js/core'
 import { defineSurface, Surface } from '@weft-js/core/surface'
 import { progress } from '@weft-js/scroll/timeline'
-import { attach, director, type Director, type Entry } from './Stage-director'
+import { attach, director, handleOf, type Director, type Entry } from './Stage-director'
 import type { SceneProps, StageProps } from './Stage-types'
 
 export type * from './Stage-types'
+
+/** The key of a stage's `StageHandle` on its root element, `[data-stage]`: `root[Symbol.for('weft.stage')]`. */
+export const STAGE = Symbol.for('weft.stage')
 
 /** Each stage by its root element: a scene finds its stage by walking up the document. */
 const STAGES = new WeakMap<Element, Director>()
@@ -42,6 +45,11 @@ function surfaceOf(d: Director) {
   })
 }
 
+function root(d: Director, el: HTMLElement) {
+  STAGES.set((d.root = el), d)
+  Object.defineProperty(el, STAGE, { value: handleOf(d), configurable: true })
+}
+
 /**
  * One canvas pinned behind the page for every `<Scene>` inside it. Sections scroll over it at full speed; the
  * active section's scene draws, and the next one blends in as its section arrives.
@@ -52,7 +60,7 @@ export function Stage(props: StageProps) {
   const def = surfaceOf(d)
   onMount(() => follow(d))
   return (
-    <div ref={(el: HTMLElement) => STAGES.set((d.root = el), d)} data-stage class={props.class}>
+    <div ref={(el: HTMLElement) => root(d, el)} data-stage class={props.class}>
       <div data-stage-viewport style={`${PINNED};overflow:hidden;z-index:0`}>
         <Surface
           use={def}

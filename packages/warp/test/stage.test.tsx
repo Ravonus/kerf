@@ -6,9 +6,12 @@ import { clock } from '@weft-js/core/surface'
 import { clock as time, flush, render } from '@weft-js/core/test'
 import {
   Scene,
+  STAGE,
   Stage,
+  type ActiveScene,
   type BlendOptions,
   type StageGovernor,
+  type StageHandle,
   type StagePost,
   type StageScene,
   type StageSceneDef,
@@ -64,9 +67,9 @@ async function frames(n = 12) {
   await flush()
 }
 
-function page(governor: StageGovernor = UNGOVERNED) {
+function page(governor = UNGOVERNED, onReady: (active: ActiveScene) => void = () => {}) {
   return render(() => (
-    <Stage label="Four scenes" kind="canvas2d" governor={governor}>
+    <Stage label="Four scenes" kind="canvas2d" governor={governor} onReady={onReady}>
       {NAMES.map((name, i) => (
         <Scene key={name} use={SCENES[i]!} poster={i ? `/${name}.jpg` : '#123456'} early={0}>
           <h2>{name}</h2>
@@ -311,3 +314,72 @@ test("a `<Scene hold>` wins over its scene's own, which stands in without one", 
   expect(heldAt({ hold: 0.5 }, live, 1, true)).toBe(0.5)
   expect(heldAt({ hold: 0.5 }, live, 1, false)).toBe(1)
 })
+
+test('once the positions catch up with the scroll and the wanted scenes have drawn, the stage says so', async () => {
+  const ready: number[] = []
+  const { container } = page(UNGOVERNED, (active) => ready.push(active.active))
+  const root = container.querySelector<HTMLElement>('[data-stage]')!
+  await frames()
+  expect(root.dataset.stageReady).toBe('0')
+  expect(ready).toEqual([0])
+  place([-1.2, -0.2, 0.8, 1.8])
+  await frames(3)
+  expect(root.dataset.stageReady).toBeUndefined()
+  await frames(40)
+  expect(root.dataset.stageReady).toBe('0')
+  expect(ready).toEqual([0, 1])
+})
+
+test('a still draws one scene alone at a position with the clock stopped, and hands back its pixels', async () => {
+  vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,AA==')
+  const { container } = page()
+  await frames()
+  const handle = (
+    container.querySelector('[data-stage]') as unknown as Record<symbol, StageHandle>
+  )[STAGE]!
+  expect(handle.scenes().map((s) => [s.index, s.bake, s.rest.toFixed(2)])).toEqual([
+    [0, false, '1.00'],
+    [1, false, '1.00'],
+    [2, false, '1.00'],
+    [3, false, '1.00'],
+  ])
+  log.length = 0
+  const png = handle.still(3, 0.75, 2)
+  await frames()
+  await expect(png).resolves.toBe('data:image/png;base64,AA==')
+  expect(log).toContain('build d 3')
+  expect(log).toContain('at d 0.75')
+  expect(log.at(-1)).toBe('render d')
+  expect(clock.playing.value).toBe(false)
+  expect(clock.seconds).toBe(2)
+  clock.play()
+})
+
+test('a still goes through the blend, and without a position stands at the hold of its scene', async () => {
+  vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,AA==')
+  const { drawn, blend } = recorder()
+  const { container } = render(() => (
+    <Stage label="Held" kind="canvas2d" governor={UNGOVERNED} blend={blend}>
+      <Scene use={SCENES[0]!} early={0}>
+        <h2>a</h2>
+      </Scene>
+      <Scene use={SCENES[1]!} early={0} hold={0.4} post={{ tear: 1 }}>
+        <h2>b</h2>
+      </Scene>
+    </Stage>
+  ))
+  await frames()
+  const handle = (
+    container.querySelector('[data-stage]') as unknown as Record<symbol, StageHandle>
+  )[STAGE]!
+  log.length = 0
+  const png = handle.still(1)
+  await frames()
+  await expect(png).resolves.toBe('data:image/png;base64,AA==')
+  expect(log).toContain('at b 0.40')
+  expect(log.filter((l) => l.startsWith('render'))).toEqual([])
+  expect(drawn.at(-1)).toMatchObject({ a: 'b', b: 'b', t: 1, options: { post: { tear: 1 } } })
+  expect(drawn.at(-1)!.options.levers.taa).toBe(false)
+  clock.play()
+})
+

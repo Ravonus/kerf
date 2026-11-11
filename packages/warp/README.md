@@ -575,6 +575,13 @@ changes at the half-way point with a 300 ms dissolve. A scene with a `hold` (`<S
 own) stands at that position under reduced motion and where the governor holds scenes still (a low tier),
 whatever the scroll.
 
+Once every section's position has caught up with the scroll and the scenes it wants have drawn, the stage writes
+the scroll offset on its root as `data-stage-ready` and calls `onReady`: the frame a test or a capture may take.
+A driver outside the page reaches the stage through `root[STAGE]` (`Symbol.for('weft.stage')`), a `StageHandle`:
+its scenes, `freeze(seconds)` to stop the shared clock and TAA, so that a frame owes nothing to the ones before it,
+and `still(index, position)`, which draws one scene alone through the blend and resolves with a PNG of the canvas;
+without a position the scene stands at its `hold`. `@weft-js/capture` drives both.
+
 ## Component catalogue
 
 Every component exported from `@weft-js/warp`, grouped by what it is for. The docs site has a page for each one with its
