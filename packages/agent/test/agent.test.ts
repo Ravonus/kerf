@@ -57,9 +57,11 @@ const refund = mutation({
     return 'refunded'
   },
 })
+const hours = query({ $id: 'hours.000001', cache: { life: 'minutes' }, run: () => 'Open 7 to 3' })
 void menu
 void setPrice
 void refund
+void hours
 
 const people = {
   owner: { id: 'u-owner', role: 'owner' },
@@ -125,6 +127,7 @@ function app(
     return { status: res.status, body: res.status === 200 ? await res.json() : null }
   }
   return {
+    handler,
     agent,
     store,
     bridge,
@@ -508,4 +511,39 @@ test('a failed tool tells the agent why: a declared message, or each input issue
     'Fix the input: cents: Too small',
   )
   expect(failure(new Error('boom'))).toBe('boom')
+})
+
+const get = (
+  handler: (r: Request) => Promise<Response>,
+  id: string,
+  headers: Record<string, string> = {},
+) =>
+  handler(
+    new Request(`http://localhost/_weft/fn/${id}?i=%7B%7D`, {
+      headers: { 'x-weft': '1', ...headers },
+    }),
+  )
+
+test('a cached query still answers with the agent on (the guard reads no personal ctx)', async () => {
+  const { handler } = app()
+  const body: Loose = await (await get(handler, 'hours.000001')).json()
+  expect(body.v).toBe('Open 7 to 3')
+})
+
+test("an agent's token on a function route is turned away with where to go instead", async () => {
+  const { handler } = app()
+  // a mutation, not the cached `hours`: a cached answer never builds ctx, so it never sees the token
+  const res = await handler(
+    new Request('http://localhost/_weft/fn/start.000001', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-weft': '1', authorization: 'Bearer wa_x' },
+      body: JSON.stringify({ i: {} }),
+    }),
+  )
+  const body: Loose = await res.json()
+  expect(res.status).toBe(403)
+  expect(body.e).toEqual({
+    code: 'AGENT007',
+    message: 'Agents call tools through /_weft/x/agent/mcp',
+  })
 })

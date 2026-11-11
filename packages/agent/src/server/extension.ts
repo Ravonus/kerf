@@ -63,15 +63,13 @@ async function mcpCall(
   return result
 }
 
-/** The guard: outside a tool call a token's caller is turned away; inside one, the outermost function must be offered and granted. */
-function guard(fn: { id: string }, ctx: Context) {
+/**
+ * The guard: inside a tool call, the outermost function must be offered and granted. It reads no `ctx`: a cached query's
+ * ctx refuses personal fields (Q006), and an agent only gets one on the MCP endpoint, where every call runs under `acting`.
+ */
+function guard(fn: { id: string }) {
   const a = acting.getStore()
-  // a token's caller only reaches functions through the MCP endpoint, which runs each under `acting`
-  if (!a) {
-    if (ctx.agent) throw new AgentError('AGENT007', 'Agents call tools through /_weft/x/agent/mcp')
-    return
-  }
-  if (a.checked) return
+  if (!a || a.checked) return
   a.checked = true
   const tool = allTools().find((t) => t.id === fn.id)
   if (!tool)
