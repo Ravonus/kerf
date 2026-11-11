@@ -1,8 +1,8 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
-import { DateField, Stack, Text } from '@weft-js/warp'
+import { DateField, Stack, Text } from '@kerf-js/veneer'
 
-import type { IsoDate } from '@weft-js/warp'
+import type { IsoDate } from '@kerf-js/veneer'
 
 import { TODAY } from './shared-event'
 

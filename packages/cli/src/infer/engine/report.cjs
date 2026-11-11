@@ -75,7 +75,7 @@ function report(c) {
         start,
         end,
         why: `\`${c.name}\` is exported with no prop type${bad ? ' and no caller to infer one from' : ''}. An export's type is written down, so a caller's edit can't change a public API unseen`,
-        help: `\`weft fix\` writes the inferred type: ${c.name}(props: ${type})`,
+        help: `\`kerf fix\` writes the inferred type: ${c.name}(props: ${type})`,
         edits: bad ? undefined : edits,
         safe: !bad,
       })
@@ -85,7 +85,7 @@ function report(c) {
         start,
         end,
         why: `\`${c.name}\`'s written prop type no longer matches its callers: it says ${c.writtenType.replace(MARK, '').trim()}, they need ${type}`,
-        help: '`weft fix` rewrites it (a diff to review), or delete the /*inferred*/ comment to keep the type you have',
+        help: '`kerf fix` rewrites it (a diff to review), or delete the /*inferred*/ comment to keep the type you have',
         edits,
         safe: true,
       })

@@ -20,13 +20,13 @@ const KEYED =
   /\b[\w-]*(token|secret|api[_-]?key|password)[\w-]*["']?\s*[:=]\s*["']([^"'\s$]{16,})["']/i
 
 const FILES = [
-  'weft.config.ts',
-  'weft.config.mts',
-  'weft.config.js',
-  'weft.config.mjs',
-  'weft.config.json',
-  'weft.config.yaml',
-  'weft.config.yml',
+  'kerf.config.ts',
+  'kerf.config.mts',
+  'kerf.config.js',
+  'kerf.config.mjs',
+  'kerf.config.json',
+  'kerf.config.yaml',
+  'kerf.config.yml',
   'netlify.toml',
   'vercel.json',
   'wrangler.toml',
@@ -71,13 +71,13 @@ export function writtenSecrets(root) {
 /** Hosts whose own domain says the proxy isn't in front. */
 const OWN = /\.(fly\.dev|onrender\.com|netlify\.app|vercel\.app|workers\.dev|pages\.dev)$/
 
-/** E010–E014 from the config, and the environment when `env` is given (a deploy or `weft doctor`). */
+/** E010–E014 from the config, and the environment when `env` is given (a deploy or `kerf doctor`). */
 export function cdnFindings(config = {}, { env } = {}) {
   const out = []
   const cdn = config.deploy?.cdn ?? {}
   const target = config.deploy?.target && host(config.deploy.target)
   const add = (code, severity, why, fix) =>
-    out.push({ code, severity, file: 'weft.config.ts', why, fix })
+    out.push({ code, severity, file: 'kerf.config.ts', why, fix })
   if (cdn.proxy === 'cloudflare') {
     let url
     try {
@@ -105,8 +105,8 @@ export function cdnFindings(config = {}, { env } = {}) {
       add(
         'E012',
         'error',
-        '`deploy.cdn.images` is Cloudinary, and `@weft-js/plugin-media` is not in `plugins`: nothing would send it an image',
-        '`weft add media`, or drop `cdn.images`',
+        '`deploy.cdn.images` is Cloudinary, and `@kerf-js/media` is not in `plugins`: nothing would send it an image',
+        '`kerf add media`, or drop `cdn.images`',
       )
     const given = env?.CLOUDINARY_URL
     const cloud = given && /@([\w-]+)\/?$/.exec(given)?.[1]
@@ -134,7 +134,7 @@ export function cdnFindings(config = {}, { env } = {}) {
     add(
       'E014',
       'info',
-      "`cdn.images` is checked, but this weft doesn't send uploads to Cloudinary yet: they still go to `media({ server: { dir } })`",
+      "`cdn.images` is checked, but this kerf doesn't send uploads to Cloudinary yet: they still go to `media({ server: { dir } })`",
       'Nothing yet: research 46 §9 is the plan. On a function host, uploads need a server host with a disk until then (E003)',
     )
   }

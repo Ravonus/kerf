@@ -1,4 +1,4 @@
-import { Dither } from '@weft-js/warp'
+import { Dither } from '@kerf-js/veneer'
 
 export const GLOW = { radial: true, from: 1, to: 0 }
 

@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Badge, Button, Card } from '@weft-js/warp'
+import { derived, state } from '@kerf-js/core'
+import { Badge, Button, Card } from '@kerf-js/veneer'
 
 type Step = 'idle' | 'hosted' | 'waiting'
 
@@ -19,7 +19,7 @@ export default function Paywall() {
   const applied = new Set<string>()
 
   // Stands in for the rail posting a signed event to
-  // /_weft/x/pay/stripe. Applying one twice changes
+  // /_kerf/x/pay/stripe. Applying one twice changes
   // nothing.
   const deliver = (id: string) => {
     if (applied.has(id)) {

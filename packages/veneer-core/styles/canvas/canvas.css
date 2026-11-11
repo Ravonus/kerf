@@ -1,0 +1,17 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.canvas {
+[data-scope="canvas"] {
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    min-block-size: 0;
+  }
+[data-scope="canvas"] > canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}

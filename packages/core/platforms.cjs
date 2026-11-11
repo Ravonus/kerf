@@ -1,4 +1,4 @@
-// The platforms with a prebuilt compiler addon, each published as @weft-js/compiler-<name> and listed in weft's
+// The platforms with a prebuilt compiler addon, each published as @kerf-js/compiler-<name> and listed in kerf's
 // optionalDependencies. The installer keeps the one that matches (`os`, `cpu`, `libc`). Anywhere else runs the WASM build.
 exports.platforms = [
   { name: 'darwin-arm64', target: 'aarch64-apple-darwin', os: 'darwin', cpu: 'arm64' },

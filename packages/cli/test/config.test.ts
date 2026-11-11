@@ -14,16 +14,16 @@ type Schema = { shape?: Record<string, Schema>; unwrap?: () => Schema }
 type Pairs = [string, string[], string[]][]
 
 const withConfig = (body: string) =>
-  project({ 'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'\n${body}` })
+  project({ 'kerf.config.ts': `import { defineConfig } from '@kerf-js/core/config'\n${body}` })
 const codes = (r: ConfigResult) => r.diagnostics.map((d) => [d.code, d.span![0]])
 
-describe('weft.config.ts', () => {
+describe('kerf.config.ts', () => {
   it('is optional', async () => {
     const r = await loadConfig(project())
     expect(r).toMatchObject({ file: null, config: {}, diagnostics: [] })
   })
 
-  it('loads TypeScript (including non-erasable syntax) through defineConfig from @weft-js/core/config', async () => {
+  it('loads TypeScript (including non-erasable syntax) through defineConfig from @kerf-js/core/config', async () => {
     const dir = withConfig(`enum Env { Dev = 'dev' }
 const lanes: Array<'fast'> = ['fast']
 export default defineConfig({
@@ -39,13 +39,13 @@ export default defineConfig({
     expect(r.config.test!.lanes).toEqual(['fast'])
   })
 
-  it('sees edits on the next load (for a long-lived weft mcp)', async () => {
+  it('sees edits on the next load (for a long-lived kerf mcp)', async () => {
     const { writeFileSync } = await import('node:fs')
     const dir = withConfig('export default defineConfig({ environments: { dev: {} } })\n')
     expect(Object.keys((await loadConfig(dir)).config.environments!)).toEqual(['dev'])
     writeFileSync(
-      `${dir}/weft.config.ts`,
-      "import { defineConfig } from '@weft-js/core/config'\nexport default defineConfig({ environments: { ci: {} } })\n",
+      `${dir}/kerf.config.ts`,
+      "import { defineConfig } from '@kerf-js/core/config'\nexport default defineConfig({ environments: { ci: {} } })\n",
     )
     expect(Object.keys((await loadConfig(dir)).config.environments!)).toEqual(['ci'])
   })
@@ -70,7 +70,7 @@ export default defineConfig({
     const r = await loadConfig(
       withConfig(`export default defineConfig({
   plugins: [
-    { name: '@weft-js/text', provides: ['text.measure', 'font.build'] },
+    { name: '@kerf-js/text', provides: ['text.measure', 'font.build'] },
     { name: 'pretext-measure', provides: ['text.measure'] },
     { name: 'pretext-measure' },
     { name: 'bus', provides: [{ slot: 'surface.renderer', key: 'keel-pixel' }] },
@@ -82,9 +82,9 @@ export default defineConfig({
     expect(r.diagnostics.map((d) => d.code)).toEqual(['P116', 'P008', 'P009'])
     expect(r.slots).toMatchObject({
       'text.measure': 'pretext-measure',
-      'font.build': '@weft-js/text',
-      'realtime.bus': 'weft:default:memory',
-      'surface.renderer': { canvas2d: 'weft:default', 'keel-pixel': 'bus', webgl2: 'weft:default' },
+      'font.build': '@kerf-js/text',
+      'realtime.bus': 'kerf:default:memory',
+      'surface.renderer': { canvas2d: 'kerf:default', 'keel-pixel': 'bus', webgl2: 'kerf:default' },
     })
   })
 })
@@ -103,7 +103,7 @@ describe('site (research 20 §2, §6)', () => {
 
   it("imports the app's own modules the way the app does: no extension, or a folder's index", async () => {
     const dir = project({
-      'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'\nimport { NAME } from './src/name'\nimport { LOCALE } from './src/i18n'\nexport default defineConfig({ site: { name: NAME, locale: LOCALE, description: 'x' } })\n`,
+      'kerf.config.ts': `import { defineConfig } from '@kerf-js/core/config'\nimport { NAME } from './src/name'\nimport { LOCALE } from './src/i18n'\nexport default defineConfig({ site: { name: NAME, locale: LOCALE, description: 'x' } })\n`,
       'src/name.ts': "export const NAME: string = 'acme'\n",
       'src/i18n/index.ts': "export const LOCALE = 'en_US'\n",
     })
@@ -210,7 +210,7 @@ describe('slot binding (research 13 §2.2)', () => {
 
 describe('JSON and YAML config (research 34 §2)', () => {
   const plugin =
-    "import { definePlugin } from '@weft-js/core/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({}) })\n"
+    "import { definePlugin } from '@kerf-js/core/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({}) })\n"
   const files = {
     'node_modules/acme/package.json': JSON.stringify({
       name: 'acme',
@@ -225,14 +225,14 @@ describe('JSON and YAML config (research 34 §2)', () => {
     const ts = await loadConfig(
       project({
         ...files,
-        'weft.config.ts': `import acme from 'acme/plugin'\nexport default { site: ${JSON.stringify(site)}, runtime: 'bun', plugins: [acme({ level: 1 })] }\n`,
+        'kerf.config.ts': `import acme from 'acme/plugin'\nexport default { site: ${JSON.stringify(site)}, runtime: 'bun', plugins: [acme({ level: 1 })] }\n`,
       }),
     )
     const json = await loadConfig(
       project({
         ...files,
-        'weft.config.json': JSON.stringify({
-          $schema: './.weft/config.schema.json',
+        'kerf.config.json': JSON.stringify({
+          $schema: './.kerf/config.schema.json',
           site,
           runtime: 'bun',
           plugins: [['acme', { level: 1 }]],
@@ -242,7 +242,7 @@ describe('JSON and YAML config (research 34 §2)', () => {
     const yaml = await loadConfig(
       project({
         ...files,
-        'weft.config.yaml':
+        'kerf.config.yaml':
           'site: { name: Acme, title: "%s · Acme", description: Tools. }\nruntime: bun\nplugins:\n  - [acme, { level: 1 }]\n',
       }),
     )
@@ -253,30 +253,30 @@ describe('JSON and YAML config (research 34 §2)', () => {
 
   it('reports a bad key at its path, and a syntax error or a missing plugin as P007', async () => {
     const bad = await loadConfig(
-      project({ 'weft.config.yaml': 'site:\n  title: no placeholder\n' }),
+      project({ 'kerf.config.yaml': 'site:\n  title: no placeholder\n' }),
     )
     expect(bad.diagnostics.map((d) => [d.code, d.span?.[0]])).toEqual([['P007', 2]])
     expect(
-      (await loadConfig(project({ 'weft.config.json': '{ nope' }))).diagnostics.map((d) => d.code),
+      (await loadConfig(project({ 'kerf.config.json': '{ nope' }))).diagnostics.map((d) => d.code),
     ).toEqual(['P007'])
     expect(
-      (await loadConfig(project({ 'weft.config.yaml': 'plugins: [ghost]\n' }))).diagnostics[0]!.why,
+      (await loadConfig(project({ 'kerf.config.yaml': 'plugins: [ghost]\n' }))).diagnostics[0]!.why,
     ).toContain("`ghost` isn't installed")
   })
 
   it('two config files is P010, not a silent pick', async () => {
     const r = await loadConfig(
       project({
-        'weft.config.ts': 'export default {}\n',
-        'weft.config.yaml': 'site: { name: Acme }\n',
+        'kerf.config.ts': 'export default {}\n',
+        'kerf.config.yaml': 'site: { name: Acme }\n',
       }),
     )
     expect(r.diagnostics.map((d) => d.code)).toEqual(['P010'])
-    expect(r.diagnostics[0]!.why).toContain('`weft.config.yaml`')
+    expect(r.diagnostics[0]!.why).toContain('`kerf.config.yaml`')
   })
 })
 
-// config.d.ts is what an editor offers and the schema is what `weft check` accepts: a key in one and not the other is
+// config.d.ts is what an editor offers and the schema is what `kerf check` accepts: a key in one and not the other is
 // either a P007 on valid-looking config or an option nobody can find. Every object they both describe has the same keys.
 describe('config.d.ts and the schema', () => {
   const file = new URL('../../core/src/config.d.ts', import.meta.url)
@@ -328,7 +328,7 @@ describe('config.d.ts and the schema', () => {
   }
 
   it('name the same keys, at every level', () => {
-    const pairs = compare(named.get('WeftConfig'), configSchema, 'config', [])
+    const pairs = compare(named.get('KerfConfig'), configSchema, 'config', [])
     expect(pairs.length).toBeGreaterThan(5)
     for (const [path, types, schema] of pairs)
       expect({ path, keys: types }).toEqual({ path, keys: schema })

@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { derived, state } from '@kerf-js/core'
+import { Button, Card } from '@kerf-js/veneer'
 
 export default function RunsOnce() {
   const clicks = state(0)

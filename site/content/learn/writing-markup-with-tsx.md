@@ -1,16 +1,16 @@
 # Writing markup with TSX
 
 :::learn
-- Why Weft puts markup and logic together in TSX
+- Why Kerf puts markup and logic together in TSX
 - How TSX differs from HTML: one root, closed tags, attribute names
-- Which names Weft accepts: `class` and `className`, `for` and `htmlFor`, events, `style`
-- The weft-specific attributes: `ref`, `bind:`, `textContent` and `innerHTML`
+- Which names Kerf accepts: `class` and `className`, `for` and `htmlFor`, events, `style`
+- The kerf-specific attributes: `ref`, `bind:`, `textContent` and `innerHTML`
 - How to turn a piece of HTML into TSX
 :::
 
 TSX is TypeScript with markup in it. It lets you write HTML-like tags inside a `.tsx` file, right next to the logic that
 fills them in. Most of what you write is HTML you already know; this page covers the few rules that differ, and the
-handful of attributes Weft adds.
+handful of attributes Kerf adds.
 
 :::demo describe-markup
 
@@ -24,7 +24,7 @@ change to one is next to the other.
 A sidebar component and a form component each keep their markup and logic together, and you can still keep their
 styles where you like: see [Styling and style groups](/learn/styling).
 
-TSX looks like HTML but it is stricter, and it can hold live values. Weft's compiler reads it at build time and turns it
+TSX looks like HTML but it is stricter, and it can hold live values. Kerf's compiler reads it at build time and turns it
 into the code that builds and updates the page (see [Your first component](/learn/your-first-component)). There is no
 `React.createElement` and no virtual DOM: the tags you write become real DOM nodes, built once from a template.
 
@@ -111,7 +111,7 @@ A fragment groups things without leaving any element of its own in the page.
 :::deepdive Why one root?
 A tag in TSX is an expression: it produces one value, as `1 + 2` does. A function can't return two values without
 putting them in something, in the same way that `return 1 2` isn't JavaScript. A parent element or a fragment is that
-something. In Weft the value is the DOM nodes themselves: a fragment hands back its children as a list, and the place it
+something. In Kerf the value is the DOM nodes themselves: a fragment hands back its children as a list, and the place it
 lands in puts them all in order.
 :::
 
@@ -123,10 +123,10 @@ Every tag must be closed. Tags that are empty in HTML, such as `<img>`, `<input>
 ### 3. Attribute names: both spellings work
 
 HTML attributes are written in TSX as they are in HTML, and most are one lowercase word: `src`, `alt`, `href`,
-`placeholder`. Where React renamed an attribute to suit JavaScript, Weft accepts React's name as well, so code written
+`placeholder`. Where React renamed an attribute to suit JavaScript, Kerf accepts React's name as well, so code written
 either way works:
 
-| HTML | React's name | Weft accepts |
+| HTML | React's name | Kerf accepts |
 |---|---|---|
 | `class` | `className` | both |
 | `for` | `htmlFor` | both |
@@ -144,8 +144,8 @@ HTML.
 
 :::pitfall `data-*` booleans are presence flags
 `data-open={true}` writes `data-open=""`, and `data-open={false}` leaves the attribute off. React writes the strings
-`"true"` and `"false"` instead. So in Weft you select it with `[data-open]` in CSS, and `[data-open="true"]` never
-matches. If you want React's output, pass a string: `data-open={String(open.value)}`. `weft check` reports a literal
+`"true"` and `"false"` instead. So in Kerf you select it with `[data-open]` in CSS, and `[data-open="true"]` never
+matches. If you want React's output, pass a string: `data-open={String(open.value)}`. `kerf check` reports a literal
 `{true}` or `{false}` here as **W043**, and its fix rewrites it to what it renders.
 :::
 
@@ -155,7 +155,7 @@ A boolean attribute with no value, such as `<input disabled />`, is `true`. With
 attribute off entirely, and so do `null` and `undefined`. That's how you turn an attribute on and off:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Send() {
   const sending = state(false)
@@ -172,7 +172,7 @@ export function Send() {
 ```
 
 A few attributes take the words `true` and `false` as values rather than meaning on or off: `aria-*`, `contentEditable`,
-`spellCheck`, `draggable`. For those, Weft writes `false` as the word, so `aria-pressed={false}` is
+`spellCheck`, `draggable`. For those, Kerf writes `false` as the word, so `aria-pressed={false}` is
 `aria-pressed="false"`.
 
 ### The fixed version
@@ -200,8 +200,8 @@ export default function TodoList() {
 ```
 
 :::note Pro tip: convert with your editor or an agent
-Converting a large block of HTML by hand is tedious. Any HTML-to-JSX converter's output works in Weft, since Weft accepts
-React's attribute names. An AI agent with `weft check` in its loop will fix what's left: see
+Converting a large block of HTML by hand is tedious. Any HTML-to-JSX converter's output works in Kerf, since Kerf accepts
+React's attribute names. An AI agent with `kerf check` in its loop will fix what's left: see
 [Working with AI agents](/learn/working-with-agents).
 :::
 
@@ -227,7 +227,7 @@ An attribute that starts with `on` and a capital letter is an event listener: `o
 listens to `keydown`. A handler is a function, and its event's `currentTarget` is typed as the element it's on:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Name() {
   const name = state('')
@@ -263,13 +263,13 @@ the markup is being built, and passes whatever it returns. When you need an argu
 export function Swatch() {
   return (
     <>
-      <p style="color: var(--warp-color-accent-text)">
+      <p style="color: var(--veneer-color-accent-text)">
         A string, as in HTML
       </p>
       <p
         style={{
-          color: 'var(--warp-color-accent-text)',
-          paddingInline: 'var(--warp-space-group)',
+          color: 'var(--veneer-color-accent-text)',
+          paddingInline: 'var(--veneer-space-group)',
         }}
       >
         An object
@@ -284,8 +284,8 @@ properties as `'--name'`. A number gets `px` unless the property has no unit, su
 `null`, `undefined` and booleans mean "no declaration", so `color: urgent && 'red'` sets the colour only when `urgent` is
 true. When a value in the object reads state, only the declarations that changed are written.
 
-:::note Styles in a Warp app
-In an app that uses Warp, `weft check` asks for Warp's tokens (`var(--warp-color-…)`, `var(--warp-space-…)`) instead of
+:::note Styles in a Veneer app
+In an app that uses Veneer, `kerf check` asks for Veneer's tokens (`var(--veneer-color-…)`, `var(--veneer-space-…)`) instead of
 raw colours and lengths, so a theme or dark mode follows everywhere. [Styling and style groups](/learn/styling) shows the
 better tool for most styling: style groups, which compile to class names.
 :::
@@ -296,7 +296,7 @@ better tool for most styling: style groups, which compile to class names.
 whether each is on, which saves building strings by hand:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Tab(props: { label: string }) {
   const active = state(false)
@@ -312,10 +312,10 @@ export function Tab(props: { label: string }) {
 }
 ```
 
-With the object form, Weft adds and removes only the classes that changed, and leaves any other class on the element
+With the object form, Kerf adds and removes only the classes that changed, and leaves any other class on the element
 alone.
 
-## Attributes Weft adds
+## Attributes Kerf adds
 
 ### `ref`: the element itself
 
@@ -323,7 +323,7 @@ Sometimes you need the DOM element: to focus it, measure it or hand it to a libr
 a variable, or pass a function that receives it:
 
 ```tsx
-import { onMount } from '@weft-js/core'
+import { onMount } from '@kerf-js/core'
 
 export function Search() {
   let input!: HTMLInputElement
@@ -351,9 +351,9 @@ they would replace them; the compiler reports it.
 :::pitfall `innerHTML` isn't escaped
 Text in braces is always escaped: `{comment}` shows `<script>` as those characters. `innerHTML` is the one way around
 that: whatever string you give it is parsed as markup, so a value that came from a user can run script in your page.
-Use it only for HTML you made or cleaned yourself. Weft's own code bans it outright with a lint rule (`no-html-sink`)
+Use it only for HTML you made or cleaned yourself. Kerf's own code bans it outright with a lint rule (`no-html-sink`)
 unless a comment says why the HTML is safe, and these pages' demos follow that rule. To show formatted text from users,
-build the elements, or use Warp's `Markdown`.
+build the elements, or use Veneer's `Markdown`.
 :::
 
 ### `key`
@@ -363,7 +363,7 @@ written to the page. [Rendering lists](/learn/rendering-lists) is where it matte
 
 ## Types
 
-TSX in Weft is checked by TypeScript with Weft's own JSX types. Each HTML element knows its events, so `e.currentTarget`
+TSX in Kerf is checked by TypeScript with Kerf's own JSX types. Each HTML element knows its events, so `e.currentTarget`
 in `onInput` on an `<input>` is an `HTMLInputElement`. Other attributes are left open: any name with any value is
 accepted, because HTML has hundreds of attributes and custom ones are common. So TypeScript won't catch a misspelt
 attribute such as `palceholder`; the browser ignores it and so would you, until you look.
@@ -421,7 +421,7 @@ export default function Bio() {
   )
 }
 ```
-`class` stays as it is: Weft accepts it as well as `className`.
+`class` stays as it is: Kerf accepts it as well as `className`.
 :::
 
 :::challenge Fix the click handler
@@ -452,11 +452,11 @@ export function Save() {
 
 :::challenge A flag CSS can select
 This menu should be styled by `.menu[data-open]` while it's open, but the rule never matches when it's closed either
-way, and `weft check` warns about the attribute. Make `data-open` follow the `open` box.
+way, and `kerf check` warns about the attribute. Make `data-open` follow the `open` box.
 
 <!-- example: skip the starting point, which reports W043 -->
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Menu() {
   const open = state(false)
@@ -477,7 +477,7 @@ A literal `{true}` is always on, which is what W043 points out. Read the box ins
 `false` removes it, which is what `[data-open]` selects.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Menu() {
   const open = state(false)

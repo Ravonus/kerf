@@ -1,4 +1,4 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
 import { fbm, inks, smooth, type ArtProps, type Meta } from './shared'
 import code from './ridgeline.tsx?raw'
 
@@ -14,9 +14,9 @@ export const meta: Meta = {
 const LINES = 40,
   POINTS = 150
 const colours = inks({
-  line: '--warp-color-text',
-  ground: '--warp-color-page',
-  accent: '--warp-color-accent-text',
+  line: '--veneer-color-text',
+  ground: '--veneer-color-page',
+  accent: '--veneer-color-accent-text',
 })
 
 export default function Ridgeline({ live = true }: ArtProps) {

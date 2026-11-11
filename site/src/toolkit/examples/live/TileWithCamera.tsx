@@ -1,4 +1,4 @@
-import { Tile } from '@weft-js/warp'
+import { Tile } from '@kerf-js/veneer'
 import { CALL_SELF } from '../../world'
 
 export const TileWithCamera = () => (

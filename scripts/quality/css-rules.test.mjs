@@ -1,6 +1,6 @@
 // `!important` is for what overrides every template: the user's own settings and a state that must win over any
 // component's paint. Anything else is a cascade fight that a later rule, a layer or a selector settles, and an app that
-// wants to restyle warp then has to answer it with its own !important.
+// wants to restyle veneer then has to answer it with its own !important.
 import { strict as assert } from 'node:assert'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -8,7 +8,7 @@ import { test } from 'node:test'
 
 const root = new URL('../../', import.meta.url).pathname
 
-/** Where warp's own rules may use it, by the selector or at-rule around the declaration. */
+/** Where veneer's own rules may use it, by the selector or at-rule around the declaration. */
 const REASONS = [
   [
     /prefers-reduced-motion|data-motion="reduce"/,
@@ -68,9 +68,9 @@ function cssFiles(dir, out = []) {
   return out
 }
 
-await test('warp uses !important only to override every template', () => {
+await test('veneer uses !important only to override every template', () => {
   const bad = []
-  for (const file of cssFiles(join(root, 'docs/design/warp/tokens')))
+  for (const file of cssFiles(join(root, 'docs/design/veneer/tokens')))
     for (const { decl, context } of importants(readFileSync(file, 'utf8')))
       if (!REASONS.some(([re]) => re.test(context)))
         bad.push(`${relative(root, file)}: ${context} { ${decl} }`)
@@ -87,7 +87,7 @@ await test('warp uses !important only to override every template', () => {
 const USER_SETTINGS = REASONS.slice(0, 3)
 
 await test('apps, the site and templates use !important only for user settings', () => {
-  const dirs = ['site/src', 'examples', 'packages/create/templates']
+  const dirs = ['site/src', 'examples', 'packages/create-kerf/templates']
   const bad = []
   for (const dir of dirs)
     for (const file of cssFiles(join(root, dir)))
@@ -100,7 +100,7 @@ await test('apps, the site and templates use !important only for user settings',
   assert.deepEqual(
     bad,
     [],
-    'warp sits in @layer warp.*, so any unlayered rule already beats it: drop the !important, or raise the selector against your own rule',
+    'veneer sits in @layer veneer.*, so any unlayered rule already beats it: drop the !important, or raise the selector against your own rule',
   )
 })
 
@@ -113,36 +113,36 @@ await test('the scan sees declarations inside nested at-rules', () => {
   ])
 })
 
-/** Rules (innermost blocks) that turn the trim off and don't zero warp's font-swap fix with it. */
+/** Rules (innermost blocks) that turn the trim off and don't zero veneer's font-swap fix with it. */
 export function untrimmed(css) {
   const text = css.replace(/\/\*[\s\S]*?\*\//g, ' ')
   const bad = []
   for (const [, prelude, body] of text.matchAll(/([^{};]*)\{([^{}]*)\}/g))
     if (
       /(^|;)\s*text-box(-trim)?\s*:\s*(normal|none)\b/.test(body) &&
-      !/--warp-trim-k\s*:\s*0\b/.test(body)
+      !/--veneer-trim-k\s*:\s*0\b/.test(body)
     )
       bad.push(prelude.trim())
   return bad
 }
 
-// warp pads a trimmed heading by (brand cap − fallback cap) while the fallback face renders, so the box keeps its
-// height at the swap. CSS can't read an element's text-box, so `--warp-trim-k` says whether it's trimmed: a rule that
+// veneer pads a trimmed heading by (brand cap − fallback cap) while the fallback face renders, so the box keeps its
+// height at the swap. CSS can't read an element's text-box, so `--veneer-trim-k` says whether it's trimmed: a rule that
 // takes the trim off and leaves k at 1 gets the padding with no trim to cancel, and the page moves when the font
 // lands (CLS).
 await test('a rule that takes a heading trim off zeroes the swap fix too', () => {
-  const dirs = ['docs/design/warp/tokens', 'site/src', 'examples', 'packages/create/templates']
+  const dirs = ['docs/design/veneer/tokens', 'site/src', 'examples', 'packages/create-kerf/templates']
   const bad = []
   for (const dir of dirs)
     for (const file of cssFiles(join(root, dir)))
       for (const rule of untrimmed(readFileSync(file, 'utf8')))
         bad.push(`${relative(root, file)}: ${rule}`)
-  assert.deepEqual(bad, [], 'Add `--warp-trim-k: 0;` beside `text-box: normal`')
+  assert.deepEqual(bad, [], 'Add `--veneer-trim-k: 0;` beside `text-box: normal`')
 })
 
 await test('the trim scan pairs the two in one rule', () => {
   assert.deepEqual(
-    untrimmed('h1 { text-box: normal; color: red } h2 { text-box: normal; --warp-trim-k: 0 }'),
+    untrimmed('h1 { text-box: normal; color: red } h2 { text-box: normal; --veneer-trim-k: 0 }'),
     ['h1'],
   )
 })

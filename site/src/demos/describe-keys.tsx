@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card, Grid } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Card, Grid } from '@kerf-js/veneer'
 
 type Guest = { id: number; name: string }
 

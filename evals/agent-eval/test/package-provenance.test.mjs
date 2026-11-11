@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 const verifier = fileURLToPath(new URL('../evidence/T06/verify-packages.mjs', import.meta.url))
 
 test('installed packages must match every packed byte', () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-provenance-test-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-provenance-test-'))
   try {
     const app = join(root, 'app'),
       scratch = join(root, 'scratch'),
@@ -18,23 +18,23 @@ test('installed packages must match every packed byte', () => {
       'core',
       'start',
       'cli',
-      'warp',
-      'warp-core',
-      'warp-icons',
+      'veneer',
+      'veneer-core',
+      'veneer-icons',
       'compiler-darwin-arm64',
     ]
     for (const name of names) {
       const source = join(root, `source-${name}`, 'package')
-      const installed = join(app, 'node_modules', '@weft-js', name)
+      const installed = join(app, 'node_modules', '@kerf-js', name)
       mkdirSync(source, { recursive: true })
       mkdirSync(installed, { recursive: true })
-      writeFileSync(join(source, 'package.json'), JSON.stringify({ name: `@weft-js/${name}` }))
-      writeFileSync(join(installed, 'package.json'), JSON.stringify({ name: `@weft-js/${name}` }))
+      writeFileSync(join(source, 'package.json'), JSON.stringify({ name: `@kerf-js/${name}` }))
+      writeFileSync(join(installed, 'package.json'), JSON.stringify({ name: `@kerf-js/${name}` }))
       writeFileSync(join(source, 'data.txt'), `candidate ${name}`)
       writeFileSync(join(installed, 'data.txt'), `candidate ${name}`)
       const tar = join(root, `${name}.tgz`)
       execFileSync('/usr/bin/tar', ['-czf', tar, '-C', join(root, `source-${name}`), 'package'])
-      mapping[`@weft-js/${name}`] = `file:${tar}`
+      mapping[`@kerf-js/${name}`] = `file:${tar}`
     }
     const mapFile = join(root, 'tarballs.json')
     writeFileSync(mapFile, JSON.stringify(mapping))
@@ -43,17 +43,17 @@ test('installed packages must match every packed byte', () => {
     const good = run()
     assert.equal(good.status, 0, good.stderr)
     assert.equal(JSON.parse(good.stdout).length, 7)
-    writeFileSync(join(app, 'node_modules/@weft-js/core/data.txt'), 'published mismatch')
+    writeFileSync(join(app, 'node_modules/@kerf-js/core/data.txt'), 'published mismatch')
     const bad = run()
     assert.notEqual(bad.status, 0)
-    assert.match(bad.stderr, /installed file differs from @weft-js\/core/)
-    writeFileSync(join(app, 'node_modules/@weft-js/core/data.txt'), 'candidate core')
-    const extra = join(app, 'node_modules/@weft-js/foreign')
+    assert.match(bad.stderr, /installed file differs from @kerf-js\/core/)
+    writeFileSync(join(app, 'node_modules/@kerf-js/core/data.txt'), 'candidate core')
+    const extra = join(app, 'node_modules/@kerf-js/foreign')
     mkdirSync(extra)
-    writeFileSync(join(extra, 'package.json'), JSON.stringify({ name: '@weft-js/foreign' }))
+    writeFileSync(join(extra, 'package.json'), JSON.stringify({ name: '@kerf-js/foreign' }))
     const foreign = run()
     assert.notEqual(foreign.status, 0)
-    assert.match(foreign.stderr, /missing local tarball @weft-js\/foreign/)
+    assert.match(foreign.stderr, /missing local tarball @kerf-js\/foreign/)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

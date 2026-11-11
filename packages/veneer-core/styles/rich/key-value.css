@@ -1,0 +1,19 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- key-value */
+  :where([data-scope="kv"]) { display: grid; gap: var(--veneer-space-related); min-inline-size: 0; }
+  :where([data-scope="kv"] [data-part="body"]:not([data-scope="kv"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="kv"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="kv"] *)) > div) { flex: 1; min-inline-size: 0; padding: 18px var(--veneer-pad-control) 8px; }
+  :where([data-scope="kv"] table) { inline-size: 100%; border-collapse: collapse; font-size: var(--veneer-text-control-size); }
+  :where([data-scope="kv"] th) { padding: 0 8px 4px 0; text-align: start; font: 500 var(--veneer-text-caption-size)/1.3 var(--veneer-text-body-font); color: var(--veneer-color-text-subtle); }
+  :where([data-scope="kv"] td) { padding: 2px 8px 2px 0; }
+  :where([data-scope="kv"] td:last-child),
+  :where([data-scope="kv"] th:last-child) { inline-size: 1px; padding-inline-end: 0; }
+  :where([data-scope="kv"] input) { all: unset; box-sizing: border-box; inline-size: 100%; block-size: max(var(--veneer-control-sm), var(--veneer-target-min)); padding-inline: 8px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); font: 400 max(var(--veneer-text-code-size), var(--veneer-input-font-min)) var(--veneer-font-mono); color: var(--veneer-color-text); }
+  :where([data-scope="kv"] input:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: -2px; }
+  :where([data-scope="kv"] input[data-duplicate]) { box-shadow: inset 0 -2px 0 var(--veneer-color-caution-solid); }
+  :where([data-scope="kv"] [data-part="remove"]:not([data-scope="kv"] :is([data-scope="filterbar"],[data-scope="tag"]) *:not([data-scope="kv"] :is([data-scope="filterbar"],[data-scope="tag"]) [data-scope="kv"] *))) { all: unset; position: relative; display: grid; place-items: center; inline-size: 28px; block-size: 28px; border-radius: var(--veneer-radius-mark); color: var(--veneer-color-text-subtle); cursor: pointer; }
+  :where([data-scope="kv"] [data-part="remove"])::after { content: ""; position: absolute; inset: min(0px, calc((28px - var(--veneer-hit-min)) / 2)); }
+  :where([data-scope="kv"] [data-part="remove"]:hover:not([data-scope="kv"] :is([data-scope="filterbar"],[data-scope="tag"]) *:not([data-scope="kv"] :is([data-scope="filterbar"],[data-scope="tag"]) [data-scope="kv"] *))) { background: var(--veneer-color-surface-hover); color: var(--veneer-color-text); }
+  :where([data-scope="kv"] [data-part="remove"]:focus-visible:not([data-scope="kv"] :is([data-scope="filterbar"],[data-scope="tag"]) *:not([data-scope="kv"] :is([data-scope="filterbar"],[data-scope="tag"]) [data-scope="kv"] *))) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: -2px; }
+  :where([data-scope="kv"] [data-part="remove"]:not([data-scope="kv"] :is([data-scope="filterbar"],[data-scope="tag"]) *:not([data-scope="kv"] :is([data-scope="filterbar"],[data-scope="tag"]) [data-scope="kv"] *)) svg) { inline-size: 14px; block-size: 14px; }
+}

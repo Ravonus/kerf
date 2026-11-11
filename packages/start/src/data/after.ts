@@ -3,7 +3,7 @@
 import { server } from './foundation'
 import { StartError } from './primitives'
 
-const COOKIE = 'weft-preview'
+const COOKIE = 'kerf-preview'
 
 /**
  * Run `fn` once this response is finished: after the page has streamed or the call has answered. The visitor never
@@ -37,7 +37,7 @@ const here = (what: string) => {
 export const preview = {
   id(): string | undefined {
     const scope = server()
-    const m = scope?.request.headers.get('cookie')?.match(/(?:^|;\s*)weft-preview=([^;]+)/)
+    const m = scope?.request.headers.get('cookie')?.match(/(?:^|;\s*)kerf-preview=([^;]+)/)
     return m ? decodeURIComponent(m[1]!) : undefined
   },
   start(value: string) {

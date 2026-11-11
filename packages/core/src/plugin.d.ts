@@ -1,4 +1,4 @@
-// @weft-js/core/plugin: the whole plugin authoring surface (research 13 §2.3, minimal Phase 2 slice).
+// @kerf-js/core/plugin: the whole plugin authoring surface (research 13 §2.3, minimal Phase 2 slice).
 import type { CardTheme } from './head'
 
 /** Where a plugin's code runs. */
@@ -17,7 +17,7 @@ export interface SlotDef<Id extends string = string, Impl = unknown, V extends n
   readonly __impl?: Impl
 }
 
-/** Where an implementation lives. Loaded lazily through the generated `weft:slot/<id>` module. */
+/** Where an implementation lives. Loaded lazily through the generated `kerf:slot/<id>` module. */
 export interface ModuleRef {
   module: string
   export: string
@@ -52,14 +52,14 @@ export interface PluginEnv {
 export interface Contributions {
   provides?: ProviderRef[]
   requires?: SlotDef[]
-  /** CSS variables in `--<namespace>-*`; `css` is written to `.weft/tokens/<namespace>.css`. Collisions are P113. */
+  /** CSS variables in `--<namespace>-*`; `css` is written to `.kerf/tokens/<namespace>.css`. Collisions are P113. */
   tokens?: {
     namespace: string
     css?: string
     /** Additional CSS entries written beside the primary token stylesheet. */
     cssEntries?: Record<string, string>
     values?: Record<string, unknown>
-    /** Module ids the build resolves to another id, written to `.weft/tokens/<namespace>.alias.json`: one variant compiled in. */
+    /** Module ids the build resolves to another id, written to `.kerf/tokens/<namespace>.alias.json`: one variant compiled in. */
     alias?: Record<string, string>
   }
   /** One AGENTS.md section, at most 1 KB (P112). */
@@ -70,17 +70,17 @@ export interface Contributions {
   catalog?: { name: string; import: string; summary: string }[]
   /** Codes in the plugin's namespace (P111 otherwise). */
   diagnostics?: { code: string; catches: string; fix: string; severity?: 'error' | 'warning' }[]
-  /** Runs in `weft check`, never on HMR: it reads through `ctx` and returns findings in the plugin's namespace. */
+  /** Runs in `kerf check`, never on HMR: it reads through `ctx` and returns findings in the plugin's namespace. */
   check?: { include?: string[]; run(ctx: CheckContext): Finding[] | Promise<Finding[]> }
-  /** `weft docs <topic>`: a page in the package, read at the time. `weft docs <code>` finds `diagnostics` by itself. */
+  /** `kerf docs <topic>`: a page in the package, read at the time. `kerf docs <code>` finds `diagnostics` by itself. */
   docs?: { topic: string; summary: string; file: string }
-  /** What `weft add <alias>` does after adding the plugin. See {@link Setup}. */
+  /** What `kerf add <alias>` does after adding the plugin. See {@link Setup}. */
   setup?: Setup
-  /** Lines `weft add` prints after installing. */
+  /** Lines `kerf add` prints after installing. */
   notes?: string[]
 }
 
-/** What a plugin's `weft check` rule is given. */
+/** What a plugin's `kerf check` rule is given. */
 export interface CheckContext {
   root: string
   /** The files that match `include`, relative to the root. */
@@ -110,9 +110,9 @@ export interface Finding {
   }
 }
 
-/** Files a plugin writes into an app, for `weft add`. Pure: it describes, and `weft add` does the writing, or a dry run. */
+/** Files a plugin writes into an app, for `kerf add`. Pure: it describes, and `kerf add` does the writing, or a dry run. */
 export interface Setup {
-  /** Other packages to add first, as `weft add` would. */
+  /** Other packages to add first, as `kerf add` would. */
   with?: string[]
   /** What the app must have, each with what to run instead: `'db'` and `'auth'`. */
   needs?: ('db' | 'auth')[]
@@ -121,7 +121,7 @@ export interface Setup {
     layer: string | null
     read(rel: string): string | undefined
   }): {
-    /** New files. One that exists stops `weft add`, with nothing changed. */
+    /** New files. One that exists stops `kerf add`, with nothing changed. */
     files?: Record<string, string>
     /** Existing files, whole. */
     edits?: Record<string, string>
@@ -150,8 +150,8 @@ export interface PluginDef<I, O> {
   /** Package name (P116). */
   name: string
   version: string
-  /** Semver range on Weft (P103). */
-  weft?: string
+  /** Semver range on Kerf (P103). */
+  kerf?: string
   /** Diagnostic namespace: first-party plugins claim a letter (`'D'`); the default is `<short-name>/`. */
   namespace?: string
   options?: OptionsSchema<I, O>
@@ -163,13 +163,13 @@ export interface PluginDef<I, O> {
   contribute(options: O, env: Readonly<PluginEnv>): Contributions
 }
 
-/** A `plugins: []` entry: plain data, plus the non-enumerable plugin hooks `weft` calls. */
+/** A `plugins: []` entry: plain data, plus the non-enumerable plugin hooks `kerf` calls. */
 export interface PluginInstance<O = unknown> {
   readonly name: string
   readonly version: string
   readonly provides: readonly (string | { slot: string; key: string })[]
   readonly options: O
-  readonly weft: string
+  readonly kerf: string
   readonly namespace: string
   readonly permissions: Readonly<Permissions>
   contribute(env: PluginEnv): Readonly<Contributions>

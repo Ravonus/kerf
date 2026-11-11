@@ -3,7 +3,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { bindProviders, fixture } from './dev-server.setup.mjs'
 
-// Each build runs in its own node process, as `weft build` does: Nitro's build stalls inside vitest's module runner.
+// Each build runs in its own node process, as `kerf build` does: Nitro's build stalls inside vitest's module runner.
 export function build({ preset, ...rest }: { preset: string; [key: string]: unknown }) {
   bindProviders() // the fixture's media route needs its media.server slot
   const opts = JSON.stringify({ ...rest, preset, logLevel: 'error' })

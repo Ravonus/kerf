@@ -1,0 +1,17 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* Status bar — the IDE-style bottom line. Mono, one line, items are buttons. */
+:where([data-scope="status-bar"]) {
+  display: flex; align-items: center; gap: 2px; min-block-size: 26px; padding-inline: var(--veneer-space-tight);
+  padding-block-end: var(--veneer-safe-bottom); background: var(--veneer-color-surface-sunken);
+  border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); overflow: clip; white-space: nowrap;
+}
+:where([data-scope="status-bar"] > *) { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; }
+:where([data-scope="status-bar"] > button:hover) { background: var(--veneer-color-surface-hover); color: var(--veneer-color-text); }
+:where([data-scope="status-bar"] [data-part="spacer"]:not([data-scope="status-bar"] :is([data-scope="composer"],[data-scope="pagination"],[data-scope="table"],[data-scope="virtual"]) *:not([data-scope="status-bar"] :is([data-scope="composer"],[data-scope="pagination"],[data-scope="table"],[data-scope="virtual"]) [data-scope="status-bar"] *))) { flex: 1; padding: 0; }
+:where([data-scope="status-bar"] [data-tone="accent"]) { color: var(--veneer-color-accent-text); }
+@container (max-width: 599.98px) {
+:where([data-scope="status-bar"] [data-optional]) { display: none; }
+}
+}

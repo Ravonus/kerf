@@ -1,0 +1,25 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- listbox (time slots, countries) + wheel ------------------------- */
+  :where([data-scope="popover"] [data-part="listbox"]) { margin: 0; padding: 0; list-style: none; max-block-size: 248px; overflow: auto; scrollbar-width: thin; outline: none; }
+  :where([data-scope="popover"] [data-part="listbox"] [role="option"]) {
+    display: flex; align-items: center; gap: 10px; min-block-size: var(--veneer-control-sm); padding-inline: 10px;
+    border-radius: var(--veneer-radius-control); cursor: pointer; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  :where([data-scope="popover"] [data-part="listbox"] [role="option"]:hover),
+  :where([data-scope="popover"] [data-part="listbox"] [role="option"][data-active]) { background: var(--veneer-color-surface-hover); }
+  :where([data-scope="popover"] [data-part="listbox"] [role="option"][aria-selected="true"]) { color: var(--veneer-color-accent-text); font-weight: 500; }
+  :where([data-scope="popover"] [data-part="listbox"] [role="option"][aria-selected="true"])::after { content: ""; margin-inline-start: auto; inline-size: 6px; block-size: 6px; border-radius: 999px; background: var(--veneer-color-accent-solid); }
+  :where([data-scope="popover"] [data-part="listbox"]:focus-visible [role="option"][data-active]) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: -2px; }
+  :where([data-scope="popover"] [data-part="listbox"] [data-part="opt-meta"]) { margin-inline-start: auto; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); font-family: var(--veneer-font-mono); }
+  :where([data-scope="popover"] [data-part="listbox"] [data-part="code"]:not([data-scope="popover"] [data-scope="system-page"] *:not([data-scope="popover"] [data-scope="system-page"] [data-scope="popover"] *))) { inline-size: 26px; font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+  :where([data-scope="wheels"]) { --_row: 40px; position: relative; display: flex; justify-content: center; gap: var(--veneer-space-related); block-size: calc(var(--_row) * 5); }
+  :where([data-scope="wheels"])::before { content: ""; position: absolute; inset-inline: 0; inset-block-start: calc(var(--_row) * 2); block-size: var(--_row); border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-hover); border-block: var(--veneer-border-hairline) solid var(--veneer-color-border); pointer-events: none; }
+  :where([data-scope="wheels"] [role="listbox"]) {
+    position: relative; flex: 0 1 72px; margin: 0; padding: calc(var(--_row) * 2) 0; list-style: none; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; outline: none;
+    mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent);
+  }
+  :where([data-scope="wheels"] [role="listbox"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: -2px; border-radius: var(--veneer-radius-control); }
+  :where([data-scope="wheels"] [role="option"]) { display: grid; place-items: center; block-size: var(--_row); scroll-snap-align: center; font-size: 20px; font-variant-numeric: tabular-nums; color: var(--veneer-color-text-subtle); cursor: pointer; }
+  :where([data-scope="wheels"] [role="option"][aria-selected="true"]) { color: var(--veneer-color-text); font-weight: 500; }
+}

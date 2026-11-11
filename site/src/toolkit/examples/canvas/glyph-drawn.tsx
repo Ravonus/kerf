@@ -1,4 +1,4 @@
-import { DitherGlyph } from '@weft-js/warp'
+import { DitherGlyph } from '@kerf-js/veneer'
 
 export const drawDiamond = (
   ctx: CanvasRenderingContext2D,

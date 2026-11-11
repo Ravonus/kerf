@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Badge,
   Row,
   Stack,
   Tabs,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { PROJECTS, TONE_OF } from '../../world'
 import { FILTERS } from './shared'
 

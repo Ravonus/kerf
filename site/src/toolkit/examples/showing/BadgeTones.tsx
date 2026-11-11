@@ -1,5 +1,5 @@
 import { TONES } from '../../world'
-import { Badge } from '@weft-js/warp'
+import { Badge } from '@kerf-js/veneer'
 
 export const BadgeTones = () => (
   <>

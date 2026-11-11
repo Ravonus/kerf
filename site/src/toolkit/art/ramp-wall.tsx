@@ -1,5 +1,5 @@
-import { Dither, type Algorithm, type Ramp } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Dither, type Algorithm, type Ramp } from '@kerf-js/veneer'
+import { state } from '@kerf-js/core'
 import { type ArtProps, type Meta } from './shared'
 import code from './ramp-wall.tsx?raw'
 

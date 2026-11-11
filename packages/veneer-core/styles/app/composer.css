@@ -1,0 +1,43 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* composer: one field, the signature sweep on its border, grows to 8 lines, stays above the keyboard */
+:where([data-scope="composer"]) {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0 var(--veneer-space-group) var(--veneer-space-group);
+  padding: 8px; border-radius: calc(var(--veneer-radius-surface) + 2px); background: var(--veneer-color-surface-raised);
+}
+/* the composer is a field: it keeps the ink base (sweep vs base >= 3:1), no override */
+:where([data-scope="composer"] textarea) {
+  all: unset; box-sizing: border-box; display: block; inline-size: 100%; min-block-size: 24px; max-block-size: calc(1.5em * 8);
+  padding: 4px 6px; overflow-y: auto; font: 400 max(var(--veneer-text-body-size), var(--veneer-input-font-min))/1.5 var(--veneer-text-body-font);
+  field-sizing: content; position: relative; z-index: 3; white-space: pre-wrap;
+}
+:where([data-scope="composer"] textarea)::placeholder { color: var(--veneer-color-text-subtle); }
+:where([data-scope="composer"] [data-part="row"]:not([data-scope="composer"] :is([data-scope="agenda"],[data-scope="auth"],[data-scope="palette"],[data-scope="scroll-grid"],[data-scope="transport"],[data-scope="tree"],[data-scope="virtual"]) *:not([data-scope="composer"] :is([data-scope="agenda"],[data-scope="auth"],[data-scope="palette"],[data-scope="scroll-grid"],[data-scope="transport"],[data-scope="tree"],[data-scope="virtual"]) [data-scope="composer"] *))) { display: flex; align-items: center; gap: 2px; position: relative; z-index: 3; }
+:where([data-scope="composer"] [data-part="row"]:not([data-scope="composer"] :is([data-scope="agenda"],[data-scope="auth"],[data-scope="palette"],[data-scope="scroll-grid"],[data-scope="transport"],[data-scope="tree"],[data-scope="virtual"]) *:not([data-scope="composer"] :is([data-scope="agenda"],[data-scope="auth"],[data-scope="palette"],[data-scope="scroll-grid"],[data-scope="transport"],[data-scope="tree"],[data-scope="virtual"]) [data-scope="composer"] *)) [data-part="spacer"]:not([data-scope="composer"] :is([data-scope="pagination"],[data-scope="status-bar"],[data-scope="table"],[data-scope="virtual"]) *:not([data-scope="composer"] :is([data-scope="pagination"],[data-scope="status-bar"],[data-scope="table"],[data-scope="virtual"]) [data-scope="composer"] *))) { flex: 1; }
+:where([data-scope="composer"] [data-part="hint"]:not([data-scope="composer"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="field"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="composer"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="field"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="composer"] *))) { font-size: 11.5px; color: var(--veneer-color-text-subtle); padding-inline: 6px; }
+:where([data-scope="composer"] [data-part="files"]) { display: flex; gap: 6px; flex-wrap: wrap; position: relative; z-index: 3; }
+:where([data-scope="composer"] [data-part="file"]:not([data-scope="composer"] [data-scope="codeblock"] *:not([data-scope="composer"] [data-scope="codeblock"] [data-scope="composer"] *))) {
+  display: inline-grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; block-size: 36px; padding: 0 4px 0 8px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: 12.5px; max-inline-size: 240px;
+}
+:where([data-scope="composer"] [data-part="file"]:not([data-scope="composer"] [data-scope="codeblock"] *:not([data-scope="composer"] [data-scope="codeblock"] [data-scope="composer"] *)) [data-scope="progress"]) { grid-column: 1 / -1; margin-block-start: -6px; }
+:where([data-scope="composer"] [data-part="send"]) { border-radius: var(--veneer-radius-round); }
+:where([data-scope="composer"] textarea) {
+  min-block-size: var(--veneer-hit-min);
+  padding-block: max(4px, calc((var(--veneer-hit-min) - 1.5em) / 2));   /* 44px tall on touch, text centred */
+}
+:where([data-scope="composer"] [data-part="quote-draft"]) {
+  position: relative; z-index: 3; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px;
+  padding: 6px 4px 6px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken);
+  box-shadow: inset 2px 0 0 var(--veneer-color-sweep);
+}
+:where([dir="rtl"] [data-scope="composer"] [data-part="quote-draft"]) { box-shadow: inset -2px 0 0 var(--veneer-color-sweep); }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-by"]:not([data-scope="composer"] [data-scope="message"] *:not([data-scope="composer"] [data-scope="message"] [data-scope="composer"] *))) { font-size: var(--veneer-text-caption-size); font-weight: 600; }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]:not([data-scope="composer"] [data-scope="message"] *:not([data-scope="composer"] [data-scope="message"] [data-scope="composer"] *))) { grid-column: 1; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: clip; }
+:where([data-scope="composer"] [data-part="quote-draft"] > [data-scope="button"]) { grid-column: 2; grid-row: 1 / span 2; }
+:where([data-scope="composer"] [data-part="hint"][data-state="error"]:not([data-scope="composer"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="field"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="composer"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="field"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="composer"] *))) { color: var(--veneer-color-critical-text); }
+@media (forced-colors: active) {
+:where([data-scope="message"] [data-part="quote"]:not([data-scope="message"] [data-scope="notification"] *:not([data-scope="message"] [data-scope="notification"] [data-scope="message"] *))),
+  :where([data-scope="composer"] [data-part="quote-draft"]) { border-inline-start: 2px solid CanvasText; box-shadow: none; }
+}
+}

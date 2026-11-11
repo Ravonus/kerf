@@ -2,9 +2,9 @@ import {
   createRoot,
   onCleanup,
   state,
-} from '@weft-js/core'
-import { interval } from '@weft-js/core/browser'
-import { Button, Card, Row } from '@weft-js/warp'
+} from '@kerf-js/core'
+import { interval } from '@kerf-js/core/browser'
+import { Button, Card, Row } from '@kerf-js/veneer'
 
 export default function Session() {
   const seconds = state(0)

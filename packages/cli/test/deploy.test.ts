@@ -60,8 +60,8 @@ function app(files = {}) {
   made.push(dir)
   const all = {
     'package.json': '{ "name": "@acme/shop", "dependencies": {} }',
-    'weft.config.ts':
-      "import { defineConfig } from '@weft-js/core/config'\n\nexport default defineConfig({\n  site: { name: 'Shop' },\n})\n",
+    'kerf.config.ts':
+      "import { defineConfig } from '@kerf-js/core/config'\n\nexport default defineConfig({\n  site: { name: 'Shop' },\n})\n",
     'src/routes/index.tsx': 'export default () => <h1>Shop</h1>\n',
     ...files,
   }
@@ -74,11 +74,11 @@ function app(files = {}) {
 
 const CHAT = {
   'src/server/chat.server.ts':
-    "import { channel } from '@weft-js/start/channel'\nexport const chat = channel({ authorize: () => true })\n",
+    "import { channel } from '@kerf-js/start/channel'\nexport const chat = channel({ authorize: () => true })\n",
 }
 const SQLITE = {
   'src/db/index.server.ts':
-    "import { createDb } from '@weft-js/start/db/sqlite'\nexport const db = createDb({ schema: {} })\n",
+    "import { createDb } from '@kerf-js/start/db/sqlite'\nexport const db = createDb({ schema: {} })\n",
 }
 
 describe('needs', () => {
@@ -94,13 +94,13 @@ describe('needs', () => {
         ...CHAT,
         ...SQLITE,
         'src/server/search.server.ts':
-          "import { remote } from '@weft-js/start/rust'\nexport const search = remote('rust://search')\n",
+          "import { remote } from '@kerf-js/start/rust'\nexport const search = remote('rust://search')\n",
         'src/routes/feed.tsx':
           'export default () => { const f = feed.live({}, { required: true }); return <p>{f.value}</p> }\n',
         'src/server/upload.server.ts':
           'export const up = mutation({ input: z.object({ file: z.media() }) })\n',
-        'weft.config.ts':
-          "export default { plugins: [media()] }\nimport media from '@weft-js/plugin-media'\n",
+        'kerf.config.ts':
+          "export default { plugins: [media()] }\nimport media from '@kerf-js/media'\n",
         'package.json': '{ "dependencies": { "sharp": "1.0.0" } }',
       }),
     )
@@ -120,7 +120,7 @@ describe('needs', () => {
         'src/realtime.server.ts':
           "export default realtime({ bus: postgresBus({ url: process.env.DATABASE_URL }), changes: dbChanges(db, ['t'], { listener: 'external' }) })\n",
         'src/server/search.server.ts':
-          "import { remote } from '@weft-js/start/rust'\nexport const search = remote('rust://search')\n",
+          "import { remote } from '@kerf-js/start/rust'\nexport const search = remote('rust://search')\n",
       }),
       { rust: { services: { search: { external: true } } } },
     )
@@ -179,7 +179,7 @@ describe('fit', () => {
     const n = needsOf(
       app({
         'src/server/s.server.ts':
-          "import { remote } from '@weft-js/start/rust'\nexport const s = remote('rust://s')\n",
+          "import { remote } from '@kerf-js/start/rust'\nexport const s = remote('rust://s')\n",
       }),
     )
     expect(fit(n, host('vercel')!).findings.map((f) => f.code)).toEqual(['E002'])
@@ -204,10 +204,10 @@ describe('files', () => {
       'fly.toml',
       'Dockerfile',
       '.dockerignore',
-      '.github/workflows/weft-deploy.yml',
+      '.github/workflows/kerf-deploy.yml',
     ])
     const toml = files[0]!.text
-    expect(toml).toMatch(/^# weft deploy init fly, sha [0-9a-f]{12}\napp = "shop"/)
+    expect(toml).toMatch(/^# kerf deploy init fly, sha [0-9a-f]{12}\napp = "shop"/)
     expect(toml).toContain('destination = "/app/.data"')
     expect(fileStates(dir, files).map((f: { state: string }) => f.state)).toEqual([
       'missing',
@@ -217,7 +217,7 @@ describe('files', () => {
     ])
     expect(writeFiles(dir, fileStates(dir, files))).toHaveLength(4)
     expect(fileStates(dir, files).every((f: { state: string }) => f.state === 'current')).toBe(true)
-    // the config moved on: weft's own file is stale
+    // the config moved on: kerf's own file is stale
     const moved = filesFor(
       initContext(
         dir,
@@ -247,7 +247,7 @@ describe('files', () => {
     expect(netlify).toContain('pull_request:')
     // oxlint-disable no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
     expect(netlify).toContain(
-      "npx weft deploy --yes ${{ github.event_name == 'push' && '--prod' || '' }}",
+      "npx kerf deploy --yes ${{ github.event_name == 'push' && '--prod' || '' }}",
     ) /* oxlint-enable no-template-curly-in-string */
     const render = filesFor(
       initContext(dir, { deploy: { target: 'render', branch: 'prod' } }, 'render'),
@@ -258,16 +258,16 @@ describe('files', () => {
     expect(render.find((f) => f.path === 'render.yaml')!.text).toContain('autoDeploy: false')
   })
 
-  it("a sidecar's image builds with cargo and runs `weft start`", () => {
+  it("a sidecar's image builds with cargo and runs `kerf start`", () => {
     const dir = app({
       'src/server/s.server.ts':
-        "import { remote } from '@weft-js/start/rust'\nexport const s = remote('rust://s')\n",
+        "import { remote } from '@kerf-js/start/rust'\nexport const s = remote('rust://s')\n",
     })
     const docker = filesFor(initContext(dir, { deploy: { target: 'fly' } }, 'fly')).find(
       (f) => f.path === 'Dockerfile',
     )!.text
     expect(docker).toContain('rustup')
-    expect(docker).toContain('CMD ["npx", "weft", "start"]')
+    expect(docker).toContain('CMD ["npx", "kerf", "start"]')
     const plain = filesFor(initContext(app(), { deploy: { target: 'fly' } }, 'fly')).find(
       (f) => f.path === 'Dockerfile',
     )!.text
@@ -284,11 +284,11 @@ describe('secrets and CDN', () => {
       // oxlint-disable no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
       '.github/workflows/deploy.yml':
         'env:\n  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}\n  hook: https://api.render.com/deploy/srv-abc123?key=xyz789\n' /* oxlint-enable no-template-curly-in-string */,
-      'weft.config.ts':
+      'kerf.config.ts':
         "export default { deploy: { target: 'netlify' }, apiKey: 'abcdef0123456789abcdef', token: process.env.TOKEN }\n",
     })
     expect(writtenSecrets(dir)).toEqual([
-      { file: 'weft.config.ts', line: 1, what: 'a value for `apiKey`' },
+      { file: 'kerf.config.ts', line: 1, what: 'a value for `apiKey`' },
       { file: 'netlify.toml', line: 2, what: 'a Netlify token' },
       {
         file: '.github/workflows/deploy.yml',
@@ -322,7 +322,7 @@ describe('secrets and CDN', () => {
       'E014',
     ])
     const media = {
-      plugins: [{ name: '@weft-js/plugin-media' }],
+      plugins: [{ name: '@kerf-js/media' }],
       deploy: { cdn: { images: { provider: 'cloudinary', cloud: 'shop' } } },
     }
     expect(codes(media)).toEqual(['E014'])
@@ -340,7 +340,7 @@ describe('secrets and CDN', () => {
   })
 })
 
-describe('weft check and doctor', () => {
+describe('kerf check and doctor', () => {
   it('reports E001 for the configured target, as a diagnostic with the fix, and E006 for its missing files', () => {
     const dir = app(CHAT)
     const d = deployChecks(dir, { deploy: { target: 'netlify' } })
@@ -348,7 +348,7 @@ describe('weft check and doctor', () => {
     expect(d[0]).toMatchObject({
       severity: 'error',
       file: 'src/server/chat.server.ts',
-      docs: 'weft docs E001',
+      docs: 'kerf docs E001',
     })
     expect((d[0] as unknown as { fix: { text: string } }).fix.text).toContain("target: 'fly'")
     expect(deployChecks(dir, {})).toEqual([]) // no target: check stays quiet; doctor says E005
@@ -363,12 +363,12 @@ describe('weft check and doctor', () => {
   })
 })
 
-describe('weft deploy init', () => {
+describe('kerf deploy init', () => {
   it('picks the suggestion, records `deploy` in the config, writes the files, and lists what to run once', () => {
     const dir = app(SQLITE)
     const r = initCommand(dir, {})
     expect(r.target).toBe('fly')
-    const config = readFileSync(join(dir, 'weft.config.ts'), 'utf8')
+    const config = readFileSync(join(dir, 'kerf.config.ts'), 'utf8')
     expect(config).toContain(
       "deploy: { target: 'fly', fly: { app: 'shop', region: 'iad', volume: { name: 'data', sizeGb: 1 } }, ci: 'github', branch: 'main' },",
     )
@@ -376,18 +376,18 @@ describe('weft deploy init', () => {
       'fly.toml',
       'Dockerfile',
       '.dockerignore',
-      '.github/workflows/weft-deploy.yml',
+      '.github/workflows/kerf-deploy.yml',
     ])
     expect(r.next.join('\n')).toContain('flyctl volumes create data --size 1')
   })
 
   it("refuses a target the app can't run on, unless --unsafe-allow, and changes nothing", () => {
     const dir = app(CHAT)
-    const before = readFileSync(join(dir, 'weft.config.ts'), 'utf8')
+    const before = readFileSync(join(dir, 'kerf.config.ts'), 'utf8')
     expect(() => initCommand(dir, {}, { target: 'netlify' })).toThrow(
       /E001 src\/server\/chat\.server\.ts[\s\S]*Nothing was changed/,
     )
-    expect(readFileSync(join(dir, 'weft.config.ts'), 'utf8')).toBe(before)
+    expect(readFileSync(join(dir, 'kerf.config.ts'), 'utf8')).toBe(before)
     expect(
       initCommand(dir, {}, { target: 'netlify', dryRun: true, unsafe: unsafeAllowed('E001') })
         .written,
@@ -399,29 +399,29 @@ describe('weft deploy init', () => {
     const r = initCommand(dir, {}, { dryRun: true })
     expect(r.target).toBe('netlify')
     expect(r.actions).toContain('netlify.toml: write')
-    expect(readFileSync(join(dir, 'weft.config.ts'), 'utf8')).not.toContain('deploy')
+    expect(readFileSync(join(dir, 'kerf.config.ts'), 'utf8')).not.toContain('deploy')
   })
 
   it('writes a config when the app has none', () => {
     const dir = app()
-    rmSync(join(dir, 'weft.config.ts'))
+    rmSync(join(dir, 'kerf.config.ts'))
     initCommand(dir, {})
-    expect(readFileSync(join(dir, 'weft.config.ts'), 'utf8')).toBe(
-      "import { defineConfig } from '@weft-js/core/config'\n\nexport default defineConfig({\n  deploy: { target: 'netlify', netlify: { site: 'shop' }, ci: 'github', branch: 'main' },\n})\n",
+    expect(readFileSync(join(dir, 'kerf.config.ts'), 'utf8')).toBe(
+      "import { defineConfig } from '@kerf-js/core/config'\n\nexport default defineConfig({\n  deploy: { target: 'netlify', netlify: { site: 'shop' }, ci: 'github', branch: 'main' },\n})\n",
     )
   })
 
   it('adds `deploy` to an empty config and a JSON one', () => {
     expect(
-      withDeploy('weft.config.ts', 'export default defineConfig({})\n', { target: 'vercel' }),
+      withDeploy('kerf.config.ts', 'export default defineConfig({})\n', { target: 'vercel' }),
     ).toBe("export default defineConfig({\n  deploy: { target: 'vercel' },\n})\n")
     expect(
-      JSON.parse(withDeploy('weft.config.json', '{ "runtime": "node" }', { target: 'render' })),
+      JSON.parse(withDeploy('kerf.config.json', '{ "runtime": "node" }', { target: 'render' })),
     ).toEqual({ runtime: 'node', deploy: { target: 'render' } })
   })
 })
 
-describe('weft deploy', () => {
+describe('kerf deploy', () => {
   const which = (cmd: string) => cmd === 'netlify' || cmd === 'flyctl'
 
   registerDryDeploy(which)
@@ -434,7 +434,7 @@ describe('weft deploy', () => {
     ).rejects.toThrow(/E001[\s\S]*--unsafe-allow E001/)
     await expect(deployCommand(app(), {}, {})).rejects.toMatchObject({
       code: 'E_REFUSED',
-      message: expect.stringContaining('weft suggests `netlify`'),
+      message: expect.stringContaining('kerf suggests `netlify`'),
     })
   })
 
@@ -548,7 +548,7 @@ function registerDryDeploy(which: (cmd: string) => boolean) {
     expect(ran).toBe(false)
     expect(r.dryRun).toBe(true)
     expect(r.steps!.map((s) => s.what)).toEqual([
-      'weft build --preset netlify',
+      'kerf build --preset netlify',
       'netlify deploy --dir dist --functions .netlify/functions-internal --json --site shop',
     ])
     expect(r.steps![1]!.reads).toEqual(['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'])

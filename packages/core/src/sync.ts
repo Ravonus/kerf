@@ -1,5 +1,5 @@
-// @weft-js/core/sync: `state(init, { persist, sync: 'tabs' })` in a defineState scope (research 14 §2.8, research 32 §1). One
-// BroadcastChannel per app; the weft() Vite plugin imports this where the option is used.
+// @kerf-js/core/sync: `state(init, { persist, sync: 'tabs' })` in a defineState scope (research 14 §2.8, research 32 §1). One
+// BroadcastChannel per app; the kerf() Vite plugin imports this where the option is used.
 //
 // A write goes out as the top-level keys that changed, for a plain object, else as the whole value, coalesced per
 // microtask. Conflicts are last writer wins per key by `(at, tab)`, so two tabs adding different products merge. An
@@ -50,7 +50,7 @@ function line(inst: Instance): Line | undefined {
   let l = lines.get(inst.app)
   if (l || typeof BroadcastChannel === 'undefined') return l
   const made: Line = {
-    bc: new BroadcastChannel(`weft:state:${inst.app.name}`),
+    bc: new BroadcastChannel(`kerf:state:${inst.app.name}`),
     slots: new Map(),
     refs: 0,
     tab: crypto.getRandomValues(new Uint32Array(2)).join('.'),

@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
-import { Table } from '@weft-js/warp'
+import { Table } from '@kerf-js/veneer'
 
 import { COLUMNS, WATCHED } from './shared-project'
 

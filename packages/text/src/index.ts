@@ -1,4 +1,4 @@
-// @weft-js/core/text's entry: a tiny detector that loads only the current engine's base chunk.
+// @kerf-js/core/text's entry: a tiny detector that loads only the current engine's base chunk.
 // Each engine chunk is built from Pretext specialised for that engine (scripts/specialize.mjs).
 import { detectEngine, type EngineName } from './detect.js'
 import type { TextEngine } from './types.js'

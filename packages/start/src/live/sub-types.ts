@@ -1,4 +1,4 @@
-import type { State } from '@weft-js/core'
+import type { State } from '@kerf-js/core'
 import type { Fn } from '../data'
 
 export interface View {

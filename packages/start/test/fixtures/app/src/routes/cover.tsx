@@ -1,5 +1,5 @@
-import { Form } from '@weft-js/start'
-import { Media } from '@weft-js/core/media'
+import { Form } from '@kerf-js/start'
+import { Media } from '@kerf-js/core/media'
 import { getCover, setCover } from '../server/forms'
 
 export default function Cover() {

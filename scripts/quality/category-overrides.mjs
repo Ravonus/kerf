@@ -26,7 +26,7 @@ export function configDrift(config, files) {
 
 /** Run category warnings with a checked, temporary configuration. */
 export function runCategoryLint({ files, cwd, binary, print = console.log }) {
-  const configPath = resolve(cwd, `.weft-category-${randomBytes(12).toString('hex')}.json`)
+  const configPath = resolve(cwd, `.kerf-category-${randomBytes(12).toString('hex')}.json`)
   let created = false
   try {
     writeFileSync(configPath, JSON.stringify(categoryConfig(files)), { flag: 'wx' })

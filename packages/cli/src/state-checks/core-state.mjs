@@ -102,7 +102,7 @@ export function coreState(root, graph) {
     for (const node of sf.statements) {
       if (
         !ts.isImportDeclaration(node) ||
-        node.moduleSpecifier.text !== '@weft-js/core' ||
+        node.moduleSpecifier.text !== '@kerf-js/core' ||
         !node.importClause ||
         node.importClause.isTypeOnly
       )

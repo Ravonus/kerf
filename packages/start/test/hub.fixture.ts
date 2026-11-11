@@ -1,9 +1,9 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { query, stream, topic, type StandardSchemaV1 } from '@weft-js/start'
-import { hub, resetHub, type Body, type Sink } from '@weft-js/start/hub'
-import type { Poke } from '@weft-js/start/changes'
+import { query, stream, topic, type StandardSchemaV1 } from '@kerf-js/start'
+import { hub, resetHub, type Body, type Sink } from '@kerf-js/start/hub'
+import type { Poke } from '@kerf-js/start/changes'
 import { createScope, liveQueries, type Scope } from '../src/exec'
-import { runtime } from '@weft-js/start/data'
+import { runtime } from '@kerf-js/start/data'
 
 export function createHubFixture() {
   // What server.tsx sets: the request scope, found through AsyncLocalStorage.
@@ -11,9 +11,9 @@ export function createHubFixture() {
   runtime.scope = () => als.getStore()
   runtime.enter = (scope, fn) => als.run(scope as Scope, fn)
 
-  const json = { 'content-type': 'application/json', 'x-weft': '1' }
+  const json = { 'content-type': 'application/json', 'x-kerf': '1' }
   const request = (body: unknown, headers: Record<string, string> = json) =>
-    new Request('http://app.test/_weft/rt', { method: 'POST', headers, body: JSON.stringify(body) })
+    new Request('http://app.test/_kerf/rt', { method: 'POST', headers, body: JSON.stringify(body) })
 
   /** What each event's frame carries, as far as these tests read it. */
   type Frames = {

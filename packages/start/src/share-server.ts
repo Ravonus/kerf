@@ -33,7 +33,7 @@ const isIssue = (r: unknown): r is Issue => !!(r as Partial<Issue> | null | unde
 const schema = <T>(validate: (v: Sent) => T | Issue): StandardSchemaV1<T, T> => ({
   '~standard': {
     version: 1,
-    vendor: 'weft',
+    vendor: 'kerf',
     validate: (v: unknown) => {
       const r = validate(v as Sent)
       return isIssue(r) ? r : { value: r }
@@ -99,7 +99,7 @@ const byShard = <T>(items: T[], key: (item: T) => string) => {
 }
 
 const publish = (h: Hub, shard: number, body: object) =>
-  h.bus.publish(`weft:s:${shard}`, `{"v":1,${JSON.stringify(body).slice(1)}`)
+  h.bus.publish(`kerf:s:${shard}`, `{"v":1,${JSON.stringify(body).slice(1)}`)
 
 function heard(h: Hub, st: Sharing, shard: number, ev: Ev | null) {
   if (!ev) return // the bus lost something: bits are re-said on a beat, and peers age out
@@ -143,7 +143,7 @@ function hold(h: Hub, st: Sharing, c: Client, key: string) {
   const n = shardOf(key)
   let shard = st.shards.get(n)
   if (!shard) {
-    const name = `weft:s:${n}`,
+    const name = `kerf:s:${n}`,
       ch = h.channel(name),
       on = (ev: Ev | null) => heard(h, st, n, ev)
     ch.listeners.add(on)

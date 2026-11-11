@@ -7,8 +7,8 @@ CI publishes on its own after every merge (below).
 
 | npm tag  | What it is                                                       | Version                      | Install                   |
 | -------- | ---------------------------------------------------------------- | ---------------------------- | ------------------------- |
-| `latest` | The last release the owner cut, after the full release gate      | `0.1.4`                      | `npm i @weft-js/start`      |
-| `next`   | Every push to `main` that passes `quality`                       | `0.1.5-nightly.20261111.12`  | `npm i @weft-js/start@next` |
+| `latest` | The last release the owner cut, after the full release gate      | `0.1.4`                      | `npm i @kerf-js/start`      |
+| `next`   | Every push to `main` that passes `quality`                       | `0.1.5-nightly.20261111.12`  | `npm i @kerf-js/start@next` |
 
 Before 1.0 there is no separate stable line: `latest` is the stable one, and a release is a nightly the owner has
 run the full release gate on. A minor (0.2.0) may break things; a patch (0.1.5) should not.
@@ -37,7 +37,7 @@ ARM runs the WASM build.
 
 1. Make sure `main` passes the full gate: `pnpm run check --require-tools --release`, then the
    scaffold and runtime-matrix checks and the packed-install check
-   (`node packages/create/scripts/packed.mjs <dir>`). Run the app builds after the check, not
+   (`node packages/create-kerf/scripts/packed.mjs <dir>`). Run the app builds after the check, not
    beside it: the browser tests' timings don't hold on a machine that is also building apps.
 2. Set the version with `node scripts/set-version.mjs 0.1.5` (every public package, and the core's
    pins on its compilers) and commit.
@@ -76,7 +76,7 @@ packages are never published.
 
 ## Known gaps
 
-- Warp's dashboard bundle is 52.3 KB brotli, slightly over the 50 KB target. This is accepted for
+- Veneer's dashboard bundle is 52.3 KB brotli, slightly over the 50 KB target. This is accepted for
   1.0; the target is a goal, not a release gate.
 - Instant navigation shows its skeleton in about 15-30 ms on 3G, but the
   layout still shifts by about 0.20 between skeleton and content. The

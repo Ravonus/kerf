@@ -1,4 +1,4 @@
-import { Link } from '@weft-js/warp'
+import { Link } from '@kerf-js/veneer'
 
 export const LinkPlay = ({
   children,

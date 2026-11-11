@@ -4,7 +4,7 @@ import {
   Row,
   Text,
   Button,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { SOFT } from './paint-primitives'
 
 export const DitherBanner = () => (

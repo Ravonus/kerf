@@ -1,4 +1,4 @@
-import { redirect } from '@weft-js/start'
+import { redirect } from '@kerf-js/start'
 import { Moved } from '../../components/Moved'
 
 // /docs became Learn (the tutorial) and Reference (the API). Not prerendered: the server answers 308 with the new address.

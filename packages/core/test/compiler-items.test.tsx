@@ -1,10 +1,10 @@
 // Runtime checks for the compiler items in research 16 §9: children memoisation, defaults that read other props,
 // `{...rest}` on a native element (the `spread` helper), keyed fragment and conditional rows, and the W016 trap.
-// weft-allow T005: framework test of compiled output; it checks the exact DOM and classes the compiler writes
+// kerf-allow T005: framework test of compiled output; it checks the exact DOM and classes the compiler writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { state } from '@weft-js/core'
-import { flush, render, touches } from '@weft-js/core/test'
+import { state } from '@kerf-js/core'
+import { flush, render, touches } from '@kerf-js/core/test'
 import { seen, seenRef } from './fixtures/refs'
 
 test('children are built once, however often and wherever the component reads them', async () => {

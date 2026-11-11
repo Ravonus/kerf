@@ -1,4 +1,4 @@
-import { Select, Stack } from '@weft-js/warp'
+import { Select, Stack } from '@kerf-js/veneer'
 import { REGION_OPTIONS } from './shared'
 
 export const SelectSizes = () => (

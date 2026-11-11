@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { palette } from '@weft-js/warp-core/dither'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
+import { palette } from '@kerf-js/veneer-core/dither'
 import { rng, type ArtProps, type Meta } from './shared'
 import code from './draft.tsx?raw'
 
@@ -57,13 +57,13 @@ export default function Draft({ live = true }: ArtProps) {
   const draw = ({ ctx, width, height, time, tier, still }: Frame) => {
     if (!inksNow)
       inksNow = palette(ctx.canvas.parentElement!, [
-        '--warp-color-page',
-        '--warp-color-accent-text',
-        '--warp-color-accent-soft',
-        '--warp-color-border-strong',
-        '--warp-color-text',
+        '--veneer-color-page',
+        '--veneer-color-accent-text',
+        '--veneer-color-accent-soft',
+        '--veneer-color-border-strong',
+        '--veneer-color-text',
       ])
-    const [ground, warp, weft, rule, mark] = inksNow as unknown as number[]
+    const [ground, veneer, kerf, rule, mark] = inksNow as unknown as number[]
     if (!image || image.width !== width || image.height !== height) {
       image = new ImageData(width, height)
       out = new Uint32Array(image.data.buffer)
@@ -91,11 +91,11 @@ export default function Draft({ live = true }: ArtProps) {
       const row = y + shift,
         tr = treadle(row),
         tie = TIE[tr]!
-      // treadling, and the cloth: a warp thread on top wherever its shaft is tied to this row's treadle
+      // treadling, and the cloth: a veneer thread on top wherever its shaft is tied to this row's treadle
       set(right + RULE + tr * PITCH, top + y * PITCH, mark!)
       for (let x = 0; x < span; x++) {
         const lifted = tie[thread[x]!]
-        const ink = lifted ? warp! : weft!,
+        const ink = lifted ? veneer! : kerf!,
           px = x * PITCH,
           py = top + y * PITCH
         for (let b = 0; b < PITCH; b++)

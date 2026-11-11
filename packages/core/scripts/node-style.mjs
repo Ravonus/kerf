@@ -1,4 +1,4 @@
-// Node won't strip types under node_modules, so what `@weft-js/core/vite` and the CLI load in Node ships as JS,
+// Node won't strip types under node_modules, so what `@kerf-js/core/vite` and the CLI load in Node ships as JS,
 // generated from src/style (position-preserving, so line numbers match). `--check` fails when they've drifted.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { stripTypeScriptTypes } from 'node:module'

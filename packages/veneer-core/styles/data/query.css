@@ -1,0 +1,37 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+/* query builder ----------------------------------------------------------------- */
+:where([data-scope="query"]) { display: grid; gap: 8px; }
+:where([data-scope="query"] [data-part="group"]:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) *:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) [data-scope="query"] *))) {
+  display: grid; gap: 8px; padding: 10px 10px 10px 14px; border-radius: var(--veneer-radius-control);
+  border: 1px solid var(--veneer-color-border); border-inline-start: 3px solid var(--_dc, var(--veneer-color-accent-solid)); background: var(--veneer-color-surface);
+}
+:where([data-scope="query"] [data-part="group"]:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) *:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) [data-scope="query"] *)) [data-part="group"]:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) *:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) [data-scope="query"] *))) { --_dc: var(--veneer-color-data-7); background: var(--veneer-color-surface-raised); }
+:where([data-scope="query"] [data-part="rule"]) { display: grid; grid-template-columns: 52px repeat(3, minmax(0, 1fr)) auto; gap: 6px; align-items: center; }
+:where([data-scope="query"] [data-part="join"]) { font: 500 10px/1.25 var(--veneer-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--veneer-color-text-subtle); text-align: center; }
+:where([data-scope="query"] select),
+:where([data-scope="query"] input) {
+  min-inline-size: 0; block-size: var(--veneer-control-sm); padding-inline: 8px; border: 1px solid var(--veneer-color-border-control); border-radius: calc(var(--veneer-radius-control) - 2px);
+  background: var(--veneer-color-surface-raised); color: var(--veneer-color-text); font: 400 max(12px, var(--veneer-input-font-min))/var(--veneer-text-control-leading) var(--veneer-text-body-font);
+}
+:where([data-scope="query"] output) { display: block; padding: 10px 12px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font: 400 12px/1.6 var(--veneer-font-mono); color: var(--veneer-color-text); overflow-wrap: anywhere; }
+@container (max-width: 520px) {
+:where([data-scope="query"] [data-part="rule"]) { grid-template-columns: 1fr 1fr auto; }
+:where([data-scope="query"] [data-part="join"]) { grid-column: 1 / -1; text-align: start; }
+:where([data-scope="query"] [data-part="rule"] > :is(select):last-of-type),
+  :where([data-scope="query"] [data-part="rule"] > :is(input):last-of-type) { grid-column: 1 / 3; }
+}
+/* query builder: the row's remove button reaches into the group's free end padding to hit-min */
+:where([data-scope="query"] [data-rm])::after { inset-inline-end: min(0px, calc(100% - var(--veneer-hit-min))); }
+/* query selects and inputs are sm (36px on touch): a transparent block band + negative margins make a 44px
+   area with no layout change; the visible edge is an inset ring. Rows are 6px apart, so stacked rows
+   share the gap: each control keeps ≥ 42px (the 24px floor + spacing case) */
+:where([data-scope="query"] select),
+:where([data-scope="query"] input) {
+  --_band: max(0px, calc((var(--veneer-hit-min) - var(--veneer-control-sm)) / 2));
+  block-size: calc(var(--veneer-control-sm) + 2 * var(--_band)); margin-block: calc(-1 * var(--_band));
+  border: 0 solid transparent; border-block-width: var(--_band); background-clip: padding-box; padding-inline: 9px;
+  box-shadow: inset 0 0 0 1px var(--veneer-color-border-control);
+  border-radius: calc(var(--veneer-radius-control) - 2px) / calc(var(--veneer-radius-control) - 2px + var(--_band));
+}
+}

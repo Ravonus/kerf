@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   Card,
   Input,
   Spinner,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 // Stands in for a request to a server.
 const send = (email: string) =>

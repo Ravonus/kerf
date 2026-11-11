@@ -1,9 +1,9 @@
 import { writeFileSync } from 'node:fs'
 
 export async function diagnostics(context) {
-  const { check, eq, weftCheck, docs, cleanDocs, ok } = context
-  await check('`weft check` passes the clean sidecar app', () => {
-    const r = weftCheck()
+  const { check, eq, kerfCheck, docs, cleanDocs, ok } = context
+  await check('`kerf check` passes the clean sidecar app', () => {
+    const r = kerfCheck()
     eq(r.ok, true, `check: ${JSON.stringify(r.diagnostics)?.slice(0, 800)}`)
     return r.summary
   })
@@ -16,7 +16,7 @@ export const nothing = mutation({ output: z.void(), impl: search })
 export const shout = query({ input: z.object({ a: z.string().transform(s => s.length) }), output: z.null(), impl: search })
 `,
     )
-    const r = weftCheck().diagnostics.filter((d) => d.code === 'R101')
+    const r = kerfCheck().diagnostics.filter((d) => d.code === 'R101')
     writeFileSync(docs, cleanDocs)
     eq(r.length, 3, `R101s: ${JSON.stringify(r)}`)
     ok(
@@ -32,7 +32,7 @@ export const shout = query({ input: z.object({ a: z.string().transform(s => s.le
 export const either = query({ output: z.union([z.object({ a: z.string() }), z.object({ b: z.number() })]), impl: search })
 `,
     )
-    const r = weftCheck().diagnostics.filter((d) => d.code === 'R102')
+    const r = kerfCheck().diagnostics.filter((d) => d.code === 'R102')
     writeFileSync(docs, cleanDocs)
     eq(r.length, 1, 'R102s')
     ok(r[0].why.includes('either.'), r[0].why)
@@ -41,13 +41,13 @@ export const either = query({ output: z.union([z.object({ a: z.string() }), z.ob
 }
 
 async function remaining(context) {
-  const { check, weftCheck, docs, main, cleanDocs, cleanMain, ID, ok } = context
+  const { check, kerfCheck, docs, main, cleanDocs, cleanMain, ID, ok } = context
   await check('R103: an edited schema stops cargo at the function it broke, named by id', () => {
     writeFileSync(
       docs,
       cleanDocs.replace('score: z.number() })', 'score: z.number(), lang: z.string() })'),
     )
-    const r = weftCheck().diagnostics.filter((d) => d.code === 'R103')
+    const r = kerfCheck().diagnostics.filter((d) => d.code === 'R103')
     writeFileSync(docs, cleanDocs)
     ok(r.length, 'no R103')
     ok(
@@ -62,7 +62,7 @@ async function remaining(context) {
   })
   await check('R109: a compile error no function explains is told apart', () => {
     writeFileSync(main, cleanMain.replace('fn words(text: &str)', 'fn words(text: &strr)'))
-    const r = weftCheck().diagnostics.filter((d) => /^R10[39]$/.test(d.code))
+    const r = kerfCheck().diagnostics.filter((d) => /^R10[39]$/.test(d.code))
     writeFileSync(main, cleanMain)
     ok(
       r.some((d) => d.code === 'R109'),

@@ -69,7 +69,7 @@ export function conditional(a, node) {
   return undefined
 }
 
-/** `expect(cart.items.value)` with `cart` imported from app code, in a component test. (`scope(cart)` from @weft-js/core/test is the way to test a scope.) */
+/** `expect(cart.items.value)` with `cart` imported from app code, in a component test. (`scope(cart)` from @kerf-js/core/test is the way to test a scope.) */
 export function readsInternalState(subject, imports) {
   const s = unwrap(subject)
   if (!ts.isPropertyAccessExpression(s) || s.name.text !== 'value') return false
@@ -121,7 +121,7 @@ export function insideFakeApi(timer) {
   return false
 }
 
-/** Replace a zero-delay sleep with `flush()`, importing it from @weft-js/core/test when the file doesn't. */
+/** Replace a zero-delay sleep with `flush()`, importing it from @kerf-js/core/test when the file doesn't. */
 export function flushFix(sf, sleep, edit) {
   const edits = [edit(sleep.getStart(sf), sleep.getEnd(), 'flush()')]
   const hasFlush = sf.statements.some(
@@ -132,16 +132,16 @@ export function flushFix(sf, sleep, edit) {
       st.importClause.namedBindings.elements.some((e) => e.name.text === 'flush'),
   )
   if (!hasFlush) {
-    const weftTest = sf.statements.find(
+    const kerfTest = sf.statements.find(
       (st) =>
         ts.isImportDeclaration(st) &&
         ts.isStringLiteral(st.moduleSpecifier) &&
-        st.moduleSpecifier.text === '@weft-js/core/test' &&
+        st.moduleSpecifier.text === '@kerf-js/core/test' &&
         st.importClause?.namedBindings &&
         ts.isNamedImports(st.importClause.namedBindings),
     )
-    if (weftTest) {
-      const el = weftTest.importClause.namedBindings.elements
+    if (kerfTest) {
+      const el = kerfTest.importClause.namedBindings.elements
       edits.push(edit(el[el.length - 1].getEnd(), el[el.length - 1].getEnd(), ', flush'))
     } else {
       const last = [...sf.statements].reverse().find((st) => ts.isImportDeclaration(st))
@@ -150,7 +150,7 @@ export function flushFix(sf, sleep, edit) {
         edit(
           at,
           at,
-          `${last ? '\n' : ''}import { flush } from '@weft-js/core/test'${last ? '' : '\n'}`,
+          `${last ? '\n' : ''}import { flush } from '@kerf-js/core/test'${last ? '' : '\n'}`,
         ),
       )
     }

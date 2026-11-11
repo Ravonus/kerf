@@ -11,7 +11,7 @@ export async function commandTsc({ formatHuman, sortDiagnostics, args, print, sa
   const diagnostics = sortDiagnostics(await propTsc(args.root))
   if (args.json) print({ ok: !diagnostics.some((d) => d.severity === 'error'), diagnostics })
   say(formatHuman(diagnostics))
-  say(`weft tsc: ${diagnostics.filter((d) => d.severity === 'error').length} errors`)
+  say(`kerf tsc: ${diagnostics.filter((d) => d.severity === 'error').length} errors`)
   return diagnostics.some((d) => d.severity === 'error') ? 1 : 0
 }
 
@@ -21,7 +21,7 @@ export async function commandCheck({ check, formatHuman, compilerLine, doctor, a
   say(formatHuman(result.diagnostics))
   if (args.flags.verbose) say(compilerLine(doctor(args.root).compiler))
   say(
-    `weft check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`,
+    `kerf check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`,
   )
   return result.ok ? 0 : 1
 }
@@ -53,11 +53,11 @@ export async function commandDoctor({
   if (args.json) print({ ...result, live: plan, deploy: hosts })
   else
     say(
-      `${formatDoctor(result)}\n\nweft doctor: deploy${hosts.target ? ` (target ${hosts.target})` : ''}\n${formatHosts(hosts).replace(/^/gm, '  ')}`,
+      `${formatDoctor(result)}\n\nkerf doctor: deploy${hosts.target ? ` (target ${hosts.target})` : ''}\n${formatHosts(hosts).replace(/^/gm, '  ')}`,
     )
   if (!plan) return 0
   say(
-    `weft doctor: ${plan.preset} (${plan.host})\n  live mode: ${plan.mode}\n  ${plan.says}${plan.required.length ? `\n  required: ${plan.required.join(', ')}` : ''}${plan.options.length ? `\n  options:\n${plan.options.map((o) => `    - ${o}`).join('\n')}` : ''}`,
+    `kerf doctor: ${plan.preset} (${plan.host})\n  live mode: ${plan.mode}\n  ${plan.says}${plan.required.length ? `\n  required: ${plan.required.join(', ')}` : ''}${plan.options.length ? `\n  options:\n${plan.options.map((o) => `    - ${o}`).join('\n')}` : ''}`,
   )
   say(formatHuman(plan.diagnostics))
   return plan.diagnostics.some((d) => d.severity === 'error') ? 1 : 0
@@ -66,7 +66,7 @@ export async function commandDoctor({
 export async function commandTest({ formatHuman, formatGate, gate, args, print, say }) {
   if (!args.flags.gate)
     throw Object.assign(
-      new Error('`weft test` runs the gate with --gate; run the suite itself with vitest'),
+      new Error('`kerf test` runs the gate with --gate; run the suite itself with vitest'),
       { code: 'E_USAGE' },
     )
   const num = (name) => (args.flags[name] === undefined ? undefined : Number(args.flags[name]))
@@ -83,7 +83,7 @@ export async function commandTest({ formatHuman, formatGate, gate, args, print, 
   say(formatHuman(result.diagnostics))
   say(formatGate(result))
   say(
-    `weft test --gate: ${result.ok ? 'pass' : 'fail'}, ${result.summary.changedTests} changed tests, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`,
+    `kerf test --gate: ${result.ok ? 'pass' : 'fail'}, ${result.summary.changedTests} changed tests, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`,
   )
   return result.ok ? 0 : 1
 }
@@ -96,7 +96,7 @@ export async function commandDev({ devCommand, args, say }) {
   const server = await devCommand(args.root, {
     port: args.flags.port && Number(args.flags.port),
   })
-  say(`weft dev: ${server.resolvedUrls.local[0]}`)
+  say(`kerf dev: ${server.resolvedUrls.local[0]}`)
   await new Promise((ok) => {
     process.once('SIGINT', ok)
   })
@@ -113,12 +113,12 @@ export async function commandBuild({ formatHuman, buildCommand, args, print, say
   if (args.json) print(result)
   say(formatHuman(result.diagnostics))
   say(
-    `weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract, ${result.audited} pages audited (${result.ms} ms)`,
+    `kerf build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract, ${result.audited} pages audited (${result.ms} ms)`,
   )
   for (const note of result.notes ?? []) say(note)
   if (!result.ok)
     say(
-      'weft build: failed. The output is written, but fix the errors above before it ships, or `--unsafe-allow <code>` to force it.',
+      'kerf build: failed. The output is written, but fix the errors above before it ships, or `--unsafe-allow <code>` to force it.',
     )
   return result.ok ? 0 : 1
 }
@@ -134,7 +134,7 @@ export async function commandAudit({ formatHuman, audit, args, print, say }) {
   if (args.json) print(result)
   say(formatHuman(result.diagnostics))
   say(
-    `weft audit: ${result.skipped ?? `${result.pages.length} pages at a phone's and a desktop's width, ${result.diagnostics.length} findings (${result.ms} ms)`}`,
+    `kerf audit: ${result.skipped ?? `${result.pages.length} pages at a phone's and a desktop's width, ${result.diagnostics.length} findings (${result.ms} ms)`}`,
   )
   return result.ok ? 0 : 1
 }
@@ -172,7 +172,7 @@ export async function commandDeploy({
     say(formatHuman(result.findings))
     say(
       [
-        `weft deploy init ${result.target}${result.dryRun ? ' (dry run: nothing written)' : ''}:`,
+        `kerf deploy init ${result.target}${result.dryRun ? ' (dry run: nothing written)' : ''}:`,
         ...result.actions.map((a) => `  ${a}`),
         '',
         'then, once:',
@@ -184,7 +184,7 @@ export async function commandDeploy({
   if (sub !== undefined)
     throw Object.assign(
       new Error(
-        `weft deploy ${String(sub)}: use \`weft deploy\`, \`weft deploy hosts\` or \`weft deploy init [target]\``,
+        `kerf deploy ${String(sub)}: use \`kerf deploy\`, \`kerf deploy hosts\` or \`kerf deploy init [target]\``,
       ),
       { code: 'E_USAGE' },
     )
@@ -200,7 +200,7 @@ export async function commandDeploy({
   if (result.dryRun)
     say(
       [
-        `weft deploy: a dry run for ${result.target}${result.prod ? ' (production)' : ' (a preview)'}. With --yes it runs:`,
+        `kerf deploy: a dry run for ${result.target}${result.prod ? ' (production)' : ' (a preview)'}. With --yes it runs:`,
         ...result.steps.map(
           (s) =>
             `  ${s.what}${s.reads.length ? `\n      reads ${s.reads.join(', ')} from the environment` : ''}`,
@@ -209,7 +209,7 @@ export async function commandDeploy({
     )
   else
     say(
-      `weft deploy: ${result.target}${result.prod ? ' (production)' : ''} → ${result.url ?? 'deployed; the host printed no URL'}`,
+      `kerf deploy: ${result.target}${result.prod ? ' (production)' : ''} → ${result.url ?? 'deployed; the host printed no URL'}`,
     )
   return 0
 }
@@ -253,7 +253,7 @@ export function commandSurfaces({ listSurfaces, args, print, say }) {
                 `${String(x.name).padEnd(20)} ${String(x.kind).padEnd(10)} ${x.file}:${x.line}  props: ${x.props.join(', ') || '(none)'}`,
             )
             .join('\n')
-        : 'No surfaces yet: `weft docs surface`.',
+        : 'No surfaces yet: `kerf docs surface`.',
     )
   return 0
 }
@@ -272,7 +272,7 @@ export async function commandTasks({ formatHuman, tasks, args, print, say }) {
 }
 
 export async function commandRun({ runTask, args }) {
-  if (!args.positional[0]) throw Object.assign(new Error('weft run <task>'), { code: 'E_USAGE' })
+  if (!args.positional[0]) throw Object.assign(new Error('kerf run <task>'), { code: 'E_USAGE' })
   return await runTask(args.root, args.positional[0])
 }
 

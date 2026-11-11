@@ -1,4 +1,4 @@
-import { DEV } from '@weft-js/core'
+import { DEV } from '@kerf-js/core'
 import { cache, FnError } from './api'
 import type { Sub } from './sub-types'
 
@@ -11,7 +11,7 @@ export function ack(d: Row, byN: Map<number, Sub>, seeded: () => boolean) {
   s.error.value = undefined
   if (DEV && !s.tags.length)
     console.warn(
-      `weft: W053 \`${s.fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it.\n  fix: add \`tags\` to the query`,
+      `kerf: W053 \`${s.fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it.\n  fix: add \`tags\` to the query`,
     )
   // Data older than the subscription may have missed a write. A page's first connect is covered by its cursor.
   if (!s.acked && !seeded() && s.tags.length) void cache.invalidate(...s.tags)

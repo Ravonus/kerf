@@ -1,8 +1,8 @@
 {
-  "name": "weft-repo",
+  "name": "kerf-repo",
   "private": true,
   "type": "module",
-  "description": "Scripts for working on weft itself. Nothing here is published: the packages are in packages/.",
+  "description": "Scripts for working on kerf itself. Nothing here is published: the packages are in packages/.",
   "engines": {
     "node": ">=26"
   },

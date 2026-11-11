@@ -1,14 +1,14 @@
 // The Rust bridge from the daemon's side: it long-polls the app's queue, runs the prompt, and posts the answer back.
 import { afterEach, expect, test } from 'vitest'
 import { z } from 'zod'
-import { defineAgent, extension, memoryAgentStore } from '@weft-js/agent/server'
-import { promptFor, readAnswer, rustBridge } from '@weft-js/agent/rust'
-import { fakeBridge } from '@weft-js/agent/test'
-import { mutation, query } from '@weft-js/start'
-import { createHandler } from '@weft-js/start/server'
+import { defineAgent, extension, memoryAgentStore } from '@kerf-js/agent/server'
+import { promptFor, readAnswer, rustBridge } from '@kerf-js/agent/rust'
+import { fakeBridge } from '@kerf-js/agent/test'
+import { mutation, query } from '@kerf-js/start'
+import { createHandler } from '@kerf-js/start/server'
 
 const TOKEN = 'b'.repeat(64)
-const JOBS = 'http://localhost/_weft/x/agent/bridges/rust/jobs'
+const JOBS = 'http://localhost/_kerf/x/agent/bridges/rust/jobs'
 
 query({
   $id: 'latte.000001',
@@ -39,9 +39,9 @@ function app(bridges = [rustBridge({ token: TOKEN })]) {
   })
   const call = async (id: string, input: unknown = {}) => {
     const res = await handler(
-      new Request(`http://localhost/_weft/fn/${id}`, {
+      new Request(`http://localhost/_kerf/fn/${id}`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-weft': '1' },
+        headers: { 'content-type': 'application/json', 'x-kerf': '1' },
         body: JSON.stringify({ i: input }),
       }),
     )

@@ -253,7 +253,7 @@ export const framing: Doc[] = [
       {
         kind: 'prose',
         title: 'Showing a shell inside a page',
-        md: "A shell fills the screen by default, which is what you want in an app: put it at the top of your layout and nothing else is needed.\n\nTo preview one inside a page, as here, pass `island` so the page keeps its one `<main>`, set `--warp-viewport-block` to the height you want, and give the box around it `contain: layout` so the shell's overlays stay inside. The `AppWindow` helper in these examples does exactly that.",
+        md: "A shell fills the screen by default, which is what you want in an app: put it at the top of your layout and nothing else is needed.\n\nTo preview one inside a page, as here, pass `island` so the page keeps its one `<main>`, set `--veneer-viewport-block` to the height you want, and give the box around it `contain: layout` so the shell's overlays stay inside. The `AppWindow` helper in these examples does exactly that.",
       },
     ],
     keyboard: [

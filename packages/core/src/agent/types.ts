@@ -20,7 +20,7 @@ export type Action =
   | 'uncheck'
 
 /**
- * What an assertion checks, in @weft-js/core/test's words: `visible`, `absent`, `text` (contains), `exactText`, `value`,
+ * What an assertion checks, in @kerf-js/core/test's words: `visible`, `absent`, `text` (contains), `exactText`, `value`,
  * `checked`, `unchecked`, `disabled`, `enabled`, `focused`, `count`.
  */
 export type Expectation =

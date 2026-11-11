@@ -1,30 +1,30 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
 <h1 align="center">Admin</h1>
 
 <p align="center">
-  <strong>A signed-in back office over 10,000 orders, built three times: Weft, SolidStart and Next.</strong><br>
+  <strong>A signed-in back office over 10,000 orders, built three times: Kerf, SolidStart and Next.</strong><br>
   It also carries the data-loading shapes agents really write: nested loads, per-row loads and a slow panel.
 </p>
 
 <p align="center">
   <a href="#run-it">Run it</a> ·
-  <a href="#the-weft-variant">Weft variant</a> ·
+  <a href="#the-kerf-variant">Kerf variant</a> ·
   <a href="#the-comparison-variants">Comparison variants</a> ·
   <a href="../README.md">All examples</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!NOTE]
-> This is a private benchmark site, not a published package. Nothing here is on npm. The Weft version is not stored in
-> this folder at all: it is generated from the `admin` template of `@weft-js/create` on every bench run.
+> This is a private benchmark site, not a published package. Nothing here is on npm. The Kerf version is not stored in
+> this folder at all: it is generated from the `admin` template of `create-kerf` on every bench run.
 
 `admin` is one of the four database-driven sites in [`examples/`](../README.md). The same back office, called Backroom in
-the Weft template, is written in three stacks so `bench.mjs` can compare them on production builds against one seeded
+the Kerf template, is written in three stacks so `bench.mjs` can compare them on production builds against one seeded
 Postgres database. The pages sort, filter and page on the server, everything sits behind a sign-in, and the manifest
 pins down a canary for each live page, so a stack can't score well by serving stale rows.
 
@@ -49,27 +49,27 @@ items and 5,000 products, generated with fixed seeds so every run sees the same 
 
 | Variant | Label in results | Where the code lives |
 | --- | --- | --- |
-| `weft` | weft + warp | Generated: `{"template": "admin", "db": "postgres", "auth": true}` passed to create-weft's `scaffold()` |
+| `kerf` | kerf + veneer | Generated: `{"template": "admin", "db": "postgres", "auth": true}` passed to create-kerf's `scaffold()` |
 | `solid` | SolidStart 2.1 + Kobalte + Tailwind 4 | [`solid/`](./solid) |
 | `next` | Next 16.4 + Radix + Tailwind 4 | [`next/`](./next) |
 
 All three have to pass [`e2e.test.mjs`](./e2e.test.mjs) before their numbers count. The test uses roles and accessible
 names only, so the same file drives every stack.
 
-### The Weft variant
+### The Kerf variant
 
 The template source is
-[`packages/create/templates/admin`](../../packages/create/templates/admin). It uses:
+[`packages/create-kerf/templates/admin`](../../packages/create-kerf/templates/admin). It uses:
 
-- **Server functions.** `query` and `mutation` from `@weft-js/start`, with `zod` inputs. The order list takes
+- **Server functions.** `query` and `mutation` from `@kerf-js/start`, with `zod` inputs. The order list takes
   `page`, `sort`, `dir`, `status` and `q` and does the work in SQL through Drizzle.
-- **Auth.** `createAuth` from `@weft-js/start/auth/better-auth` with `drizzleAuth`, plus `forward` from
-  `@weft-js/start/auth` for sign-in and sign-up mutations. `ctx.user` gates the pages.
+- **Auth.** `createAuth` from `@kerf-js/start/auth/better-auth` with `drizzleAuth`, plus `forward` from
+  `@kerf-js/start/auth` for sign-in and sign-up mutations. `ctx.user` gates the pages.
 - **Routing.** File routes with `_layout.tsx` nesting, `[id]` params, `redirect`, `notFound`, `navigate`, `Link` and `Form`.
-- **Reactivity.** `state`, `derived` and `watch` from `@weft-js/core`, and `Boundary` around each panel that loads, so a
+- **Reactivity.** `state`, `derived` and `watch` from `@kerf-js/core`, and `Boundary` around each panel that loads, so a
   slow or failed load shows a skeleton or an error in place.
-- **Warp.** `Shell`, `Table` (with typed `Column`s), `Select`, `Input`, `Skeleton`, `Card`, `Grid`, `Toaster` and
-  `toast`, themed in `weft.config.ts` through the `warp()` plugin, plus icons from `@weft-js/warp-icons`.
+- **Veneer.** `Shell`, `Table` (with typed `Column`s), `Select`, `Input`, `Skeleton`, `Card`, `Grid`, `Toaster` and
+  `toast`, themed in `kerf.config.ts` through the `veneer()` plugin, plus icons from `@kerf-js/veneer-icons`.
 
 ### The comparison variants
 
@@ -96,7 +96,7 @@ pnpm run setup                         # repo root, once
 cd examples
 pnpm install                           # benchmark tools only
 node bench.mjs admin                   # every variant, 3 samples a page
-node bench.mjs admin --only weft --no-record   # try a change, write nothing
+node bench.mjs admin --only kerf --no-record   # try a change, write nothing
 node bench.mjs admin --detect          # what each variant resolves to, without building
 ```
 
@@ -107,18 +107,18 @@ every flag and what is measured.
 
 ```bash
 cd examples
-node e2e.mjs admin weft                # build if needed, database, proxy, server, tests, stop
+node e2e.mjs admin kerf                # build if needed, database, proxy, server, tests, stop
 node e2e.mjs admin solid --no-build    # the last build as it stands
 node e2e.mjs admin next
 ```
 
 Each test runs on a fresh clone of the seeded database.
 
-### Click through the Weft build
+### Click through the Kerf build
 
 ```bash
 cd examples
-node bench.mjs admin                   # leaves a build in ~/.cache/weft-app-bench
+node bench.mjs admin                   # leaves a build in ~/.cache/kerf-app-bench
 node show.mjs                          # serves it from port 5501
 ```
 
@@ -138,10 +138,10 @@ npm run dev
 The bench loads `../shared/pg/schema.sql` and `../shared/pg/seed.sql` into the database; do the same for a local copy
 that has the same rows.
 
-### Make your own copy of the Weft version
+### Make your own copy of the Kerf version
 
 ```bash
-pnpm create @weft-js my-admin --template admin --db postgres --auth
+pnpm create kerf my-admin --template admin --db postgres --auth
 ```
 
 ## Manifest details

@@ -1,4 +1,4 @@
-import { Grid, Card, Text } from '@weft-js/warp'
+import { Grid, Card, Text } from '@kerf-js/veneer'
 
 export const CardStats = () => (
   <Grid

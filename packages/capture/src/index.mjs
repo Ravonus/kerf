@@ -1,4 +1,4 @@
-// @weft-js/capture: stills, frame times, sheets and poster bakes from headless Chrome on the GPU. Dev only.
+// @kerf-js/capture: stills, frame times, sheets and poster bakes from headless Chrome on the GPU. Dev only.
 export { bake, TIERS } from './bake.mjs'
 export { gpuArgs, gpuOf, launch, open } from './browser.mjs'
 export { frames, frameStats } from './frames.mjs'

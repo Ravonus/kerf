@@ -6,7 +6,7 @@ import {
   isNotFound,
 } from '@tanstack/router-core'
 import { createMemoryHistory } from '@tanstack/history'
-import { mergeMeta, type Merged, type Meta as MetaObject } from '@weft-js/core/ssr'
+import { mergeMeta, type Merged, type Meta as MetaObject } from '@kerf-js/core/ssr'
 import type { Component } from '../router'
 import { StartError } from '../data'
 import * as exec from '../exec'
@@ -67,9 +67,9 @@ export async function resolveRoute(
   // The page's `[...name]`, so its layouts see the catch-all under that name too (the loaders copy `hold` as they start).
   hold.splat = (
     router.getMatchedRoutes(router.latestLocation.pathname)[2] as
-      | { options: { weft?: RouteEntry } }
+      | { options: { kerf?: RouteEntry } }
       | undefined
-  )?.options.weft?.splat
+  )?.options.kerf?.splat
   await router.load()
   return resolvedMatches(deps, router, hold, path, request)
 }
@@ -109,28 +109,28 @@ async function resolvedMatches(
   if (redirected) return redirected
   const matches = router.state.matches.map((m) => ({
     m,
-    weft: (router.routesById as Record<string, { options: { weft?: RouteEntry | LayoutEntry } }>)[
+    kerf: (router.routesById as Record<string, { options: { kerf?: RouteEntry | LayoutEntry } }>)[
       m.routeId
-    ]?.options.weft,
+    ]?.options.kerf,
   }))
   const params = (m: { params: Record<string, unknown> }, splat?: string) =>
     cleanParams(m.params, splat)
-  const leaf = matches.at(-1)?.weft
+  const leaf = matches.at(-1)?.kerf
   const route = leaf && 'kind' in leaf ? leaf : undefined
   const failed = matches.find((x) => x.m.status === 'error')
   const missing = !route || matches.some((x) => x.m.status === 'notFound' || isNotFound(x.m.error))
   const rootLayout = manifest.layouts.find((l) => l.dir === '')
   const rootOk =
-    rootLayout && matches[0]?.weft === rootLayout && matches[0].m.status === 'success'
+    rootLayout && matches[0]?.kerf === rootLayout && matches[0].m.status === 'success'
       ? matches[0]
       : undefined
   const levelOf = (x: (typeof matches)[number]): Level => {
     const raw = x.m.loaderData
-    const t = hold.tags.get(x.weft!.file)
+    const t = hold.tags.get(x.kerf!.file)
     return {
-      id: x.weft!.id,
+      id: x.kerf!.id,
       params: params(x.m, hold.splat),
-      mod: mod(x.weft!.file),
+      mod: mod(x.kerf!.file),
       raw,
       ...split(raw),
       ...(t?.size && { t: [...t] }),
@@ -163,7 +163,7 @@ async function resolvedMatches(
     return special('error', (e as { code?: string } | null)?.code === 'Q016' ? 503 : 500, e)
   }
   if (missing) return special('404', 404)
-  const levels = matches.filter((x) => x.weft).map(levelOf)
+  const levels = matches.filter((x) => x.kerf).map(levelOf)
   try {
     return await finish(levels, 200, route)
   } catch (e) {

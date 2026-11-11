@@ -1,5 +1,5 @@
 {
-  "file:crates/weft-compiler/src/shape.rs": {
+  "file:crates/kerf-compiler/src/shape.rs": {
     "lines": 470,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
@@ -7,7 +7,7 @@
     "lines": 443,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
-  "function:crates/weft-compiler/src/shape.rs:apply": {
+  "function:crates/kerf-compiler/src/shape.rs:apply": {
     "lines": 112,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
@@ -19,7 +19,7 @@
     "lines": 83,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
-  "function:packages/core/vite.mjs:weft": {
+  "function:packages/core/vite.mjs:kerf": {
     "lines": 112,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },

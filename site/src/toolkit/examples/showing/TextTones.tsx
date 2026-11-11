@@ -1,4 +1,4 @@
-import { Stack, Text } from '@weft-js/warp'
+import { Stack, Text } from '@kerf-js/veneer'
 
 export const TextTones = () => (
   <Stack gap="tight">

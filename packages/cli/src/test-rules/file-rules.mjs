@@ -184,12 +184,12 @@ function timerRule(n, { sf, edit, report, fakeTimers }, c, name) {
       )
     } else if (!fakeTimers && !insideFakeApi(n))
       report('T004', c, `\`${name}\` runs on the real clock in a test.`, {
-        help: 'Call `clock.install()` from @weft-js/core/test first and drive time with `await clock.advance(ms)`',
+        help: 'Call `clock.install()` from @kerf-js/core/test first and drive time with `await clock.advance(ms)`',
       })
   }
 }
 
-function mockRule(n, { report, namespaces, isWeftSpec, isUnitSpec }, c, name) {
+function mockRule(n, { report, namespaces, isKerfSpec, isUnitSpec }, c, name) {
   if (
     name &&
     ['mock', 'doMock'].includes(name) &&
@@ -198,7 +198,7 @@ function mockRule(n, { report, namespaces, isWeftSpec, isUnitSpec }, c, name) {
     ts.isStringLiteralLike(n.arguments[0])
   ) {
     const spec = n.arguments[0].text
-    if (isWeftSpec(spec))
+    if (isKerfSpec(spec))
       report(
         'T006',
         n,
@@ -218,7 +218,7 @@ function mockRule(n, { report, namespaces, isWeftSpec, isUnitSpec }, c, name) {
     ts.isIdentifier(n.arguments[0])
   ) {
     const ns = namespaces.get(n.arguments[0].text)
-    if (ns && isWeftSpec(ns.spec))
+    if (ns && isKerfSpec(ns.spec))
       report(
         'T006',
         n,
@@ -258,7 +258,7 @@ function socketRule(n, { report }) {
     ['WebSocket', 'EventSource'].includes(n.expression.text)
   )
     report('T013', n, `\`new ${n.expression.text}\` opens a real socket in a fast test.`, {
-      help: "Render the `.live()` or stream against @weft-js/core/test's fake transport: `await net.push(stream, message)`, `await net.poke('tag')`, `await net.drop()`",
+      help: "Render the `.live()` or stream against @kerf-js/core/test's fake transport: `await net.push(stream, message)`, `await net.poke('tag')`, `await net.drop()`",
     })
 }
 

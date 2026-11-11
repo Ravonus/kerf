@@ -1,13 +1,13 @@
-// @weft-js/core/agent: drive and inspect the running app from inside the page, in whatever browser the agent already has
-// (Claude's browser pane, Claude in Chrome, Codex's browser, a headless Chrome). Dev builds only; the weft() Vite
+// @kerf-js/core/agent: drive and inspect the running app from inside the page, in whatever browser the agent already has
+// (Claude's browser pane, Claude in Chrome, Codex's browser, a headless Chrome). Dev builds only; the kerf() Vite
 // plugin loads it when serving. Two ways in, one implementation:
 //
-//   - the agent's own browser runs JS: `await __weft__.agent.snapshot()`, `await __weft__.agent.act({ role: 'button', name: 'Add' }, 'click')`
-//   - `weft browser …` / the `weft mcp` browser tools: the dev server relays each command to the open tab (vite.mjs)
+//   - the agent's own browser runs JS: `await __kerf__.agent.snapshot()`, `await __kerf__.agent.act({ role: 'button', name: 'Add' }, 'click')`
+//   - `kerf browser …` / the `kerf mcp` browser tools: the dev server relays each command to the open tab (vite.mjs)
 //
-// Queries and actions are @weft-js/core/test's own (Testing Library role/label/text queries, user-event), so what an agent does
-// here records straight into a `@weft-js/core/test` test. Snapshots are the page's roles and names with refs, plus the reactive
-// graph with real names (@weft-js/core/devtools). The clock and the network are faked in the page, like @weft-js/core/test's `clock` and
+// Queries and actions are @kerf-js/core/test's own (Testing Library role/label/text queries, user-event), so what an agent does
+// here records straight into a `@kerf-js/core/test` test. Snapshots are the page's roles and names with refs, plus the reactive
+// graph with real names (@kerf-js/core/devtools). The clock and the network are faked in the page, like @kerf-js/core/test's `clock` and
 // `net`, for reconnect and timeout scenarios.
 
 import { getConfig, screen, within } from '@testing-library/dom'
@@ -220,7 +220,7 @@ function describeFor(el: Element, given?: Target): Query {
   return { by: 'ref', ref: ref(el) }
 }
 
-/** The recorded steps as a `@weft-js/core/test` test: role/label/text queries, user actions, clock and net, real assertions. */
+/** The recorded steps as a `@kerf-js/core/test` test: role/label/text queries, user actions, clock and net, real assertions. */
 export function code(steps: Step[] = recording.steps, o: CodeOptions = {}) {
   return buildCode(steps, o)
 }
@@ -309,18 +309,18 @@ export async function run(name: string, args: unknown = {}) {
   return (fn as (a: unknown) => unknown)(args ?? {})
 }
 
-type Page = Window & { __weft_agent__?: boolean; __weft__?: object }
+type Page = Window & { __kerf_agent__?: boolean; __kerf__?: object }
 
-if (typeof window !== 'undefined' && !(window as Page).__weft_agent__) {
-  ;(window as Page).__weft_agent__ = true
-  getConfig() // the queries are configured once, like @weft-js/core/test's
+if (typeof window !== 'undefined' && !(window as Page).__kerf_agent__) {
+  ;(window as Page).__kerf_agent__ = true
+  getConfig() // the queries are configured once, like @kerf-js/core/test's
   patchNetwork()
   patchConsole()
   listen(recording, () => quiet, log, describeFor)
-  if (sessionStorage.getItem('weft:clock') === 'paused') install()
+  if (sessionStorage.getItem('kerf:clock') === 'paused') install()
   const api = { snapshot, act, assert, record, clock, net, run, commands, within, version: 1 }
-  ;(window as Page).__weft__ = Object.assign((window as Page).__weft__ ?? {}, { agent: api })
-  // The dev server relays `weft browser` and MCP commands to this tab over Vite's own socket (vite.mjs).
+  ;(window as Page).__kerf__ = Object.assign((window as Page).__kerf__ ?? {}, { agent: api })
+  // The dev server relays `kerf browser` and MCP commands to this tab over Vite's own socket (vite.mjs).
   const hot = (
     import.meta as {
       hot?: {
@@ -330,10 +330,10 @@ if (typeof window !== 'undefined' && !(window as Page).__weft_agent__) {
     }
   ).hot
   if (hot) {
-    const tab = sessionStorage.getItem('weft:tab') ?? `t${Math.random().toString(36).slice(2, 8)}`
-    sessionStorage.setItem('weft:tab', tab)
+    const tab = sessionStorage.getItem('kerf:tab') ?? `t${Math.random().toString(36).slice(2, 8)}`
+    sessionStorage.setItem('kerf:tab', tab)
     const hello = () =>
-      hot.send('weft:hello', {
+      hot.send('kerf:hello', {
         tab,
         url: location.href,
         title: document.title,
@@ -347,11 +347,11 @@ if (typeof window !== 'undefined' && !(window as Page).__weft_agent__) {
     const relay = async (msg: { id: string; tab?: string; cmd: string; args: unknown }) => {
       if (msg.tab && msg.tab !== tab) return
       try {
-        hot.send('weft:reply', { id: msg.id, tab, ok: true, result: await run(msg.cmd, msg.args) })
+        hot.send('kerf:reply', { id: msg.id, tab, ok: true, result: await run(msg.cmd, msg.args) })
       } catch (e) {
-        hot.send('weft:reply', { id: msg.id, tab, ok: false, error: (e as Error).message })
+        hot.send('kerf:reply', { id: msg.id, tab, ok: false, error: (e as Error).message })
       }
     }
-    hot.on('weft:cmd', (msg: Parameters<typeof relay>[0]) => void relay(msg))
+    hot.on('kerf:cmd', (msg: Parameters<typeof relay>[0]) => void relay(msg))
   }
 }

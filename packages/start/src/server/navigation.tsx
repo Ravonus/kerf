@@ -1,5 +1,5 @@
-import { renderToStringAsync } from '@weft-js/core/ssr'
-import type { Merged } from '@weft-js/core/ssr'
+import { renderToStringAsync } from '@kerf-js/core/ssr'
+import type { Merged } from '@kerf-js/core/ssr'
 import type { RoutePayload, createRouteState } from '../router'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
@@ -26,7 +26,7 @@ export function makeNavigation({
 }) {
   /** The route as JSON for client navigation, with deferred fields awaited. */
   return async function data(path: string, request: Request, scope: Scope): Promise<Response> {
-    // Loads see the page's own URL, as on a full load, not `/_weft/data/<path>`: method, headers and signal carry over.
+    // Loads see the page's own URL, as on a full load, not `/_kerf/data/<path>`: method, headers and signal carry over.
     const r = await resolve(path, new Request(new URL(path, request.url), request))
     if (r.redirect) {
       const headers = new Headers(r.redirectHeaders)
@@ -63,7 +63,7 @@ export function makeNavigation({
         shown: (e) => exec.shown(e, scope),
         app: { cookies: cookieJar(request) },
       })
-      const at = out.lastIndexOf('<script type="application/json" data-weft>')
+      const at = out.lastIndexOf('<script type="application/json" data-kerf>')
       payload = {
         ...withLevels(payload, at < 0 ? out : out.slice(0, at), statics, true),
         ...(at >= 0 && {

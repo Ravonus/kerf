@@ -14,7 +14,7 @@ const { chromium } = createRequire(new URL('../../scripts/live-startup-e2e.mjs',
 )
 const { DIRECT, TX, SESSION } = process.env
 const fixture = fileURLToPath(new URL('../fixtures/live-db', import.meta.url))
-const bin = fileURLToPath(new URL('../../../cli/bin/weft.mjs', import.meta.url))
+const bin = fileURLToPath(new URL('../../../cli/bin/kerf.mjs', import.meta.url))
 const failed = []
 const check = (ok, what) => {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`)
@@ -36,7 +36,7 @@ if (!process.env.SKIP_BUILD) {
     {
       cwd: fileURLToPath(new URL('../..', import.meta.url)),
       stdio: 'inherit',
-      env: { ...process.env, WEFT_BUILD: '1' },
+      env: { ...process.env, KERF_BUILD: '1' },
     },
   )
   if (b.status) throw new Error('build failed')
@@ -87,7 +87,7 @@ async function boot(env) {
     await wait(100)
   }
   // oxlint-disable-next-line no-unmodified-loop-condition -- the child's handlers set `code` and `log` during the wait
-  for (let i = 0; i < 80 && code === undefined && !/weft live:/.test(log); i++) await wait(100) // the probe takes its 1.5 s
+  for (let i = 0; i < 80 && code === undefined && !/kerf live:/.test(log); i++) await wait(100) // the probe takes its 1.5 s
   await wait(300)
   return { child, base, log: () => log, code: () => code, stop: () => (child.kill(), wait(200)) }
 }
@@ -104,60 +104,60 @@ console.log(
     .find((l) => /R015/.test(l))
     ?.slice(0, 200),
 )
-check(!/weft@|:\/\/[^ ]*@/.test(s.log()), 'and prints no connection string')
+check(!/kerf@|:\/\/[^ ]*@/.test(s.log()), 'and prints no connection string')
 await s.stop()
 
 s = await boot({ DATABASE_URL: TX, LISTEN_URL: DIRECT })
 check(
-  s.code() === undefined && /weft live: feed/.test(s.log()),
+  s.code() === undefined && /kerf live: feed/.test(s.log()),
   `transaction pooler plus a direct listenUrl: ${s
     .log()
     .split('\n')
-    .find((l) => l.includes('weft live'))}`,
+    .find((l) => l.includes('kerf live'))}`,
 )
 await s.stop()
 
 s = await boot({ DATABASE_URL: SESSION })
 check(
-  s.code() === undefined && /weft live: feed/.test(s.log()),
+  s.code() === undefined && /kerf live: feed/.test(s.log()),
   `session pooler: ${s
     .log()
     .split('\n')
-    .find((l) => l.includes('weft live'))}`,
+    .find((l) => l.includes('kerf live'))}`,
 )
 await s.stop()
 
 await fresh(false)
 s = await boot({ DATABASE_URL: DIRECT })
 check(
-  s.code() === 1 && /R015/.test(s.log()) && /weft db live/.test(s.log()),
-  `no triggers: exits ${s.code()}, and says to run \`weft db live\``,
+  s.code() === 1 && /R015/.test(s.log()) && /kerf db live/.test(s.log()),
+  `no triggers: exits ${s.code()}, and says to run \`kerf db live\``,
 )
 await s.stop()
 
-await admin.unsafe(`drop role if exists weft_reader`).catch(() => {})
+await admin.unsafe(`drop role if exists kerf_reader`).catch(() => {})
 await admin.unsafe(
-  `create role weft_reader login; grant select, insert on notes to weft_reader; grant connect on database live to weft_reader`,
+  `create role kerf_reader login; grant select, insert on notes to kerf_reader; grant connect on database live to kerf_reader`,
 )
-s = await boot({ DATABASE_URL: DIRECT.replace(/\/\/[^@]*@/, '//weft_reader@') })
+s = await boot({ DATABASE_URL: DIRECT.replace(/\/\/[^@]*@/, '//kerf_reader@') })
 check(
   s.code() === 1 && /may create triggers/.test(s.log()),
   `a role with no TRIGGER: exits ${s.code()}, and says which permission`,
 )
 await s.stop()
 await admin.unsafe(
-  `revoke all on notes from weft_reader; revoke connect on database live from weft_reader; drop role weft_reader`,
+  `revoke all on notes from kerf_reader; revoke connect on database live from kerf_reader; drop role kerf_reader`,
 )
 
 // ---- an app with no feed of its own, and a listener in another process ----------------------------------------------
 await fresh()
 const app = await boot({ DATABASE_URL: DIRECT, LISTENER: 'external' })
 check(
-  /weft live: external/.test(app.log()),
+  /kerf live: external/.test(app.log()),
   `the app: ${app
     .log()
     .split('\n')
-    .find((l) => l.includes('weft live'))}`,
+    .find((l) => l.includes('kerf live'))}`,
 )
 const listener = () =>
   spawn(process.execPath, [bin, 'db', 'listen', '--root', fixture], {
@@ -172,8 +172,8 @@ side.stdout.on('data', (d) => {
 side.stderr.on('data', (d) => {
   said += d
 })
-for (let i = 0; i < 300 && !/weft live: feed/.test(said); i++) await wait(100)
-check(/weft live: feed/.test(said), 'the listener process has the feed')
+for (let i = 0; i < 300 && !/kerf live: feed/.test(said); i++) await wait(100)
+check(/kerf live: feed/.test(said), 'the listener process has the feed')
 const browser = await chromium.launch()
 const ctx = await browser.newContext()
 await ctx.addCookies([{ name: 'user', value: 'alice', url: app.base }])

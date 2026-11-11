@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   CountrySelect,
   Grid,
@@ -6,8 +6,8 @@ import {
   PhoneField,
   Stack,
   Text,
-} from '@weft-js/warp'
-import type { E164 } from '@weft-js/warp-core'
+} from '@kerf-js/veneer'
+import type { E164 } from '@kerf-js/veneer-core'
 
 import { Cell } from '../../world'
 
@@ -127,7 +127,7 @@ export const CountrySelectLimited = () => (
     label="Billing country"
     options={NEAR_COUNTRIES}
     defaultValue="SE"
-    hint="weft invoices in these three."
+    hint="kerf invoices in these three."
   />
 )
 

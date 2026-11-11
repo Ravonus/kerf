@@ -1,0 +1,9 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* branch switcher + message actions */
+:where([data-scope="branch"]) { display: inline-flex; align-items: center; gap: 0; font: 500 11.5px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="branch"] button) { all: unset; display: inline-grid; place-items: center; inline-size: max(24px, var(--veneer-target-min)); block-size: max(24px, var(--veneer-target-min)); border-radius: var(--veneer-radius-control); cursor: pointer; }
+:where([data-scope="branch"] button:hover) { background: var(--veneer-color-surface-hover); color: var(--veneer-color-text); }
+:where([data-scope="branch"] button:disabled) { opacity: var(--veneer-opacity-disabled); cursor: default; background: none; }
+:where([data-scope="branch"] button:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); }
+}

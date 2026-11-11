@@ -1,4 +1,4 @@
-// S001 and S012 in `weft check` (research 14 §3.1, §3.4, research 29 §4): server values copied into state, and
+// S001 and S012 in `kerf check` (research 14 §3.1, §3.4, research 29 §4): server values copied into state, and
 // `state.linked` over one with no `key`. X037: a resource or query made beside the `<Boundary>` meant to wait for it.
 // These need to know which imports are queries, so they read the server modules; the compiler sees one file at a time. TypeScript's parser only, no type checking, and a name's taint lasts for the
 // function it was declared in, so a same-named primitive elsewhere isn't flagged.
@@ -36,12 +36,12 @@ function importedQueries(root, rel, sf, cache) {
   return out
 }
 
-/** The local names `resource` is imported as from @weft-js/core. */
+/** The local names `resource` is imported as from @kerf-js/core. */
 const resourceNames = (sf) =>
   new Set(
     sf.statements.flatMap((n) =>
       ts.isImportDeclaration(n) &&
-      n.moduleSpecifier.text === '@weft-js/core' &&
+      n.moduleSpecifier.text === '@kerf-js/core' &&
       n.importClause?.namedBindings &&
       ts.isNamedImports(n.importClause.namedBindings)
         ? n.importClause.namedBindings.elements

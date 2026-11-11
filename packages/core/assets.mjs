@@ -1,7 +1,7 @@
-// Build-side slots in @weft-js/core/vite (research 26 §2–3): `?media` imports (`media.build@1`) and `weft:fonts`
-// (`font.build@1`). `weft plugins sync` writes `.weft/slots/<id>.build.json` for each bound build-side provider; this
+// Build-side slots in @kerf-js/core/vite (research 26 §2–3): `?media` imports (`media.build@1`) and `kerf:fonts`
+// (`font.build@1`). `kerf plugins sync` writes `.kerf/slots/<id>.build.json` for each bound build-side provider; this
 // imports the provider module in Node and serves or emits the files it returns. With no provider, `?media` still
-// gives dimensions (a header probe) and the fonts modules are empty. With a font build the client imports `weft:fonts`
+// gives dimensions (a header probe) and the fonts modules are empty. With a font build the client imports `kerf:fonts`
 // on its own: the entry a Start app boots from, or a script in an HTML app's page.
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
@@ -10,9 +10,9 @@ import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path
 import { pathToFileURL } from 'node:url'
 import { probe } from './media-probe.mjs'
 
-/** The provider bound to a build-side slot, instantiated from `.weft/slots/<id>.build.json`, or null. */
+/** The provider bound to a build-side slot, instantiated from `.kerf/slots/<id>.build.json`, or null. */
 export async function buildSlot(root, id) {
-  const file = join(root, '.weft', 'slots', `${id}.build.json`)
+  const file = join(root, '.kerf', 'slots', `${id}.build.json`)
   if (!existsSync(file)) return null
   const ref = JSON.parse(readFileSync(file, 'utf8'))
   const spec = isAbsolute(ref.module)
@@ -29,7 +29,7 @@ export async function buildSlot(root, id) {
 
 /** A `keyed` slot's build-side providers: `{ key: implementation }`. */
 export async function buildKeys(root, id) {
-  const file = join(root, '.weft', 'slots', `${id}.build.json`)
+  const file = join(root, '.kerf', 'slots', `${id}.build.json`)
   if (!existsSync(file)) return {}
   const keys = {}
   for (const [key, ref] of Object.entries(JSON.parse(readFileSync(file, 'utf8')).keys)) {
@@ -58,11 +58,11 @@ export function readSources(root) {
 }
 
 const MEDIA = /\?media(?:&audio=[^&]+)?$/
-const FONTS = 'weft:fonts'
-const PRELOADS = 'weft:fonts/preloads'
-const DEV_PREFIX = '/@weft-assets/'
+const FONTS = 'kerf:fonts'
+const PRELOADS = 'kerf:fonts/preloads'
+const DEV_PREFIX = '/@kerf-assets/'
 /** A Start app's client entry: the generated one, or its own `src/entry.client.ts`. */
-const CLIENT_ENTRY = /(?:^\0virtual:weft\/entry-client|[\\/]src[\\/]entry\.client\.[cm]?[jt]sx?)$/
+const CLIENT_ENTRY = /(?:^\0virtual:kerf\/entry-client|[\\/]src[\\/]entry\.client\.[cm]?[jt]sx?)$/
 
 /** Files the providers return: served from memory in dev, emitted under `assets/` in a build. */
 function fileStore() {
@@ -124,7 +124,7 @@ function original(file, bytes) {
   const size = probe(bytes, file)
   if (!size)
     throw new Error(
-      `${file}: not an image weft can read the size of (PNG, JPEG, GIF, WebP, AVIF, SVG). Video and audio need \`media()\` and \`mediaFfmpeg()\` in \`plugins\` (P101).`,
+      `${file}: not an image kerf can read the size of (PNG, JPEG, GIF, WebP, AVIF, SVG). Video and audio need \`media()\` and \`mediaFfmpeg()\` in \`plugins\` (P101).`,
     )
   const ext = extname(file)
   const name = `${basename(file, ext)}-${createHash('sha256').update(bytes).digest('hex').slice(0, 8)}${ext}`
@@ -159,7 +159,7 @@ export function assets() {
     return providers.get(id)
   }
   let encode
-  const fontBuild = () => existsSync(join(root, '.weft', 'slots', 'font.build.build.json'))
+  const fontBuild = () => existsSync(join(root, '.kerf', 'slots', 'font.build.build.json'))
   const buildFonts = fontBuilder(
     store,
     provider,
@@ -168,7 +168,7 @@ export function assets() {
   )
 
   return {
-    name: 'weft:assets',
+    name: 'kerf:assets',
     enforce: 'pre',
     configResolved(config) {
       root = config.root
@@ -187,14 +187,14 @@ export function assets() {
     },
     transformIndexHtml: fontHtml(fontBuild),
     resolveId(source) {
-      if (source === FONTS) return '\0weft:fonts.css'
+      if (source === FONTS) return '\0kerf:fonts.css'
       if (source === PRELOADS) return '\0' + PRELOADS
       return null
     },
     load: {
-      filter: { id: [MEDIA, /^\0weft:fonts/] },
+      filter: { id: [MEDIA, /^\0kerf:fonts/] },
       async handler(id) {
-        if (id === '\0weft:fonts.css') return (await buildFonts(this)).css
+        if (id === '\0kerf:fonts.css') return (await buildFonts(this)).css
         if (id === '\0' + PRELOADS)
           return `export const preloads = ${JSON.stringify((await buildFonts(this)).preloads)}\n`
         const file = id.replace(MEDIA, '')
@@ -211,7 +211,7 @@ export function assets() {
               {
                 root,
                 dev,
-                cacheDir: join(root, '.weft', 'cache', 'media'),
+                cacheDir: join(root, '.kerf', 'cache', 'media'),
                 url: (name) => name,
                 encode: await encode,
               },
@@ -226,21 +226,21 @@ export function assets() {
 function fontBuilder(store, provider, getRoot, getDev) {
   let fonts
   const fontEnvs = new Set()
-  /** Run font.build once per process; writes `.weft/fonts.json` (metrics and the budget report X022 reads). */
+  /** Run font.build once per process; writes `.kerf/fonts.json` (metrics and the budget report X022 reads). */
   return async (ctx) => {
     const out = await (fonts ??= (async () => {
       const p = await provider('font.build')
       if (!p) return { css: '', preloads: [], files: [] }
       const built = await p.impl.build({
         root: getRoot(),
-        cacheDir: join(getRoot(), '.weft', 'cache', 'fonts'),
+        cacheDir: join(getRoot(), '.kerf', 'cache', 'fonts'),
         url: (name) => store.url(name),
         dev: getDev(),
         source: getDev() ? '' : readSources(getRoot()),
       })
-      mkdirSync(join(getRoot(), '.weft'), { recursive: true })
+      mkdirSync(join(getRoot(), '.kerf'), { recursive: true })
       writeFileSync(
-        join(getRoot(), '.weft', 'fonts.json'),
+        join(getRoot(), '.kerf', 'fonts.json'),
         `${JSON.stringify({ plugin: p.plugin, metrics: built.metrics ?? {}, report: built.report ?? {} }, null, 2)}\n`,
       )
       return built

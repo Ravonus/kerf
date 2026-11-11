@@ -19,13 +19,13 @@ export function sheetLayout(count, { tileWidth, tileHeight, cols, gap = 4, label
 const DECODE = async (data) => {
   const bytes = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
   const tiles = await Promise.all(data.map((b64) => createImageBitmap(new Blob([bytes(b64)]))))
-  Object.assign(globalThis, { weftSheetTiles: tiles })
+  Object.assign(globalThis, { kerfSheetTiles: tiles })
   return tiles.map((t) => ({ width: t.width, height: t.height }))
 }
 
 /** Draws the decoded tiles at their cells, with captions, and returns the sheet as base64 PNG. */
 const DRAW = async (o) => {
-  const tiles = Reflect.get(globalThis, 'weftSheetTiles')
+  const tiles = Reflect.get(globalThis, 'kerfSheetTiles')
   const canvas = new OffscreenCanvas(o.layout.width, o.layout.height)
   const x = canvas.getContext('2d')
   x.fillStyle = o.background
@@ -49,7 +49,7 @@ const DRAW = async (o) => {
 
 /** Lays PNG or JPEG tiles on one PNG sheet, each at `width` px and the first tile's aspect. */
 export async function sheet(browser, tiles, options = {}) {
-  if (!tiles.length) throw new Error('weft capture: a sheet needs at least one tile')
+  if (!tiles.length) throw new Error('kerf capture: a sheet needs at least one tile')
   const page = await browser.newPage()
   try {
     const sizes = await page.evaluate(

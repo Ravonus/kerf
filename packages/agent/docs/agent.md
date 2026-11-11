@@ -1,10 +1,10 @@
 # Agent
 
-This is a plugin, `@weft-js/agent`, and nothing in weft names it. It gives an app an assistant that runs the site:
+This is a plugin, `@kerf-js/agent`, and nothing in kerf names it. It gives an app an assistant that runs the site:
 conversations you can rename, pin, archive and delete, tools that are your own server functions, grants per role and per
 token, usage per conversation and token, and bridges to Claude, the local Claude CLI or your own planner.
 
-`weft add agent` needs auth and a database. It writes:
+`kerf add agent` needs auth and a database. It writes:
 
 - `src/agent.server.ts`: `defineAgent({ store, bridges, system, roles, user })`, which turns the extension on;
 - `src/server/agent.ts`: the app's own queries, mutations and stream for conversations, turns, usage and tokens;
@@ -45,7 +45,7 @@ A function without `agent:` is never a tool, and an agent can't reach it by any 
 
 `roles` maps each role to what it may let the agent do:
 
-<!-- example: skip needs what `weft add agent` writes -->
+<!-- example: skip needs what `kerf add agent` writes -->
 
 ```ts
 export default defineAgent({
@@ -76,11 +76,11 @@ message with its text, calls and results. The scaffolded `turn` stream carries i
 
 | Bridge              | Import                     | Runs tools         | Available when             |
 | ------------------- | -------------------------- | ------------------ | -------------------------- |
-| `rustBridge()`      | `@weft-js/agent/rust`      | the loop runs them | the daemon polled in 90s   |
-| `anthropic()`       | `@weft-js/agent/anthropic` | the loop runs them | `ANTHROPIC_API_KEY` is set |
-| `claudeCli()`       | `@weft-js/agent/cli`       | itself, over MCP   | `claude` is on PATH        |
-| `fnBridge({ fn })`  | `@weft-js/agent/fn`        | the loop runs them | always                     |
-| `fakeBridge(lines)` | `@weft-js/agent/test`      | either             | always                     |
+| `rustBridge()`      | `@kerf-js/agent/rust`      | the loop runs them | the daemon polled in 90s   |
+| `anthropic()`       | `@kerf-js/agent/anthropic` | the loop runs them | `ANTHROPIC_API_KEY` is set |
+| `claudeCli()`       | `@kerf-js/agent/cli`       | itself, over MCP   | `claude` is on PATH        |
+| `fnBridge({ fn })`  | `@kerf-js/agent/fn`        | the loop runs them | always                     |
+| `fakeBridge(lines)` | `@kerf-js/agent/test`      | either             | always                     |
 
 A new conversation takes `AGENT_BRIDGE` (a bridge id) when that one can answer, else the first in `bridges` that can.
 Each conversation keeps its own and can swap at any time with `update({ bridge })`; when its bridge goes away (the
@@ -101,7 +101,7 @@ daemon long-polls it from outside, so the app can be deployed anywhere and the d
 name = "shop"
 url = "https://shop.example"
 token = "<the same token>"
-queues = ["/_weft/x/agent/bridges/rust/jobs"]
+queues = ["/_kerf/x/agent/bridges/rust/jobs"]
 ```
 
 The picker offers it while the daemon polls. `model` picks the daemon's route: `claude` (the default) is Claude first,
@@ -115,8 +115,8 @@ a local model, or a Rust sidecar with `impl: remote('rust://planner')`, which ge
 <!-- example: skip fragments of a server module -->
 
 ```ts
-import { bridgeInput, bridgeOutput } from '@weft-js/agent/fn'
-import { fnBridge } from '@weft-js/agent/fn'
+import { bridgeInput, bridgeOutput } from '@kerf-js/agent/fn'
+import { fnBridge } from '@kerf-js/agent/fn'
 
 export const planner = mutation({
   input: bridgeInput,
@@ -131,12 +131,12 @@ defineAgent({ bridges: [rustBridge(), anthropic(), house], … })
 
 ## Outside agents: MCP and tokens
 
-The app is an MCP server at `/_weft/x/agent/mcp` (Streamable HTTP, JSON answers). `createToken({ name, grants })`
+The app is an MCP server at `/_kerf/x/agent/mcp` (Streamable HTTP, JSON answers). `createToken({ name, grants })`
 returns a secret once. Give it to Claude Code, Codex or a script as `Authorization: Bearer <secret>`:
 
 ```bash
 claude mcp add --transport http shop \
-  https://example.com/_weft/x/agent/mcp \
+  https://example.com/_kerf/x/agent/mcp \
   --header "Authorization: Bearer wa_…"
 ```
 
@@ -155,8 +155,8 @@ Every bridge step records its model and input and output tokens, and every token
 <!-- example: skip test fragment -->
 
 ```ts
-import { memoryAgentStore } from '@weft-js/agent/server'
-import { fakeBridge } from '@weft-js/agent/test'
+import { memoryAgentStore } from '@kerf-js/agent/server'
+import { fakeBridge } from '@kerf-js/agent/test'
 
 const input = { item: 'latte', cents: 400 }
 const setPrice = { tool: 'setPrice', input }
@@ -181,7 +181,7 @@ Each line answers one step: words, a call or calls, or a function of the turn. `
 | AGENT004 | 422    | An empty message                                |
 | AGENT005 | 409    | A held call answered twice                      |
 | AGENT006 | 422    | A token with no grant its creator holds         |
-| AGENT007 | 403    | A token used outside `/_weft/x/agent/mcp`       |
+| AGENT007 | 403    | A token used outside `/_kerf/x/agent/mcp`       |
 | AGENT008 | 403    | A tool call reached a function without `agent:` |
 | AGENT009 | 403    | A tool call the grant doesn't allow             |
 | AGENT010 | 500    | `memoryAgentStore()` on a production server     |

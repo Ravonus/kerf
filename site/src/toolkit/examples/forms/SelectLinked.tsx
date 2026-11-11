@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Select, Stack, Text } from '@weft-js/warp'
+import { derived, state } from '@kerf-js/core'
+import { Select, Stack, Text } from '@kerf-js/veneer'
 import { PROJECTS } from '../../world'
 import { PROJECT_OPTIONS } from './shared'
 

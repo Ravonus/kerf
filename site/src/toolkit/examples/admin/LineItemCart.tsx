@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Card,
   LineItem,
   Stack,
   Text,
   Toaster,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { SHOP_CART } from '../../world'
 
 export function LineItemCart() {

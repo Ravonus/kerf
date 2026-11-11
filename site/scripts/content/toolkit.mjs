@@ -78,7 +78,7 @@ function toolkitPage({
     scope: c.scope,
     states: c.states,
     related,
-    importLine: codeBlock(`import { ${c.name} } from '@weft-js/warp'`, 'tsx'),
+    importLine: codeBlock(`import { ${c.name} } from '@kerf-js/veneer'`, 'tsx'),
     toc: heads,
     tile,
     prev: near(order[i - 1]),
@@ -89,7 +89,7 @@ function toolkitPage({
 function toolkitDetails({ facts, problems, blank, seen }, g, doc, found) {
   const c = facts.get(doc.component)
   if (!c) {
-    problems.push(`${doc.component}: not one of warp's exports`)
+    problems.push(`${doc.component}: not one of veneer's exports`)
     return
   }
   if (seen.has(c.name)) problems.push(`${c.name}: documented twice`)

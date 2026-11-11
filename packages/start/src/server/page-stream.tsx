@@ -1,5 +1,5 @@
 // The render's shell, incremental data, and remaining streamed chunks.
-import { metaTags, renderToStream } from '@weft-js/core/ssr'
+import { metaTags, renderToStream } from '@kerf-js/core/ssr'
 import { keyOf } from '../data'
 import * as exec from '../exec'
 import { hub } from '../hub'
@@ -63,7 +63,7 @@ export function render(p: PageState) {
 
 /** The head down to the fonts, after metadata is complete. */
 /**
- * A full load between pages that opt into cross-document view transitions (warp does) brings the browser's own
+ * A full load between pages that opt into cross-document view transitions (veneer does) brings the browser's own
  * transition. When the browser skips one ("invalid state"), its three promises reject, and the page reveals before the
  * runtime's module runs: so this listens from the head, on every page that has code. Chrome can also reject one the
  * page never sees (a skipped outgoing transition), so a rejection that says only that a transition was aborted or
@@ -122,9 +122,9 @@ export function pageShell(p: PageState, shape: ReturnType<typeof shaped>, after 
   return (
     `<div id="app">${p.stream.shell}</div>\n` +
     after +
-    `<script type="application/json" id="weft-route">${json(shape.payload)}</script>\n` +
+    `<script type="application/json" id="kerf-route">${json(shape.payload)}</script>\n` +
     (p.scope.form
-      ? `<script type="application/json" id="weft-form">${json(p.scope.form)}</script>\n`
+      ? `<script type="application/json" id="kerf-form">${json(p.scope.form)}</script>\n`
       : '') +
     // Async, and after all it reads, so it can run while the stream goes on.
     (shape.streaming
@@ -142,11 +142,11 @@ export async function finish(p: PageState, streaming: boolean) {
   // Read after the queries ran: the first live connect replays what is published from here.
   if (p.scope.live) await hub().ready()
   const liveScript = p.scope.live
-    ? `<script type="application/json" id="weft-rt">${json({ c: hub().cursor(), b: p.options.build })}</script>\n`
+    ? `<script type="application/json" id="kerf-rt">${json({ c: hub().cursor(), b: p.options.build })}</script>\n`
     : ''
   // A client that starts after this finds the whole page, as if it had never streamed.
   const stale = streaming
-    ? '<script>["weft-data","weft-cache"].forEach(function(i){(i=document.getElementById(i))&&i.remove()})</script>\n'
+    ? '<script>["kerf-data","kerf-cache"].forEach(function(i){(i=document.getElementById(i))&&i.remove()})</script>\n'
     : ''
   return (
     stale + dataTags(pageData(p.stream.data(), p.scope), cached) + liveScript + '</body>\n</html>\n'

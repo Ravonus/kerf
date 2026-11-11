@@ -1,4 +1,4 @@
-import { GaugeChart, Grid } from '@weft-js/warp'
+import { GaugeChart, Grid } from '@kerf-js/veneer'
 
 import { dollars as _Shared0 } from './shared-dollars'
 

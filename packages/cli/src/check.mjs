@@ -1,5 +1,5 @@
-// `weft check`: compile every project file in check mode, add the project view, the X-codes (text-checks.mjs), plugin
-// `check` hooks, the test T-codes, the config P-codes, the style D-codes (style.mjs) and the design D-codes (design-checks.mjs), and keep `.weft/styles.json`
+// `kerf check`: compile every project file in check mode, add the project view, the X-codes (text-checks.mjs), plugin
+// `check` hooks, the test T-codes, the config P-codes, the style D-codes (style.mjs) and the design D-codes (design-checks.mjs), and keep `.kerf/styles.json`
 // current when the project has style groups.
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -31,7 +31,7 @@ import { stateChecks } from './state-checks.mjs'
 import { serverStateChecks } from './server-state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
-import { loadCompiler, resolveWeft } from './weft.mjs'
+import { loadCompiler, resolveKerf } from './kerf.mjs'
 import { dbLayer } from './db-layer.mjs'
 import { loadEnv, routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
 import { deployChecks } from './deploy/index.mjs'
@@ -39,7 +39,7 @@ import { rustChecks, liveChecks, socketChecks, hygiene } from './check/runtime.m
 
 const posix = (p) => p.split('\\').join('/')
 
-/** Q015: the schema's hash against the one `weft db generate` recorded (research 28 §2). */
+/** Q015: the schema's hash against the one `kerf db generate` recorded (research 28 §2). */
 function schemaDrift(root, layer) {
   const schema = layer?.schema && join(root, layer.schema)
   if (!schema || !existsSync(schema)) return []
@@ -51,19 +51,19 @@ function schemaDrift(root, layer) {
       code: 'Q015',
       file: layer.schema,
       why: existsSync(file)
-        ? 'The schema changed since the last `weft db generate`: the database will not match it.'
+        ? 'The schema changed since the last `kerf db generate`: the database will not match it.'
         : 'No migrations yet: the first request that reads a table fails with Q014.',
     }),
   ]
 }
 
-/** I001–I003: the walk a build does (@weft-js/warp-icons/compile), when the project has the package. */
+/** I001–I003: the walk a build does (@kerf-js/veneer-icons/compile), when the project has the package. */
 async function iconChecks(root) {
   const require = createRequire(join(root, 'package.json'))
   let compile
   for (const from of [
-    () => require.resolve('@weft-js/warp-icons/compile'),
-    () => createRequire(require.resolve('@weft-js/warp')).resolve('@weft-js/warp-icons/compile'),
+    () => require.resolve('@kerf-js/veneer-icons/compile'),
+    () => createRequire(require.resolve('@kerf-js/veneer')).resolve('@kerf-js/veneer-icons/compile'),
   ]) {
     try {
       compile = from()
@@ -84,9 +84,9 @@ async function iconChecks(root) {
   )
 }
 
-/** H010: what the last build or `weft dev` found keeps an island from waiting (`.weft/hydration.json`, @weft-js/core/hydration). */
+/** H010: what the last build or `kerf dev` found keeps an island from waiting (`.kerf/hydration.json`, @kerf-js/core/hydration). */
 function hydrationChecks(root) {
-  const file = join(root, '.weft', 'hydration.json')
+  const file = join(root, '.kerf', 'hydration.json')
   if (!existsSync(file)) return []
   try {
     return JSON.parse(readFileSync(file, 'utf8'))
@@ -118,7 +118,7 @@ async function routeChecks(root, loaded, given, reported) {
     return []
   if (given?.length && !given.some((f) => f.startsWith('src/routes/'))) return []
   let inspect
-  // The routes run as they do under `weft dev`, so they get the same `.env` (an env schema throws without it).
+  // The routes run as they do under `kerf dev`, so they get the same `.env` (an env schema throws without it).
   loadEnv(root)
   try {
     inspect = await start(root, 'inspect')
@@ -202,7 +202,7 @@ async function collectDiagnostics({
 }) {
   const fontBuild =
     typeof loaded.slots['font.build'] === 'string' &&
-    !loaded.slots['font.build'].startsWith('weft:default')
+    !loaded.slots['font.build'].startsWith('kerf:default')
   const diagnostics = [
     ...loaded.diagnostics,
     ...(loaded.diagnostics.some((d) => d.code === 'P007') ? [] : trustDiagnostics(root, loaded)),
@@ -245,19 +245,19 @@ async function collectDiagnostics({
 export async function check(root, options = {}) {
   const started = performance.now()
   root = resolve(root)
-  const weft = resolveWeft(root)
-  const compiler = loadCompiler(weft)
+  const kerf = resolveKerf(root)
+  const compiler = loadCompiler(kerf)
   const loaded = await loadConfig(root)
   const { config } = loaded
   // Slot modules and plugin token files stay current with the config (research 13 §2.6).
   if (
     !loaded.diagnostics.some((d) => d.code === 'P007') &&
-    (config.plugins?.length || existsSync(join(root, '.weft', 'slots')))
+    (config.plugins?.length || existsSync(join(root, '.kerf', 'slots')))
   )
     sync(root, loaded)
 
   if (loaded.file && isDataConfig(loaded.file)) writeConfigSchema(root)
-  if (existsSync(join(root, '.weft'))) await writeMap(root)
+  if (existsSync(join(root, '.kerf'))) await writeMap(root)
 
   const exclude = [...(config.check?.exclude ?? []), ...(config.scope?.forbid ?? [])]
   const given = options.files?.map((f) => posix(relative(root, isAbsolute(f) ? f : join(root, f))))
@@ -270,10 +270,10 @@ export async function check(root, options = {}) {
     : discover(root, { include: config.test?.include ?? testGlobs, exclude })
 
   // Style groups (research 23): the project's definitions first, so each file compiles with the groups it imports.
-  const style = await styleModule(weft)
+  const style = await styleModule(kerf)
   const sfiles = style ? styleFiles(root, config) : []
   const scan = sfiles.some((f) =>
-    readFileSync(join(root, f), 'utf8').includes('@weft-js/core/style'),
+    readFileSync(join(root, f), 'utf8').includes('@kerf-js/core/style'),
   )
     ? style.scanProject(root, sfiles, (...a) => compiler.transform(...a))
     : null
@@ -305,13 +305,13 @@ export async function check(root, options = {}) {
     version: 1,
     ok: summary.errors === 0,
     root,
-    weft: { version: weft.version, from: weft.from, compiler: weft.compilerPath },
+    kerf: { version: kerf.version, from: kerf.from, compiler: kerf.compilerPath },
     config: loaded.file ? posix(relative(root, loaded.file)) : null,
     summary,
     diagnostics,
     slots: loaded.slots,
     styles: matrix
-      ? { groups: Object.keys(matrix.groups).length, matrix: '.weft/styles.json' }
+      ? { groups: Object.keys(matrix.groups).length, matrix: '.kerf/styles.json' }
       : null,
     files: rels,
     tests: testRels,

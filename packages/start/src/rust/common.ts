@@ -124,7 +124,7 @@ export async function settled(
     throw new StartError(
       'R106',
       `\`${target}\` refused \`${fn.$id}\`'s signature`,
-      '`WEFT_RUST_SECRET` must be the same on both sides, and the clocks within a minute',
+      '`KERF_RUST_SECRET` must be the same on both sides, and the clocks within a minute',
       { status: 503 },
     )
   if (error?.code === 'Deadline')
@@ -145,7 +145,7 @@ export async function settled(
     await declared(fn, { code: error.code, data: error.data })
   // The detail stays in a log, under this id: a sidecar's own, or this server's for what ran in this process.
   if (error?.detail)
-    console.error(`[weft] \`${fn.$id}\` failed (request ${error.requestId}): ${error.detail}`)
+    console.error(`[kerf] \`${fn.$id}\` failed (request ${error.requestId}): ${error.detail}`)
   throw new StartError(
     'R108',
     `\`${fn.$id}\` failed in \`${target}\` (request ${error?.requestId ?? 'unknown'})`,

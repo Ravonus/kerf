@@ -2,7 +2,7 @@ import { resolve } from 'node:path'
 
 /** Same spelling as `urlVariable` in rust.ts, which can't share a module with this one: it ships in the server bundle. */
 export const urlVariable = (service) =>
-  `WEFT_RUST_${service.toUpperCase().replaceAll('-', '_')}_URL`
+  `KERF_RUST_${service.toUpperCase().replaceAll('-', '_')}_URL`
 
 const external = (rust, service) => rust?.services?.[service]?.external === true
 /** The crate folder of a service. */

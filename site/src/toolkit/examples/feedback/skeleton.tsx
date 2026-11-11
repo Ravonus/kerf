@@ -3,7 +3,7 @@ import {
   onCleanup,
   resource,
   state,
-} from '@weft-js/core'
+} from '@kerf-js/core'
 import {
   Card,
   LiveStatus,
@@ -12,8 +12,8 @@ import {
   Skeleton,
   Stack,
   Text,
-} from '@weft-js/warp'
-import type { LiveState } from '@weft-js/warp'
+} from '@kerf-js/veneer'
+import type { LiveState } from '@kerf-js/veneer'
 import { PROJECTS } from '../../world'
 
 export const SkeletonLines = () => (

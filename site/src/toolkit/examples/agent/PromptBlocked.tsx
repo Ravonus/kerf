@@ -1,4 +1,4 @@
-import { Prompt } from '@weft-js/warp'
+import { Prompt } from '@kerf-js/veneer'
 
 export const PromptBlocked = () => (
   <Prompt

@@ -1,4 +1,4 @@
-import { CanvasStage } from '@weft-js/warp'
+import { CanvasStage } from '@kerf-js/veneer'
 import { lookStyle, Choose } from './stage-landing'
 import { LOOKS } from './looks'
 

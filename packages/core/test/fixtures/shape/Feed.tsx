@@ -1,6 +1,6 @@
 // Shape variants for test/shape.test.tsx: a list component in its own module, a row beside it and a page.
-import { resource, state, derived, untrack } from '@weft-js/core'
-import { Text } from '@weft-js/core/text'
+import { resource, state, derived, untrack } from '@kerf-js/core'
+import { Text } from '@kerf-js/core/text'
 import { Row } from './Row'
 
 export type Post = { id: number; title: string; body: string; pic?: string | undefined }

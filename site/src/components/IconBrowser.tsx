@@ -8,8 +8,8 @@ import {
   Tag,
   VirtualList,
   type SegmentedOption,
-} from '@weft-js/warp'
-import { derived, onCleanup, onMount, state } from '@weft-js/core'
+} from '@kerf-js/veneer'
+import { derived, onCleanup, onMount, state } from '@kerf-js/core'
 import files from '../generated/icons.json'
 
 type Tier = 'quiet' | 'balanced' | 'vivid'
@@ -97,19 +97,19 @@ function iconBrowserSheet(model: ReturnType<typeof iconBrowserState>) {
             <Tag>{t}</Tag>
             <span
               data-part="glyph"
-              // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+              // oxlint-disable-next-line kerf/no-html-sink -- this site's own icon set, wrapped in a fixed svg
               innerHTML={drawing(picked.value, 'hollow')}
             ></span>
             <span
               data-part="glyph"
-              // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+              // oxlint-disable-next-line kerf/no-html-sink -- this site's own icon set, wrapped in a fixed svg
               innerHTML={drawing(picked.value, 'solid')}
             ></span>
           </div>
         ))}
       </div>
       <Snippet
-        code={`import { ${pascal(picked.value)}Icon, ${pascal(picked.value)}IconSolid } from '@weft-js/warp-icons'`}
+        code={`import { ${pascal(picked.value)}Icon, ${pascal(picked.value)}IconSolid } from '@kerf-js/veneer-icons'`}
       />
     </Modal>
   )
@@ -118,7 +118,7 @@ function iconBrowserSheet(model: ReturnType<typeof iconBrowserState>) {
 // The size is a custom property, not a data-size rule: the build's purge keeps `[data-size=…]` rules only for values it
 // finds as words in the output, and these come from a control, so in a build every size drew at 16px.
 /** All the icons, and one attribute between tiers: the set is drawings in one file, loaded with the first look. */
-/* @weft client */
+/* @kerf client */
 export function IconBrowser() {
   // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let box!: HTMLDivElement
@@ -183,7 +183,7 @@ export function IconBrowser() {
               >
                 <span
                   data-part="glyph"
-                  // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+                  // oxlint-disable-next-line kerf/no-html-sink -- this site's own icon set, wrapped in a fixed svg
                   innerHTML={drawing(n, form.value)}
                 ></span>
                 <span data-part="name">

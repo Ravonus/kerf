@@ -36,8 +36,8 @@ export function attachBoxes({
       if (DEV && !features.persist)
         throw new StateError(
           'S008',
-          `\`${def.name}\` persists a box, but @weft-js/core/persist isn't loaded`,
-          "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/persist'`",
+          `\`${def.name}\` persists a box, but @kerf-js/core/persist isn't loaded`,
+          "the kerf() Vite plugin adds it; without the plugin, `import '@kerf-js/core/persist'`",
         )
       if (DEV && !name)
         throw new StateError(
@@ -52,8 +52,8 @@ export function attachBoxes({
       if (DEV && !features.sync)
         throw new StateError(
           'S008',
-          `\`${def.name}\` syncs a box, but @weft-js/core/sync isn't loaded`,
-          "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/sync'`",
+          `\`${def.name}\` syncs a box, but @kerf-js/core/sync isn't loaded`,
+          "the kerf() Vite plugin adds it; without the plugin, `import '@kerf-js/core/sync'`",
         )
       if (DEV && !name)
         throw new StateError(

@@ -1,4 +1,4 @@
-import { Treemap } from '@weft-js/warp'
+import { Treemap } from '@kerf-js/veneer'
 
 import { PROJECT_TREE } from '../../world'
 

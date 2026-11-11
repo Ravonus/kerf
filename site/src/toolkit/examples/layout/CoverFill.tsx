@@ -1,4 +1,4 @@
-import { Cover } from '@weft-js/warp'
+import { Cover } from '@kerf-js/veneer'
 import { Box, FILL } from './shared'
 
 export const CoverFill = () => (

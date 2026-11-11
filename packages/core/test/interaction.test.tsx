@@ -1,6 +1,6 @@
 // Research 45: boxes, one row per key, and what reaches the line.
-import { createRoot, flush, watch } from '@weft-js/core'
-import { bitsOf, interaction, seams } from '@weft-js/core/interaction'
+import { createRoot, flush, watch } from '@kerf-js/core'
+import { bitsOf, interaction, seams } from '@kerf-js/core/interaction'
 
 afterEach(() => {
   seams.line = undefined

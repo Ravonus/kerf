@@ -1,5 +1,5 @@
-import { derived } from '@weft-js/core'
-import { Bell, Inbox, Toaster } from '@weft-js/warp'
+import { derived } from '@kerf-js/core'
+import { Bell, Inbox, Toaster } from '@kerf-js/veneer'
 import { useInbox } from './shared'
 
 export function BellWithInbox() {

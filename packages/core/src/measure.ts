@@ -4,10 +4,10 @@
 // reactive calls over it. Until the engine is here a box is null, and with no provider bound it stays null, so a caller
 // keeps working on whatever it did before it had an exact height.
 
-import { derived, effect, onCleanup, state, untrack, type Derived, type State } from '@weft-js/core'
-import { rt } from '@weft-js/core/internal'
+import { derived, effect, onCleanup, state, untrack, type Derived, type State } from '@kerf-js/core'
+import { rt } from '@kerf-js/core/internal'
 
-/** `text.measure@1` (research 33 §6), what `weft:slot/text.measure` loads. */
+/** `text.measure@1` (research 33 §6), what `kerf:slot/text.measure` loads. */
 export interface MeasureProvider {
   prepare(
     text: string,
@@ -43,7 +43,7 @@ let loading: Promise<MeasureProvider> | undefined
 export function loadMeasure(): Promise<MeasureProvider> {
   const test = rt.slots?.['text.measure'] as MeasureProvider | undefined
   if (test) return Promise.resolve(test)
-  return (loading ??= import('weft:slot/text.measure').then(
+  return (loading ??= import('kerf:slot/text.measure').then(
     (m) => m.load() as Promise<MeasureProvider>,
   ))
 }

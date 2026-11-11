@@ -1,0 +1,33 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="inbox"][data-part="root"]) {
+  container: inbox / inline-size; position: relative;
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; min-block-size: 0; max-block-size: 100%;
+  background: var(--veneer-color-surface-overlay); color: var(--veneer-color-text);
+}
+:where([data-scope="inbox"][data-variant="popover"]) {
+  inline-size: min(400px, 100%); border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-3), 0 0 0 1px var(--veneer-color-border);
+  overflow: clip;
+}
+:where([data-scope="inbox"] [data-part="header"]:not([data-scope="inbox"] :is([data-scope="dialog"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"],[data-scope="shell"]) *:not([data-scope="inbox"] :is([data-scope="dialog"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"],[data-scope="shell"]) [data-scope="inbox"] *))) { display: flex; align-items: center; gap: var(--veneer-space-related); padding: 14px var(--veneer-space-group) 6px; }
+:where([data-scope="inbox"] [data-part="header"]:not([data-scope="inbox"] :is([data-scope="dialog"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"],[data-scope="shell"]) *:not([data-scope="inbox"] :is([data-scope="dialog"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"],[data-scope="shell"]) [data-scope="inbox"] *)) h3) { flex: 1; margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.2 var(--veneer-text-heading-font); }
+:where([data-scope="inbox"] [data-part="panel"]:not([data-scope="inbox"] :is([data-scope="artifact"],[data-scope="auth"],[data-scope="sidenav"]) *:not([data-scope="inbox"] :is([data-scope="artifact"],[data-scope="auth"],[data-scope="sidenav"]) [data-scope="inbox"] *))) { display: grid; grid-template-rows: minmax(0, 1fr); min-block-size: 0; }
+:where([data-scope="inbox"] [data-scope="tabs"]) { padding-inline: var(--veneer-space-group); }
+:where([data-scope="inbox"] [data-part="list"]:not([data-scope="inbox"] :is([data-scope="master-detail"],[data-scope="palette"],[data-scope="select"]) *:not([data-scope="inbox"] :is([data-scope="master-detail"],[data-scope="palette"],[data-scope="select"]) [data-scope="inbox"] *))) { overflow: auto; overscroll-behavior: contain; margin: 0; padding: 0 0 var(--veneer-space-related); list-style: none; }
+:where([data-scope="inbox"] [data-part="group"]:not([data-scope="inbox"] :is([data-scope="call-controls"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) *:not([data-scope="inbox"] :is([data-scope="call-controls"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) [data-scope="inbox"] *))) {
+  position: sticky; inset-block-start: 0; z-index: 2; padding: 12px var(--veneer-space-group) 6px; background: var(--veneer-color-surface-overlay);
+  font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); letter-spacing: var(--veneer-text-eyebrow-tracking);
+  text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle); font-weight: 500;
+}
+:where([data-scope="inbox"] [data-part="footer"]:not([data-scope="inbox"] :is([data-scope="dialog"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="inbox"] :is([data-scope="dialog"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="inbox"] *))) { display: flex; justify-content: space-between; align-items: center; padding: 8px var(--veneer-space-group); border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border); font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+/* "N new" pill when the list is scrolled and items arrive above */
+:where([data-scope="inbox"] [data-part="new-pill"]) {
+  position: absolute; inset-inline-start: 50%; translate: -50% 0; inset-block-start: 112px; z-index: 3;
+  animation: veneer-arrive var(--veneer-arrive-duration) var(--veneer-ease-out);
+}
+:where([data-scope="inbox"] [role="tab"]) { min-inline-size: var(--veneer-hit-min); justify-content: center; }
+:where([data-scope="inbox"] [data-part="footer"]:not([data-scope="inbox"] :is([data-scope="dialog"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="inbox"] :is([data-scope="dialog"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="inbox"] *)) a) { display: inline-flex; align-items: center; min-block-size: var(--veneer-hit-min); }
+@keyframes veneer-arrive {
+  from { opacity: 0; translate: 0 calc(var(--veneer-motion-distance) * -1); }
+}
+}

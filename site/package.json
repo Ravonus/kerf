@@ -1,30 +1,30 @@
 {
-  "name": "weft-site",
+  "name": "kerf-site",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "weft run content && weft dev --port 3300",
-    "build": "node ../benchmarks/arena/build.mjs && weft run content && weft build",
-    "check": "weft check",
-    "start": "weft start",
-    "content": "weft run content"
+    "dev": "kerf run content && kerf dev --port 3300",
+    "build": "node ../benchmarks/arena/build.mjs && kerf run content && kerf build",
+    "check": "kerf check",
+    "start": "kerf start",
+    "content": "kerf run content"
   },
   "dependencies": {
-    "@weft-js/warp-icons": "workspace:*",
-    "@weft-js/start": "workspace:*",
-    "@weft-js/warp": "workspace:*",
-    "@weft-js/warp-core": "workspace:*",
-    "@weft-js/core": "workspace:*",
+    "@kerf-js/veneer-icons": "workspace:*",
+    "@kerf-js/start": "workspace:*",
+    "@kerf-js/veneer": "workspace:*",
+    "@kerf-js/veneer-core": "workspace:*",
+    "@kerf-js/core": "workspace:*",
     "zod": "^4.6.7",
-    "@weft-js/scroll": "workspace:*"
+    "@kerf-js/scroll": "workspace:*"
   },
   "devDependencies": {
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
-    "@weft-js/cli": "workspace:*",
-    "@weft-js/text": "workspace:*",
+    "@kerf-js/cli": "workspace:*",
+    "@kerf-js/text": "workspace:*",
     "typescript": "7.0.2"
   }
 }

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Card, Input } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Card, Input } from '@kerf-js/veneer'
 
 export default function Artwork() {
   const piece = state({

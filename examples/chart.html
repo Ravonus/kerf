@@ -85,7 +85,7 @@ function trend(host, keys, lines, get, unit, color, app) {
 }
 
 const TYPES = [['js', 'JS', '--p1'], ['css', 'CSS', '--p2'], ['html', 'HTML', '--p3'], ['font', 'Fonts', '--p4']]
-const GROUPS = ['runtime', 'router', 'data', 'warp', 'kit', 'app', 'other', 'wrapper', 'unmapped'], GROUP_COLOR = g => (GROUPS.indexOf(g) > 5 ? 'var(--p4)' : `var(--s${GROUPS.indexOf(g) + 1})`)
+const GROUPS = ['runtime', 'router', 'data', 'veneer', 'kit', 'app', 'other', 'wrapper', 'unmapped'], GROUP_COLOR = g => (GROUPS.indexOf(g) > 5 ? 'var(--p4)' : `var(--s${GROUPS.indexOf(g) + 1})`)
 const PANELS = ['mobile.score', 'desktop.score', 'mobile.lcp', 'throttled.lcp', 'mobile.fcp', 'mobile.tbt', 'mobile.cls', 'mobile.si', 'browser.hydrate', 'browser.heap', 'browser.nodes', 'server.rps', 'server.rpsPlain', 'server.p95']
 
 function renderPage(body, name, app, path) {

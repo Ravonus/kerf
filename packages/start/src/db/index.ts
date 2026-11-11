@@ -1,4 +1,4 @@
-// `@weft-js/start/db`: what doesn't depend on the driver (research 28 §2). `schemasOf(schema).todos.insert` is a Zod
+// `@kerf-js/start/db`: what doesn't depend on the driver (research 28 §2). `schemasOf(schema).todos.insert` is a Zod
 // schema per table, so a table is its own validator: `input: schemas.todos.insert.pick({ title: true })`.
 
 import { getTableName, isTable, type Table } from 'drizzle-orm'

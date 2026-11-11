@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url)
 const { boxMismatch, withBoxProps } = require('../src/infer/box-props.cjs')
 const { Session } = require('../src/infer/session.cjs')
 const prefix = `
-import { state, derived, type State, type Derived } from '@weft-js/core';
+import { state, derived, type State, type Derived } from '@kerf-js/core';
 declare function Value(props: { n: number }): JSX.Element;
 declare function Box(props: { n: State<number> }): JSX.Element;
 declare function ReadonlyBox(props: { n: Derived<number> }): JSX.Element;
@@ -107,18 +107,18 @@ describe('W008 aliases and quiet cases', () => {
 
   it('follows import, namespace, type and component aliases', () => {
     expect(
-      codes(`import * as core from '@weft-js/core';
+      codes(`import * as core from '@kerf-js/core';
       type Counter = core.State<number>;
       declare function Card(props: { n: number }): JSX.Element;
       const Alias = Card; const n: Counter = core.state(1); const a = <Alias n={n} />`),
     ).toEqual(['W008'])
     const result = findings(
-      `import { state as make } from '@weft-js/core';
+      `import { state as make } from '@kerf-js/core';
       import type { Counter } from './types';
       declare function Card(props: { n: Counter<number> }): JSX.Element;
       const n = make(1); const a = <Card n={n.value} />`,
       {
-        '/app/types.ts': "export type { State as Counter } from '@weft-js/core';",
+        '/app/types.ts': "export type { State as Counter } from '@kerf-js/core';",
       },
     )
     expect(result).toMatchObject([{ code: 'W008' }])
@@ -126,12 +126,12 @@ describe('W008 aliases and quiet cases', () => {
 
   it('preserves missing type arguments on re-exported core aliases', () => {
     const result = findings(
-      `import { state as make } from '@weft-js/core';
+      `import { state as make } from '@kerf-js/core';
       import type { Counter } from './types';
       declare function Card(props: { n: Counter }): JSX.Element;
       const n = make(1); const a = <Card n={n.value} />`,
       {
-        '/app/types.ts': "export type { State as Counter } from '@weft-js/core';",
+        '/app/types.ts': "export type { State as Counter } from '@kerf-js/core';",
       },
     )
     expect(result).toEqual([{ code: 'TS2314' }])
@@ -144,9 +144,9 @@ describe('W008 aliases and quiet cases', () => {
       `${prefix} const plain = { value: 1 }; const a = <Value n={plain} />`,
       `${prefix} type ValueOnly = { [K in 'value']: State<number>[K] };
        declare function Partial(props: { n: ValueOnly }): JSX.Element; const a = <Partial n={1} />`,
-      `import { state } from '@weft-js/core'; type State<T> = { value: T };
+      `import { state } from '@kerf-js/core'; type State<T> = { value: T };
        declare function Card(props: { n: State<number> }): JSX.Element; const a = <Card n={1} />`,
-      `import { state } from '@weft-js/core'; type Derived<T> = { value: T };
+      `import { state } from '@kerf-js/core'; type Derived<T> = { value: T };
        declare function Card(props: { n: number }): JSX.Element;
        const fake: Derived<number> = { value: 1 }; const a = <Card n={fake} />`,
     ])
@@ -171,7 +171,7 @@ describe('W008 project and host checks', () => {
   })
 
   it('checks explicitly typed projects and clears a repaired finding after an edit', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'weft-box-props-'))
+    const root = mkdtempSync(join(tmpdir(), 'kerf-box-props-'))
     const file = join(root, 'App.tsx')
     writeFileSync(
       join(root, 'tsconfig.json'),
@@ -213,7 +213,7 @@ describe('W008 project and host checks', () => {
     const host = withBoxProps({ diagnostics: () => raw, update() {}, close() {} }, () => {
       started++
       return {
-        diagnostics: () => [{ code: 2322, start: 10, weft: { code: 'W008' } }],
+        diagnostics: () => [{ code: 2322, start: 10, kerf: { code: 'W008' } }],
         update() {},
         close() {
           closed++
@@ -221,7 +221,7 @@ describe('W008 project and host checks', () => {
       }
     })
     expect(started).toBe(0)
-    expect(host.diagnostics('App.tsx')[0].weft.code).toBe('W008')
+    expect(host.diagnostics('App.tsx')[0].kerf.code).toBe('W008')
     expect(host.diagnostics('App.tsx')[1]).toEqual(raw[1])
     expect(started).toBe(1)
     host.close()

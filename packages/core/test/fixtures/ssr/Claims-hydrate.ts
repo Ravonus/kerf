@@ -11,4 +11,4 @@ export {
   Rows,
   Twice,
   Wrong,
-} from './Claims.tsx?weft-hydrate'
+} from './Claims.tsx?kerf-hydrate'

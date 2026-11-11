@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/realtime-webrtc</h1>
+<h1 align="center">@kerf-js/realtime-webrtc</h1>
 
 <p align="center">
   <strong>Live cursors browser to browser, over WebRTC data channels.</strong><br>
@@ -12,24 +12,24 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/realtime-webrtc"><img src="https://img.shields.io/npm/v/@weft-js/realtime-webrtc?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf-js/realtime-webrtc"><img src="https://img.shields.io/npm/v/@kerf-js/realtime-webrtc?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
-A cursor transport for [`@weft-js/multiplayer`](https://www.npmjs.com/package/@weft-js/multiplayer) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/multiplayer)</sup>. By
+A cursor transport for [`@kerf-js/multiplayer`](https://www.npmjs.com/package/@kerf-js/multiplayer) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/multiplayer)</sup>. By
 default cursors go through your server over the channel's socket. With `webrtc()`, each browser opens a data channel to
 every other one and sends its cursor directly. Offers and ICE candidates go through the channel, so a frame's sender is
 the peer the server named when the connection was made. There is no extra service to run, only STUN, and TURN when
@@ -53,32 +53,32 @@ peers are on different networks.
 
 ```bash
 # npm
-npm install @weft-js/multiplayer @weft-js/realtime-webrtc
+npm install @kerf-js/multiplayer @kerf-js/realtime-webrtc
 
 # pnpm
-pnpm add @weft-js/multiplayer @weft-js/realtime-webrtc
+pnpm add @kerf-js/multiplayer @kerf-js/realtime-webrtc
 
 # bun
-bun add @weft-js/multiplayer @weft-js/realtime-webrtc
+bun add @kerf-js/multiplayer @kerf-js/realtime-webrtc
 ```
 
-Or install `@weft-js/multiplayer`, then let the `weft` CLI install this package and add its plugin to
-`weft.config.ts`:
+Or install `@kerf-js/multiplayer`, then let the `kerf` CLI install this package and add its plugin to
+`kerf.config.ts`:
 
 ```bash
-npm install @weft-js/multiplayer
-npx weft add realtime-webrtc
+npm install @kerf-js/multiplayer
+npx kerf add realtime-webrtc
 ```
 
-`@weft-js/multiplayer` is a peer dependency, so add it too. The package has no runtime dependencies: it uses the
+`@kerf-js/multiplayer` is a peer dependency, so add it too. The package has no runtime dependencies: it uses the
 browser's `RTCPeerConnection`.
 
-`weft add` puts its plugin in `weft.config.ts`:
+`kerf add` puts its plugin in `kerf.config.ts`:
 
 ```ts
-// weft.config.ts
-import { defineConfig } from '@weft-js/core/config'
-import realtimeWebrtc from '@weft-js/realtime-webrtc/plugin'
+// kerf.config.ts
+import { defineConfig } from '@kerf-js/core/config'
+import realtimeWebrtc from '@kerf-js/realtime-webrtc/plugin'
 
 export default defineConfig({
   plugins: [realtimeWebrtc()],
@@ -105,8 +105,8 @@ The channel needs nothing extra: signalling uses the `mp.signal` message `multip
 
 ```ts
 // src/server/doc.ts
-import { channel } from '@weft-js/start'
-import { multiplayer } from '@weft-js/multiplayer/server'
+import { channel } from '@kerf-js/start'
+import { multiplayer } from '@kerf-js/multiplayer/server'
 import { z } from 'zod'
 
 const mp = multiplayer<{ id: string }>({
@@ -125,9 +125,9 @@ export const doc = channel({
 
 ```tsx
 // src/routes/room.tsx
-import { cursors, presence } from '@weft-js/multiplayer'
-import { Cursors } from '@weft-js/multiplayer/ui'
-import { webrtc } from '@weft-js/realtime-webrtc'
+import { cursors, presence } from '@kerf-js/multiplayer'
+import { Cursors } from '@kerf-js/multiplayer/ui'
+import { webrtc } from '@kerf-js/realtime-webrtc'
 import { doc } from '#/server/doc'
 
 export default function Room() {
@@ -151,7 +151,7 @@ export default function Room() {
 ## How it works
 
 1. When `presence` learns this connection's id, it opens the transport. For each peer in the room, it creates an
-   `RTCPeerConnection`. The peer with the lower id creates the data channel, named `weft`.
+   `RTCPeerConnection`. The peer with the lower id creates the data channel, named `kerf`.
 2. Offers, answers and ICE candidates are sent with `signal(to, data)`, which goes through the channel as
    `mp.signal`. The server stamps each with its sender and forwards it to that one peer only.
 3. A signal from a connection that isn't in the room, or that isn't an object, is ignored. A bad offer or candidate
@@ -162,7 +162,7 @@ export default function Room() {
 
 ## API reference
 
-### `@weft-js/realtime-webrtc`
+### `@kerf-js/realtime-webrtc`
 
 `webrtc(options?): PeerTransport`: the transport, for `presence(conn, { transport })`.
 
@@ -173,18 +173,18 @@ export default function Room() {
 
 Type: `WebRtcOptions`.
 
-### `@weft-js/realtime-webrtc/plugin`
+### `@kerf-js/realtime-webrtc/plugin`
 
-The plugin for `weft.config.ts`, as a default export and as the named export `webrtc`. Import the default, or rename
+The plugin for `kerf.config.ts`, as a default export and as the named export `webrtc`. Import the default, or rename
 the named one, so it doesn't clash with the transport of the same name.
 
 ## Limits
 
-- Only cursors ride WebRTC. Presence state, `@weft-js/multiplayer`'s relay events and signalling stay on the channel,
+- Only cursors ride WebRTC. Presence state, `@kerf-js/multiplayer`'s relay events and signalling stay on the channel,
   where the server checks them.
 - One connection per pair of peers, so cost grows with the square of the room's size. Above `max` (8) the room stays
   on the socket.
-- A signal is up to 16384 bytes of JSON (`@weft-js/multiplayer`'s limit), and a frame under 1024 characters.
+- A signal is up to 16384 bytes of JSON (`@kerf-js/multiplayer`'s limit), and a frame under 1024 characters.
 - It needs a browser. During server rendering nothing is opened.
 
 ## Troubleshooting
@@ -194,28 +194,28 @@ the named one, so it doesn't clash with the transport of the same name.
 | `via` stays `'socket'` on different networks | No STUN, so peers can't find a path. | Add a STUN server to `iceServers`. |
 | `via` stays `'socket'` for some users | A strict NAT or firewall blocks direct paths. | Add a TURN server. |
 | `via` stays `'socket'` in a big room | More than `max` peers. | Expected: raise `max` only if each browser can hold that many connections. |
-| `weft check` stops after `weft add` | A newly added plugin's permissions must be approved. | `weft plugins approve @weft-js/realtime-webrtc`. |
+| `kerf check` stops after `kerf add` | A newly added plugin's permissions must be approved. | `kerf plugins approve @kerf-js/realtime-webrtc`. |
 
 ## Related packages
 
 | Package | What it is |
 | ------- | ---------- |
-| [`@weft-js/multiplayer`](https://www.npmjs.com/package/@weft-js/multiplayer) | Presence, cursors and the relay that this transport carries cursors for. |
-| [`@weft-js/realtime-livekit`](https://www.npmjs.com/package/@weft-js/realtime-livekit) | Cursors over a LiveKit room, which also carries audio and video. |
-| [`@weft-js/realtime-socketio`](https://www.npmjs.com/package/@weft-js/realtime-socketio) | Cursors through a Socket.IO relay you run. |
-| [`@weft-js/realtime-redis`](https://www.npmjs.com/package/@weft-js/realtime-redis) | A `realtime.bus` over Redis: how server instances reach each other, not a cursor transport. |
-| [`@weft-js/realtime-nats`](https://www.npmjs.com/package/@weft-js/realtime-nats) | A `realtime.bus` over NATS. |
-| [`@weft-js/realtime-durable-object`](https://www.npmjs.com/package/@weft-js/realtime-durable-object) | A `realtime.bus` on Cloudflare Durable Objects. |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core) | The compiler and reactive runtime, the Vite plugin, the plugin system and test utilities. |
-| [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start) | The full-stack runtime: routes, server functions, `channel`, `realtime()` and the realtime hub. |
+| [`@kerf-js/multiplayer`](https://www.npmjs.com/package/@kerf-js/multiplayer) | Presence, cursors and the relay that this transport carries cursors for. |
+| [`@kerf-js/realtime-livekit`](https://www.npmjs.com/package/@kerf-js/realtime-livekit) | Cursors over a LiveKit room, which also carries audio and video. |
+| [`@kerf-js/realtime-socketio`](https://www.npmjs.com/package/@kerf-js/realtime-socketio) | Cursors through a Socket.IO relay you run. |
+| [`@kerf-js/realtime-redis`](https://www.npmjs.com/package/@kerf-js/realtime-redis) | A `realtime.bus` over Redis: how server instances reach each other, not a cursor transport. |
+| [`@kerf-js/realtime-nats`](https://www.npmjs.com/package/@kerf-js/realtime-nats) | A `realtime.bus` over NATS. |
+| [`@kerf-js/realtime-durable-object`](https://www.npmjs.com/package/@kerf-js/realtime-durable-object) | A `realtime.bus` on Cloudflare Durable Objects. |
+| [`@kerf-js/core`](https://www.npmjs.com/package/@kerf-js/core) | The compiler and reactive runtime, the Vite plugin, the plugin system and test utilities. |
+| [`@kerf-js/start`](https://www.npmjs.com/package/@kerf-js/start) | The full-stack runtime: routes, server functions, `channel`, `realtime()` and the realtime hub. |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). From the repository,
-`pnpm --filter @weft-js/realtime-webrtc test` runs what holds without a browser. `RTCPeerConnection` needs one, so the
-real check is `@weft-js/multiplayer`'s end-to-end test with `--via webrtc`, which runs two Chromium contexts in one
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). From the repository,
+`pnpm --filter @kerf-js/realtime-webrtc test` runs what holds without a browser. `RTCPeerConnection` needs one, so the
+real check is `@kerf-js/multiplayer`'s end-to-end test with `--via webrtc`, which runs two Chromium contexts in one
 room.
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

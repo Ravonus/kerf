@@ -1,4 +1,4 @@
-import { CandlestickChart } from '@weft-js/warp'
+import { CandlestickChart } from '@kerf-js/veneer'
 
 import { LATENCY_DAYS } from '../../world'
 

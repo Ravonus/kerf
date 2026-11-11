@@ -71,7 +71,7 @@ export function shapeWatch(forget) {
       const { byShape, byFile } = state
       if (type === 'delete') {
         for (const id of byShape.keys()) {
-          if (key(id.replace(/\?weft-shape$/, '')) === key(file)) remove(state, id)
+          if (key(id.replace(/\?kerf-shape$/, '')) === key(file)) remove(state, id)
         }
       }
       const path = key(file)

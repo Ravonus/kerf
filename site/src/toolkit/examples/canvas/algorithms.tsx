@@ -1,4 +1,4 @@
-import { Grid, Stack, Dither, Text } from '@weft-js/warp'
+import { Grid, Stack, Dither, Text } from '@kerf-js/veneer'
 import { SOFT } from './paint-primitives'
 
 export const ALGORITHMS = [

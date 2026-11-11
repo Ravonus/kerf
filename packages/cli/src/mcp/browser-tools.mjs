@@ -19,12 +19,12 @@ const target = {
   ],
 }
 
-/** The `weft browser` commands as tools. The page is the app open in any browser; the dev server relays to it. */
+/** The `kerf browser` commands as tools. The page is the app open in any browser; the dev server relays to it. */
 export function browserTools() {
   const tab = {
     url: {
       type: 'string',
-      description: 'Dev server URL (default: .weft/dev.json, then environments.dev.url)',
+      description: 'Dev server URL (default: .kerf/dev.json, then environments.dev.url)',
     },
     tab: {
       type: 'string',
@@ -43,7 +43,7 @@ export function browserTools() {
   return [
     t(
       'browser_tabs',
-      "Tabs of the app connected to the dev server. Any browser works (yours, the person's); with none, call browser_launch. If your own browser can run JS, `await __weft__.agent.run(command, args)` in the page does the same as these tools.",
+      "Tabs of the app connected to the dev server. Any browser works (yours, the person's); with none, call browser_launch. If your own browser can run JS, `await __kerf__.agent.run(command, args)` in the page does the same as these tools.",
     ),
     t(
       'browser_launch',
@@ -53,7 +53,7 @@ export function browserTools() {
     t('browser_open', 'Navigate the tab to a route', { route: { type: 'string' } }, ['route']),
     t(
       'browser_snapshot',
-      'The page as roles, names and refs (`- button "Add Banana" [ref=e15]`), plus weft\'s live reactive graph with real names (`Cart.total = 42.5 ← Cart.subtotal → 1 binding in <Cart>`), and errors since the last call. Big payloads come back as a file path.',
+      'The page as roles, names and refs (`- button "Add Banana" [ref=e15]`), plus kerf\'s live reactive graph with real names (`Cart.total = 42.5 ← Cart.subtotal → 1 binding in <Cart>`), and errors since the last call. Big payloads come back as a file path.',
       {
         interactive: { type: 'boolean', description: 'Only interactive elements' },
         delta: { type: 'boolean', description: 'Only what changed since the last snapshot' },
@@ -66,7 +66,7 @@ export function browserTools() {
     ),
     t(
       'browser_act',
-      `Act like a user (user-event, as in @weft-js/core/test) and get back what changed on the page. Actions: ${browserActions.join(', ')}`,
+      `Act like a user (user-event, as in @kerf-js/core/test) and get back what changed on the page. Actions: ${browserActions.join(', ')}`,
       {
         target,
         action: { type: 'string', enum: browserActions },
@@ -127,7 +127,7 @@ function browserStateTools(t) {
     ),
     t(
       'browser_record',
-      'Record what happens in the tab (your acts and asserts, and clicks/typing from any browser tool) and turn it into a @weft-js/core/test test, which then has to pass the gate',
+      'Record what happens in the tab (your acts and asserts, and clicks/typing from any browser tool) and turn it into a @kerf-js/core/test test, which then has to pass the gate',
       {
         op: { type: 'string', enum: ['start', 'stop', 'steps', 'note', 'code'] },
         text: { type: 'string' },
@@ -144,7 +144,7 @@ function browserStateTools(t) {
     ),
     t(
       'browser_logs',
-      'Console errors and warnings, and uncaught errors with the weft binding they came from, since the last call',
+      'Console errors and warnings, and uncaught errors with the kerf binding they came from, since the last call',
     ),
     t(
       'browser_screenshot',

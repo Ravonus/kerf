@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import { Card, Shared } from './card'
 
 function Button(props: { onClick?: (e: MouseEvent) => void; label: string; variant?: 'a' | 'b' }) {

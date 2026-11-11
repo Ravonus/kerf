@@ -9,7 +9,7 @@ export const repo = repoRoot
 
 /** Resolve local package dependencies by the folder that matches their npm name. */
 export const localPackages = (root) => (name) =>
-  `file:${join(root, 'packages', name.replace('@weft-js/', ''))}`
+  `file:${join(root, 'packages', name.replace('@kerf-js/', ''))}`
 
 /** Write exit evidence with stable indentation and a final newline. */
 export const writeJson = (file, value) => writeFileSync(file, JSON.stringify(value, null, 2) + '\n')

@@ -1,0 +1,25 @@
+{
+  "name": "js-framework-benchmark-kerf",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "js-framework-benchmark": {
+    "frameworkVersionFromPackage": "@kerf-js/core",
+    "frameworkHomeURL": "https://github.com/Ravonus/kerf",
+    "repoURL": "https://github.com/Ravonus/kerf",
+    "language": "TypeScript"
+  },
+  "scripts": {
+    "build-prod": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kerf-js/core": "0.1.1"
+  },
+  "devDependencies": {
+    "oxfmt": "0.75.0",
+    "oxlint": "1.90.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
+  }
+}

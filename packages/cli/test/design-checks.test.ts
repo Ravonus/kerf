@@ -5,10 +5,10 @@ import { check } from '../src/check.mjs'
 import { fix } from '../src/fix.mjs'
 import { project } from './helpers.mjs'
 
-const warpPkg = {
+const veneerPkg = {
   'package.json': JSON.stringify({
     name: 'a',
-    dependencies: { '@weft-js/core': '*', '@weft-js/warp': '*' },
+    dependencies: { '@kerf-js/core': '*', '@kerf-js/veneer': '*' },
   }),
 }
 const codes = (r: Awaited<ReturnType<typeof check>>) =>
@@ -16,7 +16,7 @@ const codes = (r: Awaited<ReturnType<typeof check>>) =>
     .filter((d) => d.code.startsWith('D0'))
     .map((d) => d.code)
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-const run = async (src: string, files: Record<string, string> = warpPkg) => {
+const run = async (src: string, files: Record<string, string> = veneerPkg) => {
   const root = project({ ...files, 'src/Page.tsx': src })
   return { root, result: await check(root, { files: ['src/Page.tsx'] }) }
 }
@@ -33,12 +33,12 @@ function apply(
   return text
 }
 
-/** A warp app of several files, checked whole. */
+/** A veneer app of several files, checked whole. */
 const app = async (pages: Record<string, string>) => {
-  const root = project({ ...warpPkg, ...pages })
+  const root = project({ ...veneerPkg, ...pages })
   return { root, result: await check(root, { files: Object.keys(pages) }) }
 }
-const IMPORT = `import { Heading } from '@weft-js/warp'\n`
+const IMPORT = `import { Heading } from '@kerf-js/veneer'\n`
 
 describe("what isn't off-system", () => {
   const sheet = (css: string, path = 'src/app.css') =>
@@ -52,9 +52,9 @@ describe("what isn't off-system", () => {
   test('px off the scale and a real colour still fail', async () => {
     const { result } = await sheet(`.a { background: black; padding: 13px; }`)
     expect(codes(result)).toEqual(['D001', 'D002'])
-    expect(result.diagnostics.find((d) => d.code === 'D001').why).toContain('warp({ tokens })')
+    expect(result.diagnostics.find((d) => d.code === 'D001').why).toContain('veneer({ tokens })')
   })
-  test('restyling a warp part, and the theme file, warn rather than stop', async () => {
+  test('restyling a veneer part, and the theme file, warn rather than stop', async () => {
     const a = await sheet(`[data-scope="button"] { background: black; }`)
     expect(a.result.diagnostics.find((d) => d.code === 'D001').severity).toBe('warning')
     const b = await sheet(`.a { background: black; }`, 'src/theme.css')
@@ -82,7 +82,7 @@ describe('a CSP against inlined CSS', () => {
           await app({
             'src/Page.tsx': page,
             'src/headers.tsx': header,
-            'weft.config.json': '{ "site": { "inlineCss": false } }',
+            'kerf.config.json': '{ "site": { "inlineCss": false } }',
           })
         ).result,
       ),
@@ -157,11 +157,11 @@ describe('role drift', () => {
   test('D006 leaves one role per level, a hidden role, and an allowed exception alone', async () => {
     const { result } = await app({
       'src/A.tsx': `${IMPORT}export const A = ({ r, n }) => <><Heading level={1}>A</Heading><Heading level={1} role={r}>B</Heading><Heading level={n} role="label">C</Heading></>`,
-      'src/B.tsx': `${IMPORT}export const B = () => (\n  // weft-allow D006: the marketing hero\n  <Heading level={1} role="display">C</Heading>\n)`,
+      'src/B.tsx': `${IMPORT}export const B = () => (\n  // kerf-allow D006: the marketing hero\n  <Heading level={1} role="display">C</Heading>\n)`,
     })
     expect(result.diagnostics.filter((d) => d.code === 'D006')).toEqual([])
   })
-  test('D006 a level of only bare headings is left alone, and it needs warp', async () => {
+  test('D006 a level of only bare headings is left alone, and it needs veneer', async () => {
     const bare = await app({ 'src/A.tsx': `export const A = () => <><h1>A</h1><h1>B</h1></>` })
     expect(codes(bare.result)).toEqual([])
     const root = project({
@@ -172,20 +172,20 @@ describe('role drift', () => {
   })
   test('D040 the style gate on main content, and not on a side part', async () => {
     const { result } = await run(
-      `export const P = () => <main data-weft="styled"><aside data-weft="styled">x</aside></main>`,
+      `export const P = () => <main data-kerf="styled"><aside data-kerf="styled">x</aside></main>`,
     )
     expect(result.diagnostics.filter((d) => d.code === 'D040').length).toBe(1)
   })
 
   test('D007 a bare link is swapped for Link, and the import follows', async () => {
     const { root, result } = await run(
-      `import { Row } from '@weft-js/warp'\nexport const P = () => <Row as="nav"><a href="/a">Home</a></Row>`,
+      `import { Row } from '@kerf-js/veneer'\nexport const P = () => <Row as="nav"><a href="/a">Home</a></Row>`,
     )
     const d = result.diagnostics.find((x) => x.code === 'D007')
     expect(d.fix.safe).toBe(false)
     const fixed = apply(root, d)
     expect(fixed).toContain('<Link href="/a">Home</Link>')
-    expect(fixed).toContain(`import { Row, Link } from '@weft-js/warp'`)
+    expect(fixed).toContain(`import { Row, Link } from '@kerf-js/veneer'`)
     expect(codes(await check(root, { files: ['src/Page.tsx'] }))).toEqual([])
   })
   test('D007 leaves a styled link, an anchor with no href, and a name that is taken', async () => {
@@ -198,7 +198,7 @@ describe('role drift', () => {
     )
     expect(taken.result.diagnostics.find((d) => d.code === 'D007').fix.edits).toBeUndefined()
   })
-  test('D007 needs warp', async () => {
+  test('D007 needs veneer', async () => {
     const { result } = await run(`export const P = () => <a href="/a">A</a>`, {
       'package.json': JSON.stringify({ name: 'a' }),
     })
@@ -206,7 +206,7 @@ describe('role drift', () => {
   })
 })
 
-describe('values (an app with warp)', () => {
+describe('values (an app with veneer)', () => {
   test('D001 a raw colour, with no autofix', async () => {
     const { result } = await run(`export const P = () => <p style={{ color: '#7c3aed' }}>x</p>`)
     const d = result.diagnostics.find((x) => x.code === 'D001')
@@ -219,7 +219,7 @@ describe('values (an app with warp)', () => {
     )
     const d = result.diagnostics.find((x) => x.code === 'D002')
     expect(d.fix.safe).toBe(true)
-    expect(apply(root, d)).toContain(`padding: 'var(--warp-space-group)'`)
+    expect(apply(root, d)).toContain(`padding: 'var(--veneer-space-group)'`)
     expect(codes(await check(root, { files: ['src/Page.tsx'] }))).toEqual([])
   })
   registerSpacingShorthand()
@@ -241,7 +241,7 @@ describe('values (an app with warp)', () => {
   registerTailwindStack()
   test('D005 an input type or title the browser paints', async () => {
     const { result } = await run(
-      `import { Input } from '@weft-js/warp'\nexport const A = () => <><Input label="N" type="number" /><input type="date" aria-label="D" /><span title="x">y</span><input data-part="sr-only" type="range" aria-label="R" /><iframe title="f" /></>`,
+      `import { Input } from '@kerf-js/veneer'\nexport const A = () => <><Input label="N" type="number" /><input type="date" aria-label="D" /><span title="x">y</span><input data-part="sr-only" type="range" aria-label="R" /><iframe title="f" /></>`,
     )
     expect(result.diagnostics.filter((d) => d.code === 'D005')).toHaveLength(3)
   })
@@ -249,7 +249,7 @@ describe('values (an app with warp)', () => {
   registerNativeButton()
   test('!important is not part of a value: zero stays zero, and a raw value is still caught', async () => {
     const root = project({
-      ...warpPkg,
+      ...veneerPkg,
       'src/app.css': `.a { margin: 0 !important; }\n.b { gap: 7px !important; }\n`,
     })
     const r = await check(root)
@@ -259,14 +259,14 @@ describe('values (an app with warp)', () => {
   })
 
   test('static files in public/ are not the app', async () => {
-    const root = project({ ...warpPkg, 'public/built.css': `.a { color: #123456; }\n` })
+    const root = project({ ...veneerPkg, 'public/built.css': `.a { color: #123456; }\n` })
     const r = await check(root)
     expect(r.diagnostics.filter((d) => d.file === 'public/built.css')).toEqual([])
   })
 
   test('in app CSS, but not a token definition', async () => {
     const root = project({
-      ...warpPkg,
+      ...veneerPkg,
       'src/app.css': `:root { --brand: #123456; }\n.a { color: #123456; padding: 16px; }\n`,
     })
     const r = await check(root)
@@ -321,9 +321,9 @@ describe('contrast and accessibility (every app)', () => {
     expect(d.fix.safe).toBe(true)
     expect(apply(two.root, d)).toContain(`tabindex="0"`)
   })
-  test('warp: Heading level drives D035, two solids are D038, a name goes in `label`', async () => {
+  test('veneer: Heading level drives D035, two solids are D038, a name goes in `label`', async () => {
     const { result } = await run(
-      `import { Button, Heading } from '@weft-js/warp'\nexport const P = () => <form><Heading level={1}>a</Heading><Heading level={4}>b</Heading><Button>Save</Button><Button>Send</Button><Button emphasis="ghost">No</Button><Button label="Close"><svg /></Button></form>\n`,
+      `import { Button, Heading } from '@kerf-js/veneer'\nexport const P = () => <form><Heading level={1}>a</Heading><Heading level={4}>b</Heading><Button>Save</Button><Button>Send</Button><Button emphasis="ghost">No</Button><Button label="Close"><svg /></Button></form>\n`,
     )
     expect(codes(result).filter((c) => c !== 'D038')).toEqual(['D035'])
     expect(result.diagnostics.filter((d) => d.code === 'D038')).toHaveLength(2)
@@ -335,11 +335,11 @@ describe('contrast and accessibility (every app)', () => {
 })
 
 describe('which apps get the token codes', () => {
-  test('headless @weft-js/warp-core has no tokens, so a fix would point at variables that do not exist', async () => {
+  test('headless @kerf-js/veneer-core has no tokens, so a fix would point at variables that do not exist', async () => {
     const { result } = await run(`export const P = () => <p style={{ padding: '16px' }}>x</p>`, {
       'package.json': JSON.stringify({
         name: 'a',
-        dependencies: { '@weft-js/core': '*', '@weft-js/warp-core': '*' },
+        dependencies: { '@kerf-js/core': '*', '@kerf-js/veneer-core': '*' },
       }),
     })
     expect(codes(result)).toEqual([])
@@ -347,31 +347,31 @@ describe('which apps get the token codes', () => {
 })
 
 describe('turning it off', () => {
-  test('`// weft-allow` with a reason keeps one site', async () => {
+  test('`// kerf-allow` with a reason keeps one site', async () => {
     const { result } = await run(
-      `export const P = () => (\n  // weft-allow D001: the brand gradient from marketing\n  <p style={{ color: '#7c3aed' }}>x</p>\n)`,
+      `export const P = () => (\n  // kerf-allow D001: the brand gradient from marketing\n  <p style={{ color: '#7c3aed' }}>x</p>\n)`,
     )
     expect(codes(result)).toEqual([])
   })
   test('a reason is required', async () => {
     const { result } = await run(
-      `export const P = () => (\n  // weft-allow D001\n  <p style={{ color: '#7c3aed' }}>x</p>\n)`,
+      `export const P = () => (\n  // kerf-allow D001\n  <p style={{ color: '#7c3aed' }}>x</p>\n)`,
     )
     expect(codes(result)).toEqual(['D001'])
   })
   test('check.design: false', async () => {
     const { result } = await run(
       `export const P = () => <p style={{ color: '#7c3aed' }}><img /></p>`,
-      { ...warpPkg, 'weft.config.json': '{ "check": { "design": false } }' },
+      { ...veneerPkg, 'kerf.config.json': '{ "check": { "design": false } }' },
     )
     expect(codes(result)).toEqual([])
   })
 })
 
-describe('weft fix', () => {
+describe('kerf fix', () => {
   test('applies the safe fixes and leaves the suggestions', async () => {
     const root = project({
-      ...warpPkg,
+      ...veneerPkg,
       'src/Page.tsx': `export const P = () => <section style={{ padding: '16px', gap: 8 }} tabindex="2"><div onClick={() => {}}>x</div></section>\n`,
     })
     const { applied } = await fix(root, { files: ['src/Page.tsx'] })
@@ -381,13 +381,13 @@ describe('weft fix', () => {
       'D037',
     ])
     const text = readFileSync(join(root, 'src/Page.tsx'), 'utf8')
-    expect(text).toContain(`padding: 'var(--warp-space-group)', gap: 'var(--warp-space-related)'`)
+    expect(text).toContain(`padding: 'var(--veneer-space-group)', gap: 'var(--veneer-space-related)'`)
     expect(text).toContain('tabindex="0"')
     expect(text).toContain('<div onClick') // D033 changes the element: the agent's call
   })
   test('compiler autofixes go through it too', async () => {
     const root = project({
-      'src/Page.tsx': `import { state } from '@weft-js/core'\nexport function P() { const n = state(0); return <p>{n}</p> }\n`,
+      'src/Page.tsx': `import { state } from '@kerf-js/core'\nexport function P() { const n = state(0); return <p>{n}</p> }\n`,
     })
     expect((await fix(root, { files: ['src/Page.tsx'] })).applied.map((a) => a.code)).toEqual([
       'W015',
@@ -398,7 +398,7 @@ describe('weft fix', () => {
 
 test('a share card is an image: its raw colours and sizes are fine', async () => {
   const root = project({
-    ...warpPkg,
+    ...veneerPkg,
     'src/routes/_default.og.tsx':
       'export default function Card() { return <div style="color:#123456;padding:13px"><img src="/a.png" /></div> }',
   })
@@ -463,7 +463,7 @@ function registerPolicyCases(
       ['error'],
     ],
     [
-      "a nonce weft doesn't put on its scripts",
+      "a nonce kerf doesn't put on its scripts",
       "style-src 'unsafe-inline'; script-src 'nonce-abc' 'strict-dynamic'",
       ['error'],
     ],
@@ -502,7 +502,7 @@ function registerDefaultHeadingRole() {
       ds.find((d) => d.file === 'src/B.tsx'),
     )
     expect(fixed).toContain('<Heading level={3}>C</Heading>')
-    expect(fixed).toContain(`import { Heading } from '@weft-js/warp'`)
+    expect(fixed).toContain(`import { Heading } from '@kerf-js/veneer'`)
   })
 }
 
@@ -514,7 +514,7 @@ function registerHandRolledStack() {
     const d = result.diagnostics.find((x) => x.code === 'D004')
     const text = apply(root, d)
     expect(text).toContain(`<Stack gap="group"><p>x</p></Stack>`)
-    expect(text.startsWith(`import { Stack } from '@weft-js/warp'\n`)).toBe(true)
+    expect(text.startsWith(`import { Stack } from '@kerf-js/veneer'\n`)).toBe(true)
     expect(
       (await check(root, { files: ['src/Page.tsx'] })).diagnostics.filter((x) => x.code === 'D004'),
     ).toEqual([])
@@ -524,13 +524,13 @@ function registerHandRolledStack() {
 function registerTailwindStack() {
   test('D004 Tailwind classes, into an existing import', async () => {
     const { root, result } = await run(
-      `import { Card } from '@weft-js/warp'\nexport const P = () => <section class="flex gap-2"><Card /></section>\n`,
+      `import { Card } from '@kerf-js/veneer'\nexport const P = () => <section class="flex gap-2"><Card /></section>\n`,
     )
     const text = apply(
       root,
       result.diagnostics.find((d) => d.code === 'D004'),
     )
-    expect(text).toContain(`import { Card, Row } from '@weft-js/warp'`)
+    expect(text).toContain(`import { Card, Row } from '@kerf-js/veneer'`)
     expect(text).toContain(`<Row as="section" gap="related"><Card /></Row>`)
   })
 }
@@ -557,7 +557,7 @@ function registerSpacingShorthand() {
     const [a, b] = result.diagnostics.filter((d) => d.code === 'D002')
     apply(root, b)
     expect(apply(root, a)).toContain(
-      `gap: 'var(--warp-space-related)', margin: 'var(--warp-space-tight) var(--warp-space-group)'`,
+      `gap: 'var(--veneer-space-related)', margin: 'var(--veneer-space-tight) var(--veneer-space-group)'`,
     )
   })
 }

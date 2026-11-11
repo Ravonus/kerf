@@ -1,12 +1,12 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
+import { state } from '@kerf-js/core'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './shuttle.tsx?raw'
 
 export const meta: Meta = {
   name: 'Shuttle',
   description:
-    'One stroke crosses the warps and leaves one woven row behind it. It never rewinds. Hover to hurry it along.',
+    'One stroke crosses the veneers and leaves one woven row behind it. It never rewinds. Hover to hurry it along.',
   kind: 'generative',
   code,
   wide: true,
@@ -15,38 +15,38 @@ export const meta: Meta = {
 const PITCH = 5,
   ROW = 4
 const colours = inks({
-  warp: '--warp-color-border-strong',
-  soft: '--warp-color-accent-border',
-  ink: '--warp-color-accent-text',
-  deep: '--warp-color-text',
-  sweep: '--warp-color-sweep',
-  ground: '--warp-color-page',
+  veneer: '--veneer-color-border-strong',
+  soft: '--veneer-color-accent-border',
+  ink: '--veneer-color-accent-text',
+  deep: '--veneer-color-text',
+  sweep: '--veneer-color-sweep',
+  ground: '--veneer-color-page',
 })
 
-/** Which of the weft's colours row `r` takes: broad bands, like a blanket's stripes. */
+/** Which of the kerf's colours row `r` takes: broad bands, like a blanket's stripes. */
 const band = (r: number) => {
   const k = (r % 64) / 64
   return k < 0.44 ? 0 : k < 0.5 ? 2 : k < 0.72 ? 1 : k < 0.75 ? 2 : k < 0.94 ? 0 : 1
 }
 
-/** One finished row: a 2/2 twill, so the weft lies over two warps and under two, stepping one along each row. */
+/** One finished row: a 2/2 twill, so the kerf lies over two veneers and under two, stepping one along each row. */
 function weave(
   ctx: CanvasRenderingContext2D,
   c: ReturnType<typeof colours>,
   { w, r, y }: { w: number; r: number; y: number },
 ) {
   const count = Math.ceil(w / PITCH)
-  ctx.fillStyle = c.warp
+  ctx.fillStyle = c.veneer
   ctx.fillRect(0, y, w, ROW)
   ctx.fillStyle = [c.soft, c.ink, c.deep][band(r)]!
   for (let i = 0; i < count; i++) if ((i + r) & 2) ctx.fillRect(i * PITCH, y, PITCH - 0.5, ROW)
 }
-function warps(
+function veneers(
   ctx: CanvasRenderingContext2D,
   c: ReturnType<typeof colours>,
   { w, h }: { w: number; h: number },
 ) {
-  ctx.fillStyle = c.warp
+  ctx.fillStyle = c.veneer
   for (let x = PITCH / 2; x < w; x += PITCH) ctx.fillRect(x - 0.5, 0, 1, h)
 }
 
@@ -122,7 +122,7 @@ export default function Shuttle({ live = true }: ArtProps) {
       row++
     }
     ctx.clearRect(0, 0, w, h)
-    warps(ctx, c, { w, h })
+    veneers(ctx, c, { w, h })
     ctx.drawImage(cloth!, 0, 0, w, h)
     const n = rows()
     shuttleTail(ctx, c, { row, across, w, n })

@@ -21,8 +21,8 @@
     "/privacy"
   ],
   "variants": {
-    "weft": {
-      "label": "weft + warp",
+    "kerf": {
+      "label": "kerf + veneer",
       "scaffold": {
         "template": "landing",
         "db": "postgres",

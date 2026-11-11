@@ -1,6 +1,6 @@
 {
   "note": "A throwaway local test account for examples. The hash in seed.sql is Better Auth's own hashPassword of this password. Not a real credential, and authSecret is only ever used on this machine's bench servers.",
-  "email": "bench@weft.dev",
+  "email": "bench@kerf.dev",
   "password": "bench-local-throwaway-7f2c9a",
   "authSecret": "bench-only-secret-not-used-anywhere-else-0123456789"
 }

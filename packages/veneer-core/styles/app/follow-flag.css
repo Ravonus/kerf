@@ -1,0 +1,4 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="follow-flag"]) { position: absolute; inset-block-start: 0; inset-inline-start: 50%; translate: -50% 0; z-index: var(--veneer-z-overlay); padding: 3px 10px; border-radius: 0 0 var(--veneer-radius-control) var(--veneer-radius-control); background: color-mix(in oklab, var(--_pc) 70%, var(--veneer-color-text)); color: var(--veneer-color-surface); font: 500 11.5px/1.4 var(--veneer-text-body-font); }
+}

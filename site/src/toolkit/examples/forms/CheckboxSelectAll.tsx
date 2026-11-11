@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Checkbox, Stack } from '@weft-js/warp'
+import { derived, state } from '@kerf-js/core'
+import { Checkbox, Stack } from '@kerf-js/veneer'
 import { EVENTS } from './shared'
 
 export function CheckboxSelectAll() {
@@ -26,7 +26,7 @@ export function CheckboxSelectAll() {
         gap="tight"
         style={
           'padding-inline-start:' +
-          'var(--warp-space-group)'
+          'var(--veneer-space-group)'
         }
       >
         {EVENTS.map((name) => (

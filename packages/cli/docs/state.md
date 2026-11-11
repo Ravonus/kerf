@@ -1,6 +1,6 @@
-# State (`@weft-js/core`)
+# State (`@kerf-js/core`)
 
-Every reactive function in one place. The rules for using them are `weft docs rules`; props are `weft docs props`.
+Every reactive function in one place. The rules for using them are `kerf docs rules`; props are `kerf docs props`.
 
 ```tsx
 import {
@@ -10,7 +10,7 @@ import {
   onMount,
   state,
   watch,
-} from '@weft-js/core'
+} from '@kerf-js/core'
 
 export function Counter() {
   const count = state(0)
@@ -54,7 +54,7 @@ export function Counter() {
 | `state.linked(() => source, { key? })` | A box that follows `source` until written. With `key`, an edit holds while the key stays, and `.conflict.value` says when the source moved under it |
 | `derived(() => …)` | A read-only value, computed when read and cached until what it read changes |
 
-`get`, `set` and `state.linked` come from `@weft-js/core/keyed`. The main entry and the weft() Vite plugin bring it in
+`get`, `set` and `state.linked` come from `@kerf-js/core/keyed`. The main entry and the kerf() Vite plugin bring it in
 when a module uses them, so you only import it yourself when the name is built at run time (`box[name]`).
 
 Writes are batched: effects and DOM updates run together on the next microtask. `flush()` runs them now, for example
@@ -77,7 +77,7 @@ A named scope of state that any component can import. Its setup runs once per ap
 returns boxes, derived values and actions. Each action call is one transaction and one undo step.
 
 ```ts
-import { defineState, derived, state } from '@weft-js/core'
+import { defineState, derived, state } from '@kerf-js/core'
 import { z } from 'zod'
 
 export const cart = defineState('cart', () => {
@@ -114,9 +114,9 @@ its initial value), `$snapshot()` (a plain copy) and, with `history`, `$history`
 | `name` | The box's name in its scope. A persisted box the setup doesn't return needs one |
 
 Misuse throws a `StateError` in dev with a code and a fix: S008 (persistence or sync set up wrongly), S009 (two
-scopes with one name, a reserved `$` key, or `$history` without `history`). `weft check` reports S001 (server data
+scopes with one name, a reserved `$` key, or `$history` without `history`). `kerf check` reports S001 (server data
 copied into `state`) and S012 (`state.linked` over a query with no `key`). On the server, a scope is per request:
 reaching one outside a render is S002, and reading a `local` or `session` box there shows `init` (S013).
 
-In tests, `scope(cart)` from `@weft-js/core/test` makes a fresh instance with no UI, and `render(App, props, { state,
-storage })` seeds scopes and shares storage between renders: `weft docs testing`.
+In tests, `scope(cart)` from `@kerf-js/core/test` makes a fresh instance with no UI, and `render(App, props, { state,
+storage })` seeds scopes and shares storage between renders: `kerf docs testing`.

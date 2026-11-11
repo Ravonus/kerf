@@ -1,4 +1,4 @@
-import { Markdown } from '@weft-js/warp'
+import { Markdown } from '@kerf-js/veneer'
 
 export const MarkdownSafe = () => (
   <Markdown

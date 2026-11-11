@@ -9,8 +9,8 @@ import { freePort, sleep, repoRoot } from '../../scripts/lib/helpers.mjs'
 //   speed    p50 through the public GET, then 32 callers at once, at ≥ 5× on the first two runtimes
 //
 // then what only native() has: the WASM fallback with the addon gone, the event loop staying free, a pool as big as the
-// machine, a panic, a deadline, a stale library, R103–R105, `weft dev` reloading in place, `weft add rust` from nothing,
-// and a build with no `native()` carrying none of it. Each `weft start` runs on Node, Bun and Deno. The swap is scripted.
+// machine, a panic, a deadline, a stale library, R103–R105, `kerf dev` reloading in place, `kerf add rust` from nothing,
+// and a build with no `native()` carrying none of it. Each `kerf start` runs on Node, Bun and Deno. The swap is scripted.
 //
 //   node evals/gates/phase5b-exit.mjs <empty-dir> [--runtimes node,bun,deno] [--no-browser] [--results phase5b-exit]
 //
@@ -60,7 +60,7 @@ const { fnId } = await import(join(repo, 'packages/start/src/vite.mjs'))
 
 const log = (...a) => console.log('[5b]', ...a)
 const { run, must } = commands(dir, 1 << 28, true)
-const weft = () => join(dir, 'node_modules/.bin/weft')
+const kerf = () => join(dir, 'node_modules/.bin/kerf')
 const ID = Object.fromEntries(
   ['thumbnail', 'guarded', 'stats', 'boom', 'spin'].map((n) => [n, fnId(n, 'src/server/thumb.ts')]),
 )
@@ -74,7 +74,7 @@ const check = makeCheck(checks, log, 140)
 
 const runnerContext = {
   must,
-  weft,
+  kerf,
   dir,
   freePort,
   until,
@@ -129,7 +129,7 @@ log(`scaffold in ${dir}`)
 must(
   'node',
   [
-    join(repo, 'packages/create/bin/create-weft.mjs'),
+    join(repo, 'packages/create-kerf/bin/create-kerf.mjs'),
     dir,
     '--db',
     'none',
@@ -144,7 +144,7 @@ const pkgFile = join(dir, 'package.json')
 const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'))
 for (const deps of [pkg.dependencies, pkg.devDependencies])
   for (const name of Object.keys(deps ?? {}))
-    if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = packageUrl(name)
+    if (name === '@kerf-js/core' || name.startsWith('@kerf-js/')) deps[name] = packageUrl(name)
 pkg.dependencies.zod = '4.6.7'
 writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n')
 must('npm', ['install', '--no-audit', '--no-fund'])
@@ -171,12 +171,12 @@ const serverText = () =>
 // ---- before ---------------------------------------------------------------------------------------------------------
 
 const treeBefore = tree()
-must(weft(), ['check'])
+must(kerf(), ['check'])
 for (const r of runtimes) await variant('ts', r, results)
 await check('a build with no `native()` has none of it', () => {
   const text = serverText()
   ok(!text.includes('dlopen'), 'dlopen in the server bundle')
-  ok(!text.includes('weft_alloc'), 'the WASM loader in the server bundle')
+  ok(!text.includes('kerf_alloc'), 'the WASM loader in the server bundle')
   ok(!existsSync(join(dir, '.output/server/rust')), '.output/server/rust')
 })
 
@@ -187,7 +187,7 @@ cpSync(join(here, 'phase5b/rust'), dir, { recursive: true })
 const cargoFile = join(dir, 'crates/media/Cargo.toml')
 writeFileSync(
   cargoFile,
-  readFileSync(cargoFile, 'utf8').replaceAll('WEFT_CRATE', join(repo, 'crates/weft')),
+  readFileSync(cargoFile, 'utf8').replaceAll('KERF_CRATE', join(repo, 'crates/kerf')),
 )
 const treeAfter = tree()
 const changed = Object.keys({ ...treeBefore, ...treeAfter })
@@ -292,7 +292,7 @@ for (const r of runtimes) {
 }
 
 build('node')
-await check('`node .output/server/index.mjs` finds the addon with no `weft start`', async () => {
+await check('`node .output/server/index.mjs` finds the addon with no `kerf start`', async () => {
   const s = await start('node', ['node', '.output/server/index.mjs'])
   try {
     const a = await call(s.url, ID.thumbnail, { seed: 1, width: 64, height: 64 })
@@ -302,9 +302,9 @@ await check('`node .output/server/index.mjs` finds the addon with no `weft start
   }
 })
 
-// ---- weft check -----------------------------------------------------------------------------------------------------
+// ---- kerf check -----------------------------------------------------------------------------------------------------
 
-const weftCheck = () => JSON.parse(run(weft(), ['check', '--json']).stdout || '{}')
+const kerfCheck = () => JSON.parse(run(kerf(), ['check', '--json']).stdout || '{}')
 const server = join(dir, 'src/server/thumb.ts')
 const main = join(dir, 'crates/media/src/lib.rs')
 const cleanServer = readFileSync(server, 'utf8'),
@@ -313,24 +313,24 @@ const cleanServer = readFileSync(server, 'utf8'),
 await diagnostics({
   check,
   eq,
-  weftCheck,
+  kerfCheck,
   server,
   main,
   cleanServer,
   cleanMain,
   ID,
   run,
-  weft,
+  kerf,
   dir,
   repo,
   ok,
 })
 
-// ---- weft dev -------------------------------------------------------------------------------------------------------
+// ---- kerf dev -------------------------------------------------------------------------------------------------------
 
 await dev({
   freePort,
-  weft,
+  kerf,
   dir,
   until,
   call,
@@ -345,14 +345,14 @@ await dev({
   ok,
 })
 
-// ---- weft add rust --------------------------------------------------------------------------------------------------
+// ---- kerf add rust --------------------------------------------------------------------------------------------------
 
 await check(
-  '`weft add rust`: a native crate and a sidecar build, check clean and answer, on the first try',
+  '`kerf add rust`: a native crate and a sidecar build, check clean and answer, on the first try',
   async () => {
-    must(weft(), ['add', 'rust', 'hasher', '--no-install'])
-    must(weft(), ['add', 'rust', 'finder', '--remote', '--no-install'])
-    const r = weftCheck()
+    must(kerf(), ['add', 'rust', 'hasher', '--no-install'])
+    must(kerf(), ['add', 'rust', 'finder', '--remote', '--no-install'])
+    const r = kerfCheck()
     eq([r.ok, r.diagnostics?.filter((d) => d.code.startsWith('R1'))], [true, []], 'check')
     build('node')
     const s = await start('node')

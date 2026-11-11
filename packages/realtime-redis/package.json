@@ -1,16 +1,16 @@
 {
-  "name": "@weft-js/realtime-redis",
-  "version": "0.1.4",
-  "description": "@weft-js/realtime-redis: the realtime.bus provider for Redis pub/sub",
+  "name": "@kerf-js/realtime-redis",
+  "version": "0.1.0",
+  "description": "@kerf-js/realtime-redis: the realtime.bus provider for Redis pub/sub",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/realtime-redis"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/realtime-redis#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/realtime-redis#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "type": "module",
   "exports": {
@@ -24,19 +24,19 @@
     "ioredis": "6.0.0"
   },
   "peerDependencies": {
-    "@weft-js/start": "*",
-    "@weft-js/core": "*"
+    "@kerf-js/start": "*",
+    "@kerf-js/core": "*"
   },
   "devDependencies": {
-    "@weft-js/start": "workspace:*",
+    "@kerf-js/start": "workspace:*",
     "vitest": "5.0.5",
-    "@weft-js/core": "workspace:*"
+    "@kerf-js/core": "workspace:*"
   },
   "engines": {
     "node": ">=24"
   },
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "files": [
     "src",

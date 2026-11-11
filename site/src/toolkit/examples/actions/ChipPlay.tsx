@@ -1,5 +1,5 @@
-import { state, untrack } from '@weft-js/core'
-import { Chip } from '@weft-js/warp'
+import { state, untrack } from '@kerf-js/core'
+import { Chip } from '@kerf-js/veneer'
 
 export function ChipPlay(p: {
   children: string

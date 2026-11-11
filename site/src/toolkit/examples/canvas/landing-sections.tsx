@@ -4,8 +4,8 @@ import {
   Stack,
   Grid,
   StageSelect,
-} from '@weft-js/warp'
-import type { State } from '@weft-js/core'
+} from '@kerf-js/veneer'
+import type { State } from '@kerf-js/core'
 import type { Look } from './stage-landing'
 import {
   LAND_WRAP,
@@ -39,7 +39,7 @@ export function landingHeader(
             style="font-size:30px;color:inherit"
             onClick={(e: MouseEvent) => jump(e)}
           >
-            weft
+            kerf
           </a>
           <Row
             gap="tight"
@@ -115,7 +115,7 @@ export function landingHero(open: () => void) {
             data-skin="clear"
             style={LEDE}
           >
-            weft builds, previews and ships every push.
+            kerf builds, previews and ships every push.
             This page is one canvas: every surface on it
             is painted, and every control is still real
             HTML.

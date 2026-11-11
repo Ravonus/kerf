@@ -12,7 +12,7 @@ export interface PostgresBusOptions {
   url: string
 }
 
-const CHANNEL = 'weft_bus'
+const CHANNEL = 'kerf_bus'
 const WHOLE = 7_900
 const CHUNK = 7_800
 
@@ -26,7 +26,7 @@ function delivery(listeners: Map<string, Set<(message: string) => void>>) {
 
 /** A bus on Postgres NOTIFY, for several instances with no broker beside the database. */
 export function postgresBus({ url }: PostgresBusOptions): Bus {
-  if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
+  if (!url && process.env.KERF_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
   if (!/^postgres(ql)?:\/\//.test(url ?? ''))
     throw new StartError(
       'Q013',

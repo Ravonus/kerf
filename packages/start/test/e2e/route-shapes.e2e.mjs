@@ -12,7 +12,7 @@ import { shapeGroupCss } from '../../../core/vite/shape-styles.mjs'
 import { tokens } from '../../../core/vite/config-plugins.mjs'
 
 function fixture(t) {
-  const root = mkdtempSync(join(tmpdir(), 'weft-route-shapes-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-route-shapes-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const write = (file, source) => writeFileSync(join(root, file), source)
   return { root, write, abs: (file) => join(root, file) }
@@ -21,11 +21,11 @@ function fixture(t) {
 async function manifestModule(source, missing = [], groupCss = '') {
   const code = source.replace(/^import \* as shape(\d+) from (.+)$/gm, (_, index, specifier) => {
     const file = JSON.parse(specifier)
-    return missing.some((name) => file.endsWith(`${name}?weft-shape`))
+    return missing.some((name) => file.endsWith(`${name}?kerf-shape`))
       ? `const shape${index} = {}`
       : `const shape${index} = { default: function Custom() {}, 'default$shape': function Shape() {}, ` +
           `'NotFoundPage$shape': function NotFound() {}, 'ErrorPage$shape': function Error() {}, ` +
-          `${JSON.stringify('$weftShapeCss')}: ${JSON.stringify(groupCss)} }`
+          `${JSON.stringify('$kerfShapeCss')}: ${JSON.stringify(groupCss)} }`
   })
   const withStyles = code.replace(
     /^import style(\d+) from (.+)$/gm,
@@ -56,8 +56,8 @@ void test('eager shapes keep nested and static route loaders lazy', async (t) =>
   }
   const source = clientRoutes(levels, f.abs, { statics: new Set([f.abs('page.tsx')]) })
   for (const file of ['outer.tsx', 'inner.tsx', 'page.tsx', 'missing.tsx']) {
-    assert.ok(source.includes(JSON.stringify(`${f.abs(file)}?weft-shape`)), file)
-    const loader = file === 'page.tsx' ? `${f.abs(file)}?weft-assets` : f.abs(file)
+    assert.ok(source.includes(JSON.stringify(`${f.abs(file)}?kerf-shape`)), file)
+    const loader = file === 'page.tsx' ? `${f.abs(file)}?kerf-assets` : f.abs(file)
     assert.ok(source.includes(`() => import(${JSON.stringify(loader)})`), file)
   }
   const routes = await manifestModule(source, ['missing.tsx'])
@@ -94,7 +94,7 @@ void test('false exports disable shapes; unknown overrides do not import a route
     layouts: [],
   }))
   const source = clientRoutes({ layouts: [], routes }, f.abs)
-  for (const route of routes) assert.ok(!source.includes(`${f.abs(route.file)}?weft-shape`))
+  for (const route of routes) assert.ok(!source.includes(`${f.abs(route.file)}?kerf-shape`))
   const result = await manifestModule(source)
   for (const id of ['disabled', 'direct']) assert.equal(result.shapes[id].kind, 'disabled')
   for (const id of ['override', 'barrel'])
@@ -122,7 +122,7 @@ void test('built-in error shapes retain nested levels and yield to authored over
   const source = clientRoutes({ layouts, routes: [page] }, f.abs, undefined, {
     entry: [f.abs('entry.css')],
   })
-  assert.equal((source.match(/builtin\.tsx\?weft-shape/g) ?? []).length, 1)
+  assert.equal((source.match(/builtin\.tsx\?kerf-shape/g) ?? []).length, 1)
   assert.ok(source.includes(`() => import(${JSON.stringify(f.abs('page.tsx'))})`))
   const result = await manifestModule(source)
   assert.deepEqual(result.table[0].layouts, ['outer', 'inner'])
@@ -145,7 +145,7 @@ void test('built-in error shapes retain nested levels and yield to authored over
   f.write('error.tsx', 'export const skeleton = false; export default () => <p />')
   const error = { id: 'error', file: 'error.tsx', kind: 'error', layouts: ['outer'] }
   const both = clientRoutes({ layouts, routes: [page, override, error] }, f.abs)
-  assert.ok(!both.includes('builtin.tsx?weft-shape'))
+  assert.ok(!both.includes('builtin.tsx?kerf-shape'))
   assert.equal((await manifestModule(both)).shapes.error.kind, 'disabled')
 })
 
@@ -159,7 +159,7 @@ void test('a static local override is isolated and unsafe closures stay unavaila
   f.write('page.tsx', source)
   const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
   const output = clientRoutes(levels, f.abs)
-  const request = `virtual:weft/shape-override/${encodeURIComponent(f.abs('page.tsx'))}.tsx`
+  const request = `virtual:kerf/shape-override/${encodeURIComponent(f.abs('page.tsx'))}.tsx`
   assert.ok(output.includes(JSON.stringify(request)))
   assert.ok(output.includes(`() => import(${JSON.stringify(f.abs('page.tsx'))})`))
   const watched = []
@@ -177,7 +177,7 @@ void test('a static local override is isolated and unsafe closures stay unavaila
   assert.ok(!extracted.includes('sideEffect'))
   assert.ok(!extracted.includes('private.server'))
   assert.deepEqual(watched, [f.abs('page.tsx')])
-  const other = `\0virtual:weft/shape-override/${encodeURIComponent(f.abs('other.tsx'))}.tsx`
+  const other = `\0virtual:kerf/shape-override/${encodeURIComponent(f.abs('other.tsx'))}.tsx`
   await assert.rejects(() => moduleLoad(state).handler.call(context, other), /Unknown/)
   const result = await manifestModule(output)
   assert.equal(result.shapes['/'].kind, 'override')
@@ -240,7 +240,7 @@ void test('Vite loads the isolated override as TSX through the plugin pipeline',
     `const Waiting = () => <div>custom marker</div>;
     export const skeleton = Waiting; throw Error('route setup ran')`,
   )
-  const request = `virtual:weft/shape-override/${encodeURIComponent(f.abs('page.tsx'))}.tsx`
+  const request = `virtual:kerf/shape-override/${encodeURIComponent(f.abs('page.tsx'))}.tsx`
   const seen = []
   const plugin = {
     name: 'shape-override-test',
@@ -312,7 +312,7 @@ void test('metadata edits invalidate and reload only the client route module', a
   f.write('page.tsx', 'export default () => <main />')
   assert.deepEqual(await handler.call(client, { file, modules: [] }), [])
   assert.deepEqual(calls, [
-    ['lookup', '\0virtual:weft/routes'],
+    ['lookup', '\0virtual:kerf/routes'],
     ['invalidate', mod],
     ['send', { type: 'full-reload' }],
   ])
@@ -472,8 +472,8 @@ void test('entry and token styles join route shape CSS without running entry cod
     'entry.ts',
     `
     import './app.css'
-    import 'weft:tokens/warp'
-    import 'weft:tokens/missing'
+    import 'kerf:tokens/veneer'
+    import 'kerf:tokens/missing'
     import '@kit/tokens.css'
     import '@kit/unsafe.css'
     import './entry-runtime.js'
@@ -488,8 +488,8 @@ void test('entry and token styles join route shape CSS without running entry cod
     resolve: (spec) => {
       calls.push(spec)
       if (spec === './app.css') return { id: f.abs('app.css') }
-      if (spec === 'weft:tokens/warp') return { id: token }
-      if (spec === 'weft:tokens/missing') return { id: '\0weft:tokens-empty' }
+      if (spec === 'kerf:tokens/veneer') return { id: token }
+      if (spec === 'kerf:tokens/missing') return { id: '\0kerf:tokens-empty' }
       if (spec === '@kit/tokens.css') return { id: kit }
       if (spec === '@kit/unsafe.css') return { id: f.abs('unsafe.js') }
     },
@@ -516,9 +516,9 @@ void test('entry and token styles join route shape CSS without running entry cod
 
 void test('the token plugin resolves generated token CSS as an inert inline stylesheet', async (t) => {
   const f = fixture(t)
-  mkdirSync(join(f.root, '.weft', 'tokens'), { recursive: true })
-  f.write('.weft/tokens/warp.css', ':root { --warp-space-group: 12px }')
-  f.write('entry.ts', "import 'weft:tokens/warp'")
+  mkdirSync(join(f.root, '.kerf', 'tokens'), { recursive: true })
+  f.write('.kerf/tokens/veneer.css', ':root { --veneer-space-group: 12px }')
+  f.write('entry.ts', "import 'kerf:tokens/veneer'")
   const server = await createServer({
     root: f.root,
     configFile: false,
@@ -533,11 +533,11 @@ void test('the token plugin resolves generated token CSS as an inert inline styl
     }
     const styles = await shapeCssSources(ctx, f.abs('entry.ts'))
     assert.equal(styles.length, 1)
-    assert.ok(styles[0].endsWith('/.weft/tokens/warp.css'), styles[0])
+    assert.ok(styles[0].endsWith('/.kerf/tokens/veneer.css'), styles[0])
     const output = await server.environments.client.transformRequest(
-      '/.weft/tokens/warp.css?inline',
+      '/.kerf/tokens/veneer.css?inline',
     )
-    assert.ok(output?.code.includes('--warp-space-group: 12px'), output?.code)
+    assert.ok(output?.code.includes('--veneer-space-group: 12px'), output?.code)
     assert.ok(output?.code.includes('export default'), output?.code)
     assert.ok(!output?.code.includes('updateStyle'), output?.code)
   } finally {
@@ -571,7 +571,7 @@ void test('entry stylesheet import changes invalidate shape metadata', async (t)
 void test('client virtual routes collect entry and route styles through the Vite hook', async (t) => {
   const f = fixture(t)
   f.write('entry.ts', "import './app.css'; throw new Error('entry ran')")
-  f.write('page.tsx', "import 'weft:tokens/warp'; export default () => <main />")
+  f.write('page.tsx', "import 'kerf:tokens/veneer'; export default () => <main />")
   f.write('disabled.tsx', "import '@bad/disabled.css'; export const skeleton = false")
   const manifest = {
     layouts: [],
@@ -591,10 +591,10 @@ void test('client virtual routes collect entry and route styles through the Vite
     resolve: (spec) => {
       if (spec === '@bad/disabled.css') throw new Error('disabled CSS was resolved')
       if (spec === './app.css') return { id: f.abs('app.css') }
-      return spec === 'weft:tokens/warp' ? { id: f.abs('token.css') } : null
+      return spec === 'kerf:tokens/veneer' ? { id: f.abs('token.css') } : null
     },
   }
-  const source = await moduleLoad(state).handler.call(context, '\0virtual:weft/routes')
+  const source = await moduleLoad(state).handler.call(context, '\0virtual:kerf/routes')
   const routes = await manifestModule(source)
   assert.deepEqual(routes.shapes['/'].cssText, [
     `${f.abs('app.css')}?inline`,

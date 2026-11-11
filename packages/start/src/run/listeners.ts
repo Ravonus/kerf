@@ -1,4 +1,4 @@
-import { drain, wake } from '@weft-js/core/dom'
+import { drain, wake } from '@kerf-js/core/dom'
 import type { Held } from '../boot'
 import { client, peers } from '../router'
 import { admitLink, routeClicks } from './admission'
@@ -15,7 +15,7 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
   // A cross-document transition's pagereveal and pageswap are settled from the head (page-stream.tsx `REVEAL`): the page
   // reveals before this runs. One still going when it does is settled here too.
   settle((document as Document & { activeViewTransition?: ViewTransition }).activeViewTransition)
-  if (hot()) hot()!.on('weft:refresh', (changed) => void nav.reloaded(changed))
+  if (hot()) hot()!.on('kerf:refresh', (changed) => void nav.reloaded(changed))
   client.invalidated = nav.invalidated
   client.sessionChanged = nav.dispose
   clicks(nav)

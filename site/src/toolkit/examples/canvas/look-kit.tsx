@@ -2,7 +2,7 @@ import type {
   Scene,
   StagePiece,
   StagePainter,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import type {
   Style,
   PaintColor,
@@ -212,11 +212,11 @@ export const words = (
 }
 
 // The colours a look starts from: an app's --stage-* if
-// it set one, else warp's tokens, which follow light and
+// it set one, else veneer's tokens, which follow light and
 // dark.
 export const TOKENS = {
-  ink: 'var(--stage-ink, var(--warp-color-text))',
-  paper: 'var(--stage-paper, var(--warp-color-surface))',
+  ink: 'var(--stage-ink, var(--veneer-color-text))',
+  paper: 'var(--stage-paper, var(--veneer-color-surface))',
   accent:
-    'var(--stage-accent, var(--warp-color-accent-solid))',
+    'var(--stage-accent, var(--veneer-color-accent-solid))',
 }

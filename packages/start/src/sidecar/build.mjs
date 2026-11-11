@@ -16,11 +16,11 @@ import { buildable, crateDir, isNative, stem, urlVariable } from './common.mjs'
 
 // ---- build --------------------------------------------------------------------------------------------------------
 
-const BUILT = ['.weft', 'sidecars'] // a build empties `.output`, and these have to run during it
+const BUILT = ['.kerf', 'sidecars'] // a build empties `.output`, and these have to run during it
 const SHIPPED = ['.output', 'rust']
 const SHIPPED_NATIVE = ['.output', 'server', 'rust'] // with the server, so a host that moves it moves these
 
-/** Release binaries into `.weft/sidecars/`, and what `weft start` needs to run them. */
+/** Release binaries into `.kerf/sidecars/`, and what `kerf start` needs to run them. */
 export async function buildSidecars({ root, contract, rust, preset, log = () => {} }) {
   root = resolve(root)
   const out = join(root, ...BUILT)
@@ -36,7 +36,7 @@ export async function buildSidecars({ root, contract, rust, preset, log = () => 
       diagnostics.push({
         code: 'R109',
         severity: 'error',
-        file: 'weft.config.ts',
+        file: 'kerf.config.ts',
         span: [1, 1, 1, 1],
         why: `\`rust://${service}\` has no crate at \`${relative(root, dir)}\`. Create it, point \`rust.services.${service}.crate\` at it, or set \`external: true\`.`,
       })
@@ -103,7 +103,7 @@ export function shipSidecars(root) {
 // ---- start --------------------------------------------------------------------------------------------------------
 
 /**
- * Run `.output/rust/`'s binaries for `weft start` (or `built`'s, while `weft build` prerenders). A service with `WEFT_RUST_<NAME>_URL` already set is someone else's.
+ * Run `.output/rust/`'s binaries for `kerf start` (or `built`'s, while `kerf build` prerenders). A service with `KERF_RUST_<NAME>_URL` already set is someone else's.
  * Each keeps its port across restarts, so the server's address stays good.
  * @returns {Promise<{ env: Record<string, string>, close(): void }>} `env` for the server process
  */
@@ -118,11 +118,11 @@ export async function startSidecars({ root, built = false, log = console.log }) 
   // While a build prerenders, the libraries aren't next to a server yet.
   const paths =
     built && Object.values(manifest).some((m) => m.kind === 'native')
-      ? { WEFT_NATIVE_DIR: dir }
+      ? { KERF_NATIVE_DIR: dir }
       : {}
   if (!names.length) return { env: paths, close() {} }
-  const secret = process.env.WEFT_RUST_SECRET || randomBytes(32).toString('hex')
-  const env = { ...paths, WEFT_RUST_SECRET: secret }
+  const secret = process.env.KERF_RUST_SECRET || randomBytes(32).toString('hex')
+  const env = { ...paths, KERF_RUST_SECRET: secret }
   let closed = false
   const live = new Map()
 
@@ -151,7 +151,7 @@ export async function startSidecars({ root, built = false, log = console.log }) 
       // One that ran for a while starts over; one that dies at once backs off.
       tries = Date.now() - up > 30_000 ? 1 : tries + 1
       const wait = Math.min(100 * 2 ** tries, 5_000)
-      log(`[weft] ${service} ${why}: restarting in ${wait} ms`)
+      log(`[kerf] ${service} ${why}: restarting in ${wait} ms`)
       setTimeout(() => {
         if (!closed) begin().catch((e) => again(e.message.split('\n')[0]))
       }, wait)

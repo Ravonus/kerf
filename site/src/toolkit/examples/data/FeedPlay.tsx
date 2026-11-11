@@ -1,4 +1,4 @@
-import { Feed } from '@weft-js/warp'
+import { Feed } from '@kerf-js/veneer'
 
 import { money as _Shared0 } from './shared-project'
 

@@ -1,23 +1,23 @@
-import { state } from '@weft-js/core'
-import { Heading, Shell, Text } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Heading, Shell, Text } from '@kerf-js/veneer'
 import {
   AppWindow,
   MARK,
   ACCOUNT,
-  weftNav,
+  kerfNav,
   pageOf,
 } from './shared'
 
 export function ShellRail() {
   const page = state('deploys')
   const folded = state<boolean | 'hidden'>(true)
-  const nav = weftNav((id) => (page.value = id))
+  const nav = kerfNav((id) => (page.value = id))
   return (
     <AppWindow height={420}>
       <Shell
         island
-        label="weft"
-        brand={{ name: 'weft', mark: <MARK /> }}
+        label="kerf"
+        brand={{ name: 'kerf', mark: <MARK /> }}
         crumbs={[{ label: pageOf[page.value]! }]}
         nav={nav}
         current={page.value}

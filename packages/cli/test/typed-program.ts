@@ -4,7 +4,7 @@ import ts from 'typescript'
 /** Core declarations and minimal globals used by typed diagnostic fixtures. */
 export const declarations = `
 interface Array<T> { length: number; [index: number]: T }
-declare module '@weft-js/core' {
+declare module '@kerf-js/core' {
   export interface State<T> { value: T; readonly stateBrand: 'state' }
   export interface Derived<T> { readonly value: T; readonly derivedBrand: 'derived' }
   export function state<T>(value: T): State<T>;

@@ -26,7 +26,7 @@ export function bindings(mods) {
     return i ? across(mod, i.source, i.imported, seen) : false
   }
   const across = (mod, spec, name, seen) => {
-    if (spec === '@weft-js/core/style') return false
+    if (spec === '@kerf-js/core/style') return false
     if (OPAQUE.test(spec)) return !PURE[spec]?.has(name)
     const file = mod.resolved.get(spec)
     if (!file) return true

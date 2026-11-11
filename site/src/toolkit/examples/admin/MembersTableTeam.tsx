@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { MembersTable, Toaster } from '@weft-js/warp'
-import type { Invite, Member } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { MembersTable, Toaster } from '@kerf-js/veneer'
+import type { Invite, Member } from '@kerf-js/veneer'
 import {
   TEAM_INVITES,
   TEAM_MEMBERS,

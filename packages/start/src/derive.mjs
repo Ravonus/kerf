@@ -1,6 +1,6 @@
 // What a page's HTML says about itself (research 20 §10): the automatic layer under route `meta`. A route that sets no
 // title gets its `h1`, one that sets no description gets its first real paragraph, cleaned and cut at a sentence. Pure
-// functions on a string, server-side only: `weft check` runs the same `descriptionProblem` on what a route wrote.
+// functions on a string, server-side only: `kerf check` runs the same `descriptionProblem` on what a route wrote.
 
 const SKIP = new Set([
   'script',
@@ -198,14 +198,14 @@ export function pageText(html) {
 }
 
 /**
- * The site's public origin, when something says what it is: `site.url`, `WEFT_SITE_URL`, or what the host sets on a
+ * The site's public origin, when something says what it is: `site.url`, `KERF_SITE_URL`, or what the host sets on a
  * deploy. No request is involved, so the answer can be trusted and written into a page a CDN keeps.
  */
 export function deployUrl(site, env = {}) {
   if (site?.url) return site.url
   const https = (host) => host && `https://${host}`
   return (
-    env.WEFT_SITE_URL ||
+    env.KERF_SITE_URL ||
     https(env.VERCEL_PROJECT_PRODUCTION_URL) ||
     https(env.VERCEL_URL) ||
     env.URL || // Netlify

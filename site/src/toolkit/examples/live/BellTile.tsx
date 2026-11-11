@@ -1,4 +1,4 @@
-import { Bell, Row } from '@weft-js/warp'
+import { Bell, Row } from '@kerf-js/veneer'
 
 export const BellTile = () => (
   <Row gap="group">

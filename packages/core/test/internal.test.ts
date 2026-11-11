@@ -1,5 +1,5 @@
-import * as internal from '@weft-js/core/internal'
-import { collect, createRoot, flush, state } from '@weft-js/core'
+import * as internal from '@kerf-js/core/internal'
+import { collect, createRoot, flush, state } from '@kerf-js/core'
 import * as root from '../src/full'
 import manifest from '../package.json'
 import * as graph from '../src/index/graph'

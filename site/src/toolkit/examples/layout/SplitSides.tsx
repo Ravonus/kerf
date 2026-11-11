@@ -1,4 +1,4 @@
-import { Split, Stack } from '@weft-js/warp'
+import { Split, Stack } from '@kerf-js/veneer'
 import { Box } from './shared'
 
 export const SplitSides = () => (

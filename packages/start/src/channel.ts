@@ -3,7 +3,7 @@
 // finds its messages. The socket server is socket.ts, and `room.in(params).publish` reaches it through
 // `runtime.channels`, so nothing of the server ships here.
 
-import { type Derived, type State } from '@weft-js/core'
+import { type Derived, type State } from '@kerf-js/core'
 import {
   fns,
   runtime,
@@ -140,7 +140,7 @@ export interface Channel<P, C, S> {
   readonly $id: string
 }
 
-const FN = Symbol.for('weft.fn')
+const FN = Symbol.for('kerf.fn')
 let auto = 0
 
 /** A named room of schema-checked messages over the shared socket. */
@@ -222,7 +222,7 @@ export function sharedState<K extends StandardSchemaV1, V extends StandardSchema
   } as never
 }
 
-/** @weft-js/core/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
+/** @kerf-js/core/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
 const FAKE = './channel-fake.ts' // with its extension: nothing resolves this one for a linked package
 function fake(onFrame: (d: Frame) => void, closed: (code: number) => void): SocketLink {
   let link: SocketLink | undefined

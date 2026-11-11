@@ -1,13 +1,13 @@
-// The change feed on a real MongoDB: `WEFT_TEST_MONGO` a replica set, `WEFT_TEST_MONGO_SOLO` a standalone. Their
+// The change feed on a real MongoDB: `KERF_TEST_MONGO` a replica set, `KERF_TEST_MONGO_SOLO` a standalone. Their
 // databases are yours to lose.
 import { until6000 as until } from '../../start/test/change-wait.helpers.mjs'
 import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
-import { createFeed } from '@weft-js/start/changes'
+import { createFeed } from '@kerf-js/start/changes'
 import type { Db, MongoClient, ObjectId } from 'mongodb'
 import { mongoChanges } from '../src/mongo'
 
-const url = process.env.WEFT_TEST_MONGO
-const solo = process.env.WEFT_TEST_MONGO_SOLO
+const url = process.env.KERF_TEST_MONGO
+const solo = process.env.KERF_TEST_MONGO_SOLO
 
 // A change stream needs a real replica set, which only a machine with one configures.
 describe.skipIf(!url)('mongo change feed', () => {

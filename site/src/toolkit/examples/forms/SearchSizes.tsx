@@ -1,4 +1,4 @@
-import { Search, Stack } from '@weft-js/warp'
+import { Search, Stack } from '@kerf-js/veneer'
 
 export const SearchSizes = () => (
   <Stack gap="group">

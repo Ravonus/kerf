@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 const times = [500, 1500, 3000]
 

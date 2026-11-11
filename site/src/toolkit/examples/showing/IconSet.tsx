@@ -1,4 +1,4 @@
-import { Grid, Stack, Icon, Text } from '@weft-js/warp'
+import { Grid, Stack, Icon, Text } from '@kerf-js/veneer'
 import { LOOK } from './icon-data'
 
 export const IconSet = () => (

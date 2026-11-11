@@ -1,5 +1,5 @@
-import { ScrollView } from '@weft-js/warp'
-import { canvas } from '@weft-js/scroll/canvas'
+import { ScrollView } from '@kerf-js/veneer'
+import { canvas } from '@kerf-js/scroll/canvas'
 
 const lines = Array.from({ length: 80 }, (_, i) => i)
 

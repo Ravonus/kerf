@@ -1,6 +1,6 @@
-import { onCleanup, state } from '@weft-js/core'
-import { Text } from '@weft-js/core/text'
-import { Button, Card } from '@weft-js/warp'
+import { onCleanup, state } from '@kerf-js/core'
+import { Text } from '@kerf-js/core/text'
+import { Button, Card } from '@kerf-js/veneer'
 
 const REPLY =
   'Streams arrive a few characters at a time. A plain ' +

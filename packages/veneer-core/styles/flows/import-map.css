@@ -1,0 +1,4 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+:where([data-scope="import-map"] [data-scope="field"]) { min-inline-size: 150px; }
+}

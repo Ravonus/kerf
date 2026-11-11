@@ -1,4 +1,4 @@
-// `weft build` reads the live plan through a private Vite dev server before it builds. That server must not leave
+// `kerf build` reads the live plan through a private Vite dev server before it builds. That server must not leave
 // NODE_ENV=development behind, or the production build compiles with `import.meta.env.DEV` on and ships dev-only
 // diagnostics (X031 and the rest) to every visitor.
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { readShapes } from '../src/contract.mjs'
 
 test('loading the server modules leaves NODE_ENV as it found it', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-env-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-env-'))
   const was = process.env.NODE_ENV
   try {
     delete process.env.NODE_ENV

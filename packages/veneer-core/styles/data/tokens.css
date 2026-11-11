@@ -1,0 +1,86 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.tokens {
+/* per-stop data inputs (numbers; they inherit cleanly) */
+:root, [data-expression="balanced"] {
+  --veneer-ref-data-draw: 0;     /* line/arc draw-in (stroke-dashoffset) */
+  --veneer-ref-data-rise: 0.35;  /* bars start at 65% height and settle */
+  --veneer-ref-data-fade: 1;     /* marks fade in */
+  --veneer-ref-data-area: 0.14;  /* area wash alpha */
+  --veneer-ref-data-line: 1.75px;
+  --veneer-ref-data-num-font: var(--veneer-font-display);
+  --veneer-ref-tree-guides: 1;   /* tree data (06 §6): hairline level guides */
+  --veneer-ref-tree-tint: 0;     /* guides + leading edge in the top-level branch's series colour */
+}
+[data-expression="quiet"] {
+  --veneer-ref-data-draw: 0; --veneer-ref-data-rise: 0; --veneer-ref-data-fade: 0;
+  --veneer-ref-data-area: 0; --veneer-ref-data-line: 1.5px;
+  --veneer-ref-data-num-font: var(--veneer-font-sans);
+  --veneer-ref-tree-guides: 0; --veneer-ref-tree-tint: 0;
+}
+[data-expression="vivid"] {
+  --veneer-ref-data-draw: 1; --veneer-ref-data-rise: 1; --veneer-ref-data-fade: 1;
+  --veneer-ref-data-area: 0.34; --veneer-ref-data-line: 2px;
+  --veneer-ref-data-num-font: var(--veneer-font-display);
+  --veneer-ref-tree-guides: 1; --veneer-ref-tree-tint: 1;
+}
+
+/* sys: re-declared on every scope root, exactly like veneer.css §2 */
+:root, [data-expression], [data-density], [data-form], [data-pointer],
+[data-motion], [data-flair], [data-theme], [data-palette], [data-veneer] {
+  /* -- categorical palette v0.2 (replaces veneer.css v0.1 data-1…8) ---------
+     Same eight families, re-stepped so ADJACENT slots differ in lightness as
+     well as hue. Validated (Machado 2009 CVD sim, OKLab ΔE×100) in light and
+     dark at every stop: adjacent protan/deutan ΔE ≥ 15.8 (target 8), normal
+     ΔE ≥ 21.3 (floor 15), chroma ≥ 0.10, every mark ≥ 3:1 vs page, surface,
+     raised and sunken. v0.1 failed adjacent CVD (teal↔magenta ΔE 3.1).
+     Order: blue · amber · magenta · olive · cyan · red-orange · violet · teal */
+  --veneer-color-data-1: light-dark(oklch(0.571 min(calc(0.220 * var(--_tk)), 0.233) 260), oklch(0.600 min(calc(0.220 * var(--_tk)), 0.216) 260));
+  --veneer-color-data-2: light-dark(oklch(0.639 min(calc(0.191 * var(--_tk)), 0.142) 65),  oklch(0.664 min(calc(0.191 * var(--_tk)), 0.148) 65));
+  --veneer-color-data-3: light-dark(oklch(0.570 min(calc(0.220 * var(--_tk)), 0.239) 347), oklch(0.648 min(calc(0.220 * var(--_tk)), 0.272) 347));
+  --veneer-color-data-4: light-dark(oklch(0.625 min(calc(0.193 * var(--_tk)), 0.142) 117), oklch(0.664 min(calc(0.193 * var(--_tk)), 0.151) 117));
+  --veneer-color-data-5: light-dark(oklch(0.622 min(calc(0.153 * var(--_tk)), 0.118) 226), oklch(0.664 min(calc(0.153 * var(--_tk)), 0.126) 226));
+  --veneer-color-data-6: light-dark(oklch(0.600 min(calc(0.220 * var(--_tk)), 0.187) 40),  oklch(0.604 min(calc(0.220 * var(--_tk)), 0.188) 40));
+  --veneer-color-data-7: light-dark(oklch(0.592 min(calc(0.220 * var(--_tk)), 0.255) 298), oklch(0.605 min(calc(0.220 * var(--_tk)), 0.246) 298));
+  --veneer-color-data-8: light-dark(oklch(0.574 min(calc(0.209 * var(--_tk)), 0.119) 165), oklch(0.664 min(calc(0.209 * var(--_tk)), 0.138) 165));
+  --veneer-color-data-other: var(--veneer-color-text-faint);           /* the 9th+ series fold here */
+
+  /* sequential: one hue (accent), light → dark; diverging: critical ↔ neutral ↔ info */
+  --veneer-color-data-seq-0: var(--veneer-color-surface-sunken);
+  --veneer-color-data-seq-1: color-mix(in oklab, var(--veneer-color-accent-solid) 18%, var(--veneer-color-surface));
+  --veneer-color-data-seq-2: color-mix(in oklab, var(--veneer-color-accent-solid) 38%, var(--veneer-color-surface));
+  --veneer-color-data-seq-3: color-mix(in oklab, var(--veneer-color-accent-solid) 60%, var(--veneer-color-surface));
+  --veneer-color-data-seq-4: color-mix(in oklab, var(--veneer-color-accent-solid) 82%, var(--veneer-color-surface));
+  --veneer-color-data-seq-5: var(--veneer-color-accent-solid);
+  --veneer-color-data-div-neg: var(--veneer-color-critical-text);
+  --veneer-color-data-div-mid: var(--veneer-color-surface-active);
+  --veneer-color-data-div-pos: var(--veneer-color-info-text);
+
+  /* polarity (price up/down, KPI deltas): colour + shape, never colour alone */
+  --veneer-color-data-up: var(--veneer-color-positive-text);
+  --veneer-color-data-down: var(--veneer-color-critical-text);
+  --veneer-color-data-up-flash: var(--veneer-color-positive-soft);
+  --veneer-color-data-down-flash: var(--veneer-color-critical-soft);
+
+  /* marks + motion */
+  --veneer-data-line: var(--veneer-ref-data-line);
+  --veneer-data-area: var(--veneer-ref-data-area);
+  --veneer-data-num-font: var(--veneer-ref-data-num-font);
+  --veneer-data-draw: calc(var(--veneer-ref-data-draw) * var(--veneer-motion-scale));
+  --veneer-data-rise: calc(var(--veneer-ref-data-rise) * var(--veneer-motion-scale));
+  --veneer-data-fade: calc(var(--veneer-ref-data-fade) * var(--veneer-motion-scale));
+  /* enter: slow at balanced; vivid draws over 2 × slow (the one data exception
+     to the 384ms cap, like the sweep: once, on enter, never on update) */
+  --veneer-data-enter: calc(var(--veneer-duration-slow) * (1 + var(--veneer-ref-data-draw)));
+  --veneer-data-tween: var(--veneer-duration-base);                    /* live updates */
+  --veneer-data-flash: calc(900ms * (0.4 + 0.6 * var(--veneer-motion-scale)));
+
+  /* table */
+  --veneer-table-row: max(calc(var(--veneer-ref-control-md) + 4px), var(--veneer-target-min)); /* 36 · 40 · 44; 44 coarse */
+  --veneer-table-pad-x: calc(var(--veneer-pad-control) * 1);
+  --veneer-table-head: max(calc(var(--veneer-ref-control-md) - 2px), var(--veneer-target-min));
+  /* tree data: one level of indent (toggle 24 + related gap, density-scaled: 30 · 32 · 34) */
+  --veneer-table-indent: calc(24px + var(--veneer-space-related));
+  --veneer-table-tree-guides: var(--veneer-ref-tree-guides);
+  --veneer-table-tree-tint: var(--veneer-ref-tree-tint);
+}
+}

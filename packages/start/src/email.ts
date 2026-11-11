@@ -1,4 +1,4 @@
-// `@weft-js/start/email`: `sendEmail()` from any server code, through the mailer `src/email.server.ts` exports, or
+// `@kerf-js/start/email`: `sendEmail()` from any server code, through the mailer `src/email.server.ts` exports, or
 // the one the environment names: `RESEND_API_KEY` sends through Resend, `SMTP_URL` over SMTP (nodemailer), and dev with
 // neither prints each message to the server log. Auth's verification and reset emails go the same way.
 import { StartError } from './data'
@@ -109,7 +109,7 @@ export function consoleMailer(): Mailer {
     name: 'console',
     send(m) {
       console.info(
-        `[weft] email to ${[m.to].flat().join(', ')}: ${m.subject}\n${m.text ?? m.html ?? ''}\n`,
+        `[kerf] email to ${[m.to].flat().join(', ')}: ${m.subject}\n${m.text ?? m.html ?? ''}\n`,
       )
       return Promise.resolve()
     },

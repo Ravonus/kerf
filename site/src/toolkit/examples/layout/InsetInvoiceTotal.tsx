@@ -1,4 +1,4 @@
-import { Inset, Row, Stack, Text } from '@weft-js/warp'
+import { Inset, Row, Stack, Text } from '@kerf-js/veneer'
 
 export const InsetInvoiceTotal = () => (
   <Stack gap="related">

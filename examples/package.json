@@ -1,5 +1,5 @@
 {
-  "name": "weft-app-bench",
+  "name": "kerf-app-bench",
   "private": true,
   "type": "module",
   "description": "Benchmarks any real app across its variants: node bench.mjs <app>",

@@ -1,0 +1,19 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+:where([data-scope="breadcrumb"] ol) { display: flex; align-items: center; gap: 2px; margin: 0; padding: 0; list-style: none; min-inline-size: 0; }
+:where([data-scope="breadcrumb"] li) { display: flex; align-items: center; min-inline-size: 0; white-space: nowrap; }
+:where([data-scope="breadcrumb"] li + li)::before {
+  content: "/"; padding-inline: 6px; color: var(--veneer-color-text-faint); font-weight: 400;
+}
+:where([data-scope="breadcrumb"] a) {
+  color: var(--veneer-color-text-subtle); text-decoration: none; padding: 4px 4px; border-radius: var(--veneer-radius-mark);
+  transition: color var(--veneer-duration-fast) var(--veneer-ease-out);
+}
+:where([data-scope="breadcrumb"] a:hover) { color: var(--veneer-color-text); background: var(--veneer-color-surface-hover); }
+:where([data-scope="breadcrumb"] [aria-current]) { color: var(--veneer-color-text); font-weight: 500; overflow: clip; text-overflow: ellipsis; padding-inline: 4px; }
+:where([data-scope="breadcrumb"] [data-part="ellipsis"]:not([data-scope="breadcrumb"] [data-scope="breadcrumbs"] *:not([data-scope="breadcrumb"] [data-scope="breadcrumbs"] [data-scope="breadcrumb"] *))) { display: none; }
+@container (max-width: 999.98px) {
+:where([data-scope="breadcrumb"] li[data-collapse]) { display: none; }
+:where([data-scope="breadcrumb"] [data-part="ellipsis"]:not([data-scope="breadcrumb"] [data-scope="breadcrumbs"] *:not([data-scope="breadcrumb"] [data-scope="breadcrumbs"] [data-scope="breadcrumb"] *))) { display: flex; }
+}
+}

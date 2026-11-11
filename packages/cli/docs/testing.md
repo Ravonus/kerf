@@ -1,4 +1,4 @@
-# Testing (`@weft-js/core/test`, vitest)
+# Testing (`@kerf-js/core/test`, vitest)
 
 A new app has no test runner. Add one:
 
@@ -7,14 +7,14 @@ npm install -D vitest jsdom @testing-library/dom \
   @testing-library/user-event
 ```
 
-<!-- example: skip @weft-js/core/vite has no type declarations yet (TS7016 under strict) -->
+<!-- example: skip @kerf-js/core/vite has no type declarations yet (TS7016 under strict) -->
 ```ts
 // vitest.config.ts
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf-js/core/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [weft()],
+  plugins: [kerf()],
   test: { environment: 'jsdom' },
 })
 ```
@@ -22,8 +22,8 @@ export default defineConfig({
 Then `npx vitest run`. A test:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { render, screen, user } from '@weft-js/core/test'
+import { state } from '@kerf-js/core'
+import { render, screen, user } from '@kerf-js/core/test'
 import { expect, test } from 'vitest'
 
 function Cart() {
@@ -59,9 +59,9 @@ test('adding to the cart', async () => {
 
 ## Junk tests: T001–T009
 
-`weft check` reports these on test files (`test.include` in the config). A test that finishes without an assertion
-also fails at runtime (T001). T012 and T013 are about open listeners and real sockets: `weft docs browser` and
-`weft docs start`; T010, T011 and T020 are the gate: `weft docs verify`.
+`kerf check` reports these on test files (`test.include` in the config). A test that finishes without an assertion
+also fails at runtime (T001). T012 and T013 are about open listeners and real sockets: `kerf docs browser` and
+`kerf docs start`; T010, T011 and T020 are the gate: `kerf docs verify`.
 
 | Code | Catches | Instead |
 |---|---|---|
@@ -70,12 +70,12 @@ also fails at runtime (T001). T012 and T013 are about open listeners and real so
 | T003 | `n.value = 5; expect(n.value).toBe(5)` | Act through the UI, assert what depends on it |
 | T004 | `setTimeout` sleeps, real timers, `waitFor` | `flush()`, `clock.advance(ms)` |
 | T005 | `container`, selectors, classes, `innerHTML`, test ids, app state in a component test (warning) | Role, label, text |
-| T006 | `vi.mock('@weft-js/core')`, mocking the component under test | Fake the edges (API, storage) |
+| T006 | `vi.mock('@kerf-js/core')`, mocking the component under test | Fake the edges (API, storage) |
 | T007 | Snapshots | Behavior assertions |
 | T008 | `expect` under `if`/`?:`/`&&`/`catch`, or only inside loops | Assert the condition, then assert unconditionally |
 | T009 | `.only`, `.skip`, `fit`, `xit` | Remove it; `test.fails` for a test meant to fail |
 
-A deliberate exception needs a reason: `// weft-allow T007: the exported SVG is the product`. In the file's header
+A deliberate exception needs a reason: `// kerf-allow T007: the exported SVG is the product`. In the file's header
 comments it covers the whole file; elsewhere, its own line and the next.
 
-Plugins can use this clock too: `fakePay` from `@weft-js/pay/test` plays a rail on it, through your real webhook and ledger. `weft docs pay`.
+Plugins can use this clock too: `fakePay` from `@kerf-js/pay/test` plays a rail on it, through your real webhook and ledger. `kerf docs pay`.

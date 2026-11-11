@@ -1,4 +1,4 @@
-// `weft check` W043, a literal boolean on a `data-*` attribute whose `weft fix` renders the same, and W044, a random key.
+// `kerf check` W043, a literal boolean on a `data-*` attribute whose `kerf fix` renders the same, and W044, a random key.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -45,7 +45,7 @@ describe('W043', () => {
     expect(w043(await check(app(body)))).toEqual([])
   })
 
-  it('`weft fix` applies it, and the check comes back clean', async () => {
+  it('`kerf fix` applies it, and the check comes back clean', async () => {
     const dir = app('<div data-open={true} data-closed={false} id="a" />')
     await fix(dir)
     expect(readFileSync(join(dir, file), 'utf8')).toContain('<div data-open id="a" />')

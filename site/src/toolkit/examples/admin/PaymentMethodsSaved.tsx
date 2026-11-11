@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { PaymentMethods, Toaster } from '@weft-js/warp'
-import type { PaymentMethod } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { PaymentMethods, Toaster } from '@kerf-js/veneer'
+import type { PaymentMethod } from '@kerf-js/veneer'
 import { CARDS } from '../../world'
 
 export function PaymentMethodsSaved() {

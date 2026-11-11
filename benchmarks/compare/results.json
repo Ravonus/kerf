@@ -1,6 +1,6 @@
 {
- "weft-warp": {
-  "label": "weft + warp",
+ "kerf-veneer": {
+  "label": "kerf + veneer",
   "size": {
    "js": {
     "raw": 103973,
@@ -1015,8 +1015,8 @@
    "jsCssBr": 127572
   }
  },
- "weft-plain": {
-  "label": "weft, no warp",
+ "kerf-plain": {
+  "label": "kerf, no veneer",
   "size": {
    "js": {
     "raw": 19860,
@@ -1211,8 +1211,8 @@
    }
   }
  },
- "weft-tailwind": {
-  "label": "weft-tailwind",
+ "kerf-tailwind": {
+  "label": "kerf-tailwind",
   "design": {
    "axe": 6,
    "contrast": 6,

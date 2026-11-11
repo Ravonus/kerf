@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   PaginationBar,
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 export function PaginationBarControlled() {
   const page = state(8)

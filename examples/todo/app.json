@@ -51,8 +51,8 @@
     }
   },
   "variants": {
-    "weft": {
-      "label": "weft + warp",
+    "kerf": {
+      "label": "kerf + veneer",
       "scaffold": {
         "template": "todo",
         "db": "postgres",

@@ -1,4 +1,4 @@
-import { Grid, Inset } from '@weft-js/warp'
+import { Grid, Inset } from '@kerf-js/veneer'
 import { Box } from './shared'
 
 export const InsetPads = () => (

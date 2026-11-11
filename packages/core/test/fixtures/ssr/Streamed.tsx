@@ -1,5 +1,5 @@
 // Two Boundaries with resources that resolve at different times, for test/stream.test.tsx.
-import { Boundary, resource } from '@weft-js/core'
+import { Boundary, resource } from '@kerf-js/core'
 
 function Part(props: { load: (what: string) => Promise<string>; what: string }) {
   const v = resource(() => props.load(props.what))

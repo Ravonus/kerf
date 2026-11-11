@@ -1,10 +1,10 @@
-// @weft-js/core/devtools: the live reactive graph in dev builds, for agents (`weft browser snapshot`/`set`) and people (the
-// overlay, Alt+Shift+G). The weft() Vite plugin loads it when serving; production builds never do.
+// @kerf-js/core/devtools: the live reactive graph in dev builds, for agents (`kerf browser snapshot`/`set`) and people (the
+// overlay, Alt+Shift+G). The kerf() Vite plugin loads it when serving; production builds never do.
 //
 //   Cart.total = 42.5 ← Cart.subtotal, Cart.coupon → 1 binding in <Cart>
 //
 // Names come from the compiler's dev pass (`name(state(0), "Cart.count")`) and from `defineState` (`cart.items`).
-// The page gets `window.__weft__ = { graph, set, flush, errors, overlay }`.
+// The page gets `window.__kerf__ = { graph, set, flush, errors, overlay }`.
 
 import { Box } from './index/state'
 import { DEV, Memo, flush, named, type Computation } from './index'
@@ -163,7 +163,7 @@ export function set(target: string, value: unknown) {
   return graph(ids.get(n))[0]
 }
 
-/** Uncaught errors since the last call, with the binding or component they came from (`@weft-js/core` on the error). */
+/** Uncaught errors since the last call, with the binding or component they came from (`@kerf-js/core` on the error). */
 const caught: { message: string; at?: string; stack?: string }[] = []
 /** The errors the page has thrown since it loaded, newest last. */
 export function errors() {
@@ -193,14 +193,14 @@ export function overlay(show?: boolean) {
   }
   if (panel) return true
   panel = document.createElement('aside')
-  panel.setAttribute('aria-label', 'weft graph')
-  panel.setAttribute('data-weft-devtools', '')
+  panel.setAttribute('aria-label', 'kerf graph')
+  panel.setAttribute('data-kerf-devtools', '')
   panel.style.cssText =
     'position:fixed;right:8px;bottom:8px;z-index:2147483647;max-width:min(560px,90vw);max-height:45vh;overflow:auto;' +
     'background:#111c;color:#eee;font:12px/1.4 ui-monospace,monospace;padding:8px 10px;border-radius:6px;backdrop-filter:blur(4px)'
   const input = document.createElement('input')
   input.placeholder = 'filter (Cart, cart.)'
-  input.setAttribute('aria-label', 'Filter the weft graph')
+  input.setAttribute('aria-label', 'Filter the kerf graph')
   input.style.cssText =
     'width:100%;margin-bottom:6px;background:#0008;color:inherit;border:1px solid #fff3;font:inherit;padding:2px 4px'
   input.oninput = () => paint(input.value)
@@ -213,7 +213,7 @@ export function overlay(show?: boolean) {
 }
 
 if (DEV && typeof window !== 'undefined') {
-  ;(window as Window & { __weft__?: object }).__weft__ = {
+  ;(window as Window & { __kerf__?: object }).__kerf__ = {
     graph,
     format,
     set,
@@ -225,12 +225,12 @@ if (DEV && typeof window !== 'undefined') {
   addEventListener('error', (e) =>
     caught.push({
       message: e.message,
-      at: e.error?.weft,
+      at: e.error?.kerf,
       stack: e.error?.stack?.split('\n').slice(0, 4).join('\n'),
     }),
   )
   addEventListener('unhandledrejection', (e) =>
-    caught.push({ message: String(e.reason?.message ?? e.reason), at: e.reason?.weft }),
+    caught.push({ message: String(e.reason?.message ?? e.reason), at: e.reason?.kerf }),
   )
   addEventListener('keydown', (e) => {
     if (e.altKey && e.shiftKey && e.code === 'KeyG') overlay()

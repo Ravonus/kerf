@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Stack, ToolCall } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Stack, ToolCall } from '@kerf-js/veneer'
 import { ROLLBACK } from './shared'
 
 export function ToolCallApproval() {

@@ -25,7 +25,7 @@ describe('T-codes: each fires on junk', () => {
       `test('a', () => { expect(1 + 1).toBe(2); expect(total()) })`,
       'x.test.ts',
     )
-    expect(d).toMatchObject({ code: 'T001', severity: 'error', docs: 'weft docs T001' })
+    expect(d).toMatchObject({ code: 'T001', severity: 'error', docs: 'kerf docs T001' })
     expect(d.why).toContain('`expect(total())` has no matcher')
   })
 
@@ -46,16 +46,16 @@ test.todo('later')`
   registerTimerDiagnostics()
 
   it('T004: a zero-delay sleep gets a flush() edit that imports it', () => {
-    const src = `import { render } from '@weft-js/core/test'\ntest('a', async () => { await new Promise(r => setTimeout(r)); expect(f()).toBe(1) })`
+    const src = `import { render } from '@kerf-js/core/test'\ntest('a', async () => { await new Promise(r => setTimeout(r)); expect(f()).toBe(1) })`
     const [d] = checkTestFile(src, 'x.test.tsx')
     expect(d.code).toBe('T004')
     expect(d.fix.safe).toBe(false)
     expect(apply(src, d.fix)).toBe(
-      `import { render, flush } from '@weft-js/core/test'\ntest('a', async () => { await flush(); expect(f()).toBe(1) })`,
+      `import { render, flush } from '@kerf-js/core/test'\ntest('a', async () => { await flush(); expect(f()).toBe(1) })`,
     )
     const bare = `test('a', async () => { await new Promise(r => setTimeout(r)); expect(f()).toBe(1) })`
     expect(apply(bare, checkTestFile(bare, 'x.test.ts')[0].fix)).toBe(
-      `import { flush } from '@weft-js/core/test'\ntest('a', async () => { await flush(); expect(f()).toBe(1) })`,
+      `import { flush } from '@kerf-js/core/test'\ntest('a', async () => { await flush(); expect(f()).toBe(1) })`,
     )
   })
 
@@ -69,14 +69,14 @@ test.todo('later')`
 
   registerOnlyAndSkipDiagnostics()
 
-  it('weft-allow in the file header covers the whole file; without a reason it is ignored', () => {
+  it('kerf-allow in the file header covers the whole file; without a reason it is ignored', () => {
     const body = `test('a', () => { expect(document.querySelector('p')!.textContent).toBe('x') })`
     expect(
-      codes(`// weft-allow T005: framework test of compiled DOM\nimport { x } from 'y'\n${body}`),
+      codes(`// kerf-allow T005: framework test of compiled DOM\nimport { x } from 'y'\n${body}`),
     ).toEqual([])
-    expect(codes(`// weft-allow T005\nimport { x } from 'y'\n${body}`)).toEqual(['T005'])
+    expect(codes(`// kerf-allow T005\nimport { x } from 'y'\n${body}`)).toEqual(['T005'])
     expect(
-      codes(`import { x } from 'y'\n// weft-allow T005: only this line\nconst a = 1\n${body}`),
+      codes(`import { x } from 'y'\n// kerf-allow T005: only this line\nconst a = 1\n${body}`),
     ).toEqual(['T005'])
   })
 })
@@ -92,10 +92,10 @@ describe('T-codes stay quiet on the repo’s own tests', () => {
   }
 })
 
-describe('weft check reports T-codes', () => {
+describe('kerf check reports T-codes', () => {
   it('lints test files next to the components, and the reference stays clean', async () => {
     const dir = project({
-      'src/Header.test.tsx': `import { render } from '@weft-js/core/test'
+      'src/Header.test.tsx': `import { render } from '@kerf-js/core/test'
 import { Header } from './components/Header'
 test.only('header', () => { render(Header, { count: 1 } as any) })
 `,
@@ -224,12 +224,12 @@ function registerSelfSetValueAssertions() {
 }
 
 function registerMockDiagnostics() {
-  it('T006: mocking weft or the unit under test', () => {
-    expect(codes(`vi.mock('@weft-js/core')\ntest('a', () => { expect(f()).toBe(1) })`)).toEqual([
+  it('T006: mocking kerf or the unit under test', () => {
+    expect(codes(`vi.mock('@kerf-js/core')\ntest('a', () => { expect(f()).toBe(1) })`)).toEqual([
       'T006',
     ])
     expect(
-      codes(`vi.mock('@weft-js/core/dom', () => ({}))\ntest('a', () => { expect(f()).toBe(1) })`),
+      codes(`vi.mock('@kerf-js/core/dom', () => ({}))\ntest('a', () => { expect(f()).toBe(1) })`),
     ).toEqual(['T006'])
     expect(
       codes(
@@ -238,7 +238,7 @@ function registerMockDiagnostics() {
     ).toEqual(['T006'])
     expect(
       codes(
-        `import * as weft from '@weft-js/core'\ntest('a', () => { vi.spyOn(weft, 'state'); expect(f()).toBe(1) })`,
+        `import * as kerf from '@kerf-js/core'\ntest('a', () => { vi.spyOn(kerf, 'state'); expect(f()).toBe(1) })`,
       ),
     ).toEqual(['T006'])
     // Faking an edge is fine.
@@ -327,11 +327,11 @@ function registerSnapshotDiagnostics() {
     ])
     expect(
       codes(
-        `test('a', () => {\n  // weft-allow T007: the exported SVG is the product\n  expect(svg()).toMatchSnapshot()\n})`,
+        `test('a', () => {\n  // kerf-allow T007: the exported SVG is the product\n  expect(svg()).toMatchSnapshot()\n})`,
       ),
     ).toEqual([])
     expect(
-      codes(`test('a', () => {\n  // weft-allow T007\n  expect(svg()).toMatchSnapshot()\n})`),
+      codes(`test('a', () => {\n  // kerf-allow T007\n  expect(svg()).toMatchSnapshot()\n})`),
     ).toEqual(['T007'])
   })
 }

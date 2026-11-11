@@ -1,5 +1,5 @@
 // HMR gate, end to end (PLAN §3.7: 1k components ≤ 50 ms p95 from Vite's change event to DOM updated; research 21).
-// Generates a 1k-component app, serves it with Vite + weft(), opens it in headless Chromium, then edits one
+// Generates a 1k-component app, serves it with Vite + kerf(), opens it in headless Chromium, then edits one
 // component file at a time and times Vite's watcher `change` event (and the file write) → MutationObserver sees
 // the edited text. Exits 1 when the gated p95 is over budget.
 //
@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createServer } from 'vite'
-import weft from '../vite.mjs'
+import kerf from '../vite.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const pkg = join(here, '..')
@@ -33,9 +33,9 @@ const pw = process.env.PLAYWRIGHT_CORE
   : await import('playwright-core')
 const { chromium } = pw.default ?? pw
 
-const root = join(tmpdir(), `weft-hmr-bench-${process.pid}`)
+const root = join(tmpdir(), `kerf-hmr-bench-${process.pid}`)
 mkdirSync(join(root, 'src'), { recursive: true })
-const comp = (i, label) => `import { state } from '@weft-js/core'
+const comp = (i, label) => `import { state } from '@kerf-js/core'
 export function C${i}(props: { label: string }) {
   const count = state(${i})
   return <li onClick={() => count.value++}><b>${label}</b> {props.label} {count.value}</li>
@@ -49,7 +49,7 @@ writeFileSync(
 )
 writeFileSync(
   join(root, 'src', 'main.tsx'),
-  `import { render } from '@weft-js/core/dom'\nimport { App } from './App.tsx'\nrender(() => <App />, document.getElementById('root')!)\n`,
+  `import { render } from '@kerf-js/core/dom'\nimport { App } from './App.tsx'\nrender(() => <App />, document.getElementById('root')!)\n`,
 )
 writeFileSync(
   join(root, 'index.html'),
@@ -60,11 +60,11 @@ const server = await createServer({
   root,
   configFile: false,
   logLevel: 'error',
-  plugins: [weft()],
+  plugins: [kerf()],
   resolve: {
     alias: [
-      { find: /^@weft-js\/core\/(dom|hmr|shape)$/, replacement: join(pkg, 'src/$1.ts') },
-      { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') },
+      { find: /^@kerf-js\/core\/(dom|hmr|shape)$/, replacement: join(pkg, 'src/$1.ts') },
+      { find: /^@kerf-js\/core$/, replacement: join(pkg, 'src/index.ts') },
     ],
   },
   server: { port: 0, fs: { allow: [root, pkg] } },
@@ -146,7 +146,7 @@ try {
   console.log(`  cold load ${result.coldMs} ms`)
   const out = arg('--json')
   if (out) writeFileSync(out, JSON.stringify(result, null, 2))
-  // The gate starts at Vite's change event: the watcher's own latency before it is the OS's and Vite's, not weft's.
+  // The gate starts at Vite's change event: the watcher's own latency before it is the OS's and Vite's, not kerf's.
   if (result.watcherToDom.p95 > 50) process.exitCode = 1
 } finally {
   await browser.close()

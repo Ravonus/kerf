@@ -1,4 +1,4 @@
-import type { ChatConversation } from '@weft-js/warp'
+import type { ChatConversation } from '@kerf-js/veneer'
 
 export const CONVERSATIONS: ChatConversation[] = [
   {

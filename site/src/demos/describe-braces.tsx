@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
-import { Card, Slider } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Card, Slider } from '@kerf-js/veneer'
 
 const person = {
   name: 'Gregorio Y. Zara',
   theme: {
-    background: 'var(--warp-color-accent-soft)',
-    color: 'var(--warp-color-accent-text)',
+    background: 'var(--veneer-color-accent-soft)',
+    color: 'var(--veneer-color-accent-text)',
   },
 }
 const today = new Date(2026, 10, 2)
@@ -27,8 +27,8 @@ export default function TodoList() {
       <ul
         style={{
           ...person.theme,
-          padding: 'var(--warp-space-group)',
-          borderRadius: 'var(--warp-radius-control)',
+          padding: 'var(--veneer-space-group)',
+          borderRadius: 'var(--veneer-radius-control)',
           fontSize: size.value,
         }}
       >

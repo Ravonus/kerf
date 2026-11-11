@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Card, Switch } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Card, Switch } from '@kerf-js/veneer'
 
 export default function Banner() {
   const urgent = state(false)

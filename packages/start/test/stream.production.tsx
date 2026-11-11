@@ -1,4 +1,4 @@
-import { Boundary, defineState, resource, state, untrack } from '@weft-js/core'
+import { Boundary, defineState, resource, state, untrack } from '@kerf-js/core'
 import { FnError } from '../src/data'
 import { createHandler, type Manifest } from '../src/server'
 import { body, page, serve } from './stream.fixture'
@@ -88,7 +88,7 @@ export function registerProductionFailures() {
       return { html: await body(await handler(new Request('http://localhost/'))), diagnostics }
     }
     const failure = (html: string) =>
-      Object.values(script(html, 'weft-data').r as Record<string, { e?: string }>).map((r) => r.e)
+      Object.values(script(html, 'kerf-data').r as Record<string, { e?: string }>).map((r) => r.e)
 
     test("a deferred field that rejects keeps a driver's text out of the HTML and the data", async () => {
       const { html, diagnostics } = await deferred(
@@ -206,7 +206,7 @@ export function registerAssetPreloadTests() {
     expect(preload).toBeGreaterThan(0)
     expect(preload).toBeLessThan(html.indexOf('<style'))
     expect(html.indexOf('<script type="module" async src="/e.js">')).toBeGreaterThan(
-      html.indexOf('id="weft-data"'),
+      html.indexOf('id="kerf-data"'),
     )
   })
 

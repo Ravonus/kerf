@@ -1,14 +1,14 @@
-// A small protocol client for /_weft/rt: tests and the runtime matrix use it. Frames are parsed the way live.ts does.
+// A small protocol client for /_kerf/rt: tests and the runtime matrix use it. Frames are parsed the way live.ts does.
 import { createHash } from 'node:crypto'
 
-const headers = { 'content-type': 'application/json', 'x-weft': '1' }
+const headers = { 'content-type': 'application/json', 'x-kerf': '1' }
 
 /** Ids are `<export>.<hash of the file>`, and the fixture's and the matrix app's module is `src/server/feed.ts`. */
 export const frameId = (_url, name, file = 'src/server/feed.ts') =>
   `${name}.${createHash('sha256').update(file).digest('hex').slice(0, 6)}`
 
 export const rpc = async (url, id, input) => {
-  const res = await fetch(`${url}/_weft/fn/${id}`, {
+  const res = await fetch(`${url}/_kerf/fn/${id}`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ i: input }),
@@ -19,19 +19,19 @@ export const rpc = async (url, id, input) => {
 
 export async function pageCursor(url, path) {
   const html = await fetch(url + path).then((r) => r.text())
-  const m = /<script type="application\/json" id="weft-rt">(.*?)<\/script>/.exec(html)
+  const m = /<script type="application\/json" id="kerf-rt">(.*?)<\/script>/.exec(html)
   return m ? JSON.parse(m[1]).c : undefined
 }
 
 export async function connect(url, body) {
   const ac = new AbortController()
-  const res = await fetch(`${url}/_weft/rt`, {
+  const res = await fetch(`${url}/_kerf/rt`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
     signal: ac.signal,
   })
-  if (!res.ok) throw new Error(`/_weft/rt: ${res.status} ${await res.text()}`)
+  if (!res.ok) throw new Error(`/_kerf/rt: ${res.status} ${await res.text()}`)
   const frames = []
   const waiting = new Set()
   void (async () => {

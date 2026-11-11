@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, ConfirmDialog } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, ConfirmDialog } from '@kerf-js/veneer'
 import { wait } from './shared'
 
 export function ConfirmDialogRevoke() {

@@ -1,4 +1,4 @@
-import { Menu } from '@weft-js/warp'
+import { Menu } from '@kerf-js/veneer'
 
 export const MenuGroups = () => (
   <Menu

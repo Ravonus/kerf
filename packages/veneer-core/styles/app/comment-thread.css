@@ -1,0 +1,15 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="comment-thread"]) {
+  position: relative; display: grid; gap: 10px; padding: 12px; border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-raised);
+  box-shadow: 0 0 0 1px var(--veneer-color-border), var(--veneer-elevation-1); font-size: 13px; transition: translate var(--veneer-duration-base) var(--veneer-ease-out), opacity var(--veneer-duration-base);
+}
+:where([data-scope="comment-thread"][data-active]) { box-shadow: 0 0 0 1px var(--veneer-color-border-strong), var(--veneer-elevation-2); translate: calc(var(--veneer-motion-distance) * -0.75) 0; }
+:where([data-scope="comment-thread"][data-resolved]) { opacity: 0.55; }
+:where([data-scope="comment-thread"] [data-part="comment"]) { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 8px; }
+:where([data-scope="comment-thread"] [data-part="comment"] p) { grid-column: 2 / -1; margin: 0; line-height: 1.5; }
+:where([data-scope="comment-thread"] [data-part="comment"] time) { font: 500 10.5px/1.8 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="comment-thread"] [data-part="reply"]) { display: flex; gap: 6px; align-items: center; }
+:where([data-scope="comment-thread"] [data-part="reply"] input) { flex: 1; min-inline-size: 0; block-size: 32px; padding-inline: 10px; border: 0; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); color: inherit; font: inherit; box-shadow: inset 0 0 0 1px var(--veneer-color-border); }
+:where([data-scope="comment-thread"] [data-part="reply"] input:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; }
+}

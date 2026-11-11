@@ -1,3 +1,3 @@
 fn main() {
-    weft::build::generate("media");
+    kerf::build::generate("media");
 }

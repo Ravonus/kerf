@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   MessageActions,
   Prose,
   Stack,
   Text,
-} from '@weft-js/warp'
-import { copyConfirm } from '@weft-js/warp-core'
+} from '@kerf-js/veneer'
+import { copyConfirm } from '@kerf-js/veneer-core'
 
 export function MessageActionsFeedback() {
   const said = state('Nothing yet')

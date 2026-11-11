@@ -1,5 +1,5 @@
-import { onMount, state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { onMount, state } from '@kerf-js/core'
+import { Button, Card } from '@kerf-js/veneer'
 
 const rows = Array.from({ length: 1000 }, (_, i) => ({
   id: i,

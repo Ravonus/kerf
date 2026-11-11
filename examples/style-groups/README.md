@@ -1,13 +1,13 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
 <h1 align="center">style-groups</h1>
 
 <p align="center">
-  <strong>A small shop written with style groups from <code>@weft-js/core/style</code>.</strong><br>
+  <strong>A small shop written with style groups from <code>@kerf-js/core/style</code>.</strong><br>
   It is the source fixture for core's style and SSR round-trip tests, not an app you start.
 </p>
 
@@ -44,14 +44,14 @@ A grocery shop with a Products tab and a Cart tab:
 | `src/api.ts` | `createFakeApi()`: six products (fruit, bakery, dairy) after 300 ms, and a random price change every 3 s. | |
 | `src/format.ts` | Money formatting. | |
 
-State is plain Weft: `state`, `derived` and `watch` from `@weft-js/core`.
+State is plain Kerf: `state`, `derived` and `watch` from `@kerf-js/core`.
 
 ## How a group reads
 
 From [`src/ui.tsx`](./src/ui.tsx):
 
 ```tsx
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf-js/core/style'
 
 /** A button. Solid for the main action of a row, ghost for small steppers. */
 export const action = group('action', {
@@ -105,4 +105,4 @@ cd packages/core
 pnpm exec vitest run test/style.test.tsx
 ```
 
-`pnpm --filter @weft-js/core test` runs the whole core suite, this file included.
+`pnpm --filter @kerf-js/core test` runs the whole core suite, this file included.

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-// The client data cache over @weft-js/core/test's fake transport (research 27 §7): queries, dedupe, in-place updates,
+// The client data cache over @kerf-js/core/test's fake transport (research 27 §7): queries, dedupe, in-place updates,
 // optimistic overlays and rollbacks, single-flight refreshes, the shared tagged cache and the Q/S diagnostics. No
 // server and no Vite plugin: the definitions keep their `run`, and calls go to the executor in process.
-import { state } from '@weft-js/core'
-import { flush, net, render, screen } from '@weft-js/core/test'
-import { cache, mutation, query, redirect, skip, type StandardSchemaV1 } from '@weft-js/start'
-import { decodeForm, produce, runtime, share } from '@weft-js/start/data'
+import { state } from '@kerf-js/core'
+import { flush, net, render, screen } from '@kerf-js/core/test'
+import { cache, mutation, query, redirect, skip, type StandardSchemaV1 } from '@kerf-js/start'
+import { decodeForm, produce, runtime, share } from '@kerf-js/start/data'
 import { checkTags } from '../src/exec'
 
 type Todo = { id: string; title: string; done: boolean }
@@ -291,7 +291,7 @@ describe('diagnostics', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const dated = query({ $id: 'dated', run: () => ({ at: new Date(0) }) })
     expect(await dated.fetch()).toEqual({ at: '1970-01-01T00:00:00.000Z' }) // what the client really gets
-    expect(String(warn.mock.calls[0]?.[0])).toMatch(/^weft: Q005 `dated`'s result\.at is a Date/)
+    expect(String(warn.mock.calls[0]?.[0])).toMatch(/^kerf: Q005 `dated`'s result\.at is a Date/)
     warn.mockRestore()
   })
 

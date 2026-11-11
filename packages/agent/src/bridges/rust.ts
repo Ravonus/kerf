@@ -1,5 +1,5 @@
 // The Rust bridge: the Technomancy AI Bridge daemon on your own machine answers, through the claude and codex CLIs
-// signed in there. The app holds a job queue at `/_weft/x/agent/bridges/<id>/jobs`, and the daemon long-polls it from
+// signed in there. The app holds a job queue at `/_kerf/x/agent/bridges/<id>/jobs`, and the daemon long-polls it from
 // outside, so the machine never listens publicly and the app can be anywhere. The daemon meters and caps spend per
 // site and per person; the agent loop here runs the tools, with the same grants as every other bridge.
 //
@@ -8,7 +8,7 @@
 //   name = "shop"
 //   url = "https://shop.example"
 //   token = "<technomancy-bridge token>"       # also AGENT_BRIDGE_TOKEN on the app
-//   queues = ["/_weft/x/agent/bridges/rust/jobs"]
+//   queues = ["/_kerf/x/agent/bridges/rust/jobs"]
 import { randomUUID, timingSafeEqual } from 'node:crypto'
 import { transcript, type Bridge, type BridgeStep, type BridgeTurn } from '../bridge'
 import type { ToolInfo } from '../index'
@@ -48,8 +48,8 @@ interface Queue {
 }
 
 // One queue per bridge id for the process: it survives a dev reload, so the poller and the turn meet
-const g = globalThis as { __weftRustBridge?: Map<string, Queue> }
-const queues = (g.__weftRustBridge ??= new Map())
+const g = globalThis as { __kerfRustBridge?: Map<string, Queue> }
+const queues = (g.__kerfRustBridge ??= new Map())
 const queueOf = (id: string) => {
   let q = queues.get(id)
   if (!q) queues.set(id, (q = { waiting: new Map(), ready: [], pollers: [], seen: 0 }))

@@ -34,7 +34,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 26 }
       - run: rustup target add ${{ matrix.target }}
-        working-directory: crates/weft-compiler
+        working-directory: crates/kerf-compiler
       - if: matrix.cross == 'zigbuild'
         run: |
           python3 -m pip install ziglang
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: wasm
-          path: packages/core/native/weft-compiler.wasm*
+          path: packages/core/native/kerf-compiler.wasm*
   verify:
     permissions:
       contents: read

@@ -9,7 +9,7 @@ import { matchingRouteAssets, selectRouteAssets } from '../../src/asset-receipt.
 import { ROUTE_ASSET_BYTES } from '../../src/vite/shared.mjs'
 
 function fixture(t) {
-  const root = mkdtempSync(join(tmpdir(), 'weft-emitted-bytes-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-emitted-bytes-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const chunk = (code, modules, imports = [], css = [], assets = []) => ({
     type: 'chunk',
@@ -20,9 +20,9 @@ function fixture(t) {
   })
   const bundle = {
     'a.js': chunk('á', ['/app/a.tsx'], ['shared.js'], ['a.css'], ['icon.svg']),
-    'b.js': chunk('bbb', ['/app/b.tsx?weft-assets'], ['shared.js'], ['b.css'], ['icon.svg']),
+    'b.js': chunk('bbb', ['/app/b.tsx?kerf-assets'], ['shared.js'], ['b.css'], ['icon.svg']),
     'shared.js': chunk('shared', ['/app/shared.ts'], [], ['shared.css']),
-    'eager.js': chunk('shapes', ['\0virtual:weft/routes'], ['shared.js']),
+    'eager.js': chunk('shapes', ['\0virtual:kerf/routes'], ['shared.js']),
     'a.css': { type: 'asset', source: '€' },
     'b.css': { type: 'asset', source: 'bb' },
     'shared.css': { type: 'asset', source: 'c' },
@@ -97,12 +97,12 @@ void test('client writeBundle emits the byte manifest independent of CSS options
   }
   const context = { environment: { config: { consumer: 'client' } } }
   await writeBundle(state).handler.call(context, { dir: f.root }, f.bundle)
-  const saved = JSON.parse(readFileSync(join(f.root, 'weft-route-assets.json'), 'utf8'))
+  const saved = JSON.parse(readFileSync(join(f.root, 'kerf-route-assets.json'), 'utf8'))
   assert.equal(saved.routes['/a'].bytes, 16)
   assert.equal(saved.build, 'build-a')
   assert.equal(saved.eager.bytes, 13)
   assert.equal(state.routeAssetBytes.routes['/b'].bytes, 16)
-  const collision = { ...f.bundle, 'weft-route-assets.json': { type: 'asset', source: '{}' } }
+  const collision = { ...f.bundle, 'kerf-route-assets.json': { type: 'asset', source: '{}' } }
   await assert.rejects(
     () => writeBundle(state).handler.call(context, { dir: f.root }, collision),
     /Cannot overwrite/,
@@ -151,7 +151,7 @@ void test('emitted byte reads stay inside the output directory and preserve bina
   }
   const context = { environment: { config: { consumer: 'client' } } }
   await writeBundle(state).handler.call(context, { dir: f.root }, f.bundle)
-  const receipt = JSON.parse(readFileSync(join(f.root, 'weft-route-assets.json'), 'utf8'))
+  const receipt = JSON.parse(readFileSync(join(f.root, 'kerf-route-assets.json'), 'utf8'))
   const unsafe = [
     traversal,
     outside,
@@ -220,6 +220,6 @@ void test('server chunk embeds only a same-build emitted receipt', async (t) => 
   assert.ok(!emitted.includes(ROUTE_ASSET_BYTES))
   state.build = 'build-b'
   assert.equal(renderChunk(state).handler.call(context, input).code, 'const receipt = null')
-  rmSync(join(f.root, 'weft-route-assets.json'))
+  rmSync(join(f.root, 'kerf-route-assets.json'))
   assert.equal(renderChunk(state).handler.call(context, input).code, 'const receipt = null')
 })

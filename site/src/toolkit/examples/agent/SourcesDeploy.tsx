@@ -1,4 +1,4 @@
-import { Sources } from '@weft-js/warp'
+import { Sources } from '@kerf-js/veneer'
 import { DEPLOY_SOURCES } from '../../world'
 
 export const SourcesDeploy = () => (

@@ -1,6 +1,6 @@
 // The intent vocabulary of style groups (research 23 §2.1): research 03's closed keys and token names, resolved to
-// declarations through warp's token variables (docs/design/warp/tokens/warp.css, `--warp-*`). Both the types in
-// @weft-js/core/style and the build-time resolver (./css.ts) read this one table. Plain data: the Vite plugin imports it in
+// declarations through veneer's token variables (docs/design/veneer/tokens/veneer.css, `--veneer-*`). Both the types in
+// @kerf-js/core/style and the build-time resolver (./css.ts) read this one table. Plain data: the Vite plugin imports it in
 // Node, so no syntax beyond what type stripping erases.
 
 type Decls = Readonly<Record<string, string>>
@@ -8,77 +8,77 @@ type Decls = Readonly<Record<string, string>>
 const scale = (prop: string) =>
   ({
     none: { [prop]: '0' },
-    hair: { [prop]: 'var(--warp-space-hair)' },
-    tight: { [prop]: 'var(--warp-space-tight)' },
-    related: { [prop]: 'var(--warp-space-related)' },
-    group: { [prop]: 'var(--warp-space-group)' },
-    section: { [prop]: 'var(--warp-space-section)' },
-    page: { [prop]: 'var(--warp-space-page)' },
+    hair: { [prop]: 'var(--veneer-space-hair)' },
+    tight: { [prop]: 'var(--veneer-space-tight)' },
+    related: { [prop]: 'var(--veneer-space-related)' },
+    group: { [prop]: 'var(--veneer-space-group)' },
+    section: { [prop]: 'var(--veneer-space-section)' },
+    page: { [prop]: 'var(--veneer-space-page)' },
   }) as const
 
-/** Warp's tone channels (warp-components.css): a tone sets them once, and every group reads them. */
+/** Veneer's tone channels (veneer-components.css): a tone sets them once, and every group reads them. */
 const tone = (t: string): Decls => ({
-  '--_solid': `var(--warp-color-${t}-solid)`,
-  '--_solid-hover': `var(--warp-color-${t}-solid-hover)`,
-  '--_ink-on': `var(--warp-color-${t}-on-solid)`,
-  '--_soft': `var(--warp-color-${t}-soft)`,
-  '--_text': `var(--warp-color-${t}-text)`,
-  '--_border': `var(--warp-color-${t}-border)`,
+  '--_solid': `var(--veneer-color-${t}-solid)`,
+  '--_solid-hover': `var(--veneer-color-${t}-solid-hover)`,
+  '--_ink-on': `var(--veneer-color-${t}-on-solid)`,
+  '--_soft': `var(--veneer-color-${t}-soft)`,
+  '--_text': `var(--veneer-color-${t}-text)`,
+  '--_border': `var(--veneer-color-${t}-border)`,
 })
 
 const text = (role: string, weight = true): Decls => ({
-  'font-size': `var(--warp-text-${role}-size)`,
-  'line-height': `var(--warp-text-${role}-leading)`,
-  ...(weight ? { 'font-weight': `var(--warp-text-${role}-weight)` } : {}),
+  'font-size': `var(--veneer-text-${role}-size)`,
+  'line-height': `var(--veneer-text-${role}-leading)`,
+  ...(weight ? { 'font-weight': `var(--veneer-text-${role}-weight)` } : {}),
 })
 
 export const VOCAB = {
   /** Background role (03 §4.3 `color.surface*`). */
   surface: {
-    page: { 'background-color': 'var(--warp-color-page)' },
-    base: { 'background-color': 'var(--warp-color-surface)' },
-    raised: { 'background-color': 'var(--warp-color-surface-raised)' },
-    overlay: { 'background-color': 'var(--warp-color-surface-overlay)' },
-    sunken: { 'background-color': 'var(--warp-color-surface-sunken)' },
+    page: { 'background-color': 'var(--veneer-color-page)' },
+    base: { 'background-color': 'var(--veneer-color-surface)' },
+    raised: { 'background-color': 'var(--veneer-color-surface-raised)' },
+    overlay: { 'background-color': 'var(--veneer-color-surface-overlay)' },
+    sunken: { 'background-color': 'var(--veneer-color-surface-sunken)' },
     inverse: {
-      'background-color': 'var(--warp-color-surface-inverse)',
-      color: 'var(--warp-color-on-inverse)',
+      'background-color': 'var(--veneer-color-surface-inverse)',
+      color: 'var(--veneer-color-on-inverse)',
     },
   },
   pad: {
     ...scale('padding'),
-    control: { padding: 'var(--warp-pad-control)' },
-    surface: { padding: 'var(--warp-pad-surface)' },
+    control: { padding: 'var(--veneer-pad-control)' },
+    surface: { padding: 'var(--veneer-pad-surface)' },
   },
   padInline: {
     ...scale('padding-inline'),
-    control: { 'padding-inline': 'var(--warp-pad-control)' },
+    control: { 'padding-inline': 'var(--veneer-pad-control)' },
   },
   padBlock: scale('padding-block'),
   gap: scale('gap'),
   radius: {
     none: { 'border-radius': '0' },
-    mark: { 'border-radius': 'var(--warp-radius-mark)' },
-    control: { 'border-radius': 'var(--warp-radius-control)' },
-    surface: { 'border-radius': 'var(--warp-radius-surface)' },
-    round: { 'border-radius': 'var(--warp-radius-round)' },
+    mark: { 'border-radius': 'var(--veneer-radius-mark)' },
+    control: { 'border-radius': 'var(--veneer-radius-control)' },
+    surface: { 'border-radius': 'var(--veneer-radius-surface)' },
+    round: { 'border-radius': 'var(--veneer-radius-round)' },
   },
   border: {
     none: { border: '0' },
-    hairline: { border: 'var(--warp-border-hairline) solid var(--warp-color-border)' },
-    strong: { border: 'var(--warp-border-hairline) solid var(--warp-color-border-strong)' },
-    control: { border: 'var(--warp-border-hairline) solid var(--warp-color-border-control)' },
-    tone: { border: 'var(--warp-border-hairline) solid var(--_border, var(--warp-color-border))' },
+    hairline: { border: 'var(--veneer-border-hairline) solid var(--veneer-color-border)' },
+    strong: { border: 'var(--veneer-border-hairline) solid var(--veneer-color-border-strong)' },
+    control: { border: 'var(--veneer-border-hairline) solid var(--veneer-color-border-control)' },
+    tone: { border: 'var(--veneer-border-hairline) solid var(--_border, var(--veneer-color-border))' },
   },
   /** Row separators, for lists of rows. */
   divide: {
-    hairline: { 'border-block-end': 'var(--warp-border-hairline) solid var(--warp-color-border)' },
+    hairline: { 'border-block-end': 'var(--veneer-border-hairline) solid var(--veneer-color-border)' },
   },
   elevation: {
-    flat: { 'box-shadow': 'var(--warp-elevation-0)' },
-    low: { 'box-shadow': 'var(--warp-elevation-1)' },
-    mid: { 'box-shadow': 'var(--warp-elevation-2)' },
-    high: { 'box-shadow': 'var(--warp-elevation-3)' },
+    flat: { 'box-shadow': 'var(--veneer-elevation-0)' },
+    low: { 'box-shadow': 'var(--veneer-elevation-1)' },
+    mid: { 'box-shadow': 'var(--veneer-elevation-2)' },
+    high: { 'box-shadow': 'var(--veneer-elevation-3)' },
   },
   tone: {
     neutral: tone('neutral'),
@@ -91,22 +91,22 @@ export const VOCAB = {
   },
   /** How the tone fills the element (03 §4.2 `emphasis`). Without a tone, `subtle` is subtle text. */
   emphasis: {
-    ghost: { 'background-color': 'transparent', color: 'var(--_text, var(--warp-color-text))' },
-    subtle: { color: 'var(--_text, var(--warp-color-text-subtle))' },
+    ghost: { 'background-color': 'transparent', color: 'var(--_text, var(--veneer-color-text))' },
+    subtle: { color: 'var(--_text, var(--veneer-color-text-subtle))' },
     soft: { 'background-color': 'var(--_soft)', color: 'var(--_text)' },
     solid: { 'background-color': 'var(--_solid)', color: 'var(--_ink-on)' },
     /** `solid`, hovered or pressed. */
     strong: { 'background-color': 'var(--_solid-hover)', color: 'var(--_ink-on)' },
     outline: {
-      'box-shadow': 'inset 0 0 0 var(--warp-border-hairline) var(--_border)',
+      'box-shadow': 'inset 0 0 0 var(--veneer-border-hairline) var(--_border)',
       color: 'var(--_text)',
     },
   },
   /** Text colour role, when the group doesn't take it from a tone. */
   ink: {
-    text: { color: 'var(--warp-color-text)' },
-    subtle: { color: 'var(--warp-color-text-subtle)' },
-    faint: { color: 'var(--warp-color-text-faint)' },
+    text: { color: 'var(--veneer-color-text)' },
+    subtle: { color: 'var(--veneer-color-text-subtle)' },
+    faint: { color: 'var(--veneer-color-text-faint)' },
     tone: { color: 'var(--_text)' },
   },
   /** Type role (03 §4.2 `role`). */
@@ -118,14 +118,14 @@ export const VOCAB = {
     body: text('body', false),
     label: text('label'),
     caption: text('caption', false),
-    code: { ...text('code', false), 'font-family': 'var(--warp-font-mono)' },
+    code: { ...text('code', false), 'font-family': 'var(--veneer-font-mono)' },
     button: text('button'),
     eyebrow: text('eyebrow'),
   },
   font: {
-    sans: { 'font-family': 'var(--warp-font-sans)' },
-    mono: { 'font-family': 'var(--warp-font-mono)' },
-    display: { 'font-family': 'var(--warp-font-display)' },
+    sans: { 'font-family': 'var(--veneer-font-sans)' },
+    mono: { 'font-family': 'var(--veneer-font-mono)' },
+    display: { 'font-family': 'var(--veneer-font-display)' },
   },
   figures: { tabular: { 'font-variant-numeric': 'tabular-nums' } },
   layout: {
@@ -152,17 +152,17 @@ export const VOCAB = {
   push: { end: { 'margin-inline-start': 'auto' } },
   grow: { fill: { flex: '1' } },
   control: {
-    sm: { 'min-block-size': 'var(--warp-control-sm)' },
-    md: { 'min-block-size': 'var(--warp-control-md)' },
-    lg: { 'min-block-size': 'var(--warp-control-lg)' },
+    sm: { 'min-block-size': 'var(--veneer-control-sm)' },
+    md: { 'min-block-size': 'var(--veneer-control-md)' },
+    lg: { 'min-block-size': 'var(--veneer-control-lg)' },
   },
   ring: {
     focus: {
-      outline: 'var(--warp-focus-width) solid var(--warp-color-focus)',
-      'outline-offset': 'var(--warp-focus-offset)',
+      outline: 'var(--veneer-focus-width) solid var(--veneer-color-focus)',
+      'outline-offset': 'var(--veneer-focus-offset)',
     },
-    accent: { 'box-shadow': '0 0 0 var(--warp-focus-width) var(--warp-color-accent-solid)' },
-    tone: { 'box-shadow': '0 0 0 var(--warp-focus-width) var(--_solid)' },
+    accent: { 'box-shadow': '0 0 0 var(--veneer-focus-width) var(--veneer-color-accent-solid)' },
+    tone: { 'box-shadow': '0 0 0 var(--veneer-focus-width) var(--_solid)' },
   },
   list: { plain: { 'list-style': 'none', margin: '0', padding: '0' } },
   cursor: { pointer: { cursor: 'pointer' }, blocked: { cursor: 'not-allowed' } },

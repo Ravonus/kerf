@@ -1,4 +1,4 @@
-// `weft mcp`: an MCP server over stdio (newline-delimited JSON-RPC 2.0) with the tools `docs`, `check`, `routes_meta`, `tasks`,
+// `kerf mcp`: an MCP server over stdio (newline-delimited JSON-RPC 2.0) with the tools `docs`, `check`, `routes_meta`, `tasks`,
 // `style_find`, `style_explain`, `test_gate` and the `browser_*` tools.
 // Every tool returns the same JSON as the CLI's `--json`, as text and as structuredContent.
 
@@ -18,11 +18,11 @@ import { explainTarget, findGroups, styleMatrix } from './style.mjs'
 
 const versions = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05']
 
-/** What `weft mcp` offers an agent: each tool's name, its description and the arguments it takes. */
+/** What `kerf mcp` offers an agent: each tool's name, its description and the arguments it takes. */
 export const tools = [
   {
     name: 'docs',
-    description: `weft docs for agents. Topics: ${Object.keys(topics).join(', ')}; or a diagnostic code such as W014. No topic: the index.`,
+    description: `kerf docs for agents. Topics: ${Object.keys(topics).join(', ')}; or a diagnostic code such as W014. No topic: the index.`,
     inputSchema: {
       type: 'object',
       properties: { topic: { type: 'string', description: 'Topic name or diagnostic code' } },
@@ -31,7 +31,7 @@ export const tools = [
   {
     name: 'check',
     description:
-      'Run `weft check`: every W- and P-diagnostic with code, file, span, why and fix (edits when an autofix exists), plus slot bindings.',
+      'Run `kerf check`: every W- and P-diagnostic with code, file, span, why and fix (edits when an autofix exists), plus slot bindings.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -46,7 +46,7 @@ export const tools = [
   {
     name: 'routes_meta',
     description:
-      "Every route's metadata as a crawler gets it (`weft routes --meta --json`): title, description, image, every tag, where each came from (`route`, `layout`, `config`, `auto`, `card`), real samples of param routes, and H-diagnostics with text to apply. Every page sets `meta` from its own context as part of building it: call this after adding or changing a route.",
+      "Every route's metadata as a crawler gets it (`kerf routes --meta --json`): title, description, image, every tag, where each came from (`route`, `layout`, `config`, `auto`, `card`), real samples of param routes, and H-diagnostics with text to apply. Every page sets `meta` from its own context as part of building it: call this after adding or changing a route.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -60,13 +60,13 @@ export const tools = [
   {
     name: 'audit',
     description:
-      "The pages as a browser renders them (`weft audit`): a clean Chrome at a phone's and a desktop's width, axe-core's WCAG rules (what Lighthouse grades), console errors, deprecations, the head a crawler reads, sideways scroll and layout shift, as L-diagnostics with fixes. Static checks read source; this catches what CSS and a breakpoint do to it. Default: the last build's pages.",
+      "The pages as a browser renders them (`kerf audit`): a clean Chrome at a phone's and a desktop's width, axe-core's WCAG rules (what Lighthouse grades), console errors, deprecations, the head a crawler reads, sideways scroll and layout shift, as L-diagnostics with fixes. Static checks read source; this catches what CSS and a breakpoint do to it. Default: the last build's pages.",
     inputSchema: {
       type: 'object',
       properties: {
         url: {
           type: 'string',
-          description: 'A running site to audit instead (a deploy, `weft start`, the dev server)',
+          description: 'A running site to audit instead (a deploy, `kerf start`, the dev server)',
         },
         indexing: {
           type: 'string',
@@ -97,7 +97,7 @@ export const tools = [
   {
     name: 'style_find',
     description:
-      "Before styling anything, find the style groups that already fit (`weft style find`): name, doc, axes and values, parts, states, how often it's used, and similar groups. Reuse or add an axis value; don't write a new group or class list for the same thing.",
+      "Before styling anything, find the style groups that already fit (`kerf style find`): name, doc, axes and values, parts, states, how often it's used, and similar groups. Reuse or add an axis value; don't write a new group or class list for the same thing.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -113,7 +113,7 @@ export const tools = [
   {
     name: 'style_explain',
     description:
-      'Explain one variation of a style group (`weft style explain`): every declaration on its root and parts in cascade order with the token, axis, state, compound or accent it came from, the attributes it renders, the CSS it emits, and the call sites that produce it.',
+      'Explain one variation of a style group (`kerf style explain`): every declaration on its root and parts in cascade order with the token, axis, state, compound or accent it came from, the attributes it renders, the CSS it emits, and the call sites that produce it.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -145,13 +145,13 @@ export const tools = [
   {
     name: 'surfaces',
     description:
-      'List the project\'s canvas and WebGL surfaces (`weft surfaces`): each `defineSurface` with its name, kind, props and file, ready to drop in as `<Surface use={X} label="…" />`.',
+      'List the project\'s canvas and WebGL surfaces (`kerf surfaces`): each `defineSurface` with its name, kind, props and file, ready to drop in as `<Surface use={X} label="…" />`.',
     inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'test_gate',
     description:
-      'Run the test gate on the diff (`weft test --gate`): each new or changed test must fail on the old code (T010), kill a mutant of the changed lines (T011), and no existing test may get weaker (T020). Returns per-test results, surviving mutants with what to assert, and diagnostics.',
+      'Run the test gate on the diff (`kerf test --gate`): each new or changed test must fail on the old code (T010), kill a mutant of the changed lines (T011), and no existing test may get weaker (T020). Returns per-test results, surviving mutants with what to assert, and diagnostics.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -191,9 +191,9 @@ export async function handle(root, msg) {
       return reply({
         protocolVersion: versions.includes(asked) ? asked : versions[0],
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'weft', version: '0.1.4' },
+        serverInfo: { name: 'kerf', version: '0.1.4' },
         instructions:
-          'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Every page sets `meta` from its own context as part of building it (`docs` topic `meta`). Chrome shared across route sections (a sidebar) goes in one layout above them that follows `currentPath()`, never a layout per section (`docs` topic `start`). Style with groups from @weft-js/core/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
+          'kerf is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Every page sets `meta` from its own context as part of building it (`docs` topic `meta`). Chrome shared across route sections (a sidebar) goes in one layout above them that follows `currentPath()`, never a layout per section (`docs` topic `start`). Style with groups from @kerf-js/core/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__kerf__.agent` in your own browser), and run `test_gate` before you call a change done.',
       })
     }
     case 'ping':

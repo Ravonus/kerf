@@ -1,13 +1,13 @@
-import { onCleanup, onMount, state } from '@weft-js/core'
+import { onCleanup, onMount, state } from '@kerf-js/core'
 
 import {
   Cursors,
   Heading,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
-import type { CursorPeer } from '@weft-js/warp'
+import type { CursorPeer } from '@kerf-js/veneer'
 
 import { CURSOR_PEERS } from '../../world'
 

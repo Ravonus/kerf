@@ -1,0 +1,5 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* toasts scoped to a container instead of the viewport (embeds, the specimen frames) */
+:where([data-scope="toast"][data-part="region"][data-contained]) { position: absolute; inset-inline-end: var(--veneer-space-group); inset-block-end: var(--veneer-space-group); }
+}

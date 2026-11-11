@@ -142,7 +142,7 @@ export function registerBfcacheBackToAPageThatLeft(getBrowser, open, onlyChromiu
     await a.goto(url + '/about')
     await sleep(300)
     await a.goBack()
-    await a.waitForFunction(() => window.__weft?.hydrated)
+    await a.waitForFunction(() => window.__kerf?.hydrated)
     console.log(
       'bfcache restored:',
       await a.evaluate(() => window.__restored ?? false),

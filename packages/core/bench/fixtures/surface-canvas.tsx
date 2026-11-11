@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
-import { defineSurface, Surface } from '@weft-js/core/surface'
+import { state } from '@kerf-js/core'
+import { render } from '@kerf-js/core/dom'
+import { defineSurface, Surface } from '@kerf-js/core/surface'
 
 const level = state(1)
 const Bars = defineSurface<{ level: number }>({

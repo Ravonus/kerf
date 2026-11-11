@@ -1,0 +1,33 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+/* a step's heading takes focus on arrival; it must not show a ring for that */
+:where([data-scope="checkout"] [data-part="step-title"]):focus,
+:where([data-part-title]):focus,
+:where([data-part="title"][tabindex="-1"]):focus { outline: none; }
+:where([data-scope="checkout"]) { container: checkout / inline-size; }
+:where([data-scope="checkout"] > [data-part="layout"]) { display: grid; gap: var(--veneer-space-group); align-items: start; }
+@container checkout (min-width: 860px) {
+:where([data-scope="checkout"] > [data-part="layout"]) { grid-template-columns: minmax(0, 1fr) 320px; gap: var(--veneer-space-section); }
+:where([data-scope="checkout"] [data-part="summary"]:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) *:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) [data-scope="checkout"] *))) { position: sticky; inset-block-start: 16px; grid-column: 2; grid-row: 1 / span 2; }
+}
+:where([data-scope="checkout"] [data-part="summary"]:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) *:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) [data-scope="checkout"] *))) {
+  display: grid; gap: 14px; padding: var(--veneer-pad-surface); background: var(--veneer-color-surface-raised);
+  border: 1px solid var(--veneer-color-border); border-radius: var(--veneer-radius-surface);
+}
+:where([data-scope="checkout"] [data-part="summary"]:not([open]):not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) *:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) [data-scope="checkout"] *))) { padding-block: 6px; gap: 0; }
+:where([data-scope="checkout"] [data-part="summary"]:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) *:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) [data-scope="checkout"] *)) > summary) {
+  list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer;
+  min-block-size: var(--veneer-hit-min); font-weight: 500;
+}
+:where([data-scope="checkout"] [data-part="summary"] > summary)::-webkit-details-marker { display: none; }
+:where([data-scope="checkout"] [data-part="summary"]:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) *:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) [data-scope="checkout"] *)) > summary svg) { inline-size: 14px; block-size: 14px; transition: transform var(--veneer-duration-base) var(--veneer-ease-out); }
+:where([data-scope="checkout"] [data-part="summary"][open]:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) *:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) [data-scope="checkout"] *)) > summary svg) { transform: rotate(180deg); }
+:where([data-scope="checkout"] [data-part="summary"][open]:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) *:not([data-scope="checkout"] :is([data-scope="chart"],[data-scope="pagination"],[data-scope="tests"]) [data-scope="checkout"] *)) > summary ~ *) { animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out) both; }
+:where([data-scope="checkout"] h3[data-part="step-title"]) { margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.25 var(--veneer-text-heading-font); }
+:where([data-scope="checkout"] [data-part="step-body"]) { display: grid; gap: 14px; }
+:where([data-scope="checkout"] [data-part="nav"]:not([data-scope="checkout"] :is([data-scope="calendar"],[data-scope="settings"],[data-scope="shell"]) *:not([data-scope="checkout"] :is([data-scope="calendar"],[data-scope="settings"],[data-scope="shell"]) [data-scope="checkout"] *))) { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-block-start: 6px; flex-wrap: wrap-reverse; }
+:where([data-scope="checkout"] [data-part="cols"]:not([data-scope="checkout"] [data-scope="calendar"] *:not([data-scope="checkout"] [data-scope="calendar"] [data-scope="checkout"] *))) { display: grid; gap: 14px; }
+@container checkout (min-width: 520px) {
+:where([data-scope="checkout"] [data-part="cols"]:not([data-scope="checkout"] [data-scope="calendar"] *:not([data-scope="checkout"] [data-scope="calendar"] [data-scope="checkout"] *))) { grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
+}
+}

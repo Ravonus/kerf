@@ -43,7 +43,7 @@ export interface Bridge {
   available?(): boolean
   step(turn: BridgeTurn): Promise<BridgeStep>
   /**
-   * Requests to `/_weft/x/agent/bridges/<id>/<path>`: for a bridge that something outside calls in to, such as the
+   * Requests to `/_kerf/x/agent/bridges/<id>/<path>`: for a bridge that something outside calls in to, such as the
    * Rust bridge daemon long-polling for jobs. It checks its own credentials.
    */
   serve?: (request: Request, path: string) => Response | Promise<Response>

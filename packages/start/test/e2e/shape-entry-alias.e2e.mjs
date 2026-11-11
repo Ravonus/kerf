@@ -9,7 +9,7 @@ import { shapeHotUpdate } from '../../src/vite.mjs'
 import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
 
 async function project(t) {
-  const parent = realpathSync(mkdtempSync(join(tmpdir(), 'weft-entry-alias-')))
+  const parent = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-entry-alias-')))
   t.after(() => rmSync(parent, { recursive: true, force: true }))
   const root = join(parent, 'project')
   mkdirSync(root)
@@ -113,7 +113,7 @@ void test('entry CSS follows resolved local aliases and bare modules only', asyn
       manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
       hydration: () => undefined,
     }
-    const source = await moduleLoad(state).handler.call(p.ctx, '\0virtual:weft/routes')
+    const source = await moduleLoad(state).handler.call(p.ctx, '\0virtual:kerf/routes')
     let before = -1
     for (const css of result.styles) {
       const index = source.indexOf(JSON.stringify(`${css}?inline`))

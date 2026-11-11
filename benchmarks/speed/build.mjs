@@ -1,24 +1,24 @@
-// Production builds of each stack, plus each reactive core alone for reactive.mjs. `WEFT=<path>` builds a stack named
-// `weft-base` from another copy of packages/core: that's how the before and after share one bench. `NAME=<stack>`
-// builds this weft alone under that name, for lab.mjs (with `WEFT_OFF`, one combination of speed paths).
+// Production builds of each stack, plus each reactive core alone for reactive.mjs. `KERF=<path>` builds a stack named
+// `kerf-base` from another copy of packages/core: that's how the before and after share one bench. `NAME=<stack>`
+// builds this kerf alone under that name, for lab.mjs (with `KERF_OFF`, one combination of speed paths).
 import { dirname, join, resolve } from 'node:path'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const base = process.env.WEFT && resolve(process.env.WEFT)
+const base = process.env.KERF && resolve(process.env.KERF)
 const pkg = base ?? join(here, '../../packages/core')
-const name = process.env.NAME ?? (base ? 'weft-base' : 'weft')
+const name = process.env.NAME ?? (base ? 'kerf-base' : 'kerf')
 const alone = base || process.env.NAME
-const weft = (await import(join(pkg, 'vite.mjs'))).default
+const kerf = (await import(join(pkg, 'vite.mjs'))).default
 const alias = [
-  { find: /^@weft-js\/core\/dom$/, replacement: join(pkg, 'src/dom.ts') },
-  { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') },
+  { find: /^@kerf-js\/core\/dom$/, replacement: join(pkg, 'src/dom.ts') },
+  { find: /^@kerf-js\/core$/, replacement: join(pkg, 'src/index.ts') },
 ]
 const define = { 'process.env.NODE_ENV': '"production"' }
 const stacks = {
-  [name]: { root: 'weft', plugins: [weft()], resolve: { alias } },
+  [name]: { root: 'kerf', plugins: [kerf()], resolve: { alias } },
   ...(alone
     ? {}
     : {

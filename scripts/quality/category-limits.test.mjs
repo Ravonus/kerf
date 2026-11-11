@@ -49,7 +49,7 @@ void test('generated overrides match literal glob metacharacters in Oxlint', asy
   const { tmpdir } = await import('node:os')
   const { join, resolve, dirname } = await import('node:path')
   const { spawnSync } = await import('node:child_process')
-  const root = mkdtempSync(join(tmpdir(), 'weft-oxlint-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-oxlint-'))
   try {
     const files = [
       'src/utils/[id].ts',
@@ -75,7 +75,7 @@ void test('generated overrides match literal glob metacharacters in Oxlint', asy
       }),
     )
     const local = resolve('node_modules/.bin/oxlint')
-    const binary = existsSync(local) ? local : resolve('../../weft/node_modules/.bin/oxlint')
+    const binary = existsSync(local) ? local : resolve('../../kerf/node_modules/.bin/oxlint')
     const result = spawnSync(binary, ['--format', 'json', '--no-ignore', ...files], {
       cwd: root,
       encoding: 'utf8',

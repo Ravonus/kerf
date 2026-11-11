@@ -1,11 +1,11 @@
 // Page metadata (research 20). Metadata is plain data, merged once per request and written as static tags at the
 // top of `<head>` in the server's first response: link-preview crawlers don't run JS (§1). Nothing here is
-// reactive, and components can't add to it. `mergeMeta` and `metaTags` are server-side (exported from @weft-js/core/ssr);
-// `headTags` is the pure tag list both the string writer and the client's `setHead` (@weft-js/core/head) use.
+// reactive, and components can't add to it. `mergeMeta` and `metaTags` are server-side (exported from @kerf-js/core/ssr);
+// `headTags` is the pure tag list both the string writer and the client's `setHead` (@kerf-js/core/head) use.
 
 import { esc } from './markup-shared.mjs'
 
-/** `site` in weft.config.ts: the defaults every page starts from (§2). */
+/** `site` in kerf.config.ts: the defaults every page starts from (§2). */
 export interface Site {
   name?: string | undefined
   /** Absolute origin (and base path) for canonical, og:url and relative images. */
@@ -18,7 +18,7 @@ export interface Site {
   /** A path or URL; `'auto'` (the default) is the generated card, `false` no image at all. */
   image?: Image | false | undefined
   twitter?: Twitter | undefined
-  /** The generated card's look. Colours come from Warp and fonts from the text plugin when the app has them. */
+  /** The generated card's look. Colours come from Veneer and fonts from the text plugin when the app has them. */
   card?: CardTheme | undefined
   /** `false`: no stylesheet text in the page, just links. */
   inlineCss?: boolean | undefined
@@ -97,9 +97,9 @@ export interface Meta {
   description?: string | undefined
   og?: Og | undefined
   twitter?: Twitter | undefined
-  /** Tags Weft doesn't model (theme-color, hreflang alternates, verification). */
+  /** Tags Kerf doesn't model (theme-color, hreflang alternates, verification). */
   extra?: readonly Extra[] | undefined
-  /** Structured data, written as `application/ld+json`. `false` drops what a layout or Weft set. */
+  /** Structured data, written as `application/ld+json`. `false` drops what a layout or Kerf set. */
   jsonLd?: object | readonly object[] | false | undefined
 }
 
@@ -205,7 +205,7 @@ export function headTags(m: Merged, path: string): Tag[] {
   return tags
 }
 
-/** The tags as HTML, one per line, each marked `data-wm` (weft-managed) for client navigation. */
+/** The tags as HTML, one per line, each marked `data-wm` (kerf-managed) for client navigation. */
 export function metaTags(m: Merged, path: string): string {
   const tags = headTags(m, path).map(([tag, attrs, text]) => {
     let a = ''

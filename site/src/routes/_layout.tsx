@@ -1,8 +1,8 @@
-import type { RouteProps } from '@weft-js/start'
+import type { RouteProps } from '@kerf-js/start'
 import { Footer } from '../components/Footer'
 import { DocsRail } from '../components/DocsRail'
 import { Header } from '../components/Header'
-import { ScrollRail } from '@weft-js/warp'
+import { ScrollRail } from '@kerf-js/veneer'
 import { SpotlightGate } from '../components/SpotlightGate'
 import '../styles/site.css'
 
@@ -10,7 +10,7 @@ import '../styles/site.css'
  * Runs in the browser: the docs sidebar in it follows the path (`DocsRail`), and a static root would be swapped whole,
  * header and sidebar with it, whenever its HTML changed between sections.
  *
- * @weft client
+ * @kerf client
  */
 export default function Root(props: RouteProps) {
   return (

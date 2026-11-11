@@ -23,9 +23,9 @@ export async function setupOf(root, pkg) {
 export async function planSetup(root, setup) {
   const layer = await dbLayer(root)
   if (setup.needs?.includes('db') && !layer)
-    throw refused('This needs a database: run `weft add db` first. Nothing was changed.')
+    throw refused('This needs a database: run `kerf add db` first. Nothing was changed.')
   if (setup.needs?.includes('auth') && !existsSync(join(root, 'src/auth.server.ts')))
-    throw refused('This needs users: run `weft add auth` first. Nothing was changed.')
+    throw refused('This needs users: run `kerf add auth` first. Nothing was changed.')
   const read = (rel) =>
     existsSync(join(root, rel)) ? readFileSync(join(root, rel), 'utf8') : undefined
   let plan

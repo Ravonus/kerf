@@ -1,6 +1,6 @@
 import { open } from '../browser'
 
-/** What @weft-js/core/browser has open right now: listeners, intervals and subscribed values, with where they were made. */
+/** What @kerf-js/core/browser has open right now: listeners, intervals and subscribed values, with where they were made. */
 export const leaks = (): string[] => [...open.values()].map(([what]) => what)
 
 /**

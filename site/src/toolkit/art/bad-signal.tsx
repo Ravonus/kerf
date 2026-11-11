@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { palette, quantize, rasterMask, tile, type Mask } from '@weft-js/warp-core/dither'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
+import { palette, quantize, rasterMask, tile, type Mask } from '@kerf-js/veneer-core/dither'
 import { smooth, noise, type ArtProps, type Meta } from './shared'
 import code from './bad-signal.tsx?raw'
 
@@ -26,11 +26,11 @@ export default function BadSignal({ live = true }: ArtProps) {
     if (!cells) {
       cells = palette(host, [
         'none',
-        '--warp-color-border-strong',
-        '--warp-color-text-subtle',
-        '--warp-color-text',
+        '--veneer-color-border-strong',
+        '--veneer-color-text-subtle',
+        '--veneer-color-text',
       ])
-      torn = palette(host, ['--warp-color-critical-text'])[0]!
+      torn = palette(host, ['--veneer-color-critical-text'])[0]!
     }
     if (!image || image.width !== width || image.height !== height) {
       image = new ImageData(width, height)

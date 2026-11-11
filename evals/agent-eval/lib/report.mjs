@@ -22,7 +22,7 @@ function tallyActivity(runs) {
     docs = {}
   for (const r of runs) {
     for (const [k, v] of Object.entries(r.activity.diagnostics)) diag[k] = (diag[k] ?? 0) + v
-    if (r.stack === 'weft-warp')
+    if (r.stack === 'kerf-veneer')
       for (const [k, v] of Object.entries(r.activity.docs)) docs[k] = (docs[k] ?? 0) + v
   }
   return { diag, docs }
@@ -55,10 +55,10 @@ export function report(dir) {
     '## Failures',
     ...(failures.length ? failures : ['none']),
     '',
-    '## weft: diagnostics met',
+    '## kerf: diagnostics met',
     JSON.stringify(diag),
     '',
-    '## weft: docs read',
+    '## kerf: docs read',
     JSON.stringify(docs),
   ].join('\n')
 }

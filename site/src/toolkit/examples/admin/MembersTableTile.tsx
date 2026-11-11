@@ -4,7 +4,7 @@ import {
   SeatsMeter,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { FIRST_FOUR } from './shared'
 
 export const MembersTableTile = () => (

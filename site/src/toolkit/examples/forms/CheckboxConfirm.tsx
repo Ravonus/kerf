@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   Checkbox,
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 export function CheckboxConfirm() {
   const sure = state(false)

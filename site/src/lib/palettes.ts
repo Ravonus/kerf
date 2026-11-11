@@ -1,9 +1,9 @@
-// The site's named themes: warp({ themes }) in weft.config.ts builds them, and the Appearance menu and each example
-// frame's palette button switch them (data-palette). The first, "weft", is the default look and sets nothing.
+// The site's named themes: veneer({ themes }) in kerf.config.ts builds them, and the Appearance menu and each example
+// frame's palette button switch them (data-palette). The first, "kerf", is the default look and sets nothing.
 
-/** A theme the site ships: its name, label, swatch, and the `warp({ themes })` entry. */
+/** A theme the site ships: its name, label, swatch, and the `veneer({ themes })` entry. */
 export const PALETTES = [
-  { name: 'weft', label: 'Weft', swatch: '#2f9e6a' },
+  { name: 'kerf', label: 'Kerf', swatch: '#2f9e6a' },
   {
     name: 'ember',
     label: 'Ember',

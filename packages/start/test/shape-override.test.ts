@@ -7,7 +7,7 @@ import { afterAll, expect, test } from 'vitest'
 import { resolveImportedOverride, shapeOverride } from '../src/vite/shape-override.mjs'
 import { skeletonExport } from '../src/vite/route-modules.mjs'
 
-const root = mkdtempSync(join(tmpdir(), 'weft-skeleton-'))
+const root = mkdtempSync(join(tmpdir(), 'kerf-skeleton-'))
 afterAll(() => rmSync(root, { recursive: true, force: true }))
 const write = (rel: string, code: string) => {
   const file = join(root, rel)

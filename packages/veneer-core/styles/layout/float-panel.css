@@ -1,0 +1,52 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* FloatPanel (draggable) — a non-modal tool window. Drag by the handle,
+   or focus the handle and use arrows (Shift = ×4). Phone: a bottom sheet. */
+:where([data-scope="float-panel"]) {
+  --_x: 24px; --_y: 24px;
+  position: absolute; z-index: var(--veneer-z-overlay); inset-block-start: var(--_y); inset-inline-start: var(--_x);
+  inline-size: min(320px, calc(100% - 24px)); display: flex; flex-direction: column;
+  background: var(--veneer-color-surface-overlay); border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-2);
+  animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="float-panel"][data-dragging]) { box-shadow: var(--veneer-elevation-3); user-select: none; }
+:where([data-scope="float-panel"] > [data-part="handle"]) {
+  display: flex; align-items: center; gap: var(--veneer-space-related); min-block-size: max(36px, var(--veneer-hit-min));
+  padding-inline: var(--veneer-pad-control) var(--veneer-space-tight); cursor: grab; touch-action: none;
+  border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border); font-weight: 600; font-size: var(--veneer-text-caption-size);
+  border-start-start-radius: inherit; border-start-end-radius: inherit;
+}
+:where([data-scope="float-panel"] > [data-part="handle"]:focus-visible) { outline-offset: -2px; }
+:where([data-scope="float-panel"][data-dragging] > [data-part="handle"]) { cursor: grabbing; }
+:where([data-scope="float-panel"] > [data-part="handle"])::before {
+  content: ""; inline-size: 8px; block-size: 14px; flex: none; opacity: 0.7;
+  background: radial-gradient(circle, var(--veneer-color-text-subtle) 1.1px, transparent 1.5px) 0 0 / 4px 4px;
+}
+:where([data-scope="float-panel"] > [data-part="body"]) { padding: var(--veneer-space-group); overflow: auto; }
+@container (max-width: 599.98px) {
+:where([data-scope="float-panel"]) {
+    position: fixed; inset: auto 0 var(--_dock, 0px) 0; inline-size: auto; max-block-size: 60%;
+    border-radius: calc(var(--veneer-radius-surface) + 6px) calc(var(--veneer-radius-surface) + 6px) 0 0;
+    padding-block-end: var(--veneer-safe-bottom); animation: veneer-sheet-in var(--veneer-duration-sheet) var(--veneer-ease-out) both;
+  }
+:where([data-scope="float-panel"] > [data-part="handle"]) { cursor: default; justify-content: center; }
+}
+@media print {
+:where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
+}
+@keyframes veneer-sheet-in {
+  from { transform: translateY(calc(100% * var(--veneer-motion-scale))); opacity: calc(1 - var(--veneer-motion-scale)); }
+}
+}

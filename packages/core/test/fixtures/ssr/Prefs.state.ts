@@ -1,5 +1,5 @@
-// The scopes of test/ssr-state.test.tsx, shared by the `?weft-ssr` and `?weft-hydrate` builds of Prefs.tsx.
-import { defineState, state } from '@weft-js/core'
+// The scopes of test/ssr-state.test.tsx, shared by the `?kerf-ssr` and `?kerf-hydrate` builds of Prefs.tsx.
+import { defineState, state } from '@kerf-js/core'
 
 const object = {
   '~standard': {

@@ -1,4 +1,4 @@
-// `weft lsp`: TypeScript 7 loads no plugins and its content mappers refuse `.tsx`, so the one place left to stand is
+// `kerf lsp`: TypeScript 7 loads no plugins and its content mappers refuse `.tsx`, so the one place left to stand is
 // between the editor and `tsc --lsp`. Buffers go in as their shadows; positions are mapped both ways (research 44 §6).
 
 import { spawn } from 'node:child_process'
@@ -62,7 +62,7 @@ export function lsp(root, { input = process.stdin, output = process.stdout } = {
   if (!dir)
     throw Object.assign(
       new Error(
-        '`weft lsp` needs TypeScript 7 in the project; older versions use the tsserver plugin',
+        '`kerf lsp` needs TypeScript 7 in the project; older versions use the tsserver plugin',
       ),
       { code: 'E_USAGE' },
     )
@@ -89,7 +89,7 @@ export function lsp(root, { input = process.stdin, output = process.stdout } = {
   // One at a time: a request has to see the shadow its position is mapped for.
   let line = Promise.resolve()
   framed(input, (msg) => {
-    line = line.then(() => client(msg)).catch((e) => process.stderr.write(`weft lsp: ${e.stack}\n`))
+    line = line.then(() => client(msg)).catch((e) => process.stderr.write(`kerf lsp: ${e.stack}\n`))
   })
 
   framed(server.stdout, (msg) => {
@@ -158,7 +158,7 @@ function makeMapping(session, docs) {
       range: { start: positionAt(doc.text, f.start), end: positionAt(doc.text, f.end) },
       severity: f.severity === 'warning' ? 2 : 1,
       code: f.code,
-      source: 'weft',
+      source: 'kerf',
       message: `${f.why} Fix: ${f.help}`,
     }))
   const items = (doc, list) => [

@@ -1,31 +1,31 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
 <h1 align="center">Catalog</h1>
 
 <p align="center">
-  <strong>A public shop of 5,000 products with a cart behind Suspense, in Weft, SolidStart and Next.</strong><br>
-  The holdout site: it is measured like the others, and no change to Weft or Warp is made because of its numbers.
+  <strong>A public shop of 5,000 products with a cart behind Suspense, in Kerf, SolidStart and Next.</strong><br>
+  The holdout site: it is measured like the others, and no change to Kerf or Veneer is made because of its numbers.
 </p>
 
 <p align="center">
   <a href="#run-it">Run it</a> ·
-  <a href="#the-weft-variant">Weft variant</a> ·
+  <a href="#the-kerf-variant">Kerf variant</a> ·
   <a href="#the-comparison-variants">Comparison variants</a> ·
   <a href="../README.md">All examples</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!NOTE]
-> This is a private benchmark site, not a published package. Nothing here is on npm. The Weft version is not stored in
-> this folder: it is generated from the `catalog` template of `@weft-js/create` on every bench run.
+> This is a private benchmark site, not a published package. Nothing here is on npm. The Kerf version is not stored in
+> this folder: it is generated from the `catalog` template of `create-kerf` on every bench run.
 
 `catalog` is one of the four database-driven sites in [`examples/`](../README.md). Its manifest calls it the holdout:
-the other sites are where Weft and Warp get tuned, and this one checks whether those changes help an app nobody tuned
-for. A shop (Mendwell, in the Weft template) is a good holdout because its pages are public, cacheable, list-heavy and
+the other sites are where Kerf and Veneer get tuned, and this one checks whether those changes help an app nobody tuned
+for. A shop (Mendwell, in the Kerf template) is a good holdout because its pages are public, cacheable, list-heavy and
 have one small piece of per-visitor state, the cart.
 
 ## What the app shows
@@ -49,7 +49,7 @@ Audio, Lighting, Travel, Bath) and 5,000 products named `product-1` to `product-
 
 | Variant | Label in results | Where the code lives |
 | --- | --- | --- |
-| `weft` | weft + warp | Generated: `{"template": "catalog", "db": "postgres", "auth": false}` passed to create-weft's `scaffold()` |
+| `kerf` | kerf + veneer | Generated: `{"template": "catalog", "db": "postgres", "auth": false}` passed to create-kerf's `scaffold()` |
 | `solid` | SolidStart 2.1 + Kobalte + Tailwind 4 | [`solid/`](./solid) |
 | `next` | Next 16.4 + Radix + Tailwind 4 | [`next/`](./next) |
 
@@ -61,12 +61,12 @@ Audio, Lighting, Travel, Bath) and 5,000 products named `product-1` to `product-
 All three have to pass [`e2e.test.mjs`](./e2e.test.mjs) before their numbers count, including a test that every variant
 shows the same shop.
 
-### The Weft variant
+### The Kerf variant
 
 The template source is
-[`packages/create/templates/catalog`](../../packages/create/templates/catalog). It uses:
+[`packages/create-kerf/templates/catalog`](../../packages/create-kerf/templates/catalog). It uses:
 
-- **Server functions.** `query` from `@weft-js/start` for categories, featured products, the product list, a product and
+- **Server functions.** `query` from `@kerf-js/start` for categories, featured products, the product list, a product and
   related products. `listCategories` sets `cache: { life: 'hours' }`.
 - **Mutations with tags.** `addToCart` and `setQuantity` are `mutation`s that declare `invalidates` (`carts`,
   `cart_items`), and the cart queries declare matching `tags`, so the header count refreshes after a write.
@@ -74,8 +74,8 @@ The template source is
 - **Islands.** `CartLink` wraps the count in its own `Boundary`, so the header renders with the page and the count fills
   in after.
 - **Routing.** `[slug]` routes, `notFound`, `navigate`, `Link`, `Form` and `type Meta`.
-- **Warp.** `Grid`, `Split`, `Badge`, `Checkbox`, `NumberField`, `Skeleton`, `Toaster` and `toast`, themed through the
-  `warp()` plugin in `weft.config.ts`.
+- **Veneer.** `Grid`, `Split`, `Badge`, `Checkbox`, `NumberField`, `Skeleton`, `Toaster` and `toast`, themed through the
+  `veneer()` plugin in `kerf.config.ts`.
 
 ### The comparison variants
 
@@ -99,7 +99,7 @@ pnpm run setup                         # repo root, once
 cd examples
 pnpm install                           # benchmark tools only
 node bench.mjs catalog
-node bench.mjs catalog --only weft,solid --samples=5
+node bench.mjs catalog --only kerf,solid --samples=5
 node bench.mjs catalog --detect
 ```
 
@@ -107,17 +107,17 @@ node bench.mjs catalog --detect
 
 ```bash
 cd examples
-node e2e.mjs catalog weft
+node e2e.mjs catalog kerf
 node e2e.mjs catalog next --no-build
-node e2e.mjs catalog --dir http://localhost:3000 --db weft_bench_x   # a server already running
+node e2e.mjs catalog --dir http://localhost:3000 --db kerf_bench_x   # a server already running
 ```
 
-### Click through the Weft build
+### Click through the Kerf build
 
 ```bash
 cd examples
 node bench.mjs catalog
-node show.mjs                          # the last Weft builds, from port 5501
+node show.mjs                          # the last Kerf builds, from port 5501
 ```
 
 ### Run a comparison variant on its own
@@ -132,10 +132,10 @@ npm run dev
 Load [`../shared/pg/schema.sql`](../shared/pg/schema.sql) and [`../shared/pg/seed.sql`](../shared/pg/seed.sql) into that
 database to get the bench's rows.
 
-### Make your own copy of the Weft version
+### Make your own copy of the Kerf version
 
 ```bash
-pnpm create @weft-js my-shop --template catalog --db postgres
+pnpm create kerf my-shop --template catalog --db postgres
 ```
 
 ## Manifest details

@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Alert,
   Button,
@@ -6,7 +6,7 @@ import {
   Progress,
   Row,
   Stack,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import type { ToastTone } from './toasts'
 
 export function AlertFormError() {
@@ -28,12 +28,12 @@ export function AlertFormError() {
           tone="critical"
           title="That domain won't work"
         >
-          Use a full domain, like shop.weft.dev.
+          Use a full domain, like shop.kerf.dev.
         </Alert>
       )}
       <Input
         label="Domain"
-        placeholder="shop.weft.dev"
+        placeholder="shop.kerf.dev"
         value={domain.value}
         onInput={(e: Event) =>
           (domain.value = (

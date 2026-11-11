@@ -1,0 +1,21 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* Frame — fixed aspect media box (no chrome of its own) */
+:where([data-scope="frame"]) {
+  --_ratio: 16 / 9;
+  aspect-ratio: var(--_ratio); overflow: clip; display: grid; place-items: center;
+  background: var(--veneer-color-surface-sunken);
+}
+:where([data-scope="frame"] > img),
+:where([data-scope="frame"] > video),
+:where([data-scope="frame"] > canvas),
+:where([data-scope="frame"] > svg) {
+  inline-size: 100%; block-size: 100%; object-fit: cover; display: block;
+}
+:where([data-scope="frame"][data-ratio="square"]) { --_ratio: 1; }
+:where([data-scope="frame"][data-ratio="4:3"])  { --_ratio: 4 / 3; }
+:where([data-scope="frame"][data-ratio="3:2"])  { --_ratio: 3 / 2; }
+:where([data-scope="frame"][data-ratio="21:9"]) { --_ratio: 21 / 9; }
+:where([data-scope="frame"][data-ratio="3:4"])  { --_ratio: 3 / 4; }
+:where([data-scope="frame"][data-ratio="9:16"]) { --_ratio: 9 / 16; }
+}

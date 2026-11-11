@@ -1,0 +1,228 @@
+import {
+  isSheet,
+  messages,
+  pickerPanel,
+  reportMissing,
+  todayIso,
+  uid,
+  type Presentation,
+} from '@kerf-js/veneer-core'
+import { onMount, state, untrack, watch, type State } from '@kerf-js/core'
+import { bindable } from './bind'
+import { Button } from './Button'
+import { Field, type Control, type FieldShell } from './Field'
+import type { IconRef } from './Icon'
+import { Icon } from './Icon'
+import { use } from '@kerf-js/veneer-core/kerf'
+import './fields'
+import '@kerf-js/veneer-core/styles/rich/body.css'
+import '@kerf-js/veneer-core/styles/rich/helpers.css'
+import '@kerf-js/veneer-core/styles/rich/pick.css'
+import '@kerf-js/veneer-core/styles/rich/segments.css'
+import '@kerf-js/veneer-core/styles/rich/popover.css'
+
+export { bindable, type Bindable, type Openable } from './bind'
+export type RichFieldProps = FieldShell & {
+  required?: boolean | undefined
+  name?: string | undefined
+  locale?: string | undefined
+  /** Pins "today" (server render, tests); the browser's clock otherwise. */
+  today?: string | undefined
+  /** `auto` opens a popover, or a sheet when the viewport is under 600px wide; `popover` and `sheet` force one. */
+  presentation?: Presentation | undefined
+}
+
+/**
+ * The locale and today a picker renders with. The server and the hydrating client must agree, so both start from the
+ * prop (or en-US and the server's clock, which Kerf carries over in the state payload); after mount the document's lang
+ * and the browser's clock take over, a microtask later so hydration itself writes nothing.
+ */
+export function usePickerEnv(locale: () => string | undefined, today: () => string | undefined) {
+  const loc = state(untrack(locale) ?? 'en-US')
+  const now = state(untrack(today) ?? todayIso())
+  onMount(() => {
+    queueMicrotask(() => {
+      if (!untrack(locale))
+        loc.value = document.documentElement.lang || navigator.language || 'en-US'
+      if (!untrack(today)) now.value = todayIso()
+    })
+    watch(locale, (l) => {
+      if (l) loc.value = l
+    })
+  })
+  return { locale: loc, today: now }
+}
+
+/** The open flag of a panel, from `open`, `defaultOpen` and the panel's first render: contents are built on first open. */
+export function useOpen(
+  open: () => State<boolean> | boolean | undefined,
+  defaultOpen: () => boolean | undefined,
+  onChange: () => ((o: boolean) => void) | undefined,
+) {
+  const flag = bindable<boolean>(
+    open,
+    defaultOpen,
+    false,
+    () => (o: boolean) => untrack(onChange)?.(o),
+  )
+  const built = state(untrack(() => flag.value))
+  return {
+    get value() {
+      return flag.value
+    },
+    get built() {
+      return built.value
+    },
+    set(v: boolean) {
+      if (v) built.value = true
+      flag.set(v)
+    },
+  }
+}
+
+/**
+ * The panel of a picker: a child of the control, so the label stays up and the sweep stays in while it is open (04
+ * "Popovers stay attached"). Anatomy from the specimen: sweep · handle · sheet-head (title, Done) · content.
+ */
+export function Panel({
+  label,
+  open,
+  trigger,
+  presentation,
+  align,
+  kind,
+  children,
+}: {
+  label: string
+  open: { value: boolean; built: boolean; set(v: boolean): void }
+  trigger: () => HTMLElement
+  presentation?: Presentation | undefined
+  align?: 'start' | 'end'
+  kind?: string | undefined
+  children: () => unknown
+}) {
+  let panel: HTMLDialogElement | undefined
+  const done = () => open.set(false)
+  use(
+    pickerPanel,
+    () => panel,
+    () => ({ open: open.value, trigger: trigger(), presentation, align, onClose: done }),
+  )
+  return (
+    <dialog
+      ref={(n) => (panel = n)}
+      data-scope="popover"
+      data-kind={kind}
+      data-align={align}
+      data-sweep=""
+      popover="manual"
+      aria-label={label}
+    >
+      <span data-part="sweep" aria-hidden="true"></span>
+      <div data-part="handle" aria-hidden="true"></div>
+      <div data-part="sheet-head">
+        <span>{label}</span>
+        <Button emphasis="soft" size="sm" data-part="done" onClick={done}>
+          Done
+        </Button>
+      </div>
+      {open.built && children()}
+    </dialog>
+  )
+}
+
+/** The trigger at the end of a composite: a calendar or clock icon button (aria-haspopup, aria-expanded). */
+export function Trigger({
+  ref,
+  icon,
+  label,
+  open,
+  disabled,
+  onToggle,
+}: {
+  ref?: (el: HTMLButtonElement) => void
+  icon: IconRef
+  label: string
+  open: boolean
+  disabled?: boolean | undefined
+  onToggle: () => void
+}) {
+  return (
+    <button
+      ref={(n) => ref?.(n)}
+      type="button"
+      data-part="trigger"
+      aria-haspopup="dialog"
+      aria-expanded={open ? 'true' : 'false'}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onToggle}
+    >
+      <Icon name={icon} />
+    </button>
+  )
+}
+
+/** A hidden input with the ISO value, so a native form posts it. */
+export function Hidden({ name, value }: { name?: string | undefined; value: () => string }) {
+  return <>{name && <input type="hidden" name={name} value={value()} />}</>
+}
+
+/**
+ * A composite in the field shell: a body role=group named by the visible label; segments keep their short names. `bound`
+ * is its value: a form's reset goes back to the first one (`onReset` clears what the composite holds beside it), and
+ * `required` is a hidden text input (a type=hidden one is never validated) that is empty while the value is, so the
+ * form won't submit; the browser's own message shows as the field's error.
+ */
+export function Composite({
+  control,
+  bound,
+  onReset,
+  ...props
+}: FieldShell & {
+  control: Control
+  bound: { readonly value: unknown; reset(): void }
+  onReset?: (() => void) | undefined
+  required?: boolean | undefined
+}) {
+  const missing = state<string | undefined>(undefined)
+  const blank = () => {
+    const v = bound.value
+    return v === null || v === '' || (typeof v === 'object' && Object.values(v).includes(null))
+  }
+  let proxy: HTMLInputElement | undefined
+  const reset = () => {
+    bound.reset()
+    onReset?.()
+    missing.value = undefined
+    if (proxy) proxy.value = blank() ? '' : 'set' // the native reset emptied it, and the value may not have changed
+  }
+  return (
+    <Field
+      {...props}
+      error={props.error ?? (blank() ? missing.value : undefined)}
+      group
+      reset={reset}
+      control={(p) => (
+        <>
+          {untrack(() => control(p))}
+          {props.required && (
+            <input
+              ref={(n) => (proxy = n)}
+              onInvalid={(e: Event) => (missing.value = reportMissing(e))}
+              data-part="sr-only"
+              tabindex="-1"
+              aria-hidden="true"
+              required
+              disabled={props.disabled}
+              readonly={props.readonly}
+              value={blank() ? '' : 'set'}
+            />
+          )}
+        </>
+      )}
+    />
+  )
+}
+
+export { isSheet, messages, uid }

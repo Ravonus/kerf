@@ -1,0 +1,38 @@
+/* veneer's tokens as Tailwind v4 theme values: `bg-surface`, `text-accent`, `rounded-control`, `font-display`. `inline`
+   keeps each utility on the var(), so dials and scopes re-theme utilities the same way they re-theme components. */
+@theme inline {
+  --color-page: var(--veneer-color-page);
+  --color-surface: var(--veneer-color-surface);
+  --color-surface-raised: var(--veneer-color-surface-raised);
+  --color-surface-sunken: var(--veneer-color-surface-sunken);
+  --color-text: var(--veneer-color-text);
+  --color-text-subtle: var(--veneer-color-text-subtle);
+  --color-text-faint: var(--veneer-color-text-faint);
+  --color-border: var(--veneer-color-border);
+  --color-border-strong: var(--veneer-color-border-strong);
+  --color-focus: var(--veneer-color-focus);
+  --color-accent: var(--veneer-color-accent-solid);
+  --color-accent-soft: var(--veneer-color-accent-soft);
+  --color-accent-text: var(--veneer-color-accent-text);
+  --color-on-accent: var(--veneer-color-accent-on-solid);
+  --color-positive: var(--veneer-color-positive-solid);
+  --color-caution: var(--veneer-color-caution-solid);
+  --color-critical: var(--veneer-color-critical-solid);
+  --color-info: var(--veneer-color-info-solid);
+
+  --font-sans: var(--veneer-font-sans);
+  --font-display: var(--veneer-font-display);
+  --font-mono: var(--veneer-font-mono);
+
+  /* one scale for gap, padding and margin: `p-related`, `gap-group`. A numeric `p-3` that isn't on it is D002. */
+  --spacing-hair: var(--veneer-space-hair);
+  --spacing-tight: var(--veneer-space-tight);
+  --spacing-related: var(--veneer-space-related);
+  --spacing-group: var(--veneer-space-group);
+  --spacing-section: var(--veneer-space-section);
+  --spacing-page: var(--veneer-space-page);
+
+  --radius-mark: var(--veneer-radius-mark);
+  --radius-control: var(--veneer-radius-control);
+  --radius-surface: var(--veneer-radius-surface);
+}

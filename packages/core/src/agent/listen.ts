@@ -8,7 +8,7 @@ export function listen(
   describeFor: (el: Element) => Query,
 ) {
   const target = (e: Event) =>
-    e.target instanceof Element && !e.target.closest('[data-weft-devtools]') ? e.target : null
+    e.target instanceof Element && !e.target.closest('[data-kerf-devtools]') ? e.target : null
   addEventListener(
     'click',
     (e) => {

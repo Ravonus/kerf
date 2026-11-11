@@ -10,7 +10,7 @@ afterEach(() => {
 })
 
 function seed(files: Record<string, string>) {
-  const root = mkdtempSync(join(tmpdir(), 'weft-server-state-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-server-state-'))
   made.push(root)
   for (const [file, text] of Object.entries(files)) {
     mkdirSync(dirname(join(root, file)), { recursive: true })
@@ -19,7 +19,7 @@ function seed(files: Record<string, string>) {
   return root
 }
 
-const shared = "import { state } from '@weft-js/core'; export const shared = state(0)"
+const shared = "import { state } from '@kerf-js/core'; export const shared = state(0)"
 const inspect = (root: string, exclude: string[] = []) =>
   serverStateChecks(root, { files: [], exclude })
 
@@ -105,13 +105,13 @@ describe('W030 entry points and aliases', () => {
 
   it('resolves import, namespace, const and destructured aliases with binding identities', () => {
     for (const source of [
-      "import { state as make } from '@weft-js/core'; export const value = make(0)",
-      "import * as core from '@weft-js/core'; export const value = core.state(0)",
-      "import * as core from '@weft-js/core'; const c = core; const make = c['state']; make(0)",
-      "import { state } from '@weft-js/core'; const first = state; const second = first; second(0)",
-      "import * as core from '@weft-js/core'; const { state: make } = core; make(0)",
-      "import { state } from '@weft-js/core'; state.linked(() => 0)",
-      "import { state } from '@weft-js/core'; const link = state['linked']; link(() => 0)",
+      "import { state as make } from '@kerf-js/core'; export const value = make(0)",
+      "import * as core from '@kerf-js/core'; export const value = core.state(0)",
+      "import * as core from '@kerf-js/core'; const c = core; const make = c['state']; make(0)",
+      "import { state } from '@kerf-js/core'; const first = state; const second = first; second(0)",
+      "import * as core from '@kerf-js/core'; const { state: make } = core; make(0)",
+      "import { state } from '@kerf-js/core'; state.linked(() => 0)",
+      "import { state } from '@kerf-js/core'; const link = state['linked']; link(() => 0)",
     ])
       expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code)).toEqual(
         ['W030'],
@@ -123,12 +123,12 @@ describe('W030 entry points and aliases', () => {
       "import { state } from 'other'; state(0)",
       'const state = value => ({ value }); state(0)',
       'state(0)',
-      "import type { state } from '@weft-js/core'; state(0)",
-      "import { state } from '@weft-js/core'; { const state = value => value; state(0) }",
-      "import * as core from '@weft-js/core'; { const core = { state: value => value }; core.state(0) }",
-      "import { state } from '@weft-js/core'; const make = state; make = value => value; make(0)",
-      "import { state } from '@weft-js/core'; const make = state; ({ make } = other); make(0)",
-      "import { state } from '@weft-js/core'; let make = state; make = value => value; make(0)",
+      "import type { state } from '@kerf-js/core'; state(0)",
+      "import { state } from '@kerf-js/core'; { const state = value => value; state(0) }",
+      "import * as core from '@kerf-js/core'; { const core = { state: value => value }; core.state(0) }",
+      "import { state } from '@kerf-js/core'; const make = state; make = value => value; make(0)",
+      "import { state } from '@kerf-js/core'; const make = state; ({ make } = other); make(0)",
+      "import { state } from '@kerf-js/core'; let make = state; make = value => value; make(0)",
     ])
       expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
   })
@@ -137,14 +137,14 @@ describe('W030 entry points and aliases', () => {
 describe('W030 globals and eager execution', () => {
   it('respects explicit globals and deferred request/component/context factories', () => {
     for (const source of [
-      "import { state } from '@weft-js/core'; export const value = state.global(0)",
-      "import { state } from '@weft-js/core'; const shared = state['global']; shared(0)",
-      "import * as core from '@weft-js/core'; const c = core; c.state.global(0)",
-      "import { state } from '@weft-js/core'; export function request() { return state(0) }",
-      "import { state } from '@weft-js/core'; export const Component = () => { const n = state(0); return n }",
-      "import { state, context } from '@weft-js/core'; export const scope = context(() => state(0))",
-      "import { state, defineState } from '@weft-js/core'; export const scope = defineState(() => state(0))",
-      "import { state } from '@weft-js/core'; class Item { value = state(0) }",
+      "import { state } from '@kerf-js/core'; export const value = state.global(0)",
+      "import { state } from '@kerf-js/core'; const shared = state['global']; shared(0)",
+      "import * as core from '@kerf-js/core'; const c = core; c.state.global(0)",
+      "import { state } from '@kerf-js/core'; export function request() { return state(0) }",
+      "import { state } from '@kerf-js/core'; export const Component = () => { const n = state(0); return n }",
+      "import { state, context } from '@kerf-js/core'; export const scope = context(() => state(0))",
+      "import { state, defineState } from '@kerf-js/core'; export const scope = defineState(() => state(0))",
+      "import { state } from '@kerf-js/core'; class Item { value = state(0) }",
     ])
       expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
   })
@@ -152,7 +152,7 @@ describe('W030 globals and eager execution', () => {
   it('detects eager IIFEs and static fields while factory declarations remain quiet', () => {
     const root = seed({
       'src/app.server.ts':
-        "import { state } from '@weft-js/core'; " +
+        "import { state } from '@kerf-js/core'; " +
         'const first = (() => state(0))(); class Item { static value = state(0) } ' +
         'export function request() { return state(0) }',
     })
@@ -166,7 +166,7 @@ describe('W030 globals and eager execution', () => {
       '(function* values() { const n = state(0); yield n })()',
       '(async function* values() { const n = state(0); yield n })()',
     ]) {
-      const source = "import { state } from '@weft-js/core'; " + invocation
+      const source = "import { state } from '@kerf-js/core'; " + invocation
       expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
     }
   })
@@ -178,7 +178,7 @@ describe('W030 globals and eager execution', () => {
       '(async () => { state(0); await wait() })()',
       '(async function () { state(0); await wait() })()',
     ]) {
-      const source = "import { state } from '@weft-js/core'; " + invocation
+      const source = "import { state } from '@kerf-js/core'; " + invocation
       expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code)).toEqual(
         ['W030'],
       )
@@ -192,7 +192,7 @@ describe('W030 parameter defaults', () => {
       '(function* (n = state(0)) { state(1) })()',
       '(async function* (n = state(0)) { state(1) })()',
     ]) {
-      const source = "import { state } from '@weft-js/core'; " + invocation
+      const source = "import { state } from '@kerf-js/core'; " + invocation
       expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code)).toEqual(
         ['W030'],
       )
@@ -218,7 +218,7 @@ describe('W030 parameter defaults', () => {
         'typeof missing',
         'new Object()',
       ]) {
-        const source = `import { state } from '@weft-js/core'; (${form})(${argument})`
+        const source = `import { state } from '@kerf-js/core'; (${form})(${argument})`
         expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
       }
     }
@@ -227,7 +227,7 @@ describe('W030 parameter defaults', () => {
   it('keeps omitted and explicit undefined defaults in every function form', () => {
     for (const form of defaultForms) {
       for (const argument of ['', 'undefined', 'void 0', '(undefined as unknown as number)']) {
-        const source = `import { state } from '@weft-js/core'; (${form})(${argument})`
+        const source = `import { state } from '@kerf-js/core'; (${form})(${argument})`
         expect(
           inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code),
         ).toEqual(['W030'])
@@ -251,7 +251,7 @@ describe('W030 arguments and rechecks', () => {
       ['(function (this: unknown, n = state(0)) {})(123)', 0],
       ['(function (this: unknown, n = state(0)) {})()', 1],
     ] as const) {
-      const source = "import { state } from '@weft-js/core'; " + invocation
+      const source = "import { state } from '@kerf-js/core'; " + invocation
       expect(inspect(seed({ 'src/app.server.ts': source })).length).toBe(count)
     }
   })
@@ -265,7 +265,7 @@ describe('W030 arguments and rechecks', () => {
       ['((n = state(0)) => state(1))(123)', 1],
       ['(function* (n = state(0)) { state(1) })()', 1],
     ] as const) {
-      const source = "import { state } from '@weft-js/core'; " + invocation
+      const source = "import { state } from '@kerf-js/core'; " + invocation
       expect(inspect(seed({ 'src/app.server.ts': source })).length).toBe(count)
     }
   })

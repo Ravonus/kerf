@@ -1,4 +1,4 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
 import { inks, rng, type ArtProps, type Meta } from './shared'
 import code from './selvedge-plan.tsx?raw'
 
@@ -13,11 +13,11 @@ export const meta: Meta = {
 
 const DEPTH = 5
 const colours = inks({
-  line: '--warp-color-text-subtle',
-  soft: '--warp-color-accent-soft',
-  mid: '--warp-color-accent-border',
-  solid: '--warp-color-accent-solid',
-  ground: '--warp-color-page',
+  line: '--veneer-color-text-subtle',
+  soft: '--veneer-color-accent-soft',
+  mid: '--veneer-color-accent-border',
+  solid: '--veneer-color-accent-solid',
+  ground: '--veneer-color-page',
 })
 
 // One fixed binary tree. Re-splitting only moves its ratios, so every wall has somewhere to spring from.

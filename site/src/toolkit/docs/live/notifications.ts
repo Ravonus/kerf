@@ -211,8 +211,8 @@ export const notifications: Doc[] = [
         title: 'In context',
         examples: [
           {
-            id: 'NotificationPreferencesWeft',
-            title: 'Weft notifications',
+            id: 'NotificationPreferencesKerf',
+            title: 'Kerf notifications',
             note: 'Each change saves on its own. Security alerts must go to email, so that box is locked.',
             stage: 'fill',
             height: 680,

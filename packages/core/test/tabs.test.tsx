@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // `tabs.channel` and `sync: 'tabs'` (research 32 §1): a `render()` is a tab, a shared `storage` is the shared
-// `localStorage`, and @weft-js/core/test's BroadcastChannel carries the messages.
+// `localStorage`, and @kerf-js/core/test's BroadcastChannel carries the messages.
 import { createRoot, state } from '../src/index'
 import { defineState } from '../src/scope'
 import '../src/persist'
@@ -160,7 +160,7 @@ function registerTabSync({ Tab, two, lineText }: ReturnType<typeof syncFixture>)
     await flush()
     expect(JSON.parse(lineText('a'))).toEqual({ a: 1, b: 1 })
     expect(JSON.parse(lineText('b'))).toEqual({ a: 1, b: 1 })
-    expect(JSON.parse(storage.getItem('weft:app:cart-sync.lines')!).data).toEqual({ a: 1, b: 1 })
+    expect(JSON.parse(storage.getItem('kerf:app:cart-sync.lines')!).data).toEqual({ a: 1, b: 1 })
   })
 
   test('a later tab reads what the others stored', async () => {
@@ -176,7 +176,7 @@ function registerTabConflict({ two, lineText }: ReturnType<typeof syncFixture>) 
   test('a write from a tab on another schema is dropped', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     two()
-    const bc = new BroadcastChannel('weft:state:app')
+    const bc = new BroadcastChannel('kerf:state:app')
     bc.postMessage({
       s: 'cart-sync.lines',
       at: Date.now() + 1000,
@@ -193,7 +193,7 @@ function registerTabConflict({ two, lineText }: ReturnType<typeof syncFixture>) 
 
   test('an older write loses to a newer one, per key', async () => {
     two()
-    const bc = new BroadcastChannel('weft:state:app')
+    const bc = new BroadcastChannel('kerf:state:app')
     const now = Date.now()
     bc.postMessage({ s: 'cart-sync.lines', at: now + 2000, t: 'x', p: { k: 2 }, d: [] })
     bc.postMessage({ s: 'cart-sync.lines', at: now + 1000, t: 'y', p: { k: 1, j: 1 }, d: [] })

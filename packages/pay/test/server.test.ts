@@ -1,13 +1,13 @@
-// The ledger on a real database, and `/_weft/x/pay/<rail>` on the real handler: verification before anything is read,
+// The ledger on a real database, and `/_kerf/x/pay/<rail>` on the real handler: verification before anything is read,
 // tags on to the hub, and an app with no `src/pay.server.ts` that has no such route at all.
 import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core'
 import { createHmac } from 'node:crypto'
-import { product, PayError, type PayRail } from '@weft-js/pay'
-import { definePay, extension, memoryPayStore } from '@weft-js/pay/server'
-import { drizzlePayStore } from '@weft-js/pay/drizzle'
-import { runtime } from '@weft-js/start/data'
-import { createDb } from '@weft-js/start/db/sqlite'
-import { createHandler } from '@weft-js/start/server'
+import { product, PayError, type PayRail } from '@kerf-js/pay'
+import { definePay, extension, memoryPayStore } from '@kerf-js/pay/server'
+import { drizzlePayStore } from '@kerf-js/pay/drizzle'
+import { runtime } from '@kerf-js/start/data'
+import { createDb } from '@kerf-js/start/db/sqlite'
+import { createHandler } from '@kerf-js/start/server'
 
 const pro = product({
   id: 'pro',
@@ -40,7 +40,7 @@ describe('drizzlePayStore', () => {
 
   test('holds the ledger, and a replay changes nothing', async () => {
     const db = createDb({ schema: { purchases, payEvents }, url: ':memory:', migrate: false })
-    await db.$weft.migrate(init)
+    await db.$kerf.migrate(init)
     const pay = definePay({
       catalog: [pro],
       store: drizzlePayStore(db, { purchases, payEvents }),
@@ -73,11 +73,11 @@ describe('drizzlePayStore', () => {
         customer: 'c1',
       },
     ])
-    expect(db.$weft.exempt.has('pay_events')).toBe(true)
+    expect(db.$kerf.exempt.has('pay_events')).toBe(true)
   })
 })
 
-describe('/_weft/x/pay/<rail>, through `server.extension`', () => {
+describe('/_kerf/x/pay/<rail>, through `server.extension`', () => {
   const secret = 'placeholder'
   const hook = (body: string, key = secret) => ({
     'x-sig': createHmac('sha256', key).update(body).digest('hex'),
@@ -127,7 +127,7 @@ describe('/_weft/x/pay/<rail>, through `server.extension`', () => {
       poked.push(tags)
       return Promise.resolve()
     }
-    const res = await handler(post('/_weft/x/pay/test', body, hook(body)))
+    const res = await handler(post('/_kerf/x/pay/test', body, hook(body)))
     runtime.poke = poke
     expect(res.status).toBe(200)
     expect(poked).toEqual([['entitlements:u1']])
@@ -136,7 +136,7 @@ describe('/_weft/x/pay/<rail>, through `server.extension`', () => {
 
   test('a bad signature is a 400 that says nothing, and the reason goes to the log', async () => {
     const { pay, handler, diagnostics } = app()
-    const res = await handler(post('/_weft/x/pay/test', body, hook(body, 'another')))
+    const res = await handler(post('/_kerf/x/pay/test', body, hook(body, 'another')))
     expect(res.status).toBe(400)
     expect(await res.text()).toBe('Bad signature')
     expect(diagnostics).toEqual([expect.objectContaining({ code: 'PAY011' })])
@@ -145,14 +145,14 @@ describe('/_weft/x/pay/<rail>, through `server.extension`', () => {
 
   test('an unknown rail is a 404, a GET a 405, and a huge body a 413', async () => {
     const { handler } = app()
-    expect((await handler(post('/_weft/x/pay/nope', body, hook(body)))).status).toBe(404)
-    expect((await handler(new Request('http://localhost/_weft/x/pay/test'))).status).toBe(405)
+    expect((await handler(post('/_kerf/x/pay/nope', body, hook(body)))).status).toBe(404)
+    expect((await handler(new Request('http://localhost/_kerf/x/pay/test'))).status).toBe(405)
     const big = 'x'.repeat((1 << 20) + 1)
-    expect((await handler(post('/_weft/x/pay/test', big, hook(big)))).status).toBe(413)
+    expect((await handler(post('/_kerf/x/pay/test', big, hook(big)))).status).toBe(413)
   })
 
   test('with no `src/pay.server.ts` the path is nothing', async () => {
     const handler = createHandler({ manifest, modules: {}, dev: true })
-    expect((await handler(post('/_weft/x/pay/test', body, hook(body)))).status).toBe(404)
+    expect((await handler(post('/_kerf/x/pay/test', body, hook(body)))).status).toBe(404)
   })
 })

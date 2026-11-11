@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Badge, Button, Card } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Badge, Button, Card } from '@kerf-js/veneer'
 
 // A stand-in for the query cache. Each query has tags; a
 // mutation names tags in `invalidates`, and every query

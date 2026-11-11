@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
@@ -16,7 +16,7 @@
   <a href="#tests">Tests</a> ·
   <a href="../bench/README.md">bench/</a> ·
   <a href="../README.md">All examples</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!NOTE]
@@ -57,7 +57,7 @@ the database state it set.
 | `flow.mjs` | Database-site passes: canaries, TTFB, nav, interaction, streaming, mutate, sign-in. |
 | `race.mjs` | Race probes that compare the list on screen with Postgres. |
 | `attribute.mjs` | Splits JS bytes into runtime, router, data, kit, app and other from sourcemaps. |
-| `diagnose.mjs` | What to tune in Weft or Warp, ranked, plus the printed report. |
+| `diagnose.mjs` | What to tune in Kerf or Veneer, ranked, plus the printed report. |
 | `stats.mjs` | Metric definitions, spreads and the win/tie/loss rule. |
 | `e2e-kit.mjs` | What an app's `e2e.test.mjs` imports. |
 | `fixture/` | The todo contract with no framework, for testing the harness. |
@@ -79,28 +79,28 @@ The defaults it fills in: `db` gets `rtt: [2, 40]`, `pool: 10` and the seed hash
 (pnpm, bun, yarn, npm in that order), then npm. Install is `ci` for npm and `install --frozen-lockfile` for the rest.
 Build is `npm run build` if there is a build script, else `npx vite build`. Start is `npm run start` if there is a start
 script, else `null`, meaning a static build. A `scaffold` variant is regenerated on every load by calling
-`scaffold()` from `../packages/create/src/index.mjs` into `$BENCH_WORK/gen/<app>/<variant>`, with the bench user's fixed
+`scaffold()` from `../packages/create-kerf/src/index.mjs` into `$BENCH_WORK/gen/<app>/<variant>`, with the bench user's fixed
 auth secret so the build key doesn't change.
 
 ### build.mjs and build/
 
 | Export | What it does |
 | --- | --- |
-| `packOnce(store, log)` | Runs `packages/create/scripts/local.mjs pack` into the store, once per state of the Weft inputs. |
+| `packOnce(store, log)` | Runs `packages/create-kerf/scripts/local.mjs pack` into the store, once per state of the Kerf inputs. |
 | `prepare(app, v, opts)` | Places the variant, computes its build key, reuses a matching build or copies, installs, runs `buildRuns` cold builds and a separate sourcemap build. |
 | `lastBuild(app, v, { work })` | Loads the last build as it stands, for `e2e.mjs --no-build`. |
 | `linesOfCode(v)` | Non-blank lines of `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs` and `.css` under the variant's `src` folders. |
 | `repoState()` | `{ commit, dirty }`: `BENCH_COMMIT` or the short HEAD, and whether `packages/` or `crates/` has changes. |
 
-The build key hashes Node's version, the stack, install and build commands, env, the app's `setup`, the Weft tarball
-inputs for Weft variants, the seed hash for database apps, and every copied file. Each cold build first deletes the
+The build key hashes Node's version, the stack, install and build commands, env, the app's `setup`, the Kerf tarball
+inputs for Kerf variants, the seed hash for database apps, and every copied file. Each cold build first deletes the
 stack's output folders and `node_modules/.vite` and `node_modules/.cache`.
 
 | Part | What it holds |
 | --- | --- |
 | `build/copy.mjs` | `SECRET` (never copied: `.env*` except `.env.example`, `netlify.env`, `.neon`, `.mcp.json`, `*.pem`), `SKIP` (`node_modules`, `.git`, build folders and the like), `files()` and `copy()`. |
-| `build/stage.mjs` | `placeVariant`, `reuseStamp`, `stageSource` and `install`. Sets `NEXT_TELEMETRY_DISABLED=1` and `SKIP_ENV_VALIDATION=1` for builds, and installs Weft variants through `local.mjs`. |
-| `build/fingerprint.mjs` | `sha`, `walkBuild`, `fingerprint` (a hash of every output file), `installedIsPacked` (the installed Weft matches the tarball byte for byte) and `weftInputs`. |
+| `build/stage.mjs` | `placeVariant`, `reuseStamp`, `stageSource` and `install`. Sets `NEXT_TELEMETRY_DISABLED=1` and `SKIP_ENV_VALIDATION=1` for builds, and installs Kerf variants through `local.mjs`. |
+| `build/fingerprint.mjs` | `sha`, `walkBuild`, `fingerprint` (a hash of every output file), `installedIsPacked` (the installed Kerf matches the tarball byte for byte) and `kerfInputs`. |
 | `build/maps.mjs` | `buildWithMaps(v)`: a separate build with hidden sourcemaps, for the byte split. |
 | `build/sourcemaps.mjs` | `wrapViteConfig` and `wrapNextConfig`: turn sourcemaps on by wrapping the app's config, leaving the config file itself alone. |
 | `build/run.mjs` | `run(cmd, { cwd, env, log })`: runs a command, logs it and returns its time. |
@@ -167,14 +167,14 @@ Playwright route interception; the server still does the work in order.
 ### attribute.mjs
 
 `attribute(v, { maps, same, total }, pages)` reads the sourcemaps from the separate build and splits each page's JS, in
-brotli bytes, into the groups `stacks.json` names for that stack's family (for Weft: warp, router, data, runtime, app,
+brotli bytes, into the groups `stacks.json` names for that stack's family (for Kerf: veneer, router, data, runtime, app,
 other). Bytes it can't map are reported as `unmapped` or `wrapper`, not guessed.
 
 ### diagnose.mjs and diagnose/
 
 | Export | What it does |
 | --- | --- |
-| `diagnose(run, prev)` | Per Weft variant: the gap to the best other variant on each metric in its list, what moved since the previous run, and a ranked tune list. |
+| `diagnose(run, prev)` | Per Kerf variant: the gap to the best other variant on each metric in its list, what moved since the previous run, and a ranked tune list. |
 | `report(run)` | The text `bench.mjs` prints. |
 
 | Part | What it holds |
@@ -246,7 +246,7 @@ node --test lib
 | --- | --- | --- |
 | `harness.test.mjs` | The canary refuses an older server, unknown assets are refused, overlapping samples tie, gaps under the floor tie, `spread` drops holes, the most specific stack wins. | nothing |
 | `serve.test.mjs` | A production server starts and stops without a database. | nothing |
-| `sites.test.mjs` | Freshness rules, that each site manifest has what the contract needs, scaffold variants regenerate the same way, unknown templates are refused, database names stay in `weft_bench_*`, the seed hash. | the repo's `packages/create` |
+| `sites.test.mjs` | Freshness rules, that each site manifest has what the contract needs, scaffold variants regenerate the same way, unknown templates are refused, database names stay in `kerf_bench_*`, the seed hash. | the repo's `packages/create-kerf` |
 | `sites/probes.test.mjs` | Markup and data split, first byte and `</head>` byte, accessibility-tree parsing, seeded shuffles, the latency proxy. | nothing |
 | `sites/database.test.mjs` | Clones hold the seed, resets restore it, the proxy adds its RTT. | Postgres and `psql` |
 | `sites/race.test.mjs` | A correct client passes every race; a client with no ordering guard fails. | Postgres, `psql`, Chromium |

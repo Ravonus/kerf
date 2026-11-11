@@ -11,15 +11,15 @@
   "host": "GatorBuilder",
   "loadMax": 6.56,
   "label": "Dashboard (benchmarks/compare)",
-  "note": "The synthetic screen from benchmarks/compare, every stack, client-rendered and served statically, so warp is measured on a real bundle. A manifest only: the stack folders aren't changed.",
+  "note": "The synthetic screen from benchmarks/compare, every stack, client-rendered and served statically, so veneer is measured on a real bundle. A manifest only: the stack folders aren't changed.",
   "pages": [
    "/"
   ],
   "variants": {
-   "weft-warp": {
-    "label": "weft + warp",
-    "stack": "weft+warp",
-    "family": "weft",
+   "kerf-veneer": {
+    "label": "kerf + veneer",
+    "stack": "kerf+veneer",
+    "family": "kerf",
     "pm": "npm",
     "build": {
      "med": 913.2596379999995,
@@ -30,7 +30,7 @@
     "buildReused": true,
     "key": "d5734bb7ac6e88de",
     "lines": 43,
-    "weft": {
+    "kerf": {
      "tgz": "5ed284fd1c92",
      "files": 145
     },
@@ -315,70 +315,70 @@
      "pages": {
       "/": {
        "groups": {
-        "warp": 15253,
+        "veneer": 15253,
         "wrapper": 3900,
         "runtime": 2489,
         "app": 521
        },
        "modules": [
         {
-         "m": "node_modules/@weft-js/warp/src/Table.tsx",
+         "m": "node_modules/@kerf-js/veneer/src/Table.tsx",
          "br": 4331
         },
         {
-         "m": "node_modules/@weft-js/warp/src/Shell.tsx",
+         "m": "node_modules/@kerf-js/veneer/src/Shell.tsx",
          "br": 3253
         },
         {
-         "m": "node_modules/@weft-js/warp-core/src/floating-label.ts",
+         "m": "node_modules/@kerf-js/veneer-core/src/floating-label.ts",
          "br": 1529
         },
         {
-         "m": "node_modules/@weft-js/warp-core/src/sweep.ts",
+         "m": "node_modules/@kerf-js/veneer-core/src/sweep.ts",
          "br": 1425
         },
         {
-         "m": "node_modules/@weft-js/core/src/index.ts",
+         "m": "node_modules/@kerf-js/core/src/index.ts",
          "br": 1092
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom.ts",
+         "m": "node_modules/@kerf-js/core/src/dom.ts",
          "br": 953
         },
         {
-         "m": "node_modules/@weft-js/warp-core/src/table.ts",
+         "m": "node_modules/@kerf-js/veneer-core/src/table.ts",
          "br": 852
         },
         {
-         "m": "node_modules/@weft-js/warp/src/Field.tsx",
+         "m": "node_modules/@kerf-js/veneer/src/Field.tsx",
          "br": 852
         },
         {
-         "m": "node_modules/@weft-js/warp-core/src/overlays.ts",
+         "m": "node_modules/@kerf-js/veneer-core/src/overlays.ts",
          "br": 629
         },
         {
-         "m": "node_modules/@weft-js/warp-core/src/shell.ts",
+         "m": "node_modules/@kerf-js/veneer-core/src/shell.ts",
          "br": 429
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom-next.ts",
+         "m": "node_modules/@kerf-js/core/src/dom-next.ts",
          "br": 396
         },
         {
-         "m": "node_modules/@weft-js/warp/src/Button.tsx",
+         "m": "node_modules/@kerf-js/veneer/src/Button.tsx",
          "br": 386
         },
         {
-         "m": "node_modules/@weft-js/warp-core/src/layers.ts",
+         "m": "node_modules/@kerf-js/veneer-core/src/layers.ts",
          "br": 368
         },
         {
-         "m": "node_modules/@weft-js/warp-core/src/menu.ts",
+         "m": "node_modules/@kerf-js/veneer-core/src/menu.ts",
          "br": 334
         },
         {
-         "m": "node_modules/@weft-js/warp/src/Select.tsx",
+         "m": "node_modules/@kerf-js/veneer/src/Select.tsx",
          "br": 289
         }
        ]
@@ -386,10 +386,10 @@
      }
     }
    },
-   "weft-plain": {
-    "label": "weft",
-    "stack": "weft",
-    "family": "weft",
+   "kerf-plain": {
+    "label": "kerf",
+    "stack": "kerf",
+    "family": "kerf",
     "pm": "npm",
     "build": {
      "med": 479.0137109999996,
@@ -400,7 +400,7 @@
     "buildReused": true,
     "key": "69eaade1db713360",
     "lines": 116,
-    "weft": {
+    "kerf": {
      "tgz": "5ed284fd1c92",
      "files": 145
     },
@@ -680,15 +680,15 @@
          "br": 1410
         },
         {
-         "m": "node_modules/@weft-js/core/src/index.ts",
+         "m": "node_modules/@kerf-js/core/src/index.ts",
          "br": 1223
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom.ts",
+         "m": "node_modules/@kerf-js/core/src/dom.ts",
          "br": 1012
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom-next.ts",
+         "m": "node_modules/@kerf-js/core/src/dom-next.ts",
          "br": 230
         },
         {
@@ -704,7 +704,7 @@
          "br": 146
         },
         {
-         "m": "node_modules/@weft-js/core/src/keys.ts",
+         "m": "node_modules/@kerf-js/core/src/keys.ts",
          "br": 62
         },
         {
@@ -2189,8 +2189,8 @@
     "commit": "1174811",
     "changed": [],
     "controls": [
-     "weft-warp",
-     "weft-plain",
+     "kerf-veneer",
+     "kerf-plain",
      "solid",
      "react-radix",
      "react-zustand",
@@ -2199,12 +2199,12 @@
     "moved": []
    },
    "variants": {
-    "weft-warp": {
+    "kerf-veneer": {
      "gaps": {
       "/": [
        {
         "key": "mobile.score",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 99,
         "theirs": 100,
         "delta": -1,
@@ -2228,7 +2228,7 @@
        },
        {
         "key": "mobile.tbt",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 81,
         "theirs": 0,
         "delta": 81,
@@ -2244,7 +2244,7 @@
        },
        {
         "key": "desktop.score",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 100,
         "theirs": 100,
         "delta": 0,
@@ -2252,7 +2252,7 @@
        },
        {
         "key": "throttled.lcp",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 1713.52,
         "theirs": 1312.735,
         "delta": 400.7850000000001,
@@ -2260,7 +2260,7 @@
        },
        {
         "key": "bytes.js.br",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 22163,
         "theirs": 5387,
         "delta": 16776,
@@ -2284,7 +2284,7 @@
        },
        {
         "key": "bytes.font.br",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 0,
         "theirs": 0,
         "delta": 0,
@@ -2292,7 +2292,7 @@
        },
        {
         "key": "browser.hydrate",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 276.19999999552965,
         "theirs": 100.60000000149012,
         "delta": 175.59999999403954,
@@ -2300,7 +2300,7 @@
        },
        {
         "key": "browser.script",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 121.754,
         "theirs": 134.013,
         "delta": -12.259,
@@ -2308,7 +2308,7 @@
        },
        {
         "key": "browser.heap",
-        "best": "weft-plain",
+        "best": "kerf-plain",
         "mine": 2.252105712890625,
         "theirs": 1.582672119140625,
         "delta": 0.66943359375,
@@ -2333,7 +2333,7 @@
       ]
      }
     },
-    "weft-plain": {
+    "kerf-plain": {
      "gaps": {
       "/": [
        {
@@ -2378,7 +2378,7 @@
        },
        {
         "key": "desktop.score",
-        "best": "weft-warp",
+        "best": "kerf-veneer",
         "mine": 100,
         "theirs": 100,
         "delta": 0,
@@ -2394,7 +2394,7 @@
        },
        {
         "key": "bytes.js.br",
-        "best": "weft-warp",
+        "best": "kerf-veneer",
         "mine": 5387,
         "theirs": 22163,
         "delta": -16776,
@@ -2418,7 +2418,7 @@
        },
        {
         "key": "bytes.font.br",
-        "best": "weft-warp",
+        "best": "kerf-veneer",
         "mine": 0,
         "theirs": 0,
         "delta": 0,
@@ -2434,7 +2434,7 @@
        },
        {
         "key": "browser.script",
-        "best": "weft-warp",
+        "best": "kerf-veneer",
         "mine": 134.013,
         "theirs": 121.754,
         "delta": 12.259,
@@ -2442,7 +2442,7 @@
        },
        {
         "key": "browser.heap",
-        "best": "weft-warp",
+        "best": "kerf-veneer",
         "mine": 1.582672119140625,
         "theirs": 2.252105712890625,
         "delta": -0.66943359375,
@@ -2470,194 +2470,194 @@
    },
    "tune": [
     {
-     "where": "warp",
+     "where": "veneer",
      "title": "Hydration slower than the best variant",
-     "why": "276ms vs 101ms (weft) on /, 4x CPU, probe.",
+     "why": "276ms vs 101ms (kerf) on /, 4x CPU, probe.",
      "impact": 3.5,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "warp",
+     "where": "veneer",
      "title": "CSS br behind the best variant",
      "why": "19.6K vs 0.0K (React + MUI) on /",
      "impact": 2,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "warp",
+     "where": "veneer",
      "title": "JS size behind the best variant",
-     "why": "21.6K vs 5.3K (weft) on /. warp 14.9 KB, wrapper 3.8 KB, runtime 2.4 KB, app 0.5 KB.",
+     "why": "21.6K vs 5.3K (kerf) on /. veneer 14.9 KB, wrapper 3.8 KB, runtime 2.4 KB, app 0.5 KB.",
      "impact": 1.6,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "warp",
-     "title": "warp code in the first load",
+     "where": "veneer",
+     "title": "veneer code in the first load",
      "why": "14.9 KB br of 21.6 KB on /.",
      "impact": 1.5,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "warp",
+     "where": "veneer",
      "title": "JS shipped but not run at load",
-     "why": "8.5 KB br of 21.6 KB never ran on /; largest framework group: warp (14.9 KB).",
+     "why": "8.5 KB br of 21.6 KB never ran on /; largest framework group: veneer (14.9 KB).",
      "impact": 0.9,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "TBT costs mobile points",
      "why": "0.3 mobile points on /.",
      "impact": 0.3,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "CLS costs mobile points",
      "why": "0.3 mobile points on /.",
      "impact": 0.3,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Mobile TBT behind the best variant",
-     "why": "81ms vs 0ms (weft) on /",
+     "why": "81ms vs 0ms (kerf) on /",
      "impact": 0.3,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "DOM nodes behind the best variant",
      "why": "1475 vs 614 (React) on /",
      "impact": 0.3,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Comment nodes behind the best variant",
      "why": "241 vs 0 (React) on /",
      "impact": 0.3,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "DOM nodes behind the best variant",
      "why": "760 vs 614 (React) on /",
      "impact": 0.3,
      "pages": [
       "/"
      ],
-     "variant": "weft-plain"
+     "variant": "kerf-plain"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Comment nodes behind the best variant",
      "why": "35 vs 0 (React) on /",
      "impact": 0.3,
      "pages": [
       "/"
      ],
-     "variant": "weft-plain"
+     "variant": "kerf-plain"
     },
     {
-     "where": "warp",
+     "where": "veneer",
      "title": "Heap after load above the best variant",
-     "why": "2.25MB vs 1.58MB (weft) on /",
+     "why": "2.25MB vs 1.58MB (kerf) on /",
      "impact": 0.2,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Network dependency tree",
      "why": "Lighthouse on /.",
      "impact": 0.2,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Render-blocking requests",
      "why": "Lighthouse on /: Est savings of 300 ms.",
      "impact": 0.2,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Max Potential First Input Delay",
      "why": "Lighthouse on /: 130 ms.",
      "impact": 0.2,
      "pages": [
       "/"
      ],
-     "variant": "weft-warp"
+     "variant": "kerf-veneer"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Network dependency tree",
      "why": "Lighthouse on /.",
      "impact": 0.2,
      "pages": [
       "/"
      ],
-     "variant": "weft-plain"
+     "variant": "kerf-plain"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Render-blocking requests",
      "why": "Lighthouse on /: Est savings of 150 ms.",
      "impact": 0.2,
      "pages": [
       "/"
      ],
-     "variant": "weft-plain"
+     "variant": "kerf-plain"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "CSS br behind the best variant",
      "why": "1.4K vs 0.0K (React + MUI) on /",
      "impact": 0.1,
      "pages": [
       "/"
      ],
-     "variant": "weft-plain"
+     "variant": "kerf-plain"
     }
    ]
   }
@@ -4221,10 +4221,10 @@
      }
     }
    },
-   "weft": {
-    "label": "weft",
-    "stack": "weft",
-    "family": "weft",
+   "kerf": {
+    "label": "kerf",
+    "stack": "kerf",
+    "family": "kerf",
     "pm": "npm",
     "build": {
      "med": 3019.36201099999,
@@ -4235,7 +4235,7 @@
     "buildReused": true,
     "key": "423f6aee65aad585",
     "lines": 3843,
-    "weft": {
+    "kerf": {
      "tgz": "5ed284fd1c92",
      "files": 145
     },
@@ -5337,7 +5337,7 @@
          "br": 2180
         },
         {
-         "m": "node_modules/@weft-js/start/src/data.ts",
+         "m": "node_modules/@kerf-js/start/src/data.ts",
          "br": 2169
         },
         {
@@ -5345,7 +5345,7 @@
          "br": 1659
         },
         {
-         "m": "node_modules/@weft-js/core/src/index.ts",
+         "m": "node_modules/@kerf-js/core/src/index.ts",
          "br": 1558
         },
         {
@@ -5353,11 +5353,11 @@
          "br": 1286
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom.ts",
+         "m": "node_modules/@kerf-js/core/src/dom.ts",
          "br": 1254
         },
         {
-         "m": "node_modules/@weft-js/start/src/client.tsx",
+         "m": "node_modules/@kerf-js/start/src/client.tsx",
          "br": 910
         },
         {
@@ -5377,7 +5377,7 @@
          "br": 754
         },
         {
-         "m": "node_modules/@weft-js/core/src/claim.ts",
+         "m": "node_modules/@kerf-js/core/src/claim.ts",
          "br": 665
         },
         {
@@ -5385,7 +5385,7 @@
          "br": 659
         },
         {
-         "m": "node_modules/@weft-js/start/src/form.tsx",
+         "m": "node_modules/@kerf-js/start/src/form.tsx",
          "br": 505
         }
        ]
@@ -5400,7 +5400,7 @@
        },
        "modules": [
         {
-         "m": "node_modules/@weft-js/core/src/index.ts",
+         "m": "node_modules/@kerf-js/core/src/index.ts",
          "br": 1558
         },
         {
@@ -5408,15 +5408,15 @@
          "br": 1437
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom.ts",
+         "m": "node_modules/@kerf-js/core/src/dom.ts",
          "br": 1254
         },
         {
-         "m": "node_modules/@weft-js/start/src/client.tsx",
+         "m": "node_modules/@kerf-js/start/src/client.tsx",
          "br": 910
         },
         {
-         "m": "node_modules/@weft-js/core/src/claim.ts",
+         "m": "node_modules/@kerf-js/core/src/claim.ts",
          "br": 665
         },
         {
@@ -5424,11 +5424,11 @@
          "br": 659
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom-next.ts",
+         "m": "node_modules/@kerf-js/core/src/dom-next.ts",
          "br": 462
         },
         {
-         "m": "node_modules/@weft-js/core/src/head.ts",
+         "m": "node_modules/@kerf-js/core/src/head.ts",
          "br": 447
         },
         {
@@ -5448,11 +5448,11 @@
          "br": 277
         },
         {
-         "m": "node_modules/@weft-js/start/src/router.ts",
+         "m": "node_modules/@kerf-js/start/src/router.ts",
          "br": 247
         },
         {
-         "m": "node_modules/@weft-js/start/src/view.tsx",
+         "m": "node_modules/@kerf-js/start/src/view.tsx",
          "br": 237
         },
         {
@@ -5471,7 +5471,7 @@
        },
        "modules": [
         {
-         "m": "node_modules/@weft-js/core/src/index.ts",
+         "m": "node_modules/@kerf-js/core/src/index.ts",
          "br": 1558
         },
         {
@@ -5479,15 +5479,15 @@
          "br": 1437
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom.ts",
+         "m": "node_modules/@kerf-js/core/src/dom.ts",
          "br": 1254
         },
         {
-         "m": "node_modules/@weft-js/start/src/client.tsx",
+         "m": "node_modules/@kerf-js/start/src/client.tsx",
          "br": 910
         },
         {
-         "m": "node_modules/@weft-js/core/src/claim.ts",
+         "m": "node_modules/@kerf-js/core/src/claim.ts",
          "br": 665
         },
         {
@@ -5495,11 +5495,11 @@
          "br": 659
         },
         {
-         "m": "node_modules/@weft-js/core/src/dom-next.ts",
+         "m": "node_modules/@kerf-js/core/src/dom-next.ts",
          "br": 462
         },
         {
-         "m": "node_modules/@weft-js/core/src/head.ts",
+         "m": "node_modules/@kerf-js/core/src/head.ts",
          "br": 447
         },
         {
@@ -5519,11 +5519,11 @@
          "br": 277
         },
         {
-         "m": "node_modules/@weft-js/start/src/router.ts",
+         "m": "node_modules/@kerf-js/start/src/router.ts",
          "br": 247
         },
         {
-         "m": "node_modules/@weft-js/start/src/view.tsx",
+         "m": "node_modules/@kerf-js/start/src/view.tsx",
          "br": 237
         },
         {
@@ -6905,13 +6905,13 @@
     "changed": [],
     "controls": [
      "next",
-     "weft",
+     "kerf",
      "solid"
     ],
     "moved": []
    },
    "variants": {
-    "weft": {
+    "kerf": {
      "gaps": {
       "/": [
        {
@@ -7380,7 +7380,7 @@
    },
    "tune": [
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Fonts outweigh everything else on the page",
      "why": "136.3 KB of fonts against 33.2 KB of JS on /; largest fraunces-400-latin-b7881128.woff2 at 117.4 KB. Same in every variant, so a default to win, not a gap: subset harder, and check the LCP text isn't waiting on it.",
      "impact": 4.9,
@@ -7389,30 +7389,30 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "LCP: render delay is the largest phase",
      "why": "1.5 mobile points lost to LCP on /. Really throttled: element render delay 2187ms, time to first byte 8ms. Lantern, which sets the score: time to first byte 451ms, load delay 525ms, load duration 3ms, render delay 1274ms. Element: <h1 id=\"hero-title\" class=\"mt-6 font-display text-display-xl font-medium text-balance\">. The LCP element is in the HTML but paints late: look at what blocks it, usually render-blocking CSS, webfont swap, or a hidden state lifted by hydration.",
      "impact": 1.5,
      "pages": [
       "/"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "TBT costs mobile points",
      "why": "1.2 mobile points on /.",
      "impact": 1.2,
      "pages": [
       "/"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "JS shipped but not run at load",
      "why": "8.4 KB br of 33.2 KB never ran on /; largest framework group: wrapper (8.7 KB).",
      "impact": 0.8,
@@ -7421,10 +7421,10 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Server req/s behind the best variant",
      "why": "389 vs 721 (Next) on /; served as br against gzip.",
      "impact": 0.5,
@@ -7433,20 +7433,20 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Server req/s, uncompressed behind the best variant",
      "why": "416 vs 802 (Next) on /; served as br against gzip.",
      "impact": 0.5,
      "pages": [
       "/"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Server p95 behind the best variant",
      "why": "33ms vs 19ms (Next) on /; served as br against gzip.",
      "impact": 0.5,
@@ -7455,30 +7455,30 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Hydration slower than the best variant",
      "why": "64ms vs 43ms (SolidStart) on /privacy, 4x CPU, long-tasks.",
      "impact": 0.4,
      "pages": [
       "/privacy"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Mobile TBT behind the best variant",
      "why": "59ms vs 18ms (SolidStart) on /",
      "impact": 0.3,
      "pages": [
       "/"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "DOM nodes behind the best variant",
      "why": "4035 vs 3188 (Next) on /",
      "impact": 0.3,
@@ -7487,10 +7487,10 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Comment nodes behind the best variant",
      "why": "996 vs 19 (Next) on /",
      "impact": 0.3,
@@ -7499,10 +7499,10 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Network dependency tree",
      "why": "Lighthouse on /.",
      "impact": 0.2,
@@ -7511,10 +7511,10 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Render-blocking requests",
      "why": "Lighthouse on /: Est savings of 150 ms.",
      "impact": 0.2,
@@ -7523,30 +7523,30 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Max Potential First Input Delay",
      "why": "Lighthouse on /: 130 ms.",
      "impact": 0.2,
      "pages": [
       "/"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "Minimize main-thread work",
      "why": "Lighthouse on /: 2.1 s.",
      "impact": 0.2,
      "pages": [
       "/"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "CSS shipped but not used on the page",
      "why": "1.9 KB br of 8.2 KB matched nothing on /privacy. One stylesheet for every route; per-route CSS would cut it.",
      "impact": 0.2,
@@ -7555,27 +7555,27 @@
       "/privacy",
       "/terms"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "FCP costs mobile points",
      "why": "0.1 mobile points on /.",
      "impact": 0.1,
      "pages": [
       "/"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     },
     {
-     "where": "weft",
+     "where": "kerf",
      "title": "HTML br behind the best variant",
      "why": "19.0K vs 18.5K (SolidStart) on /",
      "impact": 0,
      "pages": [
       "/"
      ],
-     "variant": "weft"
+     "variant": "kerf"
     }
    ]
   }

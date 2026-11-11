@@ -1,5 +1,5 @@
-// `live: { required: true, verify: … }`: a real round trip against a target that isn't production, as part of `weft
-// check` and `weft build`. A marked row goes in through a connection of its own, as any outside app's would; each link
+// `live: { required: true, verify: … }`: a real round trip against a target that isn't production, as part of `kerf
+// check` and `kerf build`. A marked row goes in through a connection of its own, as any outside app's would; each link
 // from there to a refetch is timed, and the row comes out again.
 //
 //   trigger → write → notify → app → poke → refetch → denied → cleanup
@@ -79,11 +79,11 @@ export async function roundTrip({
   env,
 }: RoundTrip): Promise<VerifyResult> {
   const { input, timeout = 5000 } = options
-  const marker = `weft-verify-${crypto.randomUUID()}` // concurrent builds never touch each other's row
+  const marker = `kerf-verify-${crypto.randomUUID()}` // concurrent builds never touch each other's row
   const ms: VerifyResult['ms'] = {}
   const untested: VerifyResult['untested'] = []
-  const cookie = env[options.cookie ?? 'WEFT_STAGING_COOKIE']
-  const other = env[options.otherCookie ?? 'WEFT_STAGING_OTHER_COOKIE']
+  const cookie = env[options.cookie ?? 'KERF_STAGING_COOKIE']
+  const other = env[options.otherCookie ?? 'KERF_STAGING_OTHER_COOKIE']
   const timed = timer(ms)
   const skip = skipper(untested)
   const { sql, listener } = database(db)

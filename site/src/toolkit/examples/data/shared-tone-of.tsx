@@ -2,7 +2,7 @@ import type {
   KanbanCardData,
   KanbanColumn,
   PivotMeasure,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 import {
   DEPLOYS,

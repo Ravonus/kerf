@@ -13,11 +13,11 @@ import {
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { pin, writePackedPolicy } from '../../../packages/create/scripts/tarballs.mjs'
+import { pin, writePackedPolicy } from '../../../packages/create-kerf/scripts/tarballs.mjs'
 import { normalizeOverrides } from '../lib/pnpm-policy.mjs'
 
 const pnpm =
-  process.env.WEFT_T06_PNPM_ENTRY ??
+  process.env.KERF_T06_PNPM_ENTRY ??
   join(homedir(), '.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs')
 
 function verifyOldMutation({ golden, bad, gradePkg, tarballs, inherited, run }) {
@@ -53,12 +53,12 @@ function verifyOldMutation({ golden, bad, gradePkg, tarballs, inherited, run }) 
 
 test('generated golden and grade-copy retain pnpm lockfile overrides', async (t) => {
   if (!existsSync(pnpm)) return t.skip('cached pnpm 12.15.0 is not available')
-  const root = mkdtempSync(join(tmpdir(), 'weft-real-pnpm-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-real-pnpm-'))
   const golden = join(root, 'golden'),
     bad = join(root, 'bad')
   try {
     mkdirSync(golden)
-    const tarballs = { '@weft-js/core': 'file:/not-installed/core.tgz' }
+    const tarballs = { '@kerf-js/core': 'file:/not-installed/core.tgz' }
     const inherited = { 'miniflare>undici': '7.30.1' }
     const pkg = pin(
       {
@@ -83,7 +83,7 @@ test('generated golden and grade-copy retain pnpm lockfile overrides', async (t)
     const lock = readFileSync(join(golden, 'pnpm-lock.yaml'), 'utf8')
     assert.match(lock, /inherited: 1\.2\.3/)
     assert.match(lock, /miniflare>undici: 7\.30\.1/)
-    assert.match(lock, /@weft-js\/core/)
+    assert.match(lock, /@kerf-js\/core/)
     const gradePkg = JSON.parse(readFileSync(join(golden, 'package.json')))
     gradePkg.pnpm = { overrides: { ...tarballs, inherited: '1.2.3', ...inherited } }
     writeFileSync(join(golden, 'package.json'), JSON.stringify(gradePkg))
@@ -93,8 +93,8 @@ test('generated golden and grade-copy retain pnpm lockfile overrides', async (t)
     writeFileSync(join(deps, 'package.json'), '{}')
     writeFileSync(join(deps, 'node_modules/playwright-core/index.js'), 'exports.chromium = {}')
     writeFileSync(join(deps, 'node_modules/axe-core/axe.min.js'), 'fixture')
-    const prior = process.env.WEFT_EVAL_DEPS
-    process.env.WEFT_EVAL_DEPS = deps
+    const prior = process.env.KERF_EVAL_DEPS
+    process.env.KERF_EVAL_DEPS = deps
     let grade
     try {
       if (process.platform === 'darwin') {
@@ -107,8 +107,8 @@ test('generated golden and grade-copy retain pnpm lockfile overrides', async (t)
         t.diagnostic('macOS grade-copy integration is not available on this platform')
       }
     } finally {
-      if (prior === undefined) delete process.env.WEFT_EVAL_DEPS
-      else process.env.WEFT_EVAL_DEPS = prior
+      if (prior === undefined) delete process.env.KERF_EVAL_DEPS
+      else process.env.KERF_EVAL_DEPS = prior
     }
     assert.ok(JSON.parse(readFileSync(join(golden, 'package.json'))).pnpm.overrides)
     assert.equal(JSON.parse(readFileSync(join(grade, 'package.json'))).pnpm, undefined)

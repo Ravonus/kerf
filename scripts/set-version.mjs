@@ -31,7 +31,7 @@ for (const file of files) {
   const pkg = JSON.parse(text)
   pkg.version = version
   for (const name of Object.keys(pkg.optionalDependencies ?? {}))
-    if (name.startsWith('@weft-js/compiler-')) pkg.optionalDependencies[name] = version
+    if (name.startsWith('@kerf-js/compiler-')) pkg.optionalDependencies[name] = version
   writeFileSync(file, `${JSON.stringify(pkg, null, 2)}\n`)
 }
 console.log(version)

@@ -38,7 +38,7 @@ export const scrolling: Doc[] = [
           {
             id: 'ScrollViewCanvas',
             title: 'Painted on a canvas',
-            note: '`renderer={canvas({ draw })}` from `@weft-js/scroll/canvas` paints each bar; `paint` is the default look to draw over.',
+            note: '`renderer={canvas({ draw })}` from `@kerf-js/scroll/canvas` paints each bar; `paint` is the default look to draw over.',
             stage: 'fill',
             height: 240,
           },

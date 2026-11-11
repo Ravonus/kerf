@@ -9,7 +9,7 @@ const posix = (p) => p.split('\\').join('/')
 
 /**
  * R101, R102 from the contract, and R103, R109 from `cargo check`, for an app with a sidecar: an agent gets the same
- * answer here as from `weft build`, with the function's id on it.
+ * answer here as from `kerf build`, with the function's id on it.
  */
 export async function rustChecks(root, loaded) {
   let sidecar
@@ -20,8 +20,8 @@ export async function rustChecks(root, loaded) {
   }
   if (!sidecar.usesRemote(root)) return []
   const rust = loaded.config?.rust
-  const held = process.env.WEFT_BUILD
-  process.env.WEFT_BUILD = '1'
+  const held = process.env.KERF_BUILD
+  process.env.KERF_BUILD = '1'
   try {
     const { writeContract } = await start(root, 'contract')
     const preset = { node: 'node', bun: 'bun', deno: 'deno_server' }[
@@ -35,7 +35,7 @@ export async function rustChecks(root, loaded) {
     })
     const out = diagnostics
       .filter((d) => d.code.startsWith('R1'))
-      .map((d) => diagnostic({ ...d, file: '.weft/contract.json' }))
+      .map((d) => diagnostic({ ...d, file: '.kerf/contract.json' }))
     if (out.some((d) => d.severity === 'error')) return out
     for (const service of Object.keys(contract.services ?? {})) {
       if (rust?.services?.[service]?.external) continue
@@ -44,7 +44,7 @@ export async function rustChecks(root, loaded) {
         out.push(
           diagnostic({
             code: 'R109',
-            file: '.weft/contract.json',
+            file: '.kerf/contract.json',
             why: `\`rust://${service}\` has no crate at \`${posix(relative(root, dir))}\`.`,
           }),
         )
@@ -65,13 +65,13 @@ export async function rustChecks(root, loaded) {
       diagnostic({
         code: 'R109',
         severity: 'warning',
-        file: '.weft/contract.json',
+        file: '.kerf/contract.json',
         why: `the contract couldn't be written, so the sidecars weren't checked: ${e.message.split('\n')[0]}`,
       }),
     ]
   } finally {
-    if (held === undefined) delete process.env.WEFT_BUILD
-    else process.env.WEFT_BUILD = held
+    if (held === undefined) delete process.env.KERF_BUILD
+    else process.env.KERF_BUILD = held
   }
 }
 
@@ -130,8 +130,8 @@ export async function liveChecks(root, loaded, preset) {
     !(existsSync(file) && /\bchanges\s*[:,}]/.test(readFileSync(file, 'utf8')))
   )
     return []
-  const held = process.env.WEFT_BUILD
-  process.env.WEFT_BUILD = '1'
+  const held = process.env.KERF_BUILD
+  process.env.KERF_BUILD = '1'
   try {
     const { readLivePlan } = await start(root, 'contract')
     const plan = await readLivePlan({
@@ -155,8 +155,8 @@ export async function liveChecks(root, loaded, preset) {
       }),
     ]
   } finally {
-    if (held === undefined) delete process.env.WEFT_BUILD
-    else process.env.WEFT_BUILD = held
+    if (held === undefined) delete process.env.KERF_BUILD
+    else process.env.KERF_BUILD = held
   }
 }
 
@@ -190,7 +190,7 @@ export async function socketChecks(root) {
       try {
         withIds = (
           await import(
-            pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft-js/start/vite'))
+            pathToFileURL(createRequire(join(root, 'package.json')).resolve('@kerf-js/start/vite'))
               .href
           )
         ).withIds
@@ -216,7 +216,7 @@ export async function socketChecks(root) {
   return out
 }
 
-/** weft owns the connection: these bypass reconnects, resume and the fake transport (research 30 §8). */
+/** kerf owns the connection: these bypass reconnects, resume and the fake transport (research 30 §8). */
 const SOCKET_PACKAGES = [
   'ws',
   'socket.io-client',
@@ -224,7 +224,7 @@ const SOCKET_PACKAGES = [
   '@microsoft/fetch-event-source',
 ]
 
-/** P002 (`package.json` scripts that aren't `weft …`), P120 (weft plugins wired straight into Vite), R007 (socket libraries). */
+/** P002 (`package.json` scripts that aren't `kerf …`), P120 (kerf plugins wired straight into Vite), R007 (socket libraries). */
 export function hygiene(root) {
   const out = []
   const pkgFile = join(root, 'package.json')
@@ -244,18 +244,18 @@ export function hygiene(root) {
             code: 'R007',
             file: 'package.json',
             ...locate(text, `"${name}"`),
-            why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in @weft-js/core/test. Use \`stream\`, \`.live()\` or \`channel\`.`,
+            why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in @kerf-js/core/test. Use \`stream\`, \`.live()\` or \`channel\`.`,
           }),
         )
     }
     for (const [name, cmd] of Object.entries(scripts)) {
-      if (!/^weft(\s|$)/.test(cmd.trim())) {
+      if (!/^kerf(\s|$)/.test(cmd.trim())) {
         out.push(
           diagnostic({
             code: 'P002',
             file: 'package.json',
             ...locate(text, `"${name}"`),
-            why: `Script \`${name}\` runs \`${cmd}\`, not \`weft …\`: agents can't see what it does or what it touches.`,
+            why: `Script \`${name}\` runs \`${cmd}\`, not \`kerf …\`: agents can't see what it does or what it touches.`,
           }),
         )
       }
@@ -265,13 +265,13 @@ export function hygiene(root) {
     const file = join(root, name)
     if (!existsSync(file)) continue
     const text = readFileSync(file, 'utf8')
-    for (const m of text.matchAll(/from\s+['"](@weft-js\/(?:plugin-[\w-]+|text))/g)) {
+    for (const m of text.matchAll(/from\s+['"](@kerf-js\/(?:plugin-[\w-]+|text))/g)) {
       out.push(
         diagnostic({
           code: 'P120',
           file: name,
           ...locate(text, m[1]),
-          why: `\`${m[1]}\` is registered in ${name}, which bypasses weft.config.ts.`,
+          why: `\`${m[1]}\` is registered in ${name}, which bypasses kerf.config.ts.`,
         }),
       )
     }

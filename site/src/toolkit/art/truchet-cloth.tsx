@@ -1,4 +1,4 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
 import { inks, rng, smooth, type ArtProps, type Meta } from './shared'
 import code from './truchet-cloth.tsx?raw'
 
@@ -14,10 +14,10 @@ const SIZE = 30,
   TWEEN = 0.5,
   { PI } = Math
 const colours = inks({
-  line: '--warp-color-text-subtle',
-  ground: '--warp-color-accent-soft',
-  accent: '--warp-color-sweep',
-  soft: '--warp-color-page',
+  line: '--veneer-color-text-subtle',
+  ground: '--veneer-color-accent-soft',
+  accent: '--veneer-color-sweep',
+  soft: '--veneer-color-page',
 })
 
 function tile(ctx: CanvasRenderingContext2D, i: number, { r, cols }: { r: number; cols: number }) {

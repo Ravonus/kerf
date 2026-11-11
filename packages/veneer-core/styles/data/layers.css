@@ -1,0 +1,13 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+:where([data-scope="layers"] [data-part="toggle"]:not([data-scope="layers"] :is([data-scope="table"],[data-scope="truncate"]) *:not([data-scope="layers"] :is([data-scope="table"],[data-scope="truncate"]) [data-scope="layers"] *))) {
+  all: unset; position: relative; display: grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: 4px; color: var(--veneer-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="layers"] [data-part="toggle"])::after { content: ""; position: absolute; inset: min(0px, calc((26px - var(--veneer-hit-min)) / 2)) -2px; }
+:where([data-scope="layers"] [data-part="toggle"][aria-pressed="false"]:not([data-scope="layers"] :is([data-scope="table"],[data-scope="truncate"]) *:not([data-scope="layers"] :is([data-scope="table"],[data-scope="truncate"]) [data-scope="layers"] *))) { opacity: 0.45; }
+:where([data-scope="layers"] [data-part="toggle"]:focus-visible:not([data-scope="layers"] :is([data-scope="table"],[data-scope="truncate"]) *:not([data-scope="layers"] :is([data-scope="table"],[data-scope="truncate"]) [data-scope="layers"] *))) { outline: 2px solid var(--veneer-color-focus); }
+:where([data-scope="layers"] li[data-hidden-layer] [data-part="name"]:not([data-scope="layers"] :is([data-scope="persona"],[data-scope="plan-card"],[data-scope="tile"],[data-scope="tool-call"],[data-scope="uploads"]) *:not([data-scope="layers"] :is([data-scope="persona"],[data-scope="plan-card"],[data-scope="tile"],[data-scope="tool-call"],[data-scope="uploads"]) [data-scope="layers"] *))) { color: var(--veneer-color-text-subtle); text-decoration: line-through; text-decoration-thickness: 1px; }
+/* layers: the visibility and lock toggles sit side by side at the row's end; each reaches away from the other */
+:where([data-scope="layers"] [data-part="toggle"]:first-of-type)::after { inset-inline-start: min(-2px, calc(100% + 1px - var(--veneer-hit-min))); inset-inline-end: -1px; }
+:where([data-scope="layers"] [data-part="toggle"]:last-of-type)::after { inset-inline-end: min(-2px, calc(100% + 1px - var(--veneer-hit-min))); inset-inline-start: -1px; }
+}

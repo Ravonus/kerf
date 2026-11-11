@@ -13,12 +13,12 @@ interface Dependencies {
   heartbeat: () => void
 }
 
-/** Listens from the first realtime use on, not from boot: `weft build` loads this with no bus to reach. */
+/** Listens from the first realtime use on, not from boot: `kerf build` loads this with no bus to reach. */
 function pokes(deps: Dependencies): Channel {
   const { channels, channel, conns, cursorOf, seq, poke, watchers, heartbeat } = deps
-  const had = channels.get('weft:poke')
+  const had = channels.get('kerf:poke')
   if (had) return had
-  const ch = channel('weft:poke')
+  const ch = channel('kerf:poke')
   ch.listeners.add((ev) => {
     if (!ev) {
       for (const c of conns.values()) c.sink.write('R', JSON.stringify({ c: cursorOf(seq()) }))

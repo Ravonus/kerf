@@ -14,7 +14,7 @@ const track = () => {
   window.WebSocket = class extends Real {
     constructor(u, ...a) {
       super(u, ...a)
-      if (String(u).includes('/_weft/ws')) window.__sockets.push(this)
+      if (String(u).includes('/_kerf/ws')) window.__sockets.push(this)
     }
   }
 }
@@ -211,8 +211,8 @@ async function checkReset({ check, eq, a, b, status, kill, say, see, lines }) {
 
 async function checkAccess({ check, eq, a, b, url, id, room, cookie, see, lines }) {
   await check('`postSystem` stores and shows live', async () => {
-    await a.page.request.post(`/_weft/fn/${fnId('postSystem')}`, {
-      headers: { 'content-type': 'application/json', 'x-weft': '1' },
+    await a.page.request.post(`/_kerf/fn/${fnId('postSystem')}`, {
+      headers: { 'content-type': 'application/json', 'x-kerf': '1' },
       data: { i: { roomId: id, text: 'maintenance' } },
     })
     await see(a.page, 'system: maintenance')
@@ -289,7 +289,7 @@ async function checkTeam({
     await see(c.page, 'tess: team secret')
 
     const read = await fetch(
-      `${url}/_weft/fn/${fnId('listMessages')}?i=${encodeURIComponent(JSON.stringify({ roomId: team }))}`,
+      `${url}/_kerf/fn/${fnId('listMessages')}?i=${encodeURIComponent(JSON.stringify({ roomId: team }))}`,
       { headers: await cookie(a) },
     ).then((r) => r.text())
     if (read.includes('team secret')) throw new Error('`listMessages` leaked a team room')

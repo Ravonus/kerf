@@ -2,7 +2,7 @@
 // still is encoded and listed in a manifest the page's build imports.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { encoders, FIXED, hex, MIME } from '@weft-js/plugin-media/build'
+import { encoders, FIXED, hex, MIME } from '@kerf-js/media/build'
 import sharp from 'sharp'
 import { launch, open } from './browser.mjs'
 import { stageReady } from './settle.mjs'
@@ -16,16 +16,16 @@ export const TIERS = {
 /** In the page: the first stage's scenes whose poster is baked. */
 const SCENES = () => {
   const el = document.querySelector('[data-stage]')
-  const stage = el && Reflect.get(el, Symbol.for('weft.stage'))
+  const stage = el && Reflect.get(el, Symbol.for('kerf.stage'))
   if (!stage || stage.tier !== 'live')
-    throw new Error('weft capture: bake needs a page with a <Stage> drawing live scenes')
+    throw new Error('kerf capture: bake needs a page with a <Stage> drawing live scenes')
   return stage.scenes().filter((scene) => scene.bake)
 }
 
 /** In the page: one scene alone where its poster is drawn (its hold, else its rest), as a PNG data URL. */
 const STILL = ([index, seconds]) => {
   const el = document.querySelector('[data-stage]')
-  const stage = Reflect.get(el, Symbol.for('weft.stage'))
+  const stage = Reflect.get(el, Symbol.for('kerf.stage'))
   return stage.still(index, undefined, seconds)
 }
 
@@ -67,7 +67,7 @@ export async function bake(options) {
       await stageReady(page, null)
       for (const scene of await page.evaluate(SCENES)) {
         if (!scene.id)
-          throw new Error(`weft capture: scene ${scene.index} bakes a poster but has no id`)
+          throw new Error(`kerf capture: scene ${scene.index} bakes a poster but has no id`)
         const shot = performance.now()
         const png = await page.evaluate(STILL, [scene.index, seconds])
         const file = `${scene.id.replace(/[^\w-]+/g, '-')}.${tier}.${format}`

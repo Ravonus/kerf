@@ -5,10 +5,10 @@ export const tests = [
     severity: 'error',
     by: 'cli',
     catches:
-      'A test with no assertion (or an `expect(x)` with no matcher): it passes as long as nothing throws. `@weft-js/core/test` also fails such a test at runtime',
+      'A test with no assertion (or an `expect(x)` with no matcher): it passes as long as nothing throws. `@kerf-js/core/test` also fails such a test at runtime',
     fix: 'Assert what the user sees: `expect(screen.getByRole(…)).toHaveTextContent(…)`',
     example:
-      "import { render } from '@weft-js/core/test'\nimport { Cart } from './Cart'\ntest('renders', () => { render(Cart) })",
+      "import { render } from '@kerf-js/core/test'\nimport { Cart } from './Cart'\ntest('renders', () => { render(Cart) })",
   },
   {
     code: 'T002',
@@ -26,14 +26,14 @@ export const tests = [
       'Asserting a value the test just set (`n.value = 5; expect(n.value).toBe(5)`) without going through the UI or the graph',
     fix: 'Act through the UI (`await user.click(…)`) or assert on what depends on the value',
     example:
-      "import { state } from '@weft-js/core'\ntest('count', () => { const n = state(0); n.value = 5; expect(n.value).toBe(5) })",
+      "import { state } from '@kerf-js/core'\ntest('count', () => { const n = state(0); n.value = 5; expect(n.value).toBe(5) })",
   },
   {
     code: 'T004',
     severity: 'error',
     by: 'cli',
     catches: 'Sleeps, real timers or `waitFor` polling in a test',
-    fix: '`await flush()`; for time, `clock.install()` and `await clock.advance(ms)` from @weft-js/core/test',
+    fix: '`await flush()`; for time, `clock.install()` and `await clock.advance(ms)` from @kerf-js/core/test',
     example:
       "test('later', async () => { await new Promise(r => setTimeout(r, 100)); expect(1 + 1).toBe(2) })",
   },
@@ -45,26 +45,26 @@ export const tests = [
       'Implementation query: `container`, CSS selectors, classes, `innerHTML`, test ids, or app state read directly in a component test',
     fix: 'Query by role, label or text (`screen.getByRole`, `getByLabelText`, `getByText`)',
     example:
-      "import { render } from '@weft-js/core/test'\nimport { Cart } from './Cart'\ntest('total', () => { const { container } = render(Cart); expect(container.querySelector('.total')!.textContent).toBe('$0') })",
+      "import { render } from '@kerf-js/core/test'\nimport { Cart } from './Cart'\ntest('total', () => { const { container } = render(Cart); expect(container.querySelector('.total')!.textContent).toBe('$0') })",
   },
   {
     code: 'T006',
     severity: 'error',
     by: 'cli',
     catches:
-      "Mocking weft (`vi.mock('@weft-js/core')`) or the unit under test, so the test checks the mock",
+      "Mocking kerf (`vi.mock('@kerf-js/core')`) or the unit under test, so the test checks the mock",
     fix: 'Fake the edges (network, storage) and render the real component',
     example:
-      "import { render } from '@weft-js/core/test'\nimport { Cart } from './Cart'\nvi.mock('./Cart')\ntest('cart', () => { render(Cart); expect(document.body.textContent).toBe('') })",
+      "import { render } from '@kerf-js/core/test'\nimport { Cart } from './Cart'\nvi.mock('./Cart')\ntest('cart', () => { render(Cart); expect(document.body.textContent).toBe('') })",
   },
   {
     code: 'T007',
     severity: 'error',
     by: 'cli',
     catches: "Snapshot without approval: it records today's output and passes against it",
-    fix: 'Assert the behavior with role/label/text queries, or approve it with `// weft-allow T007: <reason>`',
+    fix: 'Assert the behavior with role/label/text queries, or approve it with `// kerf-allow T007: <reason>`',
     example:
-      "import { render } from '@weft-js/core/test'\nimport { Cart } from './Cart'\ntest('cart', () => { render(Cart); expect(document.body.innerHTML).toMatchSnapshot() })",
+      "import { render } from '@kerf-js/core/test'\nimport { Cart } from './Cart'\ntest('cart', () => { render(Cart); expect(document.body.innerHTML).toMatchSnapshot() })",
   },
   {
     code: 'T008',
@@ -104,7 +104,7 @@ export const tests = [
     severity: 'error',
     by: 'test',
     catches:
-      'A test ends with @weft-js/core/browser listeners, intervals or subscribed values still open (checked by @weft-js/core/test after each test)',
+      'A test ends with @kerf-js/core/browser listeners, intervals or subscribed values still open (checked by @kerf-js/core/test after each test)',
     fix: 'Unmount what the test created (dispose any `createRoot`), or fix the leak',
   },
   {
@@ -122,6 +122,6 @@ export const tests = [
     by: 'gate',
     catches:
       'An existing test deleted, skipped, marked `.fails`, or with an assertion removed or loosened (`toBe(3)` → `toBeTruthy()`)',
-    fix: 'Restore it, or keep the change with `// weft-allow T020: <reason>` on that test',
+    fix: 'Restore it, or keep the change with `// kerf-allow T020: <reason>` on that test',
   },
 ]

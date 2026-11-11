@@ -20,7 +20,7 @@ async function buildVariants({
   work,
   runId,
   store,
-  weft,
+  kerf,
   buildRuns,
   opt,
   out,
@@ -33,7 +33,7 @@ async function buildVariants({
       work,
       runId,
       store,
-      weft: weft?.inputs,
+      kerf: kerf?.inputs,
       buildRuns,
       rebuild: opt.rebuild,
     })
@@ -46,7 +46,7 @@ async function buildVariants({
       buildReused: reused,
       key: key.slice(0, 16),
       lines: linesOfCode(v),
-      weft: v.weft,
+      kerf: v.kerf,
       pages: {},
     }
     say(
@@ -206,7 +206,7 @@ async function finish({ app, variants, out, t0, samplesWanted, jobs, samples, sa
             key: r.key,
             build: r.build,
             lines: r.lines,
-            weft: r.weft?.tgz,
+            kerf: r.kerf?.tgz,
             pages: Object.fromEntries(Object.entries(r.pages).map(([p, x]) => [p, x.metrics])),
           },
         ]),
@@ -234,10 +234,10 @@ export async function benchApp(app, config) {
       dbs[v.name] = await provision(app.name, v.name, { rtt: app.db.rtt[0] })
       v.dbEnv = dbs[v.name].env
     }
-  const weft = variants.some((v) => v.tarballs)
+  const kerf = variants.some((v) => v.tarballs)
     ? await packOnce(store, join(work, 'pack.log'))
     : null
-  if (weft?.packed) say('  packed this checkout')
+  if (kerf?.packed) say('  packed this checkout')
   await buildVariants({
     app,
     variants,
@@ -245,7 +245,7 @@ export async function benchApp(app, config) {
     work,
     runId,
     store,
-    weft,
+    kerf,
     buildRuns,
     opt,
     out,

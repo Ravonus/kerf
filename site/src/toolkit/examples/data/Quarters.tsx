@@ -1,4 +1,4 @@
-import { PivotTable } from '@weft-js/warp'
+import { PivotTable } from '@kerf-js/veneer'
 
 import { money as _Shared0 } from './shared-project'
 

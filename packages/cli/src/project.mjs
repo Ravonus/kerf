@@ -1,4 +1,4 @@
-// Project view for `weft check`: what one file can't see. Today that is cross-file W014.
+// Project view for `kerf check`: what one file can't see. Today that is cross-file W014.
 //
 // The compiler reports W014 as a warning when `xs.value = xs.value.map(p => ({ ...p, … }))` feeds a box that leaves
 // the file. Here we follow that box through JSX props (`<List items={xs.value} />`), into the component's props,

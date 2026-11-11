@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { onCleanup, onMount } from '@weft-js/core'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
+import { onCleanup, onMount } from '@kerf-js/core'
 import { inks, smooth, type ArtProps, type Meta } from './shared'
 import code from './bobbin.tsx?raw'
 
@@ -14,9 +14,9 @@ export const meta: Meta = {
 const COUNT = 1700,
   GOLDEN = (137.508 * Math.PI) / 180
 const colours = inks({
-  near: '--warp-color-text',
-  mid: '--warp-color-accent-text',
-  far: '--warp-color-accent-border',
+  near: '--veneer-color-text',
+  mid: '--veneer-color-accent-text',
+  far: '--veneer-color-accent-border',
 })
 
 export default function Bobbin({ live = true }: ArtProps) {

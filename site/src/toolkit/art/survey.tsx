@@ -1,4 +1,4 @@
-import { DitherField } from '@weft-js/warp'
+import { DitherField } from '@kerf-js/veneer'
 import { clamp, fbm, smooth, type ArtProps, type Meta } from './shared'
 import code from './survey.tsx?raw'
 
@@ -72,9 +72,9 @@ export default function Survey({ live = true }: ArtProps) {
       kind={map}
       ramp={[
         'none',
-        '--warp-color-border-strong',
-        '--warp-color-text-subtle',
-        '--warp-color-accent-text',
+        '--veneer-color-border-strong',
+        '--veneer-color-text-subtle',
+        '--veneer-color-accent-text',
       ]}
       cell={2}
       spread={0.4}

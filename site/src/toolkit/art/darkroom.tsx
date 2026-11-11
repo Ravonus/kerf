@@ -1,12 +1,12 @@
-import { Dither, Segmented, type Algorithm } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Dither, Segmented, type Algorithm } from '@kerf-js/veneer'
+import { state } from '@kerf-js/core'
 import { fbm, clamp, mix, smooth, type ArtProps, type Meta } from './shared'
 import code from './darkroom.tsx?raw'
 
 export const meta: Meta = {
   name: 'Darkroom',
   description:
-    'One picture through every algorithm warp has. Drag the divider to see what the dither kept.',
+    'One picture through every algorithm veneer has. Drag the divider to see what the dither kept.',
   kind: 'field',
   code,
   wide: true,

@@ -3,8 +3,8 @@ import {
   untrack,
   watch,
   type Derived,
-} from '@weft-js/core'
-import { Card, Input } from '@weft-js/warp'
+} from '@kerf-js/core'
+import { Card, Input } from '@kerf-js/veneer'
 
 /** The value after `source` stops changing for `ms`.
  * Call it while a component is being set up. */

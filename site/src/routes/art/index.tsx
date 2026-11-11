@@ -1,5 +1,5 @@
-import { Link, type Meta } from '@weft-js/start'
-import { CodeBlock } from '@weft-js/warp'
+import { Link, type Meta } from '@kerf-js/start'
+import { CodeBlock } from '@kerf-js/veneer'
 import { ROOMS } from '../../toolkit/art'
 import { ArtDial, ArtStage } from '../../toolkit/art/stage'
 import '../../styles/art.css'
@@ -9,7 +9,7 @@ export const prerender = true
 export const meta: Meta = {
   title: 'Art',
   description:
-    "Twenty-eight pieces drawn with Warp's Canvas and dither fields, in Warp's own inks. They follow the theme and the dial, and only three move at once.",
+    "Twenty-eight pieces drawn with Veneer's Canvas and dither fields, in Veneer's own inks. They follow the theme and the dial, and only three move at once.",
 }
 
 /** Two to a row, so a piece left without a partner, before a wide one or at the end, takes the row. */
@@ -27,7 +27,7 @@ export default function ArtGallery() {
         <h1>Art</h1>
         <p data-part="lede">
           Twenty-eight pieces drawn with <Link href="/components/canvas">Canvas</Link> and{' '}
-          <Link href="/components/dither-field">DitherField</Link>, in warp's own inks. They follow
+          <Link href="/components/dither-field">DitherField</Link>, in veneer's own inks. They follow
           your theme and the dial, three at most move at a time, and the rest wait as stills.
         </p>
       </header>

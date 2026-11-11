@@ -1,4 +1,4 @@
-import { BubbleChart } from '@weft-js/warp'
+import { BubbleChart } from '@kerf-js/veneer'
 
 import { PROJECT_POINTS } from '../../world'
 

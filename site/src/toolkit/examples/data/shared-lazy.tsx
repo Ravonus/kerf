@@ -1,6 +1,6 @@
-import { Row, Stack, Text } from '@weft-js/warp'
+import { Row, Stack, Text } from '@kerf-js/veneer'
 
-import type { GridTree } from '@weft-js/warp'
+import type { GridTree } from '@kerf-js/veneer'
 
 import { DEPLOYS, PROJECTS } from '../../world'
 

@@ -1,0 +1,23 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* Banner — page-level message inside main (not a toast, not a modal). */
+:where([data-scope="banner"]) {
+  --_t: var(--veneer-color-info-text); --_s: var(--veneer-color-info-soft); --_b: var(--veneer-color-info-border);
+  display: flex; align-items: flex-start; gap: var(--veneer-space-related) var(--veneer-space-group); flex-wrap: wrap;
+  padding: var(--veneer-space-related) var(--veneer-pad-control) var(--veneer-space-related) var(--veneer-space-group);
+  border: var(--veneer-border-hairline) solid var(--_b); border-inline-start: var(--veneer-border-emphasis) solid var(--_t);
+  border-radius: var(--veneer-radius-control); background: var(--_s); color: var(--veneer-color-text);
+  animation: veneer-route-in var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="banner"][data-tone="positive"]) { --_t: var(--veneer-color-positive-text); --_s: var(--veneer-color-positive-soft); --_b: var(--veneer-color-positive-border); }
+:where([data-scope="banner"][data-tone="caution"]) { --_t: var(--veneer-color-caution-text); --_s: var(--veneer-color-caution-soft); --_b: var(--veneer-color-caution-border); }
+:where([data-scope="banner"][data-tone="critical"]) { --_t: var(--veneer-color-critical-text); --_s: var(--veneer-color-critical-soft); --_b: var(--veneer-color-critical-border); }
+:where([data-scope="banner"][data-tone="accent"]) { --_t: var(--veneer-color-accent-text); --_s: var(--veneer-color-accent-soft); --_b: var(--veneer-color-accent-border); }
+:where([data-scope="banner"] > [data-part="icon"]) { color: var(--_t); flex: none; margin-block-start: 3px; }
+:where([data-scope="banner"] > [data-part="body"]) { flex: 1 1 16rem; min-inline-size: 0; padding-block: 2px; }
+:where([data-scope="banner"] > [data-part="body"] b) { font-weight: 600; }
+:where([data-scope="banner"] > [data-part="actions"]) { display: flex; gap: var(--veneer-space-related); align-items: center; }
+@keyframes veneer-route-in {
+  from { opacity: 0; transform: translateY(calc(var(--veneer-motion-distance) * 0.75)); }
+}
+}

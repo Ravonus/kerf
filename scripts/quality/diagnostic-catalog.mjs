@@ -24,7 +24,7 @@ export function emitted(files) {
   for (const [path, text] of Object.entries(files)) {
     const calls = /\b(?:Diagnostic::new|Self::new)\s*\(/g
     for (const call of text.matchAll(calls)) {
-      if (call[0].startsWith('Self::') && path !== 'crates/weft-compiler/src/diag.rs') continue
+      if (call[0].startsWith('Self::') && path !== 'crates/kerf-compiler/src/diag.rs') continue
       const args = text.slice(call.index + call[0].length)
       const match = args.match(/^\s*([^,]+),\s*([^,]+),/)
       const code = match?.[2].trim().match(/^"([A-Z]\d{3})"$/)?.[1]
@@ -227,10 +227,10 @@ function readFiles(paths) {
 }
 
 export function check() {
-  const source = tracked('crates/weft-compiler/src/*.rs', 'crates/weft-compiler/src/**/*.rs')
+  const source = tracked('crates/kerf-compiler/src/*.rs', 'crates/kerf-compiler/src/**/*.rs')
   const tests = tracked(
-    'crates/weft-compiler/tests/compile.rs',
-    'crates/weft-compiler/tests/compile/*.rs',
+    'crates/kerf-compiler/tests/compile.rs',
+    'crates/kerf-compiler/tests/compile/*.rs',
   )
   const cliSource = tracked('packages/cli/src').filter((path) => /\.(?:mjs|cjs)$/.test(path))
   const cliTests = tracked('packages/cli/test').filter((path) => /\.(?:ts|tsx|mjs)$/.test(path))

@@ -1,4 +1,4 @@
-import { HeatGrid } from '@weft-js/warp'
+import { HeatGrid } from '@kerf-js/veneer'
 
 import { DEPLOY_HEAT, DEPLOY_WEEKS } from '../../world'
 

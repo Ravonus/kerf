@@ -1,0 +1,54 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* AnchorNav — in-page "On this page". Sticky aside ≥ 1000 with a moving
+   emphasis line (aria-current="location"); a disclosure above the content below. */
+:where([data-scope="anchor-nav"]) { font-size: var(--veneer-text-caption-size); min-inline-size: 0; }
+:where([data-scope="anchor-nav"] [data-part="label"]:not([data-scope="anchor-nav"] :is([data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="field"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="anchor-nav"] :is([data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="field"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="anchor-nav"] *))) {
+  margin: 0 0 var(--veneer-space-related); font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); font-weight: 500;
+  letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="anchor-nav"] ol) { position: relative; display: grid; margin: 0; padding: 0; list-style: none; border-inline-start: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+:where([data-scope="anchor-nav"] a) {
+  position: relative; display: block; padding: 5px 0 5px 14px; color: var(--veneer-color-text-subtle); text-decoration: none; line-height: 1.4;
+  transition: color var(--veneer-duration-fast) var(--veneer-ease-out);
+}
+:where([data-scope="anchor-nav"] li li a) { padding-inline-start: 26px; }
+:where([data-scope="anchor-nav"] a:hover) { color: var(--veneer-color-text); }
+:where([data-scope="anchor-nav"] a)::before {
+  content: ""; position: absolute; inset-block: 4px; inset-inline-start: calc(var(--veneer-border-emphasis) / -2 - 0.5px);
+  inline-size: var(--veneer-border-emphasis); background: var(--veneer-color-accent-solid);
+  transform: scaleY(0); transition: transform var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="anchor-nav"] a[aria-current]) { color: var(--veneer-color-text); font-weight: 500; }
+:where([data-scope="anchor-nav"] a[aria-current])::before { transform: scaleY(1); }
+:where([data-scope="anchor-nav"] > details > summary) { display: none; }
+/* side placement: the list shows even if the disclosure was left closed */
+:where([data-scope="anchor-nav"] > details)::details-content { content-visibility: visible; display: contents; }
+@container veneer-page (max-width: 999.98px) {
+:where([data-scope="anchor-nav"] > details) {
+    border: var(--veneer-border-hairline) solid var(--veneer-color-border); border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface);
+  }
+:where([data-scope="anchor-nav"] > details > summary) {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; list-style: none; cursor: pointer;
+    min-block-size: var(--veneer-control-md); padding-inline: var(--veneer-pad-control); font-weight: 500; font-size: var(--veneer-text-body-size);
+  }
+:where([data-scope="anchor-nav"] > details > summary)::-webkit-details-marker { display: none; }
+:where([data-scope="anchor-nav"] > details > [data-part="label"]) { display: none; }
+:where([data-scope="anchor-nav"] > details:not([open]))::details-content { content-visibility: hidden; display: block; }
+:where([data-scope="anchor-nav"] > details > ol) { margin: 0 var(--veneer-pad-control) var(--veneer-space-related); }
+}
+@media print {
+:where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
+}
+}

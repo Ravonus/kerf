@@ -1,4 +1,4 @@
-import type { PluginInstance } from '@weft-js/core/plugin'
+import type { PluginInstance } from '@kerf-js/core/plugin'
 
 /** One font file and how it's used. */
 export interface Face {
@@ -20,7 +20,7 @@ export interface Face {
    * stack. For a face that draws a few letters, like a drop-cap initial: `glyphs: 'ABCR'`. Replaces `subsets`.
    * `{ selector }` reads them from the text of the elements it matches (`.class`, `[attr="value"]` or a tag) in a
    * build, and `first: true` from each one's first letter, as `::first-letter` draws it. Text the source holds only
-   * as an expression keeps the face whole, and `.weft/fonts.json` says why.
+   * as an expression keeps the face whole, and `.kerf/fonts.json` says why.
    */
   glyphs?: string | { selector: string; first?: boolean }
 }
@@ -43,7 +43,7 @@ export interface TextOptions {
   subsets?: Subset[]
   /** `'auto'` provides `text.measure`, loaded lazily by what uses it; `'off'` leaves it unbound. */
   measure?: 'auto' | 'off'
-  /** `'slim'` is @weft-js/text/engine; `'pretext'` is pinned upstream (33.9 KB br). */
+  /** `'slim'` is @kerf-js/text/engine; `'pretext'` is pinned upstream (33.9 KB br). */
   engine?: 'slim' | 'pretext'
   /** Pin the custom axes the source never varies and load uncommon latin characters on demand. Builds only. Default `true`. */
   trim?: boolean
@@ -51,5 +51,5 @@ export interface TextOptions {
 
 /** Every subset the build can cut. */
 export declare const SUBSETS: Subset[]
-/** The plugin for `weft.config.ts`: fonts, their fallbacks and `text.measure`. */
+/** The plugin for `kerf.config.ts`: fonts, their fallbacks and `text.measure`. */
 export declare function text(options?: TextOptions): PluginInstance<Required<TextOptions>>

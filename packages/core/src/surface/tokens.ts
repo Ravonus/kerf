@@ -1,4 +1,4 @@
-import { onCleanup, state } from '@weft-js/core'
+import { onCleanup, state } from '@kerf-js/core'
 import type { Token } from '../surface'
 
 // ---- tokens --------------------------------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ export function tokensOf(host: HTMLElement): Record<string, Token> {
         if (!token) {
           const kebab = name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
           probe ??= host.appendChild(Object.assign(document.createElement('i'), { hidden: true }))
-          probe.style.color = `var(--${kebab}, var(--warp-${kebab}))`
+          probe.style.color = `var(--${kebab}, var(--veneer-${kebab}))`
           const css = getComputedStyle(probe).color
           const [r, g, b, a] = rgba(css)
           token = { css, linear: [linear(r), linear(g), linear(b), a] }

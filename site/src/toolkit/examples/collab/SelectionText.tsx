@@ -1,4 +1,4 @@
-import { PeerSelection, Text } from '@weft-js/warp'
+import { PeerSelection, Text } from '@kerf-js/veneer'
 
 import { JUN } from '../../world'
 

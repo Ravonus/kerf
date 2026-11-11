@@ -9,7 +9,7 @@
 :::
 
 Components talk to each other with props. A parent passes information to a child by giving it props, as in React: the
-same attribute syntax, the same `props` argument. What's different is time. A Weft child runs once, yet its props are
+same attribute syntax, the same `props` argument. What's different is time. A Kerf child runs once, yet its props are
 never stale: every read of a prop gets the parent's value as it is now.
 
 :::demo props
@@ -102,7 +102,7 @@ export function Avatar({
 }
 ```
 
-Both forms stay live. In React, destructuring copies each prop into a local variable for that render. In Weft the
+Both forms stay live. In React, destructuring copies each prop into a local variable for that render. In Kerf the
 compiler rewrites every use of `person` into a read of `props.person`, so `person` always means the parent's current
 value. You write the short form and get the live one.
 
@@ -169,7 +169,7 @@ More often, a component uses a few props itself and forwards the rest. The rest 
 `Panel` takes `title`, `tone` and `children` for itself, and `...rest` collects everything else (`aria-label`,
 `data-low`) and puts it on the `<section>`. `rest` isn't a copy taken when `Panel` was made: it's a live view of the
 props minus the named ones, so `data-low` follows the stock count. Under the hood it is `omit(props, ['title', 'tone',
-'children'])`; `omit` is exported from `@weft-js/core` for the rare helper that needs the same thing outside a parameter
+'children'])`; `omit` is exported from `@kerf-js/core` for the rare helper that needs the same thing outside a parameter
 list.
 
 Use spreading with restraint. A component that forwards everything is harder to read and to type. Often it's clearer to
@@ -196,7 +196,7 @@ export function Profile() {
 
 `Card` doesn't need to know what's inside it. It could hold a heading, a form, or another component. Think of a component
 with a `children` prop as having a hole that its parent fills: panels, dialogs, layouts and grids all work this way.
-`Card` from Warp, used throughout these pages, is one.
+`Card` from Veneer, used throughout these pages, is one.
 
 The compiler gives each component one memoised read of its children, so `{children}` placed in the markup is built once
 and moved into place, and a live expression inside it (`{stock.value} bags left` in the demo above) updates itself
@@ -204,7 +204,7 @@ where it is. You can type `children` as `unknown`, which takes anything TSX can 
 
 ## How props change over time
 
-In React, a component re-runs with new props each time its parent renders. In Weft the child runs once, and there's no
+In React, a component re-runs with new props each time its parent renders. In Kerf the child runs once, and there's no
 "new props" moment. Instead, the compiler makes each prop a getter. When `Tip` writes
 `<Price dollars={bill.value / 2} />`, `Price` gets an object whose `dollars` works out `bill.value / 2` each time it's
 read. Every place `Price` reads `props.dollars` (a text hole, an attribute, a `derived`, a handler) gets the current
@@ -237,7 +237,7 @@ value is untouched.
 When the compiler sees a component write to one of its props, it wraps that prop in a small linked box: reads return the
 local value if there is one, and the parent's otherwise. A write sets the local value and remembers which parent value
 it was made against. When the parent's value changes, that local edit is dropped and the parent's value shows again. The
-code is `localProps` and `linked` in `@weft-js/core`, and it is only included in an app that writes a prop somewhere.
+code is `localProps` and `linked` in `@kerf-js/core`, and it is only included in an app that writes a prop somewhere.
 
 Only a whole prop can be written this way. `let n = props.user.name; n = 'Ana'` is **W001**: nothing says where that
 write should go. `props.user.name = 'Ana'` is ordinary JavaScript: it changes the `user` object itself, which the parent
@@ -246,7 +246,7 @@ owns, so be careful with it.
 
 ## Writing to the parent: `bind:`
 
-Sometimes a child should change the parent's value: a stepper that sets a count, a field that edits a name. In Weft the
+Sometimes a child should change the parent's value: a stepper that sets a count, a field that edits a name. In Kerf the
 parent decides that, at the call site, with `bind:`:
 
 :::demo bind
@@ -272,13 +272,13 @@ accepts.
 
 ## Copying a prop into state
 
-A common React habit is `useState(props.value)`: start from the prop, then edit locally. The Weft translation,
+A common React habit is `useState(props.value)`: start from the prop, then edit locally. The Kerf translation,
 `state(props.value)`, has the same bug React's has: the box takes the prop once and never follows it. The compiler
 reports it as **W005**. Use `state.linked` instead, which starts from the prop, takes local edits, and resets when the
 prop changes:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Rename(props: { name: string }) {
   const draft = state.linked(() => props.name)
@@ -315,7 +315,7 @@ The compiler reports **W001** and offers a fix that makes it `derived`. Compute 
 it, or with `derived` if other code reads it too:
 
 ```tsx
-import { derived } from '@weft-js/core'
+import { derived } from '@kerf-js/core'
 
 export function Price(props: { dollars: number }) {
   const { dollars } = props
@@ -342,7 +342,7 @@ Usually you pass a value: `count={count.value}`. The child reads it, and it stay
    [Rendering lists](/learn/rendering-lists) explains this one.
 
 ```tsx
-import { state, type State } from '@weft-js/core'
+import { state, type State } from '@kerf-js/core'
 
 function CouponField(props: { value: State<string | null> }) {
   return (
@@ -373,11 +373,11 @@ Passing a box where a value is expected, or a value where a box is expected, is 
 ## Prop types
 
 You can write prop types yourself, as every example on this page does. You can also leave a component's props
-unannotated: Weft infers them from the places that use the component and from what its body does with them, in the
-editor, in `weft check` and in `weft tsc`.
+unannotated: Kerf infers them from the places that use the component and from what its body does with them, in the
+editor, in `kerf check` and in `kerf tsc`.
 
 ```tsx
-import { derived } from '@weft-js/core'
+import { derived } from '@kerf-js/core'
 
 function Row(props) {
   const { label, onPick } = props
@@ -408,17 +408,17 @@ export default function List() {
 
 `Row` gets `{ label: string; onPick: () => void }` from its one caller. A few rules keep this honest:
 
-- An **exported** component writes its type down (**W081**), because any file may import it. `weft dev` and `weft fix`
+- An **exported** component writes its type down (**W081**), because any file may import it. `kerf dev` and `kerf fix`
   write the inferred type with an `/*inferred*/` comment, and **W082** tells you when callers have moved on.
 - A component with **no caller** has nothing to infer from (**W080**): render it, delete it, or annotate it.
 - When one caller passes a type the body can't handle, **W084** points at that caller.
-- Plain `tsc` can't infer these and reports `TS7006`. Run `weft tsc` in CI instead.
+- Plain `tsc` can't infer these and reports `TS7006`. Run `kerf tsc` in CI instead.
 
 To name another component's props, use `Props<typeof X>`:
 
 ```tsx
-import type { Props } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import type { Props } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 type ButtonProps = Props<typeof Button>
 
@@ -552,7 +552,7 @@ export function Line(props: { qty: number }) {
 `Rating` at all.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 function Rating(props: { value?: number }) {
   let { value = 0 } = props
@@ -586,7 +586,7 @@ export default function Review() {
 Bind the prop at the call site. `Rating` still writes `value` locally; with `bind:` that write goes into `score`.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 function Rating(props: { value?: number }) {
   let { value = 0 } = props

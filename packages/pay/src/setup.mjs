@@ -1,4 +1,4 @@
-// What `weft add pay` writes, as data: `weft add` does the writing, so a dry run and a refusal come for free. Plain JS
+// What `kerf add pay` writes, as data: `kerf add` does the writing, so a dry run and a refusal come for free. Plain JS
 // strings, because this loads with the config. `run` only describes: the plugin never touches the disk.
 
 const PURCHASE = ['user', 'product', 'plan']
@@ -30,7 +30,7 @@ export const payEvents = ${table}('pay_events', {
   }[engine]()
 }
 
-const catalog = `import { product } from '@weft-js/pay'
+const catalog = `import { product } from '@kerf-js/pay'
 
 // What you sell. Amounts are minor units (999 is $9.99), and no rail's ids belong here: this file reaches the client.
 export const pro = product({
@@ -45,14 +45,14 @@ export const pro = product({
 
 const ledger = (
   store,
-) => `${store === 'drizzle' ? "import { drizzlePayStore } from '@weft-js/pay/drizzle'\nimport { definePay } from '@weft-js/pay/server'\nimport { db } from '#/db/index.server'\nimport { payEvents, purchases } from '#/db/schema'\n" : "import { definePay, memoryPayStore } from '@weft-js/pay/server'\n"}import * as catalog from './pay/catalog'
+) => `${store === 'drizzle' ? "import { drizzlePayStore } from '@kerf-js/pay/drizzle'\nimport { definePay } from '@kerf-js/pay/server'\nimport { db } from '#/db/index.server'\nimport { payEvents, purchases } from '#/db/schema'\n" : "import { definePay, memoryPayStore } from '@kerf-js/pay/server'\n"}import * as catalog from './pay/catalog'
 
-// Served at /_weft/x/pay/<rail>, the webhook URL to give your provider. A verified event is the only grant.
+// Served at /_kerf/x/pay/<rail>, the webhook URL to give your provider. A verified event is the only grant.
 export default definePay({ catalog, store: ${store === 'drizzle' ? 'drizzlePayStore(db, { purchases, payEvents })' : 'memoryPayStore()'}, urls: { success: '/', cancel: '/' } })
 `
 
-const functions = `import { entitlementTag } from '@weft-js/pay'
-import { mutation, query, redirect } from '@weft-js/start'
+const functions = `import { entitlementTag } from '@kerf-js/pay'
+import { mutation, query, redirect } from '@kerf-js/start'
 import pay from '../pay.server'
 
 /** What the signed-in user holds, live: a verified event pokes this user's tag. Render from it; enforce with \`requires\`. */
@@ -77,7 +77,7 @@ export const portal = mutation({
 `
 
 export const setup = {
-  with: ['@weft-js/pay/stripe'],
+  with: ['@kerf-js/pay/stripe'],
   needs: ['db', 'auth'],
   run({ engine, layer, read }) {
     const drizzle = layer === 'drizzle'
@@ -109,12 +109,12 @@ export const setup = {
       },
       next: [
         ...(drizzle
-          ? ['`weft db generate`, then reload: the migration applies on the next request']
+          ? ['`kerf db generate`, then reload: the migration applies on the next request']
           : [
               '`src/pay.server.ts` starts on `memoryPayStore()`: write a `PayStore` on your data layer (PAY016)',
             ]),
         'put your real test keys (`sk_test_…`) in .env; `STRIPE_MODE=test` refuses a live key until you switch it to `live` (PAY032)',
-        'locally, `stripe listen --forward-to localhost:5173/_weft/x/pay/stripe` and put the `whsec_` it prints in .env; deployed, give Stripe the webhook URL /_weft/x/pay/stripe',
+        'locally, `stripe listen --forward-to localhost:5173/_kerf/x/pay/stripe` and put the `whsec_` it prints in .env; deployed, give Stripe the webhook URL /_kerf/x/pay/stripe',
       ],
     }
   },

@@ -6,8 +6,8 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 export const STACKS = [
-  'weft-warp',
-  'weft-plain',
+  'kerf-veneer',
+  'kerf-plain',
   'solid-kobalte',
   'react-radix',
   'react-zustand',

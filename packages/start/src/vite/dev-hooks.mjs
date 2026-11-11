@@ -8,7 +8,7 @@ import { SHEET, ASSETS, V } from './shared.mjs'
 export const configureServer = (s) =>
   function (server) {
     s.vite = server
-    // A `<link>` to a virtual sheet (`weft:fonts`): Vite only serves those as modules.
+    // A `<link>` to a virtual sheet (`kerf:fonts`): Vite only serves those as modules.
     const sheet = async (req, res, next) => {
       const css = await server.environments.client.pluginContainer
         .load(decodeURIComponent(req.url.slice(1)))
@@ -43,7 +43,7 @@ export const configureServer = (s) =>
         }
       }
       server.config.logger.info(
-        `weft: full reload: ${rel} was added or removed, so the routes changed`,
+        `kerf: full reload: ${rel} was added or removed, so the routes changed`,
         { timestamp: true },
       )
       server.ws.send({ type: 'full-reload' })
@@ -56,7 +56,7 @@ export const configureServer = (s) =>
       server.watcher.on(event, (file) => {
         if (file.startsWith(dir)) changed(relative(dir, file))
       })
-    // Close with the server (middleware mode, as `weft routes --meta` runs it, has no httpServer to listen on).
+    // Close with the server (middleware mode, as `kerf routes --meta` runs it, has no httpServer to listen on).
     const close = server.close.bind(server)
     server.close = () => (w.close(), close())
   }
@@ -96,7 +96,7 @@ export const hotUpdate = (s) =>
     const live = modules.filter((m) => !m.url.endsWith(ASSETS))
     if (live.some((m) => !reaches(m)))
       this.environment.logger.info(
-        `weft: full reload: ${rel} exports more than components and nothing that imports it can take the update`,
+        `kerf: full reload: ${rel} exports more than components and nothing that imports it can take the update`,
         { timestamp: true },
       )
     if (live.length < modules.length) return live

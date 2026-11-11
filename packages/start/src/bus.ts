@@ -1,5 +1,5 @@
 // The fan-out bus (research 30 §3): strings, at-most-once, ordered per publisher. Tags, topics, rings and cursors stay
-// in the hub, so a bus is three methods. `@weft-js/realtime-redis`, `-nats` and `-durable-object` implement this interface.
+// in the hub, so a bus is three methods. `@kerf-js/realtime-redis`, `-nats` and `-durable-object` implement this interface.
 
 /** How one instance reaches the others: the in-memory bus for one process, a plugin's for many. */
 export interface Bus {
@@ -13,7 +13,7 @@ export interface Bus {
   close?(): Promise<void>
 }
 
-/** The bus a `realtime.bus` plugin provides, loaded on the first publish or subscribe: `weft build` reaches for neither. */
+/** The bus a `realtime.bus` plugin provides, loaded on the first publish or subscribe: `kerf build` reaches for neither. */
 export function slotBus(plugin: string, load: () => Promise<Bus>): Bus {
   let bus: Promise<Bus> | undefined
   const get = () => (bus ??= load())

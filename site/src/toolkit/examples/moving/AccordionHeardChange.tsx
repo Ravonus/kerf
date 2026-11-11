@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Accordion, Stack, Text } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Accordion, Stack, Text } from '@kerf-js/veneer'
 import { QUESTIONS } from './shared'
 
 export function AccordionHeardChange() {

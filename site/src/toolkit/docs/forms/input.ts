@@ -47,7 +47,7 @@ export const formsInput: Doc[] = [
           {
             id: 'InputVariants',
             title: 'Label and line styles',
-            note: 'The default, `variant="classic"` and `appearance="line"`. Set the default once with `warp({ fields })`.',
+            note: 'The default, `variant="classic"` and `appearance="line"`. Set the default once with `veneer({ fields })`.',
             stage: 'fill',
           },
           {

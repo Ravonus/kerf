@@ -81,7 +81,7 @@ export function routeTree(
   const loader = makeLoader(modules, als)
   const rootLayout = manifest.layouts.find((l) => l.dir === '')
   const root = new BaseRootRoute({
-    ...(rootLayout && { loader: loader(rootLayout.file), weft: rootLayout }),
+    ...(rootLayout && { loader: loader(rootLayout.file), kerf: rootLayout }),
   } as never)
   const top: TreeNode = { route: root, children: [], dir: '' }
   const nodes = new Map<string, TreeNode>()
@@ -96,7 +96,7 @@ export function routeTree(
       getParentRoute: () => parent.route,
       path: toPath(l.dir, parent.dir),
       loader: loader(l.file),
-      weft: l,
+      kerf: l,
     } as never)
     parent.children.push(route)
     nodes.set(l.id, { route, children: [], dir: l.dir })
@@ -118,7 +118,7 @@ export function routeTree(
         getParentRoute: () => parent.route,
         path: index || '/',
         loader: loader(r.file, r.splat),
-        weft: r,
+        kerf: r,
       } as never),
     )
   }

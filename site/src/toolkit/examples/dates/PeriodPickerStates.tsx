@@ -1,4 +1,4 @@
-import { PeriodPicker, Grid } from '@weft-js/warp'
+import { PeriodPicker, Grid } from '@kerf-js/veneer'
 
 import { Cell, REGIONS as _REGIONS } from '../../world'
 import { TODAY } from './shared-event'

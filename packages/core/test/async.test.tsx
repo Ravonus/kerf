@@ -1,16 +1,16 @@
 // resource and <Boundary>: §6.2 timing (150 ms, then held 400 ms), errors and retry, and the SSR round trips.
-// weft-allow T004, T005: framework test of hydration and resource timing; it reads the server DOM and lets real timers fire
+// kerf-allow T004, T005: framework test of hydration and resource timing; it reads the server DOM and lets real timers fire
 import { screen } from '@testing-library/dom'
-import { renderToString, renderToStringAsync } from '@weft-js/core/ssr'
-import { hydrate } from '@weft-js/core/dom'
-import { flush, render } from '@weft-js/core/test'
-import { Boundary, onCleanup, resource, state } from '@weft-js/core'
+import { renderToString, renderToStringAsync } from '@kerf-js/core/ssr'
+import { hydrate } from '@kerf-js/core/dom'
+import { flush, render } from '@kerf-js/core/test'
+import { Boundary, onCleanup, resource, state } from '@kerf-js/core'
 import { hydration } from '../src/hydrate'
 import { Users, type Load } from './fixtures/ssr/Users'
-import { Users as ServerUsers } from './fixtures/ssr/Users.tsx?weft-ssr'
-import { Users as ClientUsers } from './fixtures/ssr/Users.tsx?weft-hydrate'
-import { Cached as ServerCached } from './fixtures/ssr/Cached.tsx?weft-ssr'
-import { Cached as ClientCached } from './fixtures/ssr/Cached.tsx?weft-hydrate'
+import { Users as ServerUsers } from './fixtures/ssr/Users.tsx?kerf-ssr'
+import { Users as ClientUsers } from './fixtures/ssr/Users.tsx?kerf-hydrate'
+import { Cached as ServerCached } from './fixtures/ssr/Cached.tsx?kerf-ssr'
+import { Cached as ClientCached } from './fixtures/ssr/Cached.tsx?kerf-hydrate'
 
 const names: Record<string, string> = { u1: 'Ada', u2: 'Grace' }
 
@@ -126,7 +126,7 @@ test('SSR, data awaited: the content is in the HTML and hydrates without refetch
   expect(html).toMatch(/<p wk="[^"]+" class="profile">Ada<\/p>/)
   expect(html).toContain('Ada')
   expect(html).not.toContain('skeleton')
-  expect(html).toMatch(/<script type="application\/json" data-weft>.*"Ada".*<\/script>$/)
+  expect(html).toMatch(/<script type="application\/json" data-kerf>.*"Ada".*<\/script>$/)
 
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html
@@ -165,7 +165,7 @@ test('SSR with `data: false`: a synchronous throw reaches the page only as `show
 
 test('SSR with `data: false`: the value stays out of the page data, and a synchronous read hydrates with 0 writes', async () => {
   vi.useRealTimers()
-  // A toy cache, as @weft-js/start's request cache behaves: a promise first, the value itself once it's known.
+  // A toy cache, as @kerf-js/start's request cache behaves: a promise first, the value itself once it's known.
   const known = new Map<string, { name: string }>()
   const read = (id: string) =>
     known.get(id) ??
@@ -176,7 +176,7 @@ test('SSR with `data: false`: the value stays out of the page data, and a synchr
       }, 1)
     })
   const html = await renderToStringAsync(() => ServerCached({ read }))
-  expect(html).toMatch(/^<p wk="[^"]+" class="cached">Ada<\/p>$/) // no data-weft script: nothing recorded
+  expect(html).toMatch(/^<p wk="[^"]+" class="cached">Ada<\/p>$/) // no data-kerf script: nothing recorded
 
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html
@@ -367,7 +367,7 @@ test('a held Boundary the server gave up on fetches behind its fallback, and sho
 test('a Boundary that first runs after its chunk landed claims the content, and holds for nothing', async () => {
   const load = () => Promise.resolve({ name: 'Ada' })
   const html = await renderToStringAsync(() => ServerUsers({ load }))
-  const data = JSON.parse(/data-weft>(.*?)<\/script>/.exec(html)![1]!)
+  const data = JSON.parse(/data-kerf>(.*?)<\/script>/.exec(html)![1]!)
   const key = Object.keys(data.b)[0]!
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html

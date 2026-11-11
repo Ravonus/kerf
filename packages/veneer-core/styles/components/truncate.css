@@ -1,0 +1,42 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Truncate: line clamp with an inline Show more; middle truncation for ids/paths */
+:where([data-scope="truncate"] > [data-part="text"]) {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--_lines, 2); line-clamp: var(--_lines, 2); overflow: clip;
+}
+:where([data-scope="truncate"][data-state="open"] > [data-part="text"]) { -webkit-line-clamp: unset; line-clamp: none; }
+:where([data-scope="truncate"] > [data-part="toggle"]) { all: unset; cursor: pointer; color: var(--veneer-color-accent-text); font-size: var(--veneer-text-caption-size); font-weight: 500; }
+:where([data-scope="truncate"] > [data-part="toggle"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 2px; border-radius: 2px; }
+:where([data-scope="truncate"][data-mode="middle"]) { display: inline-flex; min-inline-size: 0; max-inline-size: 100%; white-space: nowrap; font-family: var(--veneer-font-mono); font-size: var(--veneer-text-code-size); }
+:where([data-scope="truncate"][data-mode="middle"] > [data-part="head"]) { overflow: clip; text-overflow: ellipsis; }
+:where([data-scope="truncate"][data-mode="middle"] > [data-part="tail"]) { flex: none; }
+
+
+
+
+/* ---------------------------------------------------------------------------
+   TOUCH TARGETS (00 §1.5; 01 §2 "Touch floor"). Every target reaches hit-min (44px on a coarse
+   pointer, 24px on a fine one) without changing its visual box: a centred ::after expander,
+   never smaller than the target. --_hit is the per-axis inset; 0 when the box is already big enough.
+   ------------------------------------------------------------------------ */
+:where(a[data-scope="link"]),
+:where([data-scope="logo"]),
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]),
+:where([data-scope="relative-time"]),
+:where([data-scope="truncate"] > [data-part="toggle"]),
+:where([data-scope="menubar"] > [role="menuitem"]),
+:where([data-scope="ai-label"]) { position: relative; }
+
+/* links (standalone and in running text: the expander reaches into the lines above and below, with no
+   layout change), the logo, the heading anchor, relative time (a tooltip trigger), Show more, the AI label */
+@media screen {
+:where(a[data-scope="link"])::after,
+  :where([data-scope="logo"])::after,
+  :where([data-scope="anchor-heading"] > a[data-part="anchor"])::after,
+  :where([data-scope="relative-time"])::after,
+  :where([data-scope="truncate"] > [data-part="toggle"])::after,
+  :where([data-scope="ai-label"])::after {
+    content: ""; position: absolute; inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2));
+  }
+}
+}

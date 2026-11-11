@@ -1,21 +1,21 @@
 {
-  "name": "@weft-js/scroll",
-  "version": "0.1.4",
+  "name": "@kerf-js/scroll",
+  "version": "0.1.0",
   "description": "Scrolling in JavaScript: native-feeling wheel, touch, keys and focus, with scrollbars drawn in the DOM or on a canvas",
   "keywords": [
     "canvas",
     "scroll",
     "scrollbar",
-    "weft"
+    "kerf"
   ],
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/scroll#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/scroll#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/scroll"
   },
   "files": [

@@ -1,4 +1,4 @@
-// Argument parsing and output for `weft`. JSON on stdout with --json, human text on stderr.
+// Argument parsing and output for `kerf`. JSON on stdout with --json, human text on stderr.
 // Exit codes: 0 ok, 1 diagnostics with errors (a build refused on one, or a stale AGENTS.md under --check), 2 usage or internal error.
 
 import { fix } from './fix.mjs'
@@ -75,28 +75,28 @@ import {
   commandMcp,
 } from './cli/authoring.mjs'
 
-const usage = `usage: weft <command> [--json] [--root <dir>]
+const usage = `usage: kerf <command> [--json] [--root <dir>]
 
   check [files…] [--preset <p>]  compile in check mode; W-, P- and D-diagnostics with fixes (--verbose: which compiler ran)
   doctor [--preset <p>]  which compiler this install uses, whether Rust is around (it's optional), and what live data does on the target
   fix [files…]        apply the safe autofixes
-  tokens              warp's resolved tokens as DTCG, in .weft/tokens/
+  tokens              veneer's resolved tokens as DTCG, in .kerf/tokens/
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
                       [--base <ref>] [--budget <sec>] [--max-mutants <n>] [--refactor] [--no-mutation]
-  browser <cmd>       drive the running app (\`weft browser help\`): open, snapshot, act, assert, net, time, record…
+  browser <cmd>       drive the running app (\`kerf browser help\`): open, snapshot, act, assert, net, time, record…
   capture <cmd>       stills at scroll stops, frame times, contact sheets and scene poster bakes in headless Chrome
-                      on the GPU, from @weft-js/capture (\`weft capture help\`)
+                      on the GPU, from @kerf-js/capture (\`kerf capture help\`)
   lsp                 a language server for editors on TypeScript 7: tsc --lsp with inferred props
   tsc                 type-check the whole project with inferred props (tsc or tsgo; for CI)
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
-  build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json; then the
+  build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .kerf/contract.json; then the
                       built pages are audited (L-codes) and an error fails the build
                       [--unsafe-allow <codes>]  go past these codes (R002, L003, a family like L, or all): forces a deploy
   audit [routes…] [--url <u>] [--indexing public|private|auto] [--all] [--max <n>]  the built pages, or a running site, in a clean Chrome at a phone's
                       and a desktop's width: axe-core's WCAG rules, console, deprecations, head, sideways scroll, shift
   deploy [--prod] [--yes] [--target t]  fit check, build for the target, then the host's own CLI; without --yes a dry
                       run that prints what would run. Netlify, Vercel, Cloudflare, Fly, Render; the live URL at the end
-  deploy hosts        which hosts can run this app, why not, what each costs, and the one weft suggests
+  deploy hosts        which hosts can run this app, why not, what each costs, and the one kerf suggests
   deploy init [target] [--dry-run] [--force]  the host's files (netlify.toml, fly.toml + Dockerfile…), a GitHub
                       workflow that checks and deploys on push, and \`deploy\` in the config
   start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
@@ -106,21 +106,21 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
   surfaces            the canvas and WebGL surfaces this project already defines
   tasks               commands and project tasks
-  run <task>          run a project task from weft.config.ts
+  run <task>          run a project task from kerf.config.ts
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
-  map [--stdout]      write .weft/map.md and .json: a matrix of what to call in this app
+  map [--stdout]      write .kerf/map.md and .json: a matrix of what to call in this app
   icons publish <dir>  every icon and variant as static .svg files with a manifest.json, for a CDN
   add <feature>       install a plugin and wire it into the config; also tailwind, auth, db [engine] [--layer drizzle|prisma|native], and rust [name] [--remote] [--dry-run] [--no-install]
   plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
-  plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
-  plugins sync        regenerate .weft/slots/*, .weft/slots.d.ts and .weft/tokens/*
-  plugins audit       each plugin's permissions and code against .weft/plugins.lock.json, and what it uses undeclared
+  plugins explain <slot>  binding chain: config → plugin → module → .kerf/slots/<id>.ts
+  plugins sync        regenerate .kerf/slots/*, .kerf/slots.d.ts and .kerf/tokens/*
+  plugins audit       each plugin's permissions and code against .kerf/plugins.lock.json, and what it uses undeclared
   plugins approve [name…] [--all]  record them in the lock; with no names, show what's waiting and write nothing
   style find <query>  style groups that fit what you're about to style (\`card\`, \`status badge\`): reuse before you write
   style explain <group|selector> [--<axis> <value>] [--states a,b] [--accent intent:token] [--part p]
                       resolved CSS for one variation, and where each value came from
-  style matrix        write .weft/styles.json (every group: axes, parts, accents, resolved CSS, uses)
+  style matrix        write .kerf/styles.json (every group: axes, parts, accents, resolved CSS, uses)
   mcp                 MCP server on stdio: docs, check, audit, routes_meta, map, tasks, surfaces, style_find,
                       style_explain, test_gate, browser_*`
 
@@ -148,7 +148,7 @@ const valued = new Set([
   'max',
   'target',
 ])
-/** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
+/** `kerf style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
 const booleans = new Set([
   'dry-run',
@@ -334,7 +334,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     const code = error.code ?? 'E_INTERNAL'
     if (args?.json || argv.includes('--json'))
       print({ ok: false, error: { code, message: error.message } })
-    say(`weft: ${error.message}${code === 'E_USAGE' ? `\n\n${usage}` : ''}`)
+    say(`kerf: ${error.message}${code === 'E_USAGE' ? `\n\n${usage}` : ''}`)
     return code === 'E_REFUSED' ? 1 : 2
   }
 }

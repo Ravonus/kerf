@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { configDefaults, defineConfig } from 'vitest/config'
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf-js/core/vite'
 
 // Files that drive the shared fixture dev server run one at a time: a file's mutation shows up in another's
 // DOM-write count. Everything else runs in parallel, beside them.
@@ -17,8 +17,8 @@ const base = {
 } as const
 
 export default defineConfig({
-  // .tsx tests (the server-function cache under @weft-js/core/test, jsdom) compile with weft's plugin.
-  plugins: [weft()],
+  // .tsx tests (the server-function cache under @kerf-js/core/test, jsdom) compile with kerf's plugin.
+  plugins: [kerf()],
   test: {
     fsModuleCachePath: 'node_modules/.vitest-cache-start',
     projects: [

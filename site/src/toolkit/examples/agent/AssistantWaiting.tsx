@@ -1,4 +1,4 @@
-import { Assistant } from '@weft-js/warp'
+import { Assistant } from '@kerf-js/veneer'
 import { WAITING } from './shared'
 
 export const AssistantWaiting = () => (

@@ -1,30 +1,30 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
 <h1 align="center">Landing</h1>
 
 <p align="center">
-  <strong>A marketing site with a waitlist form, in Weft, SolidStart and Next.</strong><br>
+  <strong>A marketing site with a waitlist form, in Kerf, SolidStart and Next.</strong><br>
   No page reads the database, one form writes to it, and it all works with JavaScript off.
 </p>
 
 <p align="center">
   <a href="#run-it">Run it</a> ·
-  <a href="#the-weft-variant">Weft variant</a> ·
+  <a href="#the-kerf-variant">Kerf variant</a> ·
   <a href="#the-comparison-variants">Comparison variants</a> ·
   <a href="../README.md">All examples</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!NOTE]
-> This is a private benchmark site, not a published package. Nothing here is on npm. The Weft version is not stored in
-> this folder: it is generated from the `landing` template of `@weft-js/create` on every bench run.
+> This is a private benchmark site, not a published package. Nothing here is on npm. The Kerf version is not stored in
+> this folder: it is generated from the `landing` template of `create-kerf` on every bench run.
 
 `landing` is the simplest of the four database-driven sites in [`examples/`](../README.md). A landing page (Emberline,
-in the Weft template) is mostly static: what decides it is how fast the hero paints, how many bytes ship, and whether
+in the Kerf template) is mostly static: what decides it is how fast the hero paints, how many bytes ship, and whether
 the one form still works without JavaScript. The three versions say the same words, so the comparison is about the
 framework, not the copy.
 
@@ -54,24 +54,24 @@ The only table this site touches is `waitlist` in [`../shared/pg/schema.sql`](..
 
 | Variant | Label in results | Where the code lives |
 | --- | --- | --- |
-| `weft` | weft + warp | Generated: `{"template": "landing", "db": "postgres", "auth": false}` passed to create-weft's `scaffold()` |
+| `kerf` | kerf + veneer | Generated: `{"template": "landing", "db": "postgres", "auth": false}` passed to create-kerf's `scaffold()` |
 | `solid` | SolidStart 2.1 + Tailwind 4 | [`solid/`](./solid) |
 | `next` | Next 16.4 + Tailwind 4 | [`next/`](./next) |
 
-### The Weft variant
+### The Kerf variant
 
 The template source is
-[`packages/create/templates/landing`](../../packages/create/templates/landing). It uses:
+[`packages/create-kerf/templates/landing`](../../packages/create-kerf/templates/landing). It uses:
 
 - **A form that needs no script.** `joinWaitlist` is a `mutation` with a `zod` email input; it inserts with
-  `onConflictDoNothing()` and calls `redirect('/joined', 303)`. The page renders it with `Form` from `@weft-js/start`.
-- **Images.** `Media` from `@weft-js/core/media` with `priority` and `sizes` for the hero, with the
-  `media()` plugin from `@weft-js/plugin-media` registered in `weft.config.ts`.
-- **Fonts.** The `text()` plugin from `@weft-js/text` loads Figtree (`assets/fonts/figtree.woff2`, weights 300 to 900)
+  `onConflictDoNothing()` and calls `redirect('/joined', 303)`. The page renders it with `Form` from `@kerf-js/start`.
+- **Images.** `Media` from `@kerf-js/core/media` with `priority` and `sizes` for the hero, with the
+  `media()` plugin from `@kerf-js/media` registered in `kerf.config.ts`.
+- **Fonts.** The `text()` plugin from `@kerf-js/text` loads Figtree (`assets/fonts/figtree.woff2`, weights 300 to 900)
   with an Arial fallback.
-- **Warp.** `Accordion`, `Badge`, `Card`, `Grid`, `Split`, `Alert`, `Input` and `Button`, themed with the `warp()` plugin,
-  plus `CheckIcon` from `@weft-js/warp-icons`.
-- **Site metadata.** `site` in `weft.config.ts` sets the name, locale, title pattern (`%s · Emberline`) and description.
+- **Veneer.** `Accordion`, `Badge`, `Card`, `Grid`, `Split`, `Alert`, `Input` and `Button`, themed with the `veneer()` plugin,
+  plus `CheckIcon` from `@kerf-js/veneer-icons`.
+- **Site metadata.** `site` in `kerf.config.ts` sets the name, locale, title pattern (`%s · Emberline`) and description.
 
 ### The comparison variants
 
@@ -97,14 +97,14 @@ pnpm run setup                         # repo root, once
 cd examples
 pnpm install                           # benchmark tools only
 node bench.mjs landing
-node bench.mjs landing --only weft --no-record
+node bench.mjs landing --only kerf --no-record
 ```
 
 ### Run the end-to-end test
 
 ```bash
 cd examples
-node e2e.mjs landing weft
+node e2e.mjs landing kerf
 node e2e.mjs landing solid
 node e2e.mjs landing next
 ```
@@ -118,10 +118,10 @@ npm ci
 npm run dev
 ```
 
-### Make your own copy of the Weft version
+### Make your own copy of the Kerf version
 
 ```bash
-pnpm create @weft-js my-landing --template landing --db postgres
+pnpm create kerf my-landing --template landing --db postgres
 ```
 
 ## Manifest details

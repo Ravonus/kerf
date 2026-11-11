@@ -1,4 +1,4 @@
-import { Switch } from '@weft-js/warp'
+import { Switch } from '@kerf-js/veneer'
 
 export const SwitchHint = () => (
   <Switch

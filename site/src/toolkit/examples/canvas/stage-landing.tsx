@@ -5,8 +5,8 @@ import {
   StageSelect,
   DitherStage,
   CanvasStage,
-} from '@weft-js/warp'
-import { untrack } from '@weft-js/core'
+} from '@kerf-js/veneer'
+import { untrack } from '@kerf-js/core'
 import type { LookName } from './paint-primitives'
 import { LOOKS } from './looks'
 
@@ -293,7 +293,7 @@ function ditherStage(
       <DitherStage
         {...rest}
         ground={0}
-        style="background:var(--warp-color-surface)"
+        style="background:var(--veneer-color-surface)"
       >
         {children()}
       </DitherStage>

@@ -1,10 +1,10 @@
-import { Text } from '@weft-js/warp'
+import { Text } from '@kerf-js/veneer'
 
 import type {
   SyncState,
   Version,
   ChatMessage,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 import {
   CHAT,

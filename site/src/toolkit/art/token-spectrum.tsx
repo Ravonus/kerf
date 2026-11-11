@@ -1,13 +1,13 @@
-import { Canvas, Slider, type CanvasFrame as Frame } from '@weft-js/warp'
-import { palette } from '@weft-js/warp-core/dither'
-import { state } from '@weft-js/core'
+import { Canvas, Slider, type CanvasFrame as Frame } from '@kerf-js/veneer'
+import { palette } from '@kerf-js/veneer-core/dither'
+import { state } from '@kerf-js/core'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './token-spectrum.tsx?raw'
 
 export const meta: Meta = {
   name: 'Token Spectrum',
   description:
-    'Every colour warp has, plotted by lightness and chroma, live. Turn the dial, flip the theme or move the seed, and watch the whole system lean together.',
+    'Every colour veneer has, plotted by lightness and chroma, live. Turn the dial, flip the theme or move the seed, and watch the whole system lean together.',
   kind: 'data',
   code,
   wide: true,
@@ -40,14 +40,14 @@ const NAMES = [
   'data-7',
   'data-8',
 ]
-const TOKENS = NAMES.map((n) => `--warp-color-${n}`),
+const TOKENS = NAMES.map((n) => `--veneer-color-${n}`),
   COUNT = NAMES.length,
   FAMILY = STEPS.length
 const colours = inks({
-  rule: '--warp-color-border',
-  axis: '--warp-color-text-faint',
-  label: '--warp-color-text-subtle',
-  hot: '--warp-color-text',
+  rule: '--veneer-color-border',
+  axis: '--veneer-color-text-faint',
+  label: '--veneer-color-text-subtle',
+  hot: '--veneer-color-text',
 })
 const MAX_C = 0.3
 
@@ -55,7 +55,7 @@ const linear = (v: number) => {
   const c = v / 255
   return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
 }
-/** Packed RGBA to OKLCH lightness and chroma: the plane warp's tokens are designed on. */
+/** Packed RGBA to OKLCH lightness and chroma: the plane veneer's tokens are designed on. */
 function oklch(rgba: number) {
   const r = linear(rgba & 255),
     g = linear((rgba >> 8) & 255),
@@ -92,7 +92,7 @@ function paintSpectrum(
     w = width - mx * 2,
     h = height - my * 2 - 12
   ctx.clearRect(0, 0, width, height)
-  ctx.font = '11px var(--warp-font-mono, monospace)'
+  ctx.font = '11px var(--veneer-font-mono, monospace)'
   ctx.fillStyle = c.rule
   for (let v = 0; v <= 1.001; v += 0.25) ctx.fillRect(mx, Math.round(up(v)), w, 1)
   for (let v = 0; v <= MAX_C; v += 0.1) ctx.fillRect(Math.round(across(v)), my, 1, h)
@@ -202,7 +202,7 @@ export default function TokenSpectrum(_: ArtProps) {
     moving.value = true
   }
   return (
-    <div data-art="pierce" data-warp="" style={`--warp-seed-accent-h:${hue.value}`}>
+    <div data-art="pierce" data-veneer="" style={`--veneer-seed-accent-h:${hue.value}`}>
       <Canvas
         draw={draw}
         animate={moving.value}
@@ -211,7 +211,7 @@ export default function TokenSpectrum(_: ArtProps) {
           colours.reset()
           stale = true
         }}
-        label="Every warp colour token on the lightness and chroma plane"
+        label="Every veneer colour token on the lightness and chroma plane"
       />
       <div data-art="controls" data-art-end="">
         <div data-art-seed="">

@@ -1,4 +1,4 @@
-import { Popover, Snippet } from '@weft-js/warp'
+import { Popover, Snippet } from '@kerf-js/veneer'
 
 export const PopoverShare = () => (
   <Popover
@@ -12,7 +12,7 @@ export const PopoverShare = () => (
   >
     <Snippet
       prompt=""
-      code="https://ranking-v2.search-api.weft.app"
+      code="https://ranking-v2.search-api.kerf.app"
     />
   </Popover>
 )

@@ -7,7 +7,7 @@ import {
   onCleanup,
   state,
   untrack,
-} from '@weft-js/core'
+} from '@kerf-js/core'
 import type { Fn } from '../data'
 import { currentScope, rt, skip, StartError } from './api'
 import type { Sub, View } from './sub-types'

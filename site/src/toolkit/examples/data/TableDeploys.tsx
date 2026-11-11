@@ -1,4 +1,4 @@
-import { Button, Table } from '@weft-js/warp'
+import { Button, Table } from '@kerf-js/veneer'
 
 import { DEPLOYS } from '../../world'
 

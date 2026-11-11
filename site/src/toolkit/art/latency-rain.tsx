@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
+import { state } from '@kerf-js/core'
 import { clamp, inks, rng, type ArtProps, type Meta } from './shared'
 import code from './latency-rain.tsx?raw'
 
@@ -16,12 +16,12 @@ const COUNT = 900,
   MAX = 1000,
   LIFE = 9
 const colours = inks({
-  drop: '--warp-color-data-1',
-  fine: '--warp-color-text-faint',
-  err: '--warp-color-critical-text',
-  rule: '--warp-color-text-subtle',
-  band: '--warp-color-accent-soft',
-  ground: '--warp-color-page',
+  drop: '--veneer-color-data-1',
+  fine: '--veneer-color-text-faint',
+  err: '--veneer-color-critical-text',
+  rule: '--veneer-color-text-subtle',
+  band: '--veneer-color-accent-soft',
+  ground: '--veneer-color-page',
 })
 
 // log-normal around 80 ms, with the long tail every real service has, and one bad patch
@@ -156,7 +156,7 @@ function rainDrawing(found: ReturnType<typeof state<string>>) {
     }
     drawRequests(ctx, c, { clock, span, top, mx, inner, scale })
     ctx.fillStyle = c.rule
-    ctx.font = '11px var(--warp-font-mono, monospace)'
+    ctx.font = '11px var(--veneer-font-mono, monospace)'
     for (const [name, value] of [
       ['p50', p50],
       ['p95', p95],

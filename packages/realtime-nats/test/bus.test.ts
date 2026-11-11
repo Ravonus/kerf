@@ -1,7 +1,7 @@
-// nats against a real server, through the `realtime.bus` suite. `WEFT_TEST_NATS` is the path to a binary.
+// nats against a real server, through the `realtime.bus` suite. `KERF_TEST_NATS` is the path to a binary.
 import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { spawn, type ChildProcess } from 'node:child_process'
-import { busSuite } from '@weft-js/core/test/plugins'
+import { busSuite } from '@kerf-js/core/test/plugins'
 import { bus, natsBus } from '../src/index'
 
 const stop = (c: ChildProcess) =>
@@ -10,9 +10,9 @@ const stop = (c: ChildProcess) =>
     c.kill('SIGKILL')
   })
 
-const binary = process.env.WEFT_TEST_NATS
+const binary = process.env.KERF_TEST_NATS
 
-// Needs a `nats-server` binary, named by `WEFT_TEST_NATS`: the suite restarts a real server.
+// Needs a `nats-server` binary, named by `KERF_TEST_NATS`: the suite restarts a real server.
 test.skipIf(!binary)(
   'natsBus passes realtime.bus@1 on a real server, a restart included',
   async () => {

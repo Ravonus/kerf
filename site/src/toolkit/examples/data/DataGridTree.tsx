@@ -1,4 +1,4 @@
-import { DataGrid } from '@weft-js/warp'
+import { DataGrid } from '@kerf-js/veneer'
 
 import { money as _Shared0 } from './shared-project'
 

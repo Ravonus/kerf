@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
-import { Alert, Button, Card } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Alert, Button, Card } from '@kerf-js/veneer'
 import show from '../generated/showcase.json'
 
 export default function Habit() {
   const open = state(false)
   return (
-    <Card title="weft build">
+    <Card title="kerf build">
       <Button onClick={() => (open.value = !open.value)}>
         {open.value
           ? 'Hide the error'

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Chip, Row } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Chip, Row } from '@kerf-js/veneer'
 
 export function ChipIcons() {
   const mine = state(true)

@@ -14,7 +14,7 @@ const digest = (data) => createHash('sha256').update(data).digest('hex')
 const version = JSON.parse(fs.readFileSync(path.join(upstream, 'package.json'), 'utf8')).version
 if (version !== receipt.version)
   throw new Error(`Pretext version ${version} does not match ${receipt.version}`)
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'weft-pretext-split-'))
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'kerf-pretext-split-'))
 try {
   for (const [name, hash] of Object.entries(receipt.inputs)) {
     const data = fs.readFileSync(path.join(upstream, 'src', name))

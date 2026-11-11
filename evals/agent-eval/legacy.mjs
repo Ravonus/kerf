@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Cold-start agent comparison. Pre-registered in docs/research/42-agent-eval.md; read that before changing anything here.
-//   node run.mjs pack                                    weft's tarballs, with this machine's addon, from this checkout
+//   node run.mjs pack                                    kerf's tarballs, with this machine's addon, from this checkout
 //   node run.mjs golden                                  scaffold each stack once, from the local registry
 //   node run.mjs probe                                   no model: prove what the box blocks and allows, on every stack
 //   node run.mjs canary                                  smallest model calls: prove nothing of the user's reaches a request
@@ -51,14 +51,14 @@ const {
   },
 })
 const stacks = JSON.parse(readFileSync(join(here, 'stacks.json'), 'utf8'))
-const stackNames = (opt.stacks ?? 'weft-warp').split(',')
+const stackNames = (opt.stacks ?? 'kerf-veneer').split(',')
 const taskOf = (t) => JSON.parse(readFileSync(join(here, 'tasks', t, 'task.json'), 'utf8'))
 const say = (...a) => console.error(...a)
 /** `tgz` as a registry, everything else proxied from npm: the same one for all stacks, so none installs differently. */
 async function withRegistry(fn) {
   const server = spawn(
     process.execPath,
-    [join(repo, 'packages/create/scripts/registry.mjs'), tgz, String(registryPort)],
+    [join(repo, 'packages/create-kerf/scripts/registry.mjs'), tgz, String(registryPort)],
     { stdio: ['ignore', 'pipe', 'inherit'] },
   )
   await new Promise((ok) => {
@@ -105,10 +105,10 @@ const passedAll = (g) => g.total !== null && g.passed === g.total
 
 // ---- one measured run
 export async function runOne({ task, stackName, model, name }) {
-  if (model !== 'gpt-6-luna' || stackName !== 'weft-warp')
-    throw new Error('S5 supports only gpt-6-luna and weft-warp')
-  const binary = process.env.WEFT_CODEX_BIN
-  if (!binary?.startsWith('/')) throw new Error('WEFT_CODEX_BIN must be an absolute path')
+  if (model !== 'gpt-6-luna' || stackName !== 'kerf-veneer')
+    throw new Error('S5 supports only gpt-6-luna and kerf-veneer')
+  const binary = process.env.KERF_CODEX_BIN
+  if (!binary?.startsWith('/')) throw new Error('KERF_CODEX_BIN must be an absolute path')
   const t = taskOf(task)
   const manifest = goldenManifest()
   const box = boxFor(stackName, task)
@@ -217,9 +217,9 @@ function ready() {
     )
   if (execFileSync(claudeBin, ['--version'], { encoding: 'utf8' }).trim() !== m.claude)
     problems.push('claude version differs from the goldens')
-  if (!m.stacks['weft-warp'].agentFiles.includes('AGENTS.md'))
+  if (!m.stacks['kerf-veneer'].agentFiles.includes('AGENTS.md'))
     problems.push(
-      'weft scaffold has no AGENTS.md: owner decision open, see 42-agent-eval.md "Open before the matrix"',
+      'kerf scaffold has no AGENTS.md: owner decision open, see 42-agent-eval.md "Open before the matrix"',
     )
   return problems
 }

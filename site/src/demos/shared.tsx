@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card, Checkbox } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Card, Checkbox } from '@kerf-js/veneer'
 
 // One list, two views. In a real app it comes from
 // a server `query`.

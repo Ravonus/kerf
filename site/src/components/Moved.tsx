@@ -1,5 +1,5 @@
-import { navigate } from '@weft-js/start'
-import { onMount } from '@weft-js/core'
+import { navigate } from '@kerf-js/start'
+import { onMount } from '@kerf-js/core'
 
 /** An old address: goes to the new one. */
 export function Moved(props: { to: string }) {

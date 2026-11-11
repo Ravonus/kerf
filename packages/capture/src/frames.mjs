@@ -23,7 +23,7 @@ export function frameStats(gaps) {
   }
 }
 
-/** In the page: records frame gaps and long tasks until `stop` is called through `weftFrames`. */
+/** In the page: records frame gaps and long tasks until `stop` is called through `kerfFrames`. */
 const RECORD = () => {
   const gaps = []
   const tasks = { count: 0, ms: 0 }
@@ -53,7 +53,7 @@ const RECORD = () => {
       scrolled: scrollY - y0,
     }
   }
-  Object.assign(globalThis, { weftFrames: stop })
+  Object.assign(globalThis, { kerfFrames: stop })
 }
 
 /** In the page: scrolls at `speed` CSS px/s for `seconds`, one step per frame. */
@@ -90,7 +90,7 @@ export async function frames(page, options = {}) {
       last = now
     }
   } else await page.evaluate(GLIDE, [seconds, speed])
-  const run = await page.evaluate(() => Reflect.get(globalThis, 'weftFrames')())
+  const run = await page.evaluate(() => Reflect.get(globalThis, 'kerfFrames')())
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
   return {
     seconds,

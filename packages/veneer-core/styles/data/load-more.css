@@ -1,0 +1,4 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+:where([data-scope="load-more"]) { display: grid; justify-items: center; gap: 6px; padding-block: 14px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+}

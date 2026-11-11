@@ -5,8 +5,8 @@ import { PER, kb } from './units.mjs'
 export function tuneFor(run, name, GAPS, gapAgainstBest) {
   const v = run.variants[name],
     items = new Map()
-  // On a warp variant, what costs size or hydration is warp's to answer for until the split says otherwise.
-  const kit = v.stack === 'weft+warp' ? 'warp' : 'weft'
+  // On a veneer variant, what costs size or hydration is veneer's to answer for until the split says otherwise.
+  const kit = v.stack === 'kerf+veneer' ? 'veneer' : 'kerf'
   const add = (id, item) => {
     const was = items.get(id)
     if (!was || item.impact > was.impact)
@@ -25,18 +25,18 @@ export function tuneFor(run, name, GAPS, gapAgainstBest) {
 }
 
 function tuneFindings({ p, path, split, add }) {
-  if (split.warp)
-    add('warp-share', {
-      where: 'warp',
-      title: 'warp code in the first load',
-      why: `${kb(split.warp)} br of ${kb(p.metrics['bytes.js.br'].med)} on ${path}.`,
-      impact: (split.warp / 1024) * PER.kb,
+  if (split.veneer)
+    add('veneer-share', {
+      where: 'veneer',
+      title: 'veneer code in the first load',
+      why: `${kb(split.veneer)} br of ${kb(p.metrics['bytes.js.br'].med)} on ${path}.`,
+      impact: (split.veneer / 1024) * PER.kb,
       pages: [path],
     })
   for (const f of p.findings.slice(0, 6))
     if (!/font-display|cache/.test(f.id))
       add(`lh:${f.id}`, {
-        where: 'weft',
+        where: 'kerf',
         title: f.title,
         why: `Lighthouse on ${path}${f.value ? `: ${f.value}` : ''}.`,
         impact: 0.2,

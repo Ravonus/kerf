@@ -1,6 +1,6 @@
 // A component that creates extra reactive work on the client only (a watcher, memos), before and between holes.
 // With keys from the owner tree these shifted every key after them; with source-path keys they can't.
-import { derived, state, untrack, watch } from '@weft-js/core'
+import { derived, state, untrack, watch } from '@kerf-js/core'
 
 export function Watched(props: { client: boolean }) {
   const items = state(['a', 'b'])

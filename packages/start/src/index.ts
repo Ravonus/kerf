@@ -1,6 +1,6 @@
-// @weft-js/start: what route files import (research 25) and server modules define (research 27). A route module exports
+// @kerf-js/start: what route files import (research 25) and server modules define (research 27). A route module exports
 // its component (`default`) and, when it needs them, `load` (async data, often `await q.fetch()`), `meta` (research
-// 20 §3: static, awaited before the first byte, never reactive) and `prerender` (the params `weft build` writes as
+// 20 §3: static, awaited before the first byte, never reactive) and `prerender` (the params `kerf build` writes as
 // static pages, with their share cards; `true` on a route without params).
 //
 //   // src/routes/users/[id].tsx
@@ -8,7 +8,7 @@
 //   export const meta: Meta<typeof load> = ({ data }) => ({ title: data.name, description: data.bio })
 //   export default function User(props: RouteProps<typeof load, '/users/[id]'>) { return <h1>{props.data.name}</h1> }
 
-import type { Merged, Meta as MetaObject, Site } from '@weft-js/core/ssr'
+import type { Merged, Meta as MetaObject, Site } from '@kerf-js/core/ssr'
 import type { Context } from './data'
 
 export { Link, currentPath } from './view'
@@ -97,12 +97,12 @@ export {
   type ListSpec,
   type SourceSpec,
 } from './list'
-export type { Merged, Site } from '@weft-js/core/ssr'
+export type { Merged, Site } from '@kerf-js/core/ssr'
 
-/** Filled by the generated `.weft/routes.d.ts` with every route file's path (`'/users/[id]': true`). */
+/** Filled by the generated `.kerf/routes.d.ts` with every route file's path (`'/users/[id]': true`). */
 export interface RouteFiles {}
 
-/** Route paths as files name them (`/users/[id]`); any string until `.weft/routes.d.ts` is generated. */
+/** Route paths as files name them (`/users/[id]`); any string until `.kerf/routes.d.ts` is generated. */
 // oxlint-disable-next-line typescript/no-redundant-type-constituents -- `RouteFiles` is empty here and filled by a generated file
 export type RoutePath = keyof RouteFiles extends never ? string : keyof RouteFiles & string
 
@@ -116,7 +116,7 @@ type ParamNames<P extends string> = P extends `${string}[${infer N}]${infer Rest
 
 /**
  * What `load` gets. `request` is the incoming request (headers, cookies), its `url` the page's own on a full load and on
- * a client navigation alike (never the `/_weft/data/<path>` endpoint the browser fetched); `signal` aborts with it; `ctx` is what server
+ * a client navigation alike (never the `/_kerf/data/<path>` endpoint the browser fetched); `signal` aborts with it; `ctx` is what server
  * functions get (the app's part from `src/context.server.ts`). `await listTodos.fetch()` here shares the request
  * cache with the page's `listTodos()`, and `redirect()` answers 307.
  */
@@ -178,7 +178,7 @@ export interface OgProps<L = undefined, P extends string = string> {
   description: string
 }
 
-/** The params of a param route whose cards `weft build` renders (static routes always are). */
+/** The params of a param route whose cards `kerf build` renders (static routes always are). */
 export type Prerender<P extends string = string> =
   | ParamsOf<P>[]
   | (() => ParamsOf<P>[] | Promise<ParamsOf<P>[]>)

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // One command for every rule on the framework's own code: `pnpm run check`. It says what failed and how to fix it, and it's what
-// CI runs. `weft check` is something else: the rules an app gets.
+// CI runs. `kerf check` is something else: the rules an app gets.
 //
 //   pnpm run check                 every step a merge needs (all at once)
 //   pnpm run check --fast          without the test suites
@@ -45,15 +45,15 @@ if (release && !argv.includes('--list')) {
     console.error(`webkit      FAIL: ${webkit.reason}`)
     process.exit(1)
   }
-  process.env.WEFT_WEBKIT = '1'
+  process.env.KERF_WEBKIT = '1'
 }
 // --changed=<ref>: test only the packages a change since <ref> touches, and those that depend on them.
 const changedSince = argv.find((a) => a.startsWith('--changed='))?.slice(10)
 const limit = jobs()
 const windows = process.platform === 'win32'
 const bin = (name) => join(root, 'node_modules', '.bin', windows ? `${name}.cmd` : name)
-const LONG = ['packages/create', 'packages/cli', 'packages/warp', 'packages/start']
-const CRATES = ['crates/weft-compiler', 'crates/weft-layout', 'crates/weft']
+const LONG = ['packages/create-kerf', 'packages/cli', 'packages/veneer', 'packages/start']
+const CRATES = ['crates/kerf-compiler', 'crates/kerf-layout', 'crates/kerf']
 const PACKAGES = readdirSync(join(root, 'packages'))
   .filter((d) => existsSync(join(root, 'packages', d, 'package.json')))
   .map((d) => `packages/${d}`)
@@ -207,7 +207,7 @@ const STEPS = [
   },
   {
     id: 'boundaries',
-    covers: 'warp-core imports no framework; browser entries reach no Node code, however deep',
+    covers: 'veneer-core imports no framework; browser entries reach no Node code, however deep',
     fix: 'Each line shows the chain of imports. Move the Node code behind a server entry, or the framework code into bindings/.',
     run: async () => lines(await run(process.execPath, ['scripts/quality/boundaries.mjs'])),
   },
@@ -340,8 +340,8 @@ const STEPS = [
     covers: 'landing scaffold navigation on Fast and Slow 3G',
     slow: true,
     release: true,
-    fix: 'Run `pnpm --filter @weft-js/create test:e2e` and inspect the failures.',
-    run: async () => lines(await run('pnpm', ['--filter', '@weft-js/create', 'test:e2e'])),
+    fix: 'Run `pnpm --filter create-kerf test:e2e` and inspect the failures.',
+    run: async () => lines(await run('pnpm', ['--filter', 'create-kerf', 'test:e2e'])),
   },
   {
     id: 'guardrails',

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-// The first-paint budget, on rules weft's own purge reads.
+// The first-paint budget, on rules kerf's own purge reads.
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -55,7 +55,7 @@ test('interaction and forced-colours rules wait for the late sheet; a state the 
 })
 
 test('a browser that has every sheet the page uses gets links, and a chunk links only what is new', () => {
-  const have = keptSheets(`a=1; weft-css=zz.${sheetId('/a.css')}; b=2`)
+  const have = keptSheets(`a=1; kerf-css=zz.${sheetId('/a.css')}; b=2`)
   const s = pageStyles(assets, css, html, { have })
   expect(s.links).toBe(true)
   expect(s.head).toBe(`<style>${LAYER_ORDER}</style>\n<link rel="stylesheet" href="/a.css">\n`)
@@ -66,7 +66,7 @@ test('a browser that has every sheet the page uses gets links, and a chunk links
 
 test('one sheet the browser lacks, and the page paints from its own rules as before', () => {
   const s = pageStyles(assets, [...css, { href: '/b.css' }], html, {
-    have: keptSheets(`weft-css=${sheetId('/a.css')}`),
+    have: keptSheets(`kerf-css=${sheetId('/a.css')}`),
   })
   expect(s.links).toBe(false)
   expect(s.head).toContain('data-late')
@@ -85,11 +85,11 @@ test('a request with cookies has the browser list the sheets it loaded, by the i
     document?: { cookie: string; querySelectorAll(q: string): typeof links }
   }
   fakeGlobal.document = {
-    cookie: `weft-css=${sheetId('/a.css')}`,
+    cookie: `kerf-css=${sheetId('/a.css')}`,
     querySelectorAll: (q) => (q === 'link[data-late]' ? links.slice(2) : links),
   }
   Object.defineProperty(fakeGlobal.document, 'cookie', {
-    get: () => cookies.at(-1)?.split(';')[0] ?? `weft-css=${sheetId('/a.css')}`,
+    get: () => cookies.at(-1)?.split(';')[0] ?? `kerf-css=${sheetId('/a.css')}`,
     set: (v) => {
       cookies.push(v)
     },
@@ -122,7 +122,7 @@ test('dials the head restores before paint keep their rules', () => {
   const dials = `:where([data-expression="vivid"]){color:red}${big}`
   const a = { inline: { '/dials.css': dials }, critical },
     on = [{ href: '/dials.css' }]
-  expect(pageStyles(a, on, html, { head: 'warp:dials' }).head).toContain('vivid')
+  expect(pageStyles(a, on, html, { head: 'veneer:dials' }).head).toContain('vivid')
   expect(pageStyles(a, on, html).head).not.toContain('vivid')
 })
 
@@ -184,16 +184,16 @@ test('a whole-inline page has nothing deferred, so a chunk adds only what the he
   expect(s.late([{ href: '/island.css' }])).toBe('<link rel="stylesheet" href="/island.css">\n')
 })
 
-test("the layer order names warp's own layers, as warp.css does, so no component sheet can rank first", () => {
-  const spec = /@layer (warp\.tokens,[^;]+);/
-    .exec(readFileSync(new URL('../../warp-core/styles/warp.css', import.meta.url), 'utf8'))![1]!
+test("the layer order names veneer's own layers, as veneer.css does, so no component sheet can rank first", () => {
+  const spec = /@layer (veneer\.tokens,[^;]+);/
+    .exec(readFileSync(new URL('../../veneer-core/styles/veneer.css', import.meta.url), 'utf8'))![1]!
     .replace(/\s/g, '')
   expect(LAYER_ORDER).toContain(`@layer ${spec};`)
 })
 
 test('a static route from an install keeps the stylesheets of the kit components it names, and only those', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-kit-'))
-  const kit = join(root, 'node_modules/@weft-js/kit/src')
+  const root = mkdtempSync(join(tmpdir(), 'kerf-kit-'))
+  const kit = join(root, 'node_modules/@kerf-js/kit/src')
   const write = (f: string, text: string) => {
     mkdirSync(dirname(join(kit, f)), { recursive: true })
     writeFileSync(join(kit, f), text)
@@ -205,14 +205,14 @@ test('a static route from an install keeps the stylesheets of the kit components
     resolve: (spec: string, from: string) =>
       Promise.resolve({
         id:
-          spec === '@weft-js/kit'
+          spec === '@kerf-js/kit'
             ? join(kit, 'index.ts')
             : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`),
       }),
   }
   const page = await assetsOnly(
     ctx,
-    `import { Badge } from '@weft-js/kit'\n`,
+    `import { Badge } from '@kerf-js/kit'\n`,
     join(root, 'src/routes/a.tsx'),
     root,
   )
@@ -222,8 +222,8 @@ test('a static route from an install keeps the stylesheets of the kit components
 
 describe('a static route through a kit barrel', () => {
   const kit = async (files: Record<string, string>, page: string) => {
-    const root = mkdtempSync(join(tmpdir(), 'weft-kit-')),
-      dir = join(root, 'node_modules/@weft-js/kit/src')
+    const root = mkdtempSync(join(tmpdir(), 'kerf-kit-')),
+      dir = join(root, 'node_modules/@kerf-js/kit/src')
     for (const [f, text] of Object.entries(files)) {
       mkdirSync(dirname(join(dir, f)), { recursive: true })
       writeFileSync(join(dir, f), text)
@@ -232,7 +232,7 @@ describe('a static route through a kit barrel', () => {
       resolve: (spec: string, from: string) =>
         Promise.resolve({
           id:
-            spec === '@weft-js/kit'
+            spec === '@kerf-js/kit'
               ? join(dir, 'index.ts')
               : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`),
         }),
@@ -249,7 +249,7 @@ describe('a static route through a kit barrel', () => {
         'pills.tsx': `import { p } from './inner'\nexport const Pill = () => p, Badge = () => p\n`,
         'inner.tsx': `import './pills.css'\nexport const p = 1\n`,
       },
-      `import { Badge } from '@weft-js/kit'\n`,
+      `import { Badge } from '@kerf-js/kit'\n`,
     )
     expect(page).toContain('pills.css')
     expect(page).not.toContain('modal')
@@ -263,7 +263,7 @@ describe('a static route through a kit barrel', () => {
           'pills.tsx': `import { p } from './inner'\nexport const { Badge } = p\n`,
           'inner.tsx': `import './pills.css'\nexport const p = 1\n`,
         },
-        `import { Badge } from '@weft-js/kit'\n`,
+        `import { Badge } from '@kerf-js/kit'\n`,
       ),
     ).toContain('pills.css')
   })
@@ -276,7 +276,7 @@ describe('a static route through a kit barrel', () => {
         'setup.tsx': `import './setup.css'\n`,
         'helper.tsx': `import './helper.css'\nexport const used = 1\n`,
       },
-      `import { Modal } from '@weft-js/kit'\n`,
+      `import { Modal } from '@kerf-js/kit'\n`,
     )
     expect(page).toContain('base.css')
     expect(page).toContain('setup.css')
@@ -291,8 +291,8 @@ describe('a static route through a kit barrel', () => {
       'k.tsx': `import { b } from './b'\nexport const a = b\n`,
       'b.tsx': `import './k.css'\nexport const b = 1\n`,
     }
-    expect(await kit(files, `import { K } from '@weft-js/kit'\n`)).toContain('k.css')
-    expect(await kit(files, `import { Modal } from '@weft-js/kit'\n`)).not.toContain('k.css')
+    expect(await kit(files, `import { K } from '@kerf-js/kit'\n`)).toContain('k.css')
+    expect(await kit(files, `import { Modal } from '@kerf-js/kit'\n`)).not.toContain('k.css')
   })
 })
 
@@ -303,7 +303,7 @@ test("the first paint leaves out rules for classes, attributes and values the sh
     [{ href: '/b.css' }],
     '<p class="hero" data-role="lede" data-id="7"></p>',
   ).head
-  const inline = /<style>(?!@layer warp,)([\s\S]*?)<\/style>/.exec(page)![1]!
+  const inline = /<style>(?!@layer veneer,)([\s\S]*?)<\/style>/.exec(page)![1]!
   expect(inline).toContain('.hero{color:blue}')
   expect(inline).toContain('data-role=lede')
   expect(inline).toContain(':where(.hero){margin:0}')
@@ -320,7 +320,7 @@ describe('the first paint keeps a rule whenever the shell might match it', () =>
       [{ href }],
       shell,
     ).head
-    return /<style>(?!@layer warp,)([\s\S]*?)<\/style>/.exec(page)![1]!
+    return /<style>(?!@layer veneer,)([\s\S]*?)<\/style>/.exec(page)![1]!
   }
   const keeps = [
     [
@@ -385,11 +385,11 @@ test('text in a page that names a custom property nothing reads does not split t
   expect(pageStyles(assets, css, `${html}<p>--two</p>`).head).toBe(a)
   expect(
     pageStyles(
-      { inline: { '/d.css': `:where([data-scope="card"]){--warp-gap:1px}${big}` }, critical },
+      { inline: { '/d.css': `:where([data-scope="card"]){--veneer-gap:1px}${big}` }, critical },
       [{ href: '/d.css' }],
-      `${html}<i style="--warp-gap:2px"></i>`,
+      `${html}<i style="--veneer-gap:2px"></i>`,
     ).head,
-  ).toContain('--warp-gap:1px')
+  ).toContain('--veneer-gap:1px')
 })
 
 test('the budget counts the head an app adds, not just the shell', () => {

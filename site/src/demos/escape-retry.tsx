@@ -1,11 +1,11 @@
-import { Boundary, resource } from '@weft-js/core'
+import { Boundary, resource } from '@kerf-js/core'
 import {
   Button,
   Card,
   Row,
   Spinner,
   Stack,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 let calls = 0
 // Stands in for a request that fails every other time.

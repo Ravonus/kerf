@@ -1,7 +1,7 @@
-// The counter plus every @weft-js/core/browser export: what an app pays for @weft-js/core/browser over `counter`.
-import { derived, state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
-import { interval, lifecycle, media, on, online, visible } from '@weft-js/core/browser'
+// The counter plus every @kerf-js/core/browser export: what an app pays for @kerf-js/core/browser over `counter`.
+import { derived, state } from '@kerf-js/core'
+import { render } from '@kerf-js/core/dom'
+import { interval, lifecycle, media, on, online, visible } from '@kerf-js/core/browser'
 
 function Counter() {
   const count = state(0)

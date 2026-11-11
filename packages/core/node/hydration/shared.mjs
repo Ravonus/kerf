@@ -1,12 +1,12 @@
 const PURE = {
-  '@weft-js/core': new Set(['For', 'mergeProps', 'untrack']),
-  '@weft-js/start': new Set(['Link']),
+  '@kerf-js/core': new Set(['For', 'mergeProps', 'untrack']),
+  '@kerf-js/start': new Set(['Link']),
 }
-const OPAQUE = /^@weft-js\/(?:core|start)(\/|$)/
+const OPAQUE = /^@kerf-js\/(?:core|start)(\/|$)/
 const CODE = /\.[cm]?[jt]sx?$/
-/** weft API that needs nothing from the page and starts nothing by itself. */
+/** kerf API that needs nothing from the page and starts nothing by itself. */
 const QUIET = {
-  '@weft-js/core': new Set([
+  '@kerf-js/core': new Set([
     'state',
     'derived',
     'memo',
@@ -22,8 +22,8 @@ const QUIET = {
     'omit',
     'restOf',
   ]),
-  '@weft-js/core/style': { has: () => true },
-  '@weft-js/start': new Set(['Link', 'Form']),
+  '@kerf-js/core/style': { has: () => true },
+  '@kerf-js/start': new Set(['Link', 'Form']),
 }
 const STARTS = new Set(['onMount', 'watch', 'effect'])
 const DATA = new Set(['resource', 'Boundary'])

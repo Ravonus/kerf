@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { PlanPicker, Toaster } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { PlanPicker, Toaster } from '@kerf-js/veneer'
 import { PLANS } from '../../world'
 import { wait } from './shared'
 

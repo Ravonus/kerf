@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   Drawer,
@@ -6,7 +6,7 @@ import {
   Row,
   Stack,
   Switch,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 export function DrawerFooter() {
   const open = state(false)

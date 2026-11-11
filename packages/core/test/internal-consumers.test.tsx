@@ -1,7 +1,7 @@
-// weft-allow T005: framework test of compiled helper imports and their shared reactive graph
-import { state } from '@weft-js/core'
-import { Box } from '@weft-js/core/internal'
-import { flush, render } from '@weft-js/core/test'
+// kerf-allow T005: framework test of compiled helper imports and their shared reactive graph
+import { state } from '@kerf-js/core'
+import { Box } from '@kerf-js/core/internal'
+import { flush, render } from '@kerf-js/core/test'
 import { InternalProps } from './fixtures/internal/Props'
 
 test('compiled locals, rest props and children work with the public runtime', async () => {

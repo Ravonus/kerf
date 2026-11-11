@@ -1,0 +1,1 @@
+{"name":"compare-kerf-plain","private":true,"type":"module","dependencies":{"@kerf-js/veneer-core":"file:../../../packages/veneer-core","@kerf-js/core":"file:../../../packages/core"},"devDependencies":{"vite":"8.3.5"}}

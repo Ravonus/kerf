@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import type { State } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
+import type { State } from '@kerf-js/core'
 import {
   Assistant,
   Conversation,
@@ -7,7 +7,7 @@ import {
   Suggestions,
   UserMessage,
   foldAnswer,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import {
   COMMANDS,
   CONTEXT,

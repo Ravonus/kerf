@@ -1,4 +1,4 @@
-import { Card, Row, Text } from '@weft-js/warp'
+import { Card, Row, Text } from '@kerf-js/veneer'
 import { TWO_PLANS } from './shared'
 
 export const PlanPickerTile = () => (

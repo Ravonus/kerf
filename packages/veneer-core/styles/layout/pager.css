@@ -1,0 +1,12 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* Pager — previous / next at the end of a docs page */
+:where([data-scope="pager"]) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--veneer-space-related); margin-block-start: var(--veneer-space-section); }
+:where([data-scope="pager"] a) {
+  --veneer-color-sweep-base: var(--veneer-color-border); --veneer-sweep-radius: var(--veneer-radius-surface);
+  position: relative; display: grid; gap: 2px; padding: var(--veneer-space-group); border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); color: var(--veneer-color-text); text-decoration: none;
+}
+:where([data-scope="pager"] a[rel="next"]) { text-align: end; }
+:where([data-scope="pager"] a small) { color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
+}

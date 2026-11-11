@@ -1,5 +1,5 @@
-import { flush } from '@weft-js/core'
-import { setHead } from '@weft-js/core/head'
+import { flush } from '@kerf-js/core'
+import { setHead } from '@kerf-js/core/head'
 import {
   applyMatches,
   client,
@@ -123,7 +123,7 @@ export class Navigation {
       if (!current()) return
       if (scroll) {
         const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
-        // a new page arrives where it starts, at once: warp makes the root scroll smooth for in-page anchors, and a
+        // a new page arrives where it starts, at once: veneer makes the root scroll smooth for in-page anchors, and a
         // route change that glided down from the old page's offset read as the old page scrolling away
         if (target) target.scrollIntoView({ behavior: 'instant' })
         else window.scrollTo({ top: 0, left: 0, behavior: 'instant' })

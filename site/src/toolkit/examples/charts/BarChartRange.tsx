@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
-import { BarChart, Segmented } from '@weft-js/warp'
+import { BarChart, Segmented } from '@kerf-js/veneer'
 
 import { COST_BY_SERVICE } from '../../world'
 

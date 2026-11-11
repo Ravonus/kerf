@@ -1,5 +1,5 @@
 // A param route with `meta` from `data`, where the data is hostile: every value is text in the head.
-import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
+import type { LoadArgs, Meta, RouteProps } from '@kerf-js/start'
 
 export const load = ({ params }: LoadArgs<'/meta/[name]'>) => ({
   name: decodeURIComponent(params.name),

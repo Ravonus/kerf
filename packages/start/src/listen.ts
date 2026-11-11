@@ -1,4 +1,4 @@
-// `weft db listen`: the change feed as a process of its own, for an app on functions, which can't hold a connection. It
+// `kerf db listen`: the change feed as a process of its own, for an app on functions, which can't hold a connection. It
 // publishes pokes to the app's bus, so it needs a bus every instance reads, and its heartbeat is how the app knows it's up.
 
 import type { Bus } from './bus'
@@ -22,11 +22,11 @@ export async function listen({
   if (bus.name === 'memory')
     throw new StartError(
       'R017',
-      '`weft db listen` publishes to the bus, and the memory bus stops at this process',
+      '`kerf db listen` publishes to the bus, and the memory bus stops at this process',
       'set `bus` in `src/realtime.server.ts`',
     )
   const how = await changes.probe()
-  say(`weft live: ${how.mode} (${how.via})${how.why ? `: ${how.why}` : ''}`)
+  say(`kerf live: ${how.mode} (${how.via})${how.why ? `: ${how.why}` : ''}`)
   if (how.mode !== 'feed')
     throw new StartError(
       'R015',
@@ -36,16 +36,16 @@ export async function listen({
   const feed = createFeed(changes, {
     emit: (p) =>
       void bus
-        .publish('weft:poke', JSON.stringify(p))
-        .catch((e) => say(`weft live: publish failed: ${e?.message ?? e}`)),
-    status: (down) => say(down ? `weft live: down: ${down}` : 'weft live: back'),
+        .publish('kerf:poke', JSON.stringify(p))
+        .catch((e) => say(`kerf live: publish failed: ${e?.message ?? e}`)),
+    status: (down) => say(down ? `kerf live: down: ${down}` : 'kerf live: back'),
   })
   await feed.start(how)
   const beats = setInterval(
-    () => void bus.publish('weft:poke', '{"v":1,"b":1}').catch(() => {}),
+    () => void bus.publish('kerf:poke', '{"v":1,"b":1}').catch(() => {}),
     beat,
   )
-  await bus.publish('weft:poke', '{"v":1,"b":1}')
+  await bus.publish('kerf:poke', '{"v":1,"b":1}')
   return async () => {
     clearInterval(beats)
     await feed.stop()

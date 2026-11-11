@@ -1,4 +1,4 @@
-import { Table } from '@weft-js/warp'
+import { Table } from '@kerf-js/veneer'
 
 import { PEOPLE } from '../../world'
 

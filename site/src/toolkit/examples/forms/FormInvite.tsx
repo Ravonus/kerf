@@ -1,4 +1,4 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 import {
   Button,
   Input,
@@ -6,7 +6,7 @@ import {
   Select,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { EMAIL, ROLE_OPTIONS } from './shared'
 
 export function FormInvite() {
@@ -14,7 +14,7 @@ export function FormInvite() {
   const role = state<string | null>('Member')
   const tried = state(false)
   const sent = state([
-    { email: 'noor@weft.dev', role: 'Viewer' },
+    { email: 'noor@kerf.dev', role: 'Viewer' },
   ])
   const problem = derived(() =>
     !tried.value || EMAIL.test(email.value)

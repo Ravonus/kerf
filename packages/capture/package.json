@@ -1,26 +1,26 @@
 {
-  "name": "@weft-js/capture",
-  "version": "0.1.4",
-  "description": "@weft-js/capture: drive a built weft page in headless Chrome on the GPU for repeatable stills at scroll stops, frame-time runs and contact sheets, and bake scene posters at build time. Dev only.",
+  "name": "@kerf-js/capture",
+  "version": "0.1.0",
+  "description": "@kerf-js/capture: drive a built kerf page in headless Chrome on the GPU for repeatable stills at scroll stops, frame-time runs and contact sheets, and bake scene posters at build time. Dev only.",
   "keywords": [
     "capture",
     "screenshot",
     "poster",
-    "weft"
+    "kerf"
   ],
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/capture#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/capture#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/capture"
   },
   "type": "module",
   "bin": {
-    "weft-capture": "./bin/weft-capture.mjs"
+    "kerf-capture": "./bin/kerf-capture.mjs"
   },
   "exports": {
     ".": {
@@ -46,20 +46,20 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@weft-js/plugin-media": "workspace:*",
+    "@kerf-js/media": "workspace:*",
     "playwright-core": "1.64.1",
     "sharp": "0.35.5"
   },
   "peerDependencies": {
-    "@weft-js/warp": "*"
+    "@kerf-js/veneer": "*"
   },
   "peerDependenciesMeta": {
-    "@weft-js/warp": {
+    "@kerf-js/veneer": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@weft-js/warp": "workspace:*",
+    "@kerf-js/veneer": "workspace:*",
     "vite": "8.3.5",
     "vitest": "5.0.5"
   },

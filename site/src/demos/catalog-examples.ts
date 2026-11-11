@@ -65,7 +65,7 @@ export const examples: Record<string, Demo> = {
   'shop-5': {
     title: 'The shop, step 5',
     look:
-      'A checkout form from Warp, so the ' +
+      'A checkout form from Veneer, so the ' +
       'shop now has a labelled field, a ' +
       'switch and a submit button.',
     tryIt:
@@ -132,7 +132,7 @@ export const examples: Record<string, Demo> = {
     title: 'A list that keeps its rows',
     look:
       'A to-do list where each row has a ' +
-      'key, so Weft knows which row is ' +
+      'key, so Kerf knows which row is ' +
       'which.',
     tryIt:
       'Tick Grind, then press Do the first ' +
@@ -196,7 +196,7 @@ export const examples: Record<string, Demo> = {
       'what is ticked is data, a box synced ' +
       'to every tab, and hover, focus and ' +
       'press are UI state, one interaction ' +
-      'per row, drawn by Warp.',
+      'per row, drawn by Veneer.',
     tryIt:
       'Tick a row: both panes tick. Hover a ' +
       'row: both panes light. Open this ' +
@@ -224,14 +224,14 @@ export const examples: Record<string, Demo> = {
     why:
       'Tasks and ticks show in both panes ' +
       'with no sync code. With ' +
-      '@weft-js/start the list comes from a ' +
+      '@kerf-js/start the list comes from a ' +
       'server query, and .live() keeps ' +
       'other visitors in step the same way.',
   },
   habit: {
     title: 'A React habit, caught by the compiler',
     look:
-      'A real error from the Weft compiler ' +
+      'A real error from the Kerf compiler ' +
       'for state(props.value), which copies ' +
       'a prop once. That is fine in some ' +
       'frameworks and a silent bug here.',
@@ -246,11 +246,11 @@ export const examples: Record<string, Demo> = {
       'agent reads the same message.',
   },
   'ui-kit': {
-    title: 'A form from Warp',
+    title: 'A form from Veneer',
     look:
       'A billing form: email field, switch ' +
-      'and button, all from Warp, the UI ' +
-      'kit that ships with Weft.',
+      'and button, all from Veneer, the UI ' +
+      'kit that ships with Kerf.',
     tryIt:
       'Hover the field and the button, then ' +
       'press Tab to move through them.',
@@ -304,7 +304,7 @@ export const examples: Record<string, Demo> = {
       'What the shop app in the repo evals ' +
       'sends to the browser, in compressed ' +
       'JavaScript. Measured by ' +
-      'evals/gates/warp-exit.mjs with ' +
+      'evals/gates/veneer-exit.mjs with ' +
       'brotli; the app and the results are ' +
       'in the repo.',
     tryIt:
@@ -314,14 +314,14 @@ export const examples: Record<string, Demo> = {
     why:
       'You pay for the components you use. ' +
       "A page that imports a button doesn't " +
-      'bring the rest of Warp with it.',
+      'bring the rest of Veneer with it.',
   },
   ask: {
     title: 'Ask the app',
     look:
       'A small todo app above its reactive ' +
       'graph. The JSON is what graph() from ' +
-      '@weft-js/core/devtools returns. ' +
+      '@kerf-js/core/devtools returns. ' +
       'Development builds only: this frame ' +
       'is one.',
     tryIt:
@@ -329,7 +329,7 @@ export const examples: Record<string, Demo> = {
       'Only the lines that changed light up.',
     why:
       'An agent sees the same JSON through ' +
-      'weft mcp, with your real names, so ' +
+      'kerf mcp, with your real names, so ' +
       'it can check what depends on what ' +
       'instead of guessing.',
   },

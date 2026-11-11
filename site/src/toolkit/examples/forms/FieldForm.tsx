@@ -1,4 +1,4 @@
-import { Input, Stack, Textarea } from '@weft-js/warp'
+import { Input, Stack, Textarea } from '@kerf-js/veneer'
 
 export const FieldForm = () => (
   <Stack gap="group">
@@ -11,7 +11,7 @@ export const FieldForm = () => (
       label="Work email"
       type="email"
       autocomplete="email"
-      defaultValue="mara@weft.dev"
+      defaultValue="mara@kerf.dev"
     />
     <Textarea
       label="About you"

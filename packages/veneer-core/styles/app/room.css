@@ -1,0 +1,47 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="room"][data-part="root"]) {
+  container: room / inline-size; position: relative;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100%; min-block-size: 0; background: var(--veneer-color-page); color: var(--veneer-color-text);
+}
+:where([data-scope="room"] [data-part="header"]:not([data-scope="room"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="sheet"],[data-scope="shell"]) *:not([data-scope="room"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="sheet"],[data-scope="shell"]) [data-scope="room"] *))) { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--veneer-space-related); padding: 10px var(--veneer-space-group); }
+:where([data-scope="room"] [data-part="rec"]) { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-critical-text); text-transform: uppercase; letter-spacing: 0.08em; }
+:where([data-scope="room"] [data-part="stage"]) { grid-column: 1; grid-row: 2; position: relative; min-block-size: 0; padding: 0 var(--veneer-space-related) var(--veneer-space-related); display: grid; }
+:where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) {
+  grid-template-columns: repeat(var(--_cols, 3), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: var(--veneer-tile-gap); align-content: stretch;
+}
+:where([data-scope="room"] [data-part="stage"][data-layout="speaker"]) { grid-template-rows: minmax(0, 1fr) 96px; gap: var(--veneer-tile-gap); }
+:where([data-scope="room"] [data-part="stage"][data-layout="speaker"] > [data-part="strip"]) { display: grid; grid-auto-flow: column; grid-auto-columns: 148px; gap: var(--veneer-tile-gap); overflow-x: auto; scrollbar-width: none; }
+:where([data-scope="room"] [data-part="stage"][data-layout="presentation"]),
+:where([data-scope="room"] [data-part="stage"][data-layout="board"]) {
+  grid-template-columns: minmax(0, 1fr) 168px; gap: var(--veneer-tile-gap);
+}
+:where([data-scope="room"] [data-part="stage"][data-layout="board"]) { grid-template-columns: minmax(0, 1fr) 112px; }
+:where([data-scope="room"] [data-part="stage"] > [data-part="rail"]) { display: grid; grid-auto-rows: 96px; gap: var(--veneer-tile-gap); align-content: start; overflow: auto; scrollbar-width: none; }
+:where([data-scope="room"] [data-part="stage"][data-layout="board"] > [data-part="rail"]) { grid-auto-rows: 72px; }
+:where([data-scope="room"] [data-part="share"]) {
+  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--veneer-radius-surface); overflow: clip;
+  background: var(--veneer-color-surface); box-shadow: 0 0 0 1px var(--veneer-color-border);
+}
+:where([data-scope="room"] [data-part="share"] header) { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); border-block-end: 1px solid var(--veneer-color-border); }
+:where([data-scope="room"] [data-part="tiles"]) { display: contents; }
+@container room (max-width: 599.98px) {
+:where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* sidebar: chat / people; a column on desktop, a sheet below 1000 */
+:where([data-scope="room"] [data-part="sidebar"]) {
+  grid-column: 2; grid-row: 2; inline-size: 300px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-block-size: 0;
+  margin: 0 var(--veneer-space-related) var(--veneer-space-related) 0; border-radius: var(--veneer-radius-surface);
+  background: var(--veneer-color-surface); box-shadow: 0 0 0 1px var(--veneer-color-border); overflow: clip;
+  animation: veneer-side-in var(--veneer-duration-slow) var(--veneer-ease-out);
+}
+:where([data-scope="room"] [data-part="sidebar"][hidden]) { display: none; }
+@container room (max-width: 999.98px) {
+:where([data-scope="room"] [data-part="sidebar"]) { position: absolute; inset: auto 8px 72px 8px; inline-size: auto; block-size: 60%; z-index: var(--veneer-z-overlay); box-shadow: var(--veneer-elevation-3), 0 0 0 1px var(--veneer-color-border); margin: 0; }
+}
+:where([data-scope="room"] [data-part="people"] li) { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: var(--veneer-text-body-size); }
+:where([data-scope="room"] [data-part="people"] li > span:not([data-scope])) { flex: 1; min-inline-size: 0; }
+:where([data-scope="room"] [data-part="people"] li small) { display: block; color: var(--veneer-color-text-subtle); font-size: 12px; }
+@keyframes veneer-side-in { from { opacity: 0; translate: calc(var(--veneer-motion-distance) * 2) 0; } }
+}

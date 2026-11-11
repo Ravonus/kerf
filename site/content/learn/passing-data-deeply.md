@@ -45,7 +45,7 @@ works, in three steps.
 ### Step 1: create the context
 
 ```ts
-import { context } from '@weft-js/core'
+import { context } from '@kerf-js/core'
 
 type Level = 2 | 3 | 4 | 5 | 6
 export const LevelContext = context<Level>(2)
@@ -85,7 +85,7 @@ levels count themselves.
 Here is the whole thing as one module. This time the provider is an expression inside JSX, which works too:
 
 ```tsx
-import { context } from '@weft-js/core'
+import { context } from '@kerf-js/core'
 
 const ThemeContext = context<'light' | 'dark'>('light')
 
@@ -121,7 +121,7 @@ Wrapping it in an element, as here, also means content that appears *later* unde
 
 ## A context's value is read once
 
-In React, a context value can change, and every component that uses it renders again. In Weft, nothing renders again.
+In React, a context value can change, and every component that uses it renders again. In Kerf, nothing renders again.
 `Section` above runs once, calls `provide` once, and the level it gives is fixed. That suits values that are part of the
 structure, like a level.
 
@@ -131,7 +131,7 @@ For a value that changes, provide a **box**. The context holds the box, which ne
 :::demo manage-theme
 
 ```tsx
-import { context, state, type State } from '@weft-js/core'
+import { context, state, type State } from '@kerf-js/core'
 
 const Armed = context<State<boolean>>(state(false))
 
@@ -207,7 +207,7 @@ too: those belong to the component.
 
 ## Compared with React
 
-| React | Weft |
+| React | Kerf |
 |---|---|
 | `const Ctx = createContext(fallback)` | `const Ctx = context(fallback)` |
 | `<Ctx value={v}>…</Ctx>` (or `<Ctx.Provider>`) | `Ctx.provide(v, () => <>…</>)` |
@@ -219,7 +219,7 @@ too: those belong to the component.
 lines:
 
 ```tsx
-import { context, derived, type Derived } from '@weft-js/core'
+import { context, derived, type Derived } from '@kerf-js/core'
 
 type Density = 'compact' | 'cozy'
 const defaultDensity = derived<Density>(() => 'cozy')
@@ -238,7 +238,7 @@ export function DensityScope(
 ```
 
 Note the `derived`. Passing `props.value` straight to `provide` would read the prop once, when `DensityScope` is made, and
-miss every later change; Weft reports that as **W001**. A derived value of the prop is live, like a box, and readers read
+miss every later change; Kerf reports that as **W001**. A derived value of the prop is live, like a box, and readers read
 `.value`. If you do mean the first value only, say so with `untrack(() => props.value)`.
 
 :::deepdive How `use` finds its value
@@ -250,7 +250,7 @@ That's also why `use` gives the fallback in a handler: by the time a click arriv
 owner to start from. And it's why a subtree built under `provide` is disposed of with the component that called it: it's
 owned by it.
 
-Weft uses this itself. Each `defineState` scope finds which app it belongs to through a context (a server renders many
+Kerf uses this itself. Each `defineState` scope finds which app it belongs to through a context (a server renders many
 apps at once, one per request), and `<Boundary>` finds the resources inside it the same way.
 :::
 
@@ -323,7 +323,7 @@ function Row(props: { names: string[]; size: number }) {
 ```
 :::solution
 ```tsx
-import { context, state, type State } from '@weft-js/core'
+import { context, state, type State } from '@kerf-js/core'
 
 const Size = context<State<number>>(state(100))
 
@@ -383,7 +383,7 @@ function Greet() {
 ```
 :::solution
 ```tsx
-import { context } from '@weft-js/core'
+import { context } from '@kerf-js/core'
 
 const User = context('guest')
 
@@ -410,7 +410,7 @@ Write `Section` and `Title` so that titles nested in sections get smaller automa
 going past `h6`.
 :::solution
 ```tsx
-import { context } from '@weft-js/core'
+import { context } from '@kerf-js/core'
 
 type Level = 2 | 3 | 4 | 5 | 6
 const LevelContext = context<Level>(2)
@@ -434,6 +434,6 @@ export function Title(props: { children?: unknown }) {
   )
 }
 ```
-Each section reads the level around it and provides one more, so nesting is all it takes. (Warp's `Heading` takes a
+Each section reads the level around it and provides one more, so nesting is all it takes. (Veneer's `Heading` takes a
 `level` prop and does the tag choice for you, as the demo at the top of the page does.)
 :::

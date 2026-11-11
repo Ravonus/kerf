@@ -3,9 +3,9 @@ import {
   Row,
   Stack,
   VirtualList,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
-import type { VirtualControl } from '@weft-js/warp'
+import type { VirtualControl } from '@kerf-js/veneer'
 
 import { money as _Shared0 } from './shared-project'
 

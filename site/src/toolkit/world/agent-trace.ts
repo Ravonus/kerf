@@ -1,4 +1,4 @@
-import type { TraceSpan } from '@weft-js/warp'
+import type { TraceSpan } from '@kerf-js/veneer'
 
 export const TRACE: TraceSpan[] = [
   {

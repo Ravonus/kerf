@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Badge,
   Button,
   Card,
   Spinner,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 const save = () =>
   new Promise((done) => {

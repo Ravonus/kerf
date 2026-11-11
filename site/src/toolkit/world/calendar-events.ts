@@ -1,4 +1,4 @@
-import type { CalEvent } from '@weft-js/warp-core'
+import type { CalEvent } from '@kerf-js/veneer-core'
 
 export const EVENTS: CalEvent[] = [
   {

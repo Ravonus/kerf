@@ -1,4 +1,4 @@
-// The point of the benchmark: per weft variant, what cost it score and bytes, how far it is from the best other variant, what
+// The point of the benchmark: per kerf variant, what cost it score and bytes, how far it is from the best other variant, what
 // moved since the last run of this app, and a ranked list of what to tune.
 import { METRICS, compare } from './stats.mjs'
 import { diffRuns } from './diagnose/diff.mjs'
@@ -52,15 +52,15 @@ function gapAgainstBest(run, name, path, key) {
 }
 
 export function diagnose(run, prev) {
-  const weft = Object.entries(run.variants)
-    .filter(([, v]) => v.family === 'weft')
+  const kerf = Object.entries(run.variants)
+    .filter(([, v]) => v.family === 'kerf')
     .map(([k]) => k)
   const out = {
     diff: prev ? { since: prev.at, commit: prev.commit, ...diffRuns(run, prev) } : null,
     variants: {},
     tune: [],
   }
-  for (const name of weft) {
+  for (const name of kerf) {
     const gaps = {}
     for (const path of Object.keys(run.variants[name].pages))
       gaps[path] = GAPS.map((k) => gapAgainstBest(run, name, path, k))

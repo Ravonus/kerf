@@ -8,7 +8,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "file": "src/routes/boom.tsx",
       "route": "/boom",
       "severity": "info",
-      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`weft check\` doesn't have.",
+      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`kerf check\` doesn't have.",
     },
     {
       "code": "H007",
@@ -22,14 +22,14 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "file": "src/routes/deferred-meta.tsx",
       "route": "/deferred-meta",
       "severity": "info",
-      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`weft check\` doesn't have.",
+      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`kerf check\` doesn't have.",
     },
     {
       "code": "H016",
       "file": "src/routes/leak.tsx",
       "route": "/leak",
       "severity": "info",
-      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`weft check\` doesn't have.",
+      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`kerf check\` doesn't have.",
     },
     {
       "code": "H016",
@@ -331,7 +331,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Bad card · Acme",
             "height": 630,
-            "url": "/_weft/og/meta/badcard.png?v=<hash>",
+            "url": "/_kerf/og/meta/badcard.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -418,7 +418,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/meta/badcard.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/meta/badcard.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -488,7 +488,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Changing · Acme",
             "height": 630,
-            "url": "/_weft/og/meta/changing.png?v=<hash>",
+            "url": "/_kerf/og/meta/changing.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -575,7 +575,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/meta/changing.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/meta/changing.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -645,7 +645,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Harvest & storage notes · Acme",
             "height": 630,
-            "url": "/_weft/og/meta/plain.png?v=<hash>",
+            "url": "/_kerf/og/meta/plain.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -732,7 +732,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/meta/plain.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/meta/plain.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -805,7 +805,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         "og": {
           "image": {
             "height": 630,
-            "url": "/_weft/og/meta/<name>.png?v=<hash>",
+            "url": "/_kerf/og/meta/<name>.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -890,7 +890,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/meta/<name>.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/meta/<name>.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -952,7 +952,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         "og": {
           "image": {
             "height": 630,
-            "url": "/_weft/og/tags/<tag>.png?v=<hash>",
+            "url": "/_kerf/og/tags/<tag>.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -1037,7 +1037,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/tags/<tag>.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/tags/<tag>.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -1100,7 +1100,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         "og": {
           "image": {
             "height": 630,
-            "url": "/_weft/og/users/<id>.png?v=<hash>",
+            "url": "/_kerf/og/users/<id>.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -1121,7 +1121,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "samples": [
         {
           "description": "First programmer & "analyst" <of engines>.",
-          "image": "/_weft/og/users/1.png?v=<hash>",
+          "image": "/_kerf/og/users/1.png?v=<hash>",
           "source": {
             "description": "route",
             "image": "card",
@@ -1132,7 +1132,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         },
         {
           "description": "Compilers, COBOL and nanoseconds.",
-          "image": "/_weft/og/users/2.png?v=<hash>",
+          "image": "/_kerf/og/users/2.png?v=<hash>",
           "source": {
             "description": "route",
             "image": "card",
@@ -1143,7 +1143,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         },
         {
           "description": "Computable numbers.",
-          "image": "/_weft/og/users/42.png?v=<hash>",
+          "image": "/_kerf/og/users/42.png?v=<hash>",
           "source": {
             "description": "route",
             "image": "card",
@@ -1224,7 +1224,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/users/<id>.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/users/<id>.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -1287,7 +1287,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "About · Acme",
             "height": 630,
-            "url": "/_weft/og/about.png?v=<hash>",
+            "url": "/_kerf/og/about.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -1374,7 +1374,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/about.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/about.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -1567,7 +1567,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/chat.png?v=<hash>",
+            "url": "/_kerf/og/chat.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -1654,7 +1654,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/chat.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/chat.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -1724,7 +1724,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Cover · Acme",
             "height": 630,
-            "url": "/_weft/og/cover.png?v=<hash>",
+            "url": "/_kerf/og/cover.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -1811,7 +1811,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/cover.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/cover.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -2004,7 +2004,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Gate · Acme",
             "height": 630,
-            "url": "/_weft/og/gate.png?v=<hash>",
+            "url": "/_kerf/og/gate.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -2091,7 +2091,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/gate.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/gate.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -2161,7 +2161,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/held.png?v=<hash>",
+            "url": "/_kerf/og/held.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -2248,7 +2248,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/held.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/held.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -2318,7 +2318,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/held-island.png?v=<hash>",
+            "url": "/_kerf/og/held-island.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -2405,7 +2405,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/held-island.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/held-island.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -2475,7 +2475,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/island-bad.png?v=<hash>",
+            "url": "/_kerf/og/island-bad.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -2562,7 +2562,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/island-bad.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/island-bad.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -2632,7 +2632,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Mostly static · Acme",
             "height": 630,
-            "url": "/_weft/og/islands.png?v=<hash>",
+            "url": "/_kerf/og/islands.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -2719,7 +2719,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/islands.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/islands.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -2789,7 +2789,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/islands-top.png?v=<hash>",
+            "url": "/_kerf/og/islands-top.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -2876,7 +2876,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/islands-top.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/islands-top.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -2946,7 +2946,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/late-css.png?v=<hash>",
+            "url": "/_kerf/og/late-css.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -3033,7 +3033,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/late-css.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/late-css.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -3103,7 +3103,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Lazy · Acme",
             "height": 630,
-            "url": "/_weft/og/lazy.png?v=<hash>",
+            "url": "/_kerf/og/lazy.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -3190,7 +3190,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/lazy.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/lazy.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -3260,7 +3260,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/lazy-early.png?v=<hash>",
+            "url": "/_kerf/og/lazy-early.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -3347,7 +3347,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/lazy-early.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/lazy-early.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -3540,7 +3540,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/live.png?v=<hash>",
+            "url": "/_kerf/og/live.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -3627,7 +3627,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/live.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/live.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -3697,7 +3697,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/miss.png?v=<hash>",
+            "url": "/_kerf/og/miss.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -3784,7 +3784,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/miss.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/miss.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -3854,7 +3854,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/mixed.png?v=<hash>",
+            "url": "/_kerf/og/mixed.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -3941,7 +3941,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/mixed.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/mixed.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -4011,7 +4011,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Notes · Acme",
             "height": 630,
-            "url": "/_weft/og/notes.png?v=<hash>",
+            "url": "/_kerf/og/notes.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -4098,7 +4098,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/notes.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/notes.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -4185,7 +4185,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Preferences · Acme",
             "height": 630,
-            "url": "/_weft/og/prefs.png?v=<hash>",
+            "url": "/_kerf/og/prefs.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -4272,7 +4272,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/prefs.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/prefs.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -4342,7 +4342,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Slow page · Acme",
             "height": 630,
-            "url": "/_weft/og/slow.png?v=<hash>",
+            "url": "/_kerf/og/slow.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -4429,7 +4429,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/slow.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/slow.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -4499,7 +4499,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/stream-sheet.png?v=<hash>",
+            "url": "/_kerf/og/stream-sheet.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -4586,7 +4586,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/stream-sheet.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/stream-sheet.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -4656,7 +4656,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Styled · Acme",
             "height": 630,
-            "url": "/_weft/og/styled.png?v=<hash>",
+            "url": "/_kerf/og/styled.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -4743,7 +4743,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/styled.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/styled.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -4813,7 +4813,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/tabs.png?v=<hash>",
+            "url": "/_kerf/og/tabs.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -4900,7 +4900,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/tabs.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/tabs.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -4970,7 +4970,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Todos (3) · Acme",
             "height": 630,
-            "url": "/_weft/og/todos.png?v=<hash>",
+            "url": "/_kerf/og/todos.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -5057,7 +5057,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/todos.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/todos.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -5127,7 +5127,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/together.png?v=<hash>",
+            "url": "/_kerf/og/together.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -5214,7 +5214,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/together.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/together.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -5284,7 +5284,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Left pane · Acme",
             "height": 630,
-            "url": "/_weft/og/ui-state.png?v=<hash>",
+            "url": "/_kerf/og/ui-state.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -5371,7 +5371,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/ui-state.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/ui-state.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -5442,7 +5442,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Users · Acme",
             "height": 630,
-            "url": "/_weft/og/users.png?v=<hash>",
+            "url": "/_kerf/og/users.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -5529,7 +5529,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/users.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/users.png?v=<hash>",
             "property": "og:image",
           },
         ],
@@ -5606,7 +5606,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "image": {
             "alt": "Acme",
             "height": 630,
-            "url": "/_weft/og/index.png?v=<hash>",
+            "url": "/_kerf/og/index.png?v=<hash>",
             "width": 1200,
           },
           "locale": "en_US",
@@ -5693,7 +5693,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "https://acme.dev/_weft/og/index.png?v=<hash>",
+            "content": "https://acme.dev/_kerf/og/index.png?v=<hash>",
             "property": "og:image",
           },
         ],

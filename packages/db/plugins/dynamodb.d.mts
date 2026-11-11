@@ -1,6 +1,6 @@
-import type { PluginInstance } from '@weft-js/core/plugin'
+import type { PluginInstance } from '@kerf-js/core/plugin'
 
 /** Binds the DynamoDB list source to `db.adapter@1`. */
 declare const plugin: (options?: Record<string, unknown>) => PluginInstance<unknown>
-/** Installed under `db.adapter@1` by `weft plugins sync`. */
+/** Installed under `db.adapter@1` by `kerf plugins sync`. */
 export default plugin

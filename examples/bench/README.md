@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
@@ -42,7 +42,7 @@ node bench.mjs --all
 | Flag | Default | What it does |
 | --- | --- | --- |
 | `--samples=N` | `3` | Samples per page. Use 5 before stating a claim. |
-| `--jobs=N` | half the free cores, at most 8 (`WEFT_JOBS` too) | How much runs at once. `1` runs everything in turn. |
+| `--jobs=N` | half the free cores, at most 8 (`KERF_JOBS` too) | How much runs at once. `1` runs everything in turn. |
 | `--build-runs=N` | `3` | Cold builds per variant when its inputs changed. |
 | `--rebuild` | off | Build even if the build key hasn't changed. |
 | `--only=a,b` | all | Just these variants. |
@@ -58,7 +58,7 @@ Exports `benchApp(app, config)`. The phases, in order:
 | Phase | Function | What happens | Width |
 | --- | --- | --- | --- |
 | Databases | inside `benchApp` | For an app with `db`, `provision()` clones the seeded template per variant and starts a latency proxy at the low RTT. | per variant |
-| Pack | `packOnce()` | Packs this checkout's Weft packages into tarballs, once per state of `packages/` and `crates/`. Only when a variant is in the Weft family. | once |
+| Pack | `packOnce()` | Packs this checkout's Kerf packages into tarballs, once per state of `packages/` and `crates/`. Only when a variant is in the Kerf family. | once |
 | Builds | `buildVariants()` | `prepare()` copies, installs and cold-builds each variant, or reuses a build whose key matches. Records build time, lines of app code and the build key. | `--jobs` |
 | Servers | `startVariants()` | Starts each production server on a free port, proves it serves this build, and signs in the bench user where the app has `login`. | in turn |
 | Timed samples | `timedSamples()` | Bytes, hydration and the really throttled Lighthouse run. | `--jobs`, each variant's passes in turn |
@@ -72,7 +72,7 @@ database phase resets databases and moves the proxy's RTT, so it also goes one a
 databases are stopped in a `finally`, whatever ends the run.
 
 `finish()` returns `{ run, line }`. `run` is the full result (with `diagnosis`, and `db` server info for database
-apps). `line` is the compact history record: per variant its label, stack, build key, build time, lines, Weft tarball
+apps). `line` is the compact history record: per variant its label, stack, build key, build time, lines, Kerf tarball
 and the per-page metrics.
 
 ## samples.mjs

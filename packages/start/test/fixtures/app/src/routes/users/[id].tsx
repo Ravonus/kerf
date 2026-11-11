@@ -1,4 +1,4 @@
-import { notFound, type LoadArgs, type Meta, type Prerender, type RouteProps } from '@weft-js/start'
+import { notFound, type LoadArgs, type Meta, type Prerender, type RouteProps } from '@kerf-js/start'
 import { db } from '../../db'
 
 export const load = async ({ params }: LoadArgs<'/users/[id]'>) =>

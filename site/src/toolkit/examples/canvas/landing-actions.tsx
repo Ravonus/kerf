@@ -1,11 +1,11 @@
-import type { State } from '@weft-js/core'
-import { state, untrack } from '@weft-js/core'
+import type { State } from '@kerf-js/core'
+import { state, untrack } from '@kerf-js/core'
 import {
   Stack,
   Row,
   Grid,
   StageSelect,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import {
   LAND_SECTION,
   H2,
@@ -96,7 +96,7 @@ export function landingPricing(
               <span
                 style={
                   'font-family:' +
-                  'var(--warp-font-display);' +
+                  'var(--veneer-font-display);' +
                   'font-size:44px;font-weight:800;' +
                   'line-height:1'
                 }
@@ -191,7 +191,7 @@ export function landingFooter(joined: State<boolean>) {
         wrap
         gap="related"
       >
-        <span data-skin="clear">© 2026 weft</span>
+        <span data-skin="clear">© 2026 kerf</span>
         <span data-skin="clear">
           Painted on one canvas.
         </span>
@@ -317,7 +317,7 @@ export function Landing({ look }: { look: Look }) {
       look={name}
       role="page"
       aria-label={[
-        'weft, a landing page painted ',
+        'kerf, a landing page painted ',
         'on one canvas',
       ].join('')}
     >

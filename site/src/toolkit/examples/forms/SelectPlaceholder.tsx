@@ -1,4 +1,4 @@
-import { Select } from '@weft-js/warp'
+import { Select } from '@kerf-js/veneer'
 import { REGION_OPTIONS } from './shared'
 
 export const SelectPlaceholder = () => (

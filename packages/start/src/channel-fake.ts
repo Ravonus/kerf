@@ -1,4 +1,4 @@
-// @weft-js/core/test's socket (research 32 §7): the real socket.ts and hub, a memory bus, frames through JSON.
+// @kerf-js/core/test's socket (research 32 §7): the real socket.ts and hub, a memory bus, frames through JSON.
 
 import { fakeScope, fns, net, runtime, track } from './data'
 import type { Frame, SocketLink } from './channel'
@@ -22,7 +22,7 @@ export async function open(
   const h = hub()
   h.dev = true
   runtime.poke ??= (tags, origin) => hub().poke(tags, origin)
-  const request = new Request('http://localhost/_weft/ws')
+  const request = new Request('http://localhost/_kerf/ws')
   const rooms = new Map<number, string>()
   const joining = new Map<number, () => void>()
   let closed = false

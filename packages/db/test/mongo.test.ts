@@ -1,14 +1,14 @@
-// The `db.adapter` suite and the change stream on a real server: `WEFT_TEST_MONGO` names a replica set.
+// The `db.adapter` suite and the change stream on a real server: `KERF_TEST_MONGO` names a replica set.
 import { MongoClient } from 'mongodb'
-import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
-import { decodeCursor } from '@weft-js/start/list'
+import { LIST_ROWS, listSuite } from '@kerf-js/core/test/plugins'
+import { decodeCursor } from '@kerf-js/start/list'
 import { changeTags, mongoSource, watchMongo, type MongoCollection } from '../src/mongo'
 
 const spec = {
   columns: { id: '_id', title: 'title', status: 'status', rank: 'rank_no' },
   search: ['title'],
 }
-const url = process.env.WEFT_TEST_MONGO
+const url = process.env.KERF_TEST_MONGO
 interface Row {
   _id: string
   title?: string
@@ -56,7 +56,7 @@ describe.skipIf(!url)('on a real server', () => {
   afterAll(() => client.close())
 
   test('mongoSource passes db.adapter@1', async () => {
-    const tasks = client.db('weft_test').collection<Row>(`t${Date.now()}`)
+    const tasks = client.db('kerf_test').collection<Row>(`t${Date.now()}`)
     const make = async () => {
       await tasks.deleteMany({})
       await tasks.insertMany(
@@ -76,7 +76,7 @@ describe.skipIf(!url)('on a real server', () => {
   })
 
   test('a write from elsewhere reaches a poke, with no row in it', async () => {
-    const tasks = client.db('weft_test').collection<Row>(`w${Date.now()}`)
+    const tasks = client.db('kerf_test').collection<Row>(`w${Date.now()}`)
     await tasks.insertOne({ _id: 'seed' })
     const pokes: string[][] = []
     const stop = watchMongo(tasks, { tag: 'tasks', poke: (t) => void pokes.push(t) })

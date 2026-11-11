@@ -118,7 +118,7 @@ function createOperations(deps: View) {
       // In this order: a client's refetch must start after what the barrier claims is covered.
       if (feedState.live().mode === 'feed' || feedState.live().mode === 'external')
         await feed?.settle(tags)
-      await bus.publish('weft:poke', JSON.stringify({ t: tags, ...(origin && { o: origin }) }))
+      await bus.publish('kerf:poke', JSON.stringify({ t: tags, ...(origin && { o: origin }) }))
     },
     push(this: void, id: string, msg: unknown) {
       let hit = 0

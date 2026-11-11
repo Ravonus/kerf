@@ -1,0 +1,15 @@
+/* Type roles: each role reads the spec's own text tokens (veneer.css §Type), in veneer.layout so app CSS still wins. */
+@layer veneer.layout {
+:where([data-scope="text"]) { margin: 0; }
+:where([data-scope="text"][data-role="display"]) { font-family: var(--veneer-text-display-font); font-size: var(--veneer-text-display-size); line-height: var(--veneer-text-display-leading); font-weight: var(--veneer-text-display-weight); letter-spacing: var(--veneer-text-display-tracking); }
+:where([data-scope="text"][data-role="title"]) { font-family: var(--veneer-text-title-font); font-size: var(--veneer-text-title-size); line-height: var(--veneer-text-title-leading); font-weight: var(--veneer-text-title-weight); letter-spacing: var(--veneer-text-title-tracking); }
+:where([data-scope="text"][data-role="heading"]) { font-family: var(--veneer-text-heading-font); font-size: var(--veneer-text-heading-size); line-height: var(--veneer-text-heading-leading); font-weight: var(--veneer-text-heading-weight); letter-spacing: var(--veneer-text-heading-tracking); }
+:where([data-scope="text"][data-role="body"]) { font-family: var(--veneer-text-body-font); font-size: var(--veneer-text-body-size); line-height: var(--veneer-text-body-leading); }
+:where([data-scope="text"][data-role="label"]) { font-family: var(--veneer-text-label-font); font-size: var(--veneer-text-label-size); line-height: var(--veneer-text-label-leading); font-weight: var(--veneer-text-label-weight); letter-spacing: var(--veneer-text-label-tracking); text-transform: var(--veneer-text-label-case); }
+:where([data-scope="text"][data-role="caption"]) { font-family: var(--veneer-text-caption-font); font-size: var(--veneer-text-caption-size); line-height: var(--veneer-text-caption-leading); }
+:where([data-scope="text"][data-role="eyebrow"]) { font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); line-height: var(--veneer-text-eyebrow-leading); font-weight: var(--veneer-text-eyebrow-weight); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: var(--veneer-text-eyebrow-case); }
+:where([data-scope="text"][data-role="code"]) { font-family: var(--veneer-text-code-font); font-size: var(--veneer-text-code-size); }
+:where([data-scope="text"][data-ink="subtle"]) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="text"][data-ink="faint"]) { color: var(--veneer-color-text-faint); }
+:where([data-scope="text"][data-tone]) { color: var(--_text); }
+}

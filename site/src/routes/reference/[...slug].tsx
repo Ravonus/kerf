@@ -1,5 +1,5 @@
-import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
-import { Button } from '@weft-js/warp'
+import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@kerf-js/start'
+import { Button } from '@kerf-js/veneer'
 import { PageExample } from '../../components/PageExample'
 import { Toc } from '../../components/Toc'
 import pages from '../../generated/reference.json'
@@ -66,7 +66,7 @@ export default function ReferencePage(props: RouteProps<typeof load, '/reference
         {props.data.lead && (
           <p
             data-part="lead"
-            // oxlint-disable-next-line weft/no-html-sink -- the reference's own Markdown, rendered at build time
+            // oxlint-disable-next-line kerf/no-html-sink -- the reference's own Markdown, rendered at build time
             innerHTML={props.data.lead}
           ></p>
         )}
@@ -85,7 +85,7 @@ export default function ReferencePage(props: RouteProps<typeof load, '/reference
         <PageExample examples={props.data.examples} />
         <div
           data-scope="prose"
-          // oxlint-disable-next-line weft/no-html-sink -- the docs' own Markdown, rendered at build time
+          // oxlint-disable-next-line kerf/no-html-sink -- the docs' own Markdown, rendered at build time
           innerHTML={props.data.html}
         ></div>
         <footer data-part="pager">

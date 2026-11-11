@@ -1,4 +1,4 @@
-// The other cursors, drawn over the page: `aria-hidden`, gliding 120 ms, and instant under reduced motion (warp 07 §6.3).
+// The other cursors, drawn over the page: `aria-hidden`, gliding 120 ms, and instant under reduced motion (veneer 07 §6.3).
 import { hue, type Cursors as Tracker } from './index'
 
 const CSS = `[data-scope=cursors]{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:2147483000}

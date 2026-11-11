@@ -17,7 +17,7 @@ function handler(found: Found[] = [], extra = {}) {
 }
 
 afterEach(() => {
-  delete process.env.WEFT_SITE_URL
+  delete process.env.KERF_SITE_URL
 })
 
 test('production, nothing configured: the request`s origin, and H001 once', async () => {
@@ -36,7 +36,7 @@ test('dev: the same origin, and nothing to warn about', async () => {
 })
 
 test('the deploy environment wins over any Host a request claims', async () => {
-  process.env.WEFT_SITE_URL = 'https://acme.dev'
+  process.env.KERF_SITE_URL = 'https://acme.dev'
   const found: Found[] = []
   const r = await handler(found)(new Request('https://evil.example/x'))
   expect(canonical(await r.text())).toBe('https://acme.dev/x')

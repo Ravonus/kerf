@@ -1,4 +1,4 @@
-import { BarChart } from '@weft-js/warp'
+import { BarChart } from '@kerf-js/veneer'
 
 import { COST_BY_SERVICE } from '../../world'
 

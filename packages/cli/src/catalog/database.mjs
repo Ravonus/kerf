@@ -12,7 +12,7 @@ export const databaseQueries = [
     code: 'Q012',
     severity: 'error',
     by: 'start',
-    catches: '`@weft-js/start/db*` or `@weft-js/start/auth` reached the client graph',
+    catches: '`@kerf-js/start/db*` or `@kerf-js/start/auth` reached the client graph',
     fix: "Import it from a server module (`src/server/**`, `*.server.ts`) or a route's `load`",
   },
   {
@@ -21,14 +21,14 @@ export const databaseQueries = [
     by: 'start',
     catches:
       "A database URL the driver can't open (a `postgres://` URL given to the SQLite entry, or the reverse)",
-    fix: 'Use the matching `createDb`: `@weft-js/start/db/sqlite` or `@weft-js/start/db/postgres`',
+    fix: 'Use the matching `createDb`: `@kerf-js/start/db/sqlite` or `@kerf-js/start/db/postgres`',
   },
   {
     code: 'Q014',
     severity: 'error',
     by: 'start',
     catches: "The database doesn't match the schema: a table or column is missing",
-    fix: 'Run `weft db generate`, then reload (new migrations apply on the next request)',
+    fix: 'Run `kerf db generate`, then reload (new migrations apply on the next request)',
   },
 ]
 
@@ -38,8 +38,8 @@ export const databaseSchema = [
     code: 'Q015',
     severity: 'warning',
     by: 'cli',
-    catches: '`src/db/schema.ts` changed since the last `weft db generate`',
-    fix: 'Run `weft db generate`',
+    catches: '`src/db/schema.ts` changed since the last `kerf db generate`',
+    fix: 'Run `kerf db generate`',
   },
   {
     code: 'Q016',

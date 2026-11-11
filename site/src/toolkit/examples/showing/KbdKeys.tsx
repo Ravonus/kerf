@@ -1,4 +1,4 @@
-import { Kbd } from '@weft-js/warp'
+import { Kbd } from '@kerf-js/veneer'
 
 export const KbdKeys = () => (
   <>

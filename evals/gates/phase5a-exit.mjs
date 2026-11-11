@@ -9,9 +9,9 @@ import { freePort, sleep, repoRoot } from '../../scripts/lib/helpers.mjs'
 //   wire     the same requests get the same answers (values, tags, errors, statuses)
 //   browser  the same e2e passes in Chromium: SSR, 0-fetch hydration, single-flight mutation, a typed error
 //
-// then what only the Rust side has: a sidecar killed under load, a forged call, a Rust-added tag and `touch`, `weft dev`
-// reload with no failed request, a schema edit reported as R103 with the function's id, and R101/R102 from `weft check`.
-// Each `weft start` runs on Node, Bun and Deno. The swap is scripted, not done by an agent.
+// then what only the Rust side has: a sidecar killed under load, a forged call, a Rust-added tag and `touch`, `kerf dev`
+// reload with no failed request, a schema edit reported as R103 with the function's id, and R101/R102 from `kerf check`.
+// Each `kerf start` runs on Node, Bun and Deno. The swap is scripted, not done by an agent.
 //
 //   node evals/gates/phase5a-exit.mjs <empty-dir> [--runtimes node,bun,deno] [--docs 20000]
 //
@@ -60,7 +60,7 @@ const { fnId } = await import(join(repo, 'packages/start/src/vite.mjs'))
 
 const log = (...a) => console.log('[5a]', ...a)
 const { run, must } = commands(dir, 1 << 28, true)
-const weft = () => join(dir, 'node_modules/.bin/weft')
+const kerf = () => join(dir, 'node_modules/.bin/kerf')
 const ID = {
   search: fnId('searchDocs', 'src/server/docs.ts'),
   popular: fnId('popular', 'src/server/docs.ts'),
@@ -80,7 +80,7 @@ const check = makeCheck(checks, log, 120)
 
 const runnerContext = {
   must,
-  weft,
+  kerf,
   dir,
   freePort,
   until,
@@ -130,7 +130,7 @@ log(`scaffold in ${dir}`)
 must(
   'node',
   [
-    join(repo, 'packages/create/bin/create-weft.mjs'),
+    join(repo, 'packages/create-kerf/bin/create-kerf.mjs'),
     dir,
     '--db',
     'none',
@@ -145,7 +145,7 @@ const pkgFile = join(dir, 'package.json')
 const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'))
 for (const deps of [pkg.dependencies, pkg.devDependencies])
   for (const name of Object.keys(deps ?? {}))
-    if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = packageUrl(name)
+    if (name === '@kerf-js/core' || name.startsWith('@kerf-js/')) deps[name] = packageUrl(name)
 pkg.dependencies.zod = '4.6.7'
 writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n')
 must('npm', ['install', '--no-audit', '--no-fund'])
@@ -197,7 +197,7 @@ function types() {
 }
 
 const treeBefore = tree()
-must(weft(), ['check']) // the slots and route types tsc reads
+must(kerf(), ['check']) // the slots and route types tsc reads
 const typesBefore = types()
 for (const r of runtimes) await variant('ts', r, results)
 
@@ -208,7 +208,7 @@ cpSync(join(here, 'phase5a/rust'), dir, { recursive: true })
 const cargoFile = join(dir, 'crates/search/Cargo.toml')
 writeFileSync(
   cargoFile,
-  readFileSync(cargoFile, 'utf8').replaceAll('WEFT_CRATE', join(repo, 'crates/weft')),
+  readFileSync(cargoFile, 'utf8').replaceAll('KERF_CRATE', join(repo, 'crates/kerf')),
 )
 const treeAfter = tree()
 const changed = Object.keys({ ...treeBefore, ...treeAfter })
@@ -222,7 +222,7 @@ await check('the swap touches server modules only', () => {
 })
 
 await check('the app type-checks before and after, with the same client types', () => {
-  must(weft(), ['check'])
+  must(kerf(), ['check'])
   eq([typesBefore, types()], [[], []], 'tsc errors under src/')
 })
 
@@ -272,21 +272,21 @@ const speed = Object.fromEntries(
 
 await sidecar({ build, start, check, call, ID, eq, ok, until })
 
-// ---- weft check -----------------------------------------------------------------------------------------------------
+// ---- kerf check -----------------------------------------------------------------------------------------------------
 
-const weftCheck = () => JSON.parse(run(weft(), ['check', '--json']).stdout || '{}')
+const kerfCheck = () => JSON.parse(run(kerf(), ['check', '--json']).stdout || '{}')
 const docs = join(dir, 'src/server/docs.ts')
 const main = join(dir, 'crates/search/src/main.rs')
 const cleanDocs = readFileSync(docs, 'utf8'),
   cleanMain = readFileSync(main, 'utf8')
 
-await diagnostics({ check, eq, weftCheck, docs, main, cleanDocs, cleanMain, ID, ok })
+await diagnostics({ check, eq, kerfCheck, docs, main, cleanDocs, cleanMain, ID, ok })
 
-// ---- weft dev -------------------------------------------------------------------------------------------------------
+// ---- kerf dev -------------------------------------------------------------------------------------------------------
 
 await dev({
   freePort,
-  weft,
+  kerf,
   dir,
   until,
   call,
@@ -328,7 +328,7 @@ writeFileSync(
   `# Phase 5a exit check
 
 ${result.date}: **${failed.length ? 'FAIL' : 'PASS'}**, ${passed} of ${checks.length} checks. A search sidecar replaces a TS \`query\` with no client change.
-The swap is scripted (\`evals/gates/phase5a-exit.mjs\`, the app in \`evals/phase5a/\`), not done by an agent. ${result.docs} documents; \`weft start\` on ${runtimes.join(', ')}.
+The swap is scripted (\`evals/gates/phase5a-exit.mjs\`, the app in \`evals/phase5a/\`), not done by an agent. ${result.docs} documents; \`kerf start\` on ${runtimes.join(', ')}.
 
 Changed under \`src/\`: ${changed.map((f) => `\`${f}\``).join(', ')}. Added: \`crates/search\`.
 
@@ -338,8 +338,8 @@ ${checks.map((c) => `| ${c.name} | ${c.ok ? 'pass' : `**FAIL**: ${String(c.error
 
 ## Speed
 
-The same tf-idf search over one corpus, through the public \`GET /_weft/fn/<id>\`, on one machine. Sequential p50 and p99, then 32 callers at once.
-A within-weft comparison of two server bodies: the \`benchmarks/compare\` stacks have no server functions, so they have no counterpart.
+The same tf-idf search over one corpus, through the public \`GET /_kerf/fn/<id>\`, on one machine. Sequential p50 and p99, then 32 callers at once.
+A within-kerf comparison of two server bodies: the \`benchmarks/compare\` stacks have no server functions, so they have no counterpart.
 
 | Runtime | Body | p50 ms | p99 ms | calls/s |
 |---|---|---|---|---|

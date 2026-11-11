@@ -1,5 +1,5 @@
-// `weft tokens`: warp's resolved tokens as DTCG 2025.10 (PLAN §6, research 37), for Figma, Style Dictionary and Terrazzo.
-// warp owns the values, so this asks the app's warp, with the app's seed and overrides, and writes what it returns.
+// `kerf tokens`: veneer's resolved tokens as DTCG 2025.10 (PLAN §6, research 37), for Figma, Style Dictionary and Terrazzo.
+// veneer owns the values, so this asks the app's veneer, with the app's seed and overrides, and writes what it returns.
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -12,21 +12,21 @@ export async function writeTokens(root) {
   let plugin
   try {
     plugin = await import(
-      pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft-js/warp/plugin')).href
+      pathToFileURL(createRequire(join(root, 'package.json')).resolve('@kerf-js/veneer/plugin')).href
     )
   } catch {
     throw Object.assign(
-      new Error("`weft tokens` exports warp's tokens, and this app has no @weft-js/warp"),
-      { code: 'E_NO_WARP' },
+      new Error("`kerf tokens` exports veneer's tokens, and this app has no @kerf-js/veneer"),
+      { code: 'E_NO_VENEER' },
     )
   }
   const css =
-    (await loadConfig(root)).contributions.find((c) => c.name === '@weft-js/warp')?.manifest.tokens
+    (await loadConfig(root)).contributions.find((c) => c.name === '@kerf-js/veneer')?.manifest.tokens
       ?.css ?? ''
-  const dir = join(root, '.weft', 'tokens')
+  const dir = join(root, '.kerf', 'tokens')
   mkdirSync(dir, { recursive: true })
   const files = plugin.dtcg(css)
   for (const [name, content] of Object.entries(files))
     writeFileSync(join(dir, name), `${JSON.stringify(content, null, 2)}\n`)
-  return { ok: true, dir: '.weft/tokens', files: Object.keys(files) }
+  return { ok: true, dir: '.kerf/tokens', files: Object.keys(files) }
 }

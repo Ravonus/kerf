@@ -1,4 +1,4 @@
-// One `weft dev` (Vite + weftStart + Nitro) for the fixture app, shared by the e2e tests: they fetch it as a crawler
+// One `kerf dev` (Vite + kerfStart + Nitro) for the fixture app, shared by the e2e tests: they fetch it as a crawler
 // would (no JS) and drive it in Chrome. The URL goes to tests through `inject('url')`.
 import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
@@ -18,24 +18,24 @@ export const site = {
 }
 
 /**
- * Bind the fixture's providers the way `weft plugins sync` does: font.build, so the head carries font preloads, and
+ * Bind the fixture's providers the way `kerf plugins sync` does: font.build, so the head carries font preloads, and
  * media.server. build.test.ts binds them too, so it doesn't depend on this setup having run first.
  */
 export function bindProviders() {
-  const dir = join(fixture, '.weft', 'slots')
+  const dir = join(fixture, '.kerf', 'slots')
   mkdirSync(dir, { recursive: true })
   const module = fileURLToPath(new URL('./fixtures/font-provider.mjs', import.meta.url))
   writeFileSync(
     join(dir, 'font.build.build.json'),
     JSON.stringify({ plugin: '@test/fonts', version: '0.0.0', module, export: 'createFontBuild' }),
   )
-  // The media route, as `weft plugins sync` binds @weft-js/plugin-media's media.server@1.
+  // The media route, as `kerf plugins sync` binds @kerf-js/media's media.server@1.
   const media = fileURLToPath(new URL('../../plugin-media/src/server.mjs', import.meta.url))
   writeFileSync(
     join(dir, 'media.server.ts'),
-    `export const provider = { plugin: '@weft-js/plugin-media' }\nexport const load = () => import(${JSON.stringify(media)}).then(m => m.createMediaServer({ formats: ['avif', 'webp'], widths: [64, 128] }))\n`,
+    `export const provider = { plugin: '@kerf-js/media' }\nexport const load = () => import(${JSON.stringify(media)}).then(m => m.createMediaServer({ formats: ['avif', 'webp'], widths: [64, 128] }))\n`,
   )
-  return () => rmSync(join(fixture, '.weft'), { recursive: true, force: true })
+  return () => rmSync(join(fixture, '.kerf'), { recursive: true, force: true })
 }
 
 export default async function setup({ provide }) {

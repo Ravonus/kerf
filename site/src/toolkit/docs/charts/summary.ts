@@ -26,7 +26,7 @@ export const summary: DocGroup['docs'] = [
             title: 'Colours',
             stage: 'narrow',
             height: 200,
-            note: '`color` takes any Warp token.',
+            note: '`color` takes any Veneer token.',
           },
         ],
       },
@@ -50,7 +50,7 @@ export const summary: DocGroup['docs'] = [
     propDocs: {
       values: 'The numbers to draw, oldest first.',
       color:
-        "The line's colour: a Warp token such as `var(--warp-color-positive-solid)`, or any CSS colour.",
+        "The line's colour: a Veneer token such as `var(--veneer-color-positive-solid)`, or any CSS colour.",
     },
     related: ['LineChart', 'StreamChart'],
   },
@@ -98,7 +98,7 @@ export const summary: DocGroup['docs'] = [
         ],
       },
     ],
-    propDocs: { form: 'The layout to draw, from `@weft-js/warp-core/charts`.' },
+    propDocs: { form: 'The layout to draw, from `@kerf-js/veneer-core/charts`.' },
     related: ['BarChart', 'LineChart'],
   },
 ]

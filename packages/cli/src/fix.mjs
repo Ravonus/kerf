@@ -1,4 +1,4 @@
-// `weft fix`: apply every autofix `weft check` marks safe, the same edits an agent reads in `--json`. Unsafe fixes are
+// `kerf fix`: apply every autofix `kerf check` marks safe, the same edits an agent reads in `--json`. Unsafe fixes are
 // suggestions and stay with the agent. Edits are applied last first; one that overlaps an earlier one waits for the
 // next pass, and passes repeat until nothing is left (a fix can only shrink what the next check reports).
 

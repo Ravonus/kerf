@@ -10,14 +10,14 @@
 
 A `watch` has to stop when its component goes, or it keeps running against a page that no longer shows it. So does an
 `on` listener, an `interval`, a socket, a chart widget. In the last two pages you saw that all of these clean up after
-themselves. This page is about *how*: who decides when something ends, and what to do when you start something Weft
+themselves. This page is about *how*: who decides when something ends, and what to do when you start something Kerf
 didn't.
 
 :::demo escape-owner
 
 ## Owners
 
-Every reactive thing in Weft is created *inside* something: a `derived`, a `watch`, a DOM binding the compiler made,
+Every reactive thing in Kerf is created *inside* something: a `derived`, a `watch`, a DOM binding the compiler made,
 an `onCleanup` callback, an `on` listener. That something is its **owner**. When an owner is disposed, everything it
 owns is disposed too: watches stop and run their cleanups, derived values let go of what they read, bindings stop
 updating, listeners are removed, and each `onCleanup` callback runs.
@@ -37,19 +37,19 @@ belongs to that place in the tree. That's why the demo's interval needs no clean
 `shown.value && …` branch, the interval belongs to that branch, and turning the switch off disposes the branch.
 
 :::deepdive How React compares
-React keeps a fiber for each component and runs effect cleanups when the fiber unmounts. Weft has no per-component
+React keeps a fiber for each component and runs effect cleanups when the fiber unmounts. Kerf has no per-component
 object at run time: the compiler turns your TSX into DOM nodes and a handful of bindings, and those bindings hang off
 whichever owner is current. The effect is the same, things stop when the UI that made them goes, but it costs one
-object per conditional or row rather than one per component, which is part of why Weft's memory use stays low.
+object per conditional or row rather than one per component, which is part of why Kerf's memory use stays low.
 :::
 
 ## Cleaning up what you start
 
-Weft cleans up what Weft made. When you start something yourself, a raw timer, a listener, a socket, a library
+Kerf cleans up what Kerf made. When you start something yourself, a raw timer, a listener, a socket, a library
 instance, you tell the owner how to end it, with `onCleanup`:
 
 ```tsx
-import { onCleanup, state } from '@weft-js/core'
+import { onCleanup, state } from '@kerf-js/core'
 
 export function Clock() {
   const now = state(new Date())
@@ -66,7 +66,7 @@ Three ways to say the same thing, from the most specific to the most general:
 
 | You start | Clean up with |
 |---|---|
-| A listener on `window`, `document` or an element | `on(target, type, fn)` from `@weft-js/core/browser`: no cleanup to write |
+| A listener on `window`, `document` or an element | `on(target, type, fn)` from `@kerf-js/core/browser`: no cleanup to write |
 | A repeating timer | `interval(every, fn)`: no cleanup to write |
 | Something that depends on a value (a connection per room) | `watch(source, act)` and return the cleanup |
 | Anything else that lives as long as the component | `onCleanup(() => …)` beside the code that starts it |
@@ -75,12 +75,12 @@ Three ways to say the same thing, from the most specific to the most general:
 never removes, clears or closes it.
 
 :::pitfall setTimeout is yours to clear too
-Weft doesn't flag `setTimeout`, because a one-shot timer usually ends by itself. But if it can fire after the component
+Kerf doesn't flag `setTimeout`, because a one-shot timer usually ends by itself. But if it can fire after the component
 is gone, and its callback touches the page or writes state, clear it:
 
 ```tsx
-import { onCleanup, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { onCleanup, state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 export function Saved() {
   const shown = state(false)
@@ -106,7 +106,7 @@ A chart, a map or a rich text editor usually takes an element and returns an obj
 in `onMount`, where the element exists, and register the cleanup there:
 
 ```tsx
-import { onCleanup, onMount } from '@weft-js/core'
+import { onCleanup, onMount } from '@kerf-js/core'
 
 type MapView = {
   setCentre(lat: number, lng: number): void
@@ -136,21 +136,21 @@ export function Location({ lat, lng }: { lat: number; lng: number }) {
 one in the body would. To keep the map centred when the props change, add a `watch` inside the same `onMount`:
 `watch(() => [lat, lng] as const, ([lat, lng]) => map.setCentre(lat, lng))`.
 
-Warp's components wire their behaviours the same way, through a helper you can use too: see
+Veneer's components wire their behaviours the same way, through a helper you can use too: see
 [Reusing logic](/learn/reusing-logic).
 
 ## Making an owner: `createRoot`
 
 Sometimes you need to start owned work where there is no owner. A click handler runs long after setup, so `on` or
-`interval` called there has nothing to attach to: Weft reports it as **W051**, and throws in development. The answer is
+`interval` called there has nothing to attach to: Kerf reports it as **W051**, and throws in development. The answer is
 an owner of your own:
 
 :::demo escape-root
 
 ```tsx
-import { createRoot, onCleanup, state } from '@weft-js/core'
-import { interval } from '@weft-js/core/browser'
-import { Button } from '@weft-js/warp'
+import { createRoot, onCleanup, state } from '@kerf-js/core'
+import { interval } from '@kerf-js/core/browser'
+import { Button } from '@kerf-js/veneer'
 
 export function Session() {
   const seconds = state(0)
@@ -195,8 +195,8 @@ it, and keeps it for the life of the app. Browser values and listeners work insi
 owner:
 
 ```tsx
-import { defineState, state } from '@weft-js/core'
-import { on } from '@weft-js/core/browser'
+import { defineState, state } from '@kerf-js/core'
+import { on } from '@kerf-js/core/browser'
 
 export const keyboard = defineState('keyboard', () => {
   const lastKey = state('')
@@ -210,7 +210,7 @@ export const keyboard = defineState('keyboard', () => {
 Read it from any component as `keyboard.lastKey.value`. See [App-wide state with defineState](/learn/app-wide-state).
 
 Avoid making boxes at module scope in an app that renders on the server: one module is shared by every request, so a
-box there leaks one user's state into another's page. Weft's catalog names that **W030**.
+box there leaks one user's state into another's page. Kerf's catalog names that **W030**.
 
 ## Running code under an owner later: `getOwner` and `within`
 
@@ -222,7 +222,7 @@ That's how `onMount` itself works: it notes the component's owner while the body
 `within` it, so an `onCleanup` inside belongs to the component. You can do the same after an `await`:
 
 ```tsx
-import { getOwner, onCleanup, onMount, within } from '@weft-js/core'
+import { getOwner, onCleanup, onMount, within } from '@kerf-js/core'
 
 type Player = { stop(): void }
 declare function loadPlayer(): Promise<{ start(src: string): Player }>
@@ -261,7 +261,7 @@ The last tool here isn't about disposal, but it is about what a reactive functio
 without following anything it reads:
 
 ```tsx
-import { derived, state, untrack } from '@weft-js/core'
+import { derived, state, untrack } from '@kerf-js/core'
 
 export function Total() {
   const items = state([3, 4, 5])
@@ -277,7 +277,7 @@ export function Total() {
 ```
 
 Use it sparingly. A value read with `untrack` is a snapshot: if it changes, nothing that read it will notice. In a
-component body, `const x = untrack(() => …)` that only the TSX reads never updates, which Weft reports as **W018**.
+component body, `const x = untrack(() => …)` that only the TSX reads never updates, which Kerf reports as **W018**.
 A `watch` act is already untracked, so you don't need `untrack` there.
 
 ## Recap
@@ -285,7 +285,7 @@ A `watch` act is already untracked, so you don't need `untrack` there.
 - Everything reactive has an owner. Disposing an owner stops what it owns and runs its `onCleanup` callbacks.
 - `render` makes the root; each conditional branch, keyed row and `Boundary` side is an owner; components live in
   whichever owner renders them.
-- Weft cleans up what it made. For what you start, use `on` and `interval`, return a cleanup from `watch`, or call
+- Kerf cleans up what it made. For what you start, use `on` and `interval`, return a cleanup from `watch`, or call
   `onCleanup`.
 - `createRoot(dispose => …)` makes an owner where there isn't one, such as in a handler. It isn't disposed with its
   creator, so end it yourself, usually in `onCleanup`.
@@ -301,8 +301,8 @@ the panel opens another one is added. Fix it.
 
 <!-- example: skip shows the W050 leak on purpose -->
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 function Panel({ onClose }: { onClose: () => void }) {
   const close = (e: KeyboardEvent) => {
@@ -323,12 +323,12 @@ export function Page() {
 }
 ```
 :::solution
-Listen with `on` from `@weft-js/core/browser`. The panel's branch owns the listener, so closing the panel removes it:
+Listen with `on` from `@kerf-js/core/browser`. The panel's branch owns the listener, so closing the panel removes it:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { on } from '@weft-js/core/browser'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { on } from '@kerf-js/core/browser'
+import { Button } from '@kerf-js/veneer'
 
 function Panel({ onClose }: { onClose: () => void }) {
   if (typeof window !== 'undefined') {
@@ -362,8 +362,8 @@ Each call makes a root for its message. The interval belongs to that root, and t
 countdown ends.
 
 ```tsx
-import { createRoot, state } from '@weft-js/core'
-import { interval } from '@weft-js/core/browser'
+import { createRoot, state } from '@kerf-js/core'
+import { interval } from '@kerf-js/core/browser'
 
 type Message = { id: number; text: string; left: () => number }
 export const messages = state<Message[]>([])
@@ -404,8 +404,8 @@ Find it and fix it.
 
 <!-- example: skip shows the W051 leak on purpose -->
 ```tsx
-import { state } from '@weft-js/core'
-import { on } from '@weft-js/core/browser'
+import { state } from '@kerf-js/core'
+import { on } from '@kerf-js/core/browser'
 
 export function Settings() {
   const theme = state('light')
@@ -425,8 +425,8 @@ export function Settings() {
 development). Nothing about the listener depends on the fetch, so create it in the body, before anything waits:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { on } from '@weft-js/core/browser'
+import { state } from '@kerf-js/core'
+import { on } from '@kerf-js/core/browser'
 
 export function Settings() {
   const theme = state('light')

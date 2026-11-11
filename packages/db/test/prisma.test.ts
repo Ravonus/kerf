@@ -3,11 +3,11 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
-import { decodeCursor } from '@weft-js/start/list'
+import { LIST_ROWS, listSuite } from '@kerf-js/core/test/plugins'
+import { decodeCursor } from '@kerf-js/start/list'
 import { prismaSource, type PrismaDelegate } from '../src/prisma'
 
-const dir = mkdtempSync(join(tmpdir(), 'weft-prisma-'))
+const dir = mkdtempSync(join(tmpdir(), 'kerf-prisma-'))
 const url = `file:${join(dir, 'test.db')}`
 interface Client {
   task: PrismaDelegate & {

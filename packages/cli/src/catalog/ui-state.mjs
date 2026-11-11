@@ -36,7 +36,7 @@ export const uiState = [
     severity: 'error',
     by: 'cli',
     catches:
-      '`ui` on a warp component that does not take it: an attribute is written and nothing is drawn',
+      '`ui` on a veneer component that does not take it: an attribute is written and nothing is drawn',
     fix: 'Use Button, Checkbox, Switch, Radio, Toggle, Chip or Card, or read the row yourself',
   },
 ]

@@ -1,5 +1,5 @@
-// `weft deploy`, `weft deploy hosts`, `weft deploy init`, and what `weft check` and `weft doctor` say about the deploy
-// (research 46). Nothing here talks to a provider except `weft deploy --yes`, which runs the host's own CLI.
+// `kerf deploy`, `kerf deploy hosts`, `kerf deploy init`, and what `kerf check` and `kerf doctor` say about the deploy
+// (research 46). Nothing here talks to a provider except `kerf deploy --yes`, which runs the host's own CLI.
 
 import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -52,7 +52,7 @@ export function targetOf(config, { target, preset } = {}) {
   return id
 }
 
-/** E001–E004, E006, E008–E014 for `weft check`: the configured target's fit, its files, written secrets, CDN setup. */
+/** E001–E004, E006, E008–E014 for `kerf check`: the configured target's fit, its files, written secrets, CDN setup. */
 export function deployChecks(root, config, { preset } = {}) {
   const out = writtenSecrets(root).map((s) => ({
     code: 'E008',
@@ -79,7 +79,7 @@ export function deployChecks(root, config, { preset } = {}) {
             severity: 'warning',
             file: f.path,
             why: `\`${f.path}\` is ${f.state === 'missing' ? 'missing' : 'from an older config'}: ${host(id).name} would deploy ${f.state === 'missing' ? 'without it' : 'what it said then'}`,
-            fix: '`weft deploy init` writes it (a file edited by hand is left alone)',
+            fix: '`kerf deploy init` writes it (a file edited by hand is left alone)',
           })
       }
     }
@@ -99,7 +99,7 @@ export function initContext(root, config, target) {
   }
 }
 
-/** `weft deploy hosts`, and the `deploy` part of `weft doctor`: every host's fit and the suggestion (E005 when none is set). */
+/** `kerf deploy hosts`, and the `deploy` part of `kerf doctor`: every host's fit and the suggestion (E005 when none is set). */
 export function hostsCommand(root, config) {
   const needs = needsOf(root, config)
   const report = hostsReport(needs, { deploy: config.deploy })
@@ -112,14 +112,14 @@ export function hostsCommand(root, config) {
         diagnostic({
           code: 'E005',
           severity: 'info',
-          file: findConfig(root) ? relative(root, findConfig(root)) : 'weft.config.ts',
+          file: findConfig(root) ? relative(root, findConfig(root)) : 'kerf.config.ts',
           why: `No \`deploy.target\`. ${report.fits
             .filter((f) => f.fits && f.deploys)
             .map((f) => f.name)
             .join(
               ', ',
-            )} can run this app; weft suggests ${host(report.suggestion.host).name}: ${report.suggestion.why}.`,
-          help: `\`weft deploy init ${report.suggestion.host}\``,
+            )} can run this app; kerf suggests ${host(report.suggestion.host).name}: ${report.suggestion.why}.`,
+          help: `\`kerf deploy init ${report.suggestion.host}\``,
         }),
       ]
   return { needs: used, ...report, target: config.deploy?.target ?? null, diagnostics }
@@ -133,7 +133,7 @@ export function formatHosts(r) {
   for (const f of r.fits) {
     const mark = f.fits ? (f.findings.length ? '~' : '✓') : '✗'
     lines.push(
-      `${mark} ${f.host.padEnd(11)} ${f.name}${f.deploys ? '' : " (fit only: `weft deploy` doesn't drive it yet)"}`,
+      `${mark} ${f.host.padEnd(11)} ${f.name}${f.deploys ? '' : " (fit only: `kerf deploy` doesn't drive it yet)"}`,
     )
     for (const x of f.findings) lines.push(`    ${x.code} ${x.why}. Fix: ${x.fix}`)
     lines.push(`    cost: ${f.cost} (${f.pricing})`)
@@ -196,7 +196,7 @@ export function withDeploy(file, text, deploy) {
   const object = configObject(sf)
   if (!object)
     throw refused(
-      `${file} doesn't export a plain object, so \`weft deploy init\` can't add \`deploy\` to it. Add \`deploy: ${literal(deploy)}\` by hand. Nothing was changed.`,
+      `${file} doesn't export a plain object, so \`kerf deploy init\` can't add \`deploy\` to it. Add \`deploy: ${literal(deploy)}\` by hand. Nothing was changed.`,
     )
   const block = `deploy: ${literal(deploy)},`
   const last = object.properties.at(-1)
@@ -210,7 +210,7 @@ export function withDeploy(file, text, deploy) {
 }
 
 /**
- * `weft deploy init [target]`: the host's files and workflow, and `deploy` in the config when it has none. Refuses a
+ * `kerf deploy init [target]`: the host's files and workflow, and `deploy` in the config when it has none. Refuses a
  * target the app doesn't fit unless `unsafe` lets the codes through.
  */
 export function initCommand(root, config, { target, dryRun = false, force = false, unsafe } = {}) {
@@ -219,7 +219,7 @@ export function initCommand(root, config, { target, dryRun = false, force = fals
   const h = host(id)
   if (!h.deploys)
     throw usage(
-      `\`weft deploy\` doesn't drive ${h.name} yet (research 46 §11): ${TARGETS.join(', ')} it does`,
+      `\`kerf deploy\` doesn't drive ${h.name} yet (research 46 §11): ${TARGETS.join(', ')} it does`,
     )
   if (config.deploy?.target && target && config.deploy.target !== target)
     throw refused(
@@ -230,7 +230,7 @@ export function initCommand(root, config, { target, dryRun = false, force = fals
   const blocking = result.findings.filter((f) => f.severity === 'error' && !unsafe?.allows(f))
   if (blocking.length)
     throw refused(
-      `${h.name} can't run this app:\n${blocking.map((f) => `  ${f.code} ${f.file}: ${f.why}.\n       Fix: ${f.fix}`).join('\n')}\n\`weft deploy hosts\` shows which hosts can. Nothing was changed.`,
+      `${h.name} can't run this app:\n${blocking.map((f) => `  ${f.code} ${f.file}: ${f.why}.\n       Fix: ${f.fix}`).join('\n')}\n\`kerf deploy hosts\` shows which hosts can. Nothing was changed.`,
     )
   const ctx = { ...initContext(root, { ...config, deploy }, id) }
   const states = fileStates(root, filesFor(ctx))
@@ -238,16 +238,16 @@ export function initCommand(root, config, { target, dryRun = false, force = fals
   const actions = []
   let written = []
   if (!config.deploy) {
-    const file = configFile ?? join(root, 'weft.config.ts')
+    const file = configFile ?? join(root, 'kerf.config.ts')
     const text = configFile
       ? readFileSync(configFile, 'utf8')
-      : "import { defineConfig } from '@weft-js/core/config'\n\nexport default defineConfig({})\n"
+      : "import { defineConfig } from '@kerf-js/core/config'\n\nexport default defineConfig({})\n"
     actions.push(`${relative(root, file)}: ${configFile ? '' : '(new) '}deploy: ${literal(deploy)}`)
     if (!dryRun) writeFileSync(file, withDeploy(file, text, deploy))
   }
   for (const f of states)
     actions.push(
-      `${f.path}: ${{ missing: 'write', stale: 'rewrite (from an older config)', current: 'current', edited: force ? 'overwrite (edited by hand; --force)' : 'edited by hand: left alone', foreign: force ? 'overwrite (--force)' : 'not written by weft: left alone' }[f.state]}`,
+      `${f.path}: ${{ missing: 'write', stale: 'rewrite (from an older config)', current: 'current', edited: force ? 'overwrite (edited by hand; --force)' : 'edited by hand: left alone', foreign: force ? 'overwrite (--force)' : 'not written by kerf: left alone' }[f.state]}`,
     )
   if (!dryRun) written = writeFiles(root, states, { force })
   const next = [
@@ -274,10 +274,10 @@ export function initCommand(root, config, { target, dryRun = false, force = fals
     }[id],
     ...((deploy.ci ?? 'github') === 'github'
       ? [
-          `gh secret set ${h.env.join(' / ')}   (each one, from the host's dashboard: weft never writes them)`,
+          `gh secret set ${h.env.join(' / ')}   (each one, from the host's dashboard: kerf never writes them)`,
         ]
       : []),
-    `weft deploy   (a dry run: shows what --yes would run)`,
+    `kerf deploy   (a dry run: shows what --yes would run)`,
   ]
   return {
     ok: true,
@@ -291,7 +291,7 @@ export function initCommand(root, config, { target, dryRun = false, force = fals
 }
 
 /**
- * `weft deploy`: fit, then the steps. Without `yes` nothing runs: the result says what would. `build` is `weft build`
+ * `kerf deploy`: fit, then the steps. Without `yes` nothing runs: the result says what would. `build` is `kerf build`
  * in-process (start.mjs's buildCommand), `exec` runs a host CLI; both are injectable for tests.
  */
 export async function deployCommand(
@@ -313,11 +313,11 @@ export async function deployCommand(
   if (!id) {
     const s = hostsReport(needsOf(root, config)).suggestion
     throw refused(
-      `no deploy target: set \`deploy.target\` (\`weft deploy init\` does, and writes the host's files), or pass --target. weft suggests \`${s.host}\`: ${s.why}`,
+      `no deploy target: set \`deploy.target\` (\`kerf deploy init\` does, and writes the host's files), or pass --target. kerf suggests \`${s.host}\`: ${s.why}`,
     )
   }
   const h = host(id)
-  if (!h.deploys) throw usage(`\`weft deploy\` doesn't drive ${h.name} yet (research 46 §11)`)
+  if (!h.deploys) throw usage(`\`kerf deploy\` doesn't drive ${h.name} yet (research 46 §11)`)
   if (h.kind === 'server' && !prod)
     throw usage(`${h.name} has no preview deploys: pass --prod to deploy production`)
   const needs = needsOf(root, config)
@@ -348,7 +348,7 @@ export async function deployCommand(
     if (s.kind === 'build') {
       const built = await build(root, { preset: s.preset })
       diagnostics.push(...built.diagnostics)
-      if (!built.ok) throw refused('weft build failed: nothing was deployed. Fix the errors above.')
+      if (!built.ok) throw refused('kerf build failed: nothing was deployed. Fix the errors above.')
     } else if (s.kind === 'hook') {
       const res = await post(env.RENDER_DEPLOY_HOOK_URL)
       if (!res.ok)

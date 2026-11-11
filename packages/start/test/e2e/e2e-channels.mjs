@@ -16,7 +16,7 @@ export default async function run({ url, log }) {
     counter = fnId('counter')
   const roomId = `r${Date.now()}`
 
-  check('no Upgrade header is 426', (await fetch(`${url}/_weft/ws`)).status === 426)
+  check('no Upgrade header is 426', (await fetch(`${url}/_kerf/ws`)).status === 426)
   check(
     'another Origin is refused',
     (await handshake(url, { origin: 'http://evil.example' })) === 403,

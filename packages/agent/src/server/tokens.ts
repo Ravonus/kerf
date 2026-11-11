@@ -1,7 +1,7 @@
 // Tokens for agents outside the app, and what a person's agent has spent. A token never grants more than its creator
 // holds, then or now.
 import { randomBytes, randomUUID } from 'node:crypto'
-import type { Context } from '@weft-js/start'
+import type { Context } from '@kerf-js/start'
 import { allows, type AgentCaller, type AgentToken, type Usage } from '../index'
 import { AgentError, MCP, hash, turnTokens, userOf, type Core, type User } from './core'
 
@@ -59,7 +59,7 @@ export function tokenApi(core: Core) {
 
     /**
      * A token for an agent outside the app. Its grants can't exceed the creator's. The secret is returned this once:
-     * give it to Claude Code, Codex or a script as `Authorization: Bearer <secret>` on `/_weft/x/agent/mcp`.
+     * give it to Claude Code, Codex or a script as `Authorization: Bearer <secret>` on `/_kerf/x/agent/mcp`.
      */
     async createToken(ctx: Context, input: { name: string; grants: string[] }) {
       const u = userOf(ctx)

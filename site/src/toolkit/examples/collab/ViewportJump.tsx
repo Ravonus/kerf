@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
-import { Row, Text, ViewportRail } from '@weft-js/warp'
+import { Row, Text, ViewportRail } from '@kerf-js/veneer'
 
 import { VIEWPORT_PEERS } from '../../world'
 

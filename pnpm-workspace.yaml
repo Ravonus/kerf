@@ -9,7 +9,7 @@ packages:
 # so an install on any machine is held to it. Our own packages are exempt.
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
-  - '@weft-js/*'
+  - '@kerf-js/*'
 
 # Dependencies' install scripts don't run (as with ignore-scripts before): esbuild and workerd ship their binaries as
 # optional packages, and `pnpm run setup` runs `prisma generate` itself.

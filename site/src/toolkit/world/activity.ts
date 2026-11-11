@@ -1,4 +1,4 @@
-import type { ActivityItem } from '@weft-js/warp'
+import type { ActivityItem } from '@kerf-js/veneer'
 
 export const ACTIVITY: ActivityItem[] = [
   {

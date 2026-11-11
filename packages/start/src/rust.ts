@@ -9,8 +9,8 @@
 //   // src/server/docs.ts: swap `run` for `impl`, and nothing on the client changes
 //   export const searchDocs = query({ input: Search, output: z.array(Hit), tags: ['docs'], impl: search })
 //
-// A sidecar's address and key are the environment's: `weft dev` and `weft start` set `WEFT_RUST_<NAME>_URL` and
-// `WEFT_RUST_SECRET` for the sidecars they supervise, and a sidecar deployed on its own needs both set by hand.
+// A sidecar's address and key are the environment's: `kerf dev` and `kerf start` set `KERF_RUST_<NAME>_URL` and
+// `KERF_RUST_SECRET` for the sidecars they supervise, and a sidecar deployed on its own needs both set by hand.
 // Nothing here imports a Node module, so none of it reaches a bundle that doesn't call it.
 
 import { StartError, type Context, type Fn } from './data'
@@ -38,7 +38,7 @@ export interface Claims {
 
 /** `remote()`: the address, the deadline, and how a user becomes claims. */
 export interface RemoteOptions {
-  /** The address, for a sidecar that isn't supervised here. Otherwise `WEFT_RUST_<NAME>_URL`. */
+  /** The address, for a sidecar that isn't supervised here. Otherwise `KERF_RUST_<NAME>_URL`. */
   url?: string
   /** Milliseconds a call may take, sent as its deadline. 10 s by default. */
   timeout?: number
@@ -91,9 +91,9 @@ export interface Native {
 }
 
 const TARGET = /^rust:\/\/([a-z][a-z0-9_-]*)$/
-/** `search-index` → `WEFT_RUST_SEARCH_INDEX_URL`. */
+/** `search-index` → `KERF_RUST_SEARCH_INDEX_URL`. */
 export const urlVariable = (service: string) =>
-  `WEFT_RUST_${service.toUpperCase().replaceAll('-', '_')}_URL`
+  `KERF_RUST_${service.toUpperCase().replaceAll('-', '_')}_URL`
 
 const hex = (b: ArrayBuffer) =>
   Array.from(new Uint8Array(b), (x) => x.toString(16).padStart(2, '0')).join('')
@@ -119,13 +119,13 @@ const keyOf = (secret: string) => {
   return k
 }
 
-/** `weft-sig`: the crate's `verify` checks the same bytes. It covers the function and the body, not just the claims. */
+/** `kerf-sig`: the crate's `verify` checks the same bytes. It covers the function and the body, not just the claims. */
 export const sign = async (secret: string, id: string, ctx: string, body: string) =>
   hex(
     await crypto.subtle.sign(
       'HMAC',
       await keyOf(secret),
-      encoder.encode(`weft1\n${id}\n${ctx}\n${body}`),
+      encoder.encode(`kerf1\n${id}\n${ctx}\n${body}`),
     ),
   )
 
@@ -139,7 +139,7 @@ export function remote(target: string, options: RemoteOptions = {}): Remote {
     throw new StartError(
       'R106',
       `\`remote('${target}')\` isn't a sidecar target`,
-      "`remote('rust://search')`, with the address in `WEFT_RUST_SEARCH_URL` or the `url` option",
+      "`remote('rust://search')`, with the address in `KERF_RUST_SEARCH_URL` or the `url` option",
     )
   const { timeout = DEFAULT_TIMEOUT, claims = defaultClaims, validate = true } = options
   return {
@@ -152,14 +152,14 @@ export function remote(target: string, options: RemoteOptions = {}): Remote {
         throw new StartError(
           'R106',
           `\`${fn.$id}\` is implemented by \`${target}\`, and this server has no address for it`,
-          `set \`${urlVariable(service)}\` (\`weft dev\` and \`weft start\` do it for a sidecar they supervise), or pass \`url\` to \`remote()\``,
+          `set \`${urlVariable(service)}\` (\`kerf dev\` and \`kerf start\` do it for a sidecar they supervise), or pass \`url\` to \`remote()\``,
           { status: 503 },
         )
-      const secret = env('WEFT_RUST_SECRET')
+      const secret = env('KERF_RUST_SECRET')
       if (!secret)
         throw new StartError(
           'R106',
-          `\`${fn.$id}\` can't sign its call: \`WEFT_RUST_SECRET\` isn't set`,
+          `\`${fn.$id}\` can't sign its call: \`KERF_RUST_SECRET\` isn't set`,
           'set the same value on the server and the sidecar',
           { status: 503 },
         )
@@ -171,12 +171,12 @@ export function remote(target: string, options: RemoteOptions = {}): Remote {
 
       let res: Response
       try {
-        res = await fetch(`${url.replace(/\/$/, '')}/_weft/fn/${encodeURIComponent(fn.$id)}`, {
+        res = await fetch(`${url.replace(/\/$/, '')}/_kerf/fn/${encodeURIComponent(fn.$id)}`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
-            'weft-ctx': envelope,
-            'weft-sig': await sign(secret, fn.$id, envelope, body),
+            'kerf-ctx': envelope,
+            'kerf-sig': await sign(secret, fn.$id, envelope, body),
           },
           body,
           signal: AbortSignal.any([AbortSignal.timeout(timeout), request.signal]),

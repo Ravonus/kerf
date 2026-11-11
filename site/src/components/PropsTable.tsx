@@ -1,5 +1,5 @@
-import { Button } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Button } from '@kerf-js/veneer'
+import { state } from '@kerf-js/core'
 
 type Row = { name: string; type: string; required: boolean; default?: string; doc: string }
 
@@ -10,7 +10,7 @@ const LONG = 72
 const words = (text: string) =>
   text.split(/`([^`]+)`/).map((bit, i) => (i % 2 ? <code>{bit}</code> : bit))
 
-/* @weft visible */
+/* @kerf visible */
 /** One group of props. Long unions fold, and a required prop carries a dot. On a narrow column each prop stacks, and the
  * cells bring their own labels (data-label) since the header row is gone. */
 export function PropsTable(props: { title: string; rows: Row[] }) {

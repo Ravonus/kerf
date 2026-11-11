@@ -1,0 +1,585 @@
+/* =============================================================================
+   veneer · app flows — auth, onboarding, settings/billing/admin, system states,
+   commerce, admin, shortcuts overlay.       v0.2 · 2026-10-28
+   Spec: ../09-app-flows.md · Tokens + signature: ./veneer.css (load first)
+   Reuses by name (owned elsewhere, unchanged): field, checkbox, switch, segmented,
+   OTP (veneer.css / 03), button, badge, alert, avatar, tabs, tooltip, Steps, dialog,
+   sheet, toast, kbd, spinner, banner (05), table (06), page shell (02).
+   v0.2: flows no longer styles [data-scope="steps"] (05 owns the stepper) or the
+   OTP layout (03's one-input model); it adds only the outcomes on top.
+
+   Contract: @layer veneer.flows, :where() everywhere, sys tokens only, parts are
+   [data-scope][data-part], state is ARIA or data-state. Every flow sizes to its
+   container (@container 600 / 1000), never the window.
+
+   The sweep in flows has five jobs, and only five:
+     1. every field, OTP cell and selection card (inputs sweep at every stop);
+     2. progress that the user caused: stepper connectors, checklist and meter
+        rails fill THROUGH the rail, L→R (SIGNATURE §1c);
+     3. the one primary action of a step: sweep-fill / frame (dial-gated);
+     4. arrival: the tour spotlight ring draws in once around its target;
+     5. commitment: an accepted OTP / placed order cascades the sweep L→R in
+        positive, cell by cell (stagger), then holds.
+   Errors pin the sweep in, painted critical. Nothing sweeps while idle.
+   ========================================================================== */
+
+@layer veneer.tokens, veneer.base, veneer.signature, veneer.components, veneer.app, veneer.flows;
+
+@layer veneer.tokens {
+  :root, [data-expression], [data-density], [data-form], [data-pointer],
+  [data-motion], [data-flair], [data-theme], [data-palette], [data-veneer] {
+    --veneer-flow-step: var(--veneer-duration-slow);                         /* 272 · 320 · 384 */
+    --veneer-flow-distance: calc(var(--veneer-motion-distance) * 2);         /* 8 · 16 · 24; 0 reduced */
+    --veneer-flow-cascade: calc(var(--veneer-stagger) * 1.5);                /* OTP / order success cascade */
+    --veneer-flow-panel: 420px;                                            /* auth + dialogs max width */
+    --veneer-flow-rail: calc(2px + var(--veneer-x) * 2px);                   /* 2 · 3 · 4 px rails */
+  }
+}
+
+@layer veneer.flows {
+
+/* ---------------------------------------------------------------------------
+   0 · FLOW: a step machine. Steps share one grid cell, so a leaving step and
+   an entering step overlap without absolute positioning. data-dir flips the
+   travel; exits continue the direction of entry (00 §8).
+   ------------------------------------------------------------------------ */
+:where([data-scope="flow"]) { display: grid; min-inline-size: 0; }
+:where([data-scope="flow"] > [data-part="step"]) { grid-area: 1 / 1; min-inline-size: 0; }
+:where([data-scope="flow"] > [data-part="step"]:not([data-state])) { display: none; }
+:where([data-scope="flow"] > [data-part="step"][data-state="active"]) {
+  animation: veneer-flow-in var(--veneer-flow-step) var(--veneer-ease-out) both;
+}
+:where([data-scope="flow"] > [data-part="step"][data-state="leaving"]) {
+  pointer-events: none; z-index: 0;
+  animation: veneer-flow-out calc(var(--veneer-flow-step) * var(--veneer-duration-exit-k, 0.7)) var(--veneer-ease-in) both;
+}
+:where([data-scope="flow"]) { --_dir: 1; }
+:where([data-scope="flow"][data-dir="back"]) { --_dir: -1; }
+@keyframes veneer-flow-in  { from { opacity: 0; transform: translateX(calc(var(--_dir) * var(--veneer-flow-distance))); } }
+@keyframes veneer-flow-out { to   { opacity: 0; transform: translateX(calc(var(--_dir) * var(--veneer-flow-distance) * -0.5)); } }
+/* a step's heading takes focus on arrival; it must not show a ring for that */
+:where([data-scope="checkout"] [data-part="step-title"]):focus,
+:where([data-part-title]):focus,
+:where([data-part="title"][tabindex="-1"]):focus { outline: none; }
+/* entering waits for ~40% of the exit so the two steps never read on top of each other */
+:where([data-scope="flow"] > [data-part="step"][data-state="active"][data-after-exit]) { animation-delay: calc(var(--veneer-flow-step) * 0.4); }
+
+/* ---------------------------------------------------------------------------
+   1 · RAIL. The thin track that progress fills THROUGH (checklist, meters,
+   tracker, banners). The stepper itself is 05 Steps (veneer-components.css);
+   flows no longer styles [data-scope="steps"], so the two can't collide.
+   ------------------------------------------------------------------------ */
+:where([data-part="rail"]:has(> [data-part="rail-fill"])) {   /* only flows' own rails, never marketing's story rail */
+  position: relative; flex: 1 1 24px; min-inline-size: 16px; block-size: var(--veneer-flow-rail);
+  border-radius: 99px; background: var(--veneer-color-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--veneer-color-border);
+  --veneer-sweep-radius: 99px; overflow: clip;
+}
+
+/* ---------------------------------------------------------------------------
+   2 · AUTH: one layout, three forms. phone: full-bleed column; tablet: a card
+   on the page; desktop: split with a brand panel (the weave).
+   ------------------------------------------------------------------------ */
+:where([data-scope="auth"]) { container: auth / inline-size; min-block-size: 100%; background: var(--veneer-color-page); }
+:where([data-scope="auth"] > [data-part="layout"]) { display: grid; min-block-size: 100%; }
+:where([data-scope="auth"] [data-part="brand"]) { display: none; }
+:where([data-scope="auth"] [data-part="main"]) {
+  display: grid; align-content: start; justify-items: center; gap: var(--veneer-space-group);
+  padding: calc(var(--veneer-space-page) * 1.5) var(--veneer-space-page) var(--veneer-space-page);
+}
+:where([data-scope="auth"] [data-part="panel"]) {
+  inline-size: min(100%, var(--veneer-flow-panel)); display: grid; gap: calc(var(--veneer-space-group) * 1.25);
+}
+:where([data-scope="auth"] [data-part="logo"]) { display: flex; align-items: center; gap: 10px; font: 600 15px/1 var(--veneer-text-heading-font); letter-spacing: -0.01em; }
+:where([data-scope="auth"] [data-part="title"]) {
+  margin: 0; font-family: var(--veneer-text-title-font); font-weight: var(--veneer-text-title-weight);
+  font-size: calc(var(--veneer-text-title-size) * 0.92); line-height: 1.12; letter-spacing: var(--veneer-text-title-tracking);
+}
+:where([data-scope="auth"] [data-part="lede"]) { margin: 6px 0 0; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-body-size); }
+:where([data-scope="auth"] [data-part="divider"]) {
+  display: flex; align-items: center; gap: 10px; color: var(--veneer-color-text-subtle);
+  font: 500 var(--veneer-text-eyebrow-size)/1 var(--veneer-text-eyebrow-font); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: uppercase;
+}
+:where([data-scope="auth"] [data-part="divider"])::before, :where([data-scope="auth"] [data-part="divider"])::after { content: ""; flex: 1; border-block-start: 1px solid var(--veneer-color-border); }
+:where([data-scope="auth"] [data-part="fine"]) { margin: 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); text-align: center; }
+:where([data-scope="auth"] [data-part="row"]) { display: flex; align-items: center; justify-content: space-between; gap: var(--veneer-space-related); flex-wrap: wrap; }
+@container auth (min-width: 600px) {
+  :where([data-scope="auth"] [data-part="main"]) { align-content: center; padding-block: var(--veneer-space-section); }
+  :where([data-scope="auth"] [data-part="panel"]) {
+    padding: calc(var(--veneer-pad-surface) * 1.6); background: var(--veneer-color-surface-raised);
+    border: 1px solid var(--veneer-color-border); border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-2);
+  }
+}
+@container auth (min-width: 1000px) {
+  :where([data-scope="auth"] > [data-part="layout"]) { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+  :where([data-scope="auth"] [data-part="brand"]) {
+    position: relative; overflow: clip; display: flex; flex-direction: column; justify-content: space-between;
+    padding: var(--veneer-space-section); gap: var(--veneer-space-group);
+    background: var(--veneer-color-surface-inverse); color: var(--veneer-color-on-inverse);
+  }
+  :where([data-scope="auth"] [data-part="panel"]) { padding: 0; background: none; border: 0; box-shadow: none; }
+}
+:where([data-scope="auth"] [data-part="brand"] blockquote) {
+  margin: 0; max-inline-size: 30ch; position: relative; z-index: 1;
+  font-family: var(--veneer-text-title-font); font-weight: var(--veneer-text-title-weight);
+  font-size: calc(var(--veneer-text-title-size) * 0.95); line-height: 1.18; letter-spacing: var(--veneer-text-title-tracking);
+}
+:where([data-scope="auth"] [data-part="brand"] blockquote em) { font-style: var(--veneer-text-emphasis-style, normal); color: var(--veneer-color-on-inverse); text-decoration: underline; text-decoration-color: var(--veneer-color-accent-solid); text-decoration-thickness: calc(1px + var(--veneer-x) * 1.5px); text-underline-offset: 0.14em; }   /* 03 m12: accent ink on inverse was 2.85:1; the accent moves to the underline */
+:where([data-scope="auth"] [data-part="brand"] cite) { display: block; margin-block-start: 14px; font: 500 var(--veneer-text-eyebrow-size)/1.3 var(--veneer-text-eyebrow-font); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: uppercase; font-style: normal; opacity: 0.72; }
+/* the weave: veneer threads + a few kerf threads that draw in once on mount */
+:where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"]) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; }
+:where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] line) { stroke: currentColor; stroke-width: 1; opacity: 0.16; vector-effect: non-scaling-stroke; }
+:where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] path) {
+  fill: none; stroke: var(--veneer-color-accent-solid); stroke-width: calc(1px + var(--veneer-x) * 1px); vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: veneer-weave-draw calc(var(--veneer-sweep-duration) * 2) var(--veneer-sweep-ease) forwards;
+  animation-delay: calc(var(--i, 0) * var(--veneer-stagger) * 3);
+}
+:where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] path[data-broken]) { stroke: var(--veneer-color-critical-solid); }
+@keyframes veneer-weave-draw { to { stroke-dashoffset: 0; } }
+
+/* SSO + passkey: a stack of neutral outline buttons with a provider glyph */
+:where([data-scope="sso"]) { display: grid; gap: var(--veneer-space-related); }
+@container auth (min-width: 1000px) { :where([data-scope="sso"][data-layout="row"]) { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); } }
+
+/* OTP: 03's one input over six painted cells (veneer-inputs.css) owns the layout, the
+   active-cell pin and the caret. Flows adds only the outcomes: a wrong code pins every
+   cell critical; an accepted one cascades the sweep L→R in positive (--n per cell). */
+:where([data-scope="otp"][data-invalid] [data-part="cell"]) { background: var(--veneer-color-field-invalid); }
+:where([data-scope="otp"][data-invalid] [data-part="cell"]) { --_a: 1; }
+:where([data-scope="otp"][data-invalid] [data-part="cell"] > [data-part="sweep"]) { color: var(--veneer-color-critical-solid); }
+:where([data-scope="otp"][data-state="success"] [data-part="cell"] > [data-part="sweep"]) {
+  clip-path: inset(0 round var(--veneer-sweep-radius)); color: var(--veneer-color-positive-solid); opacity: 1;
+  transition-delay: calc(var(--n, 0) * var(--veneer-flow-cascade));
+}
+:where([data-scope="otp"][data-state="success"] [data-part="cell"] > [data-part="sweep-base"]) {
+  clip-path: inset(0 0 0 100% round var(--veneer-sweep-radius)); transition-delay: calc(var(--n, 0) * var(--veneer-flow-cascade));
+}
+:where([data-scope="otp"][data-state="success"] [data-part="char"]) { color: var(--veneer-color-positive-text); transition: color var(--veneer-duration-base) calc(var(--n, 0) * var(--veneer-flow-cascade)); }
+:where([data-scope="otp"][data-state="pending"]) { opacity: 0.7; }
+:where([data-part="code-label"]) { display: block; margin-block-end: 8px; font: 500 var(--veneer-text-label-size)/1.3 var(--veneer-text-body-font); color: var(--veneer-color-text); }
+
+/* sent / verified states: a mark, a heading, one sentence, one action */
+/* the result mark (auth sent/verified, the gate, an order's confirmation) is its own scope: as a bare "mark" part its
+   rule reached every checkbox's tick and 05 Meter's threshold mark on the page */
+:where([data-scope="result"]) {
+  display: grid; flex: none; place-items: center; inline-size: 44px; block-size: 44px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text);
+}
+:where([data-scope="result"][data-tone="positive"]) { background: var(--veneer-color-positive-soft); color: var(--veneer-color-positive-text); }
+:where([data-scope="result"][data-tone="caution"]) { background: var(--veneer-color-caution-soft); color: var(--veneer-color-caution-text); }
+:where([data-scope="result"][data-tone="critical"]) { background: var(--veneer-color-critical-soft); color: var(--veneer-color-critical-text); }
+:where([data-scope="result"] svg) { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+:where([data-scope="result"] svg [data-draw]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: veneer-weave-draw calc(480ms * var(--veneer-motion-scale) + 1ms) var(--veneer-sweep-ease) 160ms forwards; }
+
+/* SignGate (the original's flow / blocker / badge, rebuilt) */
+:where([data-scope="gate"]) { position: relative; isolation: isolate; border-radius: var(--veneer-radius-surface); overflow: clip; }
+:where([data-scope="gate"]:not([data-state="signed"]) > [data-part="content"]) { filter: blur(calc(2px + 4px * (1 - var(--veneer-x)))); opacity: 0.5; pointer-events: none; user-select: none; }
+:where([data-scope="gate"] > [data-part="blocker"]) {
+  position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: var(--veneer-space-group);
+  background: color-mix(in oklab, var(--veneer-color-surface) 78%, transparent);
+  backdrop-filter: blur(var(--veneer-blur-overlay)); -webkit-backdrop-filter: blur(var(--veneer-blur-overlay));
+}
+:where([data-scope="gate"][data-state="signed"] > [data-part="blocker"]) { display: none; }
+:where([data-scope="gate-badge"]) { --_t: var(--veneer-color-caution-text); --_s: var(--veneer-color-caution-soft); }
+:where([data-scope="gate-badge"][data-state="signed"]) { --_t: var(--veneer-color-positive-text); --_s: var(--veneer-color-positive-soft); }
+:where([data-scope="gate-badge"]:is([data-state="expired"])),
+:where([data-scope="gate-badge"]:is([data-state="declined"])),
+:where([data-scope="gate-badge"]:is([data-state="error"])) { --_t: var(--veneer-color-critical-text); --_s: var(--veneer-color-critical-soft); }
+
+/* ---------------------------------------------------------------------------
+   3 · ONBOARDING: checklist + tour (coachmark with spotlight).
+   ------------------------------------------------------------------------ */
+:where([data-scope="checklist"]) {
+  display: grid; gap: var(--veneer-space-group); padding: var(--veneer-pad-surface);
+  background: var(--veneer-color-surface-raised); border: 1px solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-1);
+}
+:where([data-scope="checklist"] [data-part="head"]) { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--veneer-space-related); }
+:where([data-scope="checklist"] [data-part="title"]) { margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.25 var(--veneer-text-heading-font); }
+:where([data-scope="checklist"] [data-part="count"]) { font: 500 var(--veneer-text-caption-size)/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); white-space: nowrap; }
+:where([data-scope="checklist"] [data-part="progress"]) { position: relative; block-size: var(--veneer-flow-rail); }
+:where([data-scope="checklist"] [data-part="progress"] [data-part="rail"]) { position: absolute; inset: 0; }
+:where([data-part="rail"] > [data-part="rail-fill"]) { inset: 0 auto 0 0; inline-size: var(--v, 100%); }
+:where([data-part="rail"][data-on] > [data-part="rail-fill"]) { clip-path: inset(0 round 99px); }
+:where([data-part="rail"] > [data-part="rail-fill"]) {
+  transition: clip-path var(--veneer-sweep-duration) var(--veneer-sweep-ease), inline-size var(--veneer-sweep-duration) var(--veneer-sweep-ease);
+}
+:where([data-scope="checklist"] ol) { list-style: none; margin: 0; padding: 0; display: grid; }
+:where([data-scope="checklist"] [data-part="item"]) {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2px 12px;
+  padding-block: 10px 12px; border-block-start: 1px solid var(--veneer-color-border);
+}
+:where([data-scope="checklist"] [data-part="item"] b) { font-weight: 500; transition: color var(--veneer-duration-base); }
+:where([data-scope="checklist"] [data-part="item"] p) { grid-column: 2 / -1; margin: 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="checklist"] [data-part="item"][data-state="done"] b) { color: var(--veneer-color-text-subtle); text-decoration: line-through; text-decoration-color: var(--veneer-color-border-strong); }
+:where([data-scope="checklist"] [data-part="item"][data-state="done"] [data-part="action"]) { visibility: hidden; }
+:where([data-scope="checklist"][data-state="complete"] ol) { display: none; }
+:where([data-scope="checklist"] [data-part="done"]) { display: none; }
+:where([data-scope="checklist"][data-state="complete"] [data-part="done"]) { display: flex; align-items: center; gap: 12px; animation: veneer-enter var(--veneer-duration-slow) var(--veneer-ease-out) both; }
+
+/* tour: the spotlight is a positioned box; its 9999px shadow is the scrim, so
+   the cut-out follows the target with one transition. Its ring is a sweep host
+   that draws in on arrival (job 4). */
+:where([data-scope="tour"]) { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
+:where([data-scope="tour"] [data-part="spotlight"]) {
+  position: absolute; pointer-events: none; border-radius: var(--veneer-radius-control); --veneer-sweep-radius: var(--veneer-radius-control);
+  box-shadow: 0 0 0 9999px var(--veneer-color-scrim);
+  transition: inset var(--veneer-duration-slow) var(--veneer-ease-in-out), inline-size var(--veneer-duration-slow) var(--veneer-ease-in-out),
+              block-size var(--veneer-duration-slow) var(--veneer-ease-in-out), top var(--veneer-duration-slow) var(--veneer-ease-in-out), left var(--veneer-duration-slow) var(--veneer-ease-in-out);
+  animation: veneer-fade-in var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="tour"] [data-part="spotlight"] > [data-part="sweep"]) { inset: -3px; border-width: 2px; }
+:where([data-scope="tour"] [data-part="spotlight"] > [data-part="sweep-base"]) { inset: -3px; }
+:where([data-scope="tour"] [data-part="card"]) {
+  position: absolute; box-sizing: border-box; pointer-events: auto; inline-size: min(300px, calc(100% - 32px)); display: grid; gap: 10px;
+  padding: 16px; background: var(--veneer-color-surface-overlay); border: 1px solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-3);
+  transition: top var(--veneer-duration-slow) var(--veneer-ease-in-out), left var(--veneer-duration-slow) var(--veneer-ease-in-out);
+  animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="tour"] [data-part="card"] h4:focus) { outline: none; }
+:where([data-scope="tour"] [data-part="card"] h4) { margin: 0; font: var(--veneer-text-heading-weight) 16px/1.3 var(--veneer-text-heading-font); }
+:where([data-scope="tour"] [data-part="card"] p) { margin: 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); line-height: 1.5; }
+:where([data-scope="tour"] [data-part="card"] footer) { display: flex; align-items: center; gap: 6px; margin-block-start: 4px; }
+:where([data-scope="tour"] [data-part="pips"]) { flex: 1; display: flex; gap: 4px; align-items: center; }
+:where([data-scope="tour"] [data-part="pips"] i) { inline-size: 12px; block-size: 3px; border-radius: 2px; background: var(--veneer-color-border-strong); transition: inline-size var(--veneer-duration-base) var(--veneer-ease-out), background-color var(--veneer-duration-base); }
+:where([data-scope="tour"] [data-part="pips"] i[data-on]) { background: var(--veneer-color-sweep); inline-size: 22px; }
+:where([data-scope="tour"] [data-part="step-count"]) { font: 500 var(--veneer-text-eyebrow-size)/1 var(--veneer-text-eyebrow-font); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: uppercase; color: var(--veneer-color-accent-text); }
+/* phone: the card docks to the bottom edge; the spotlight stays on the target */
+/* docking is positional: on phone the tour pins the card to the edge away from its target (inline top/left) */
+/* beacon: an unobtrusive dot on a target that has an unseen tip. No loop. */
+:where([data-part="beacon"]) { position: absolute; inset-block-start: 4px; inset-inline-end: 4px; inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--veneer-color-accent-solid); box-shadow: 0 0 0 3px var(--veneer-color-accent-soft); }
+
+/* ---------------------------------------------------------------------------
+   4 · SETTINGS, BILLING, ADMIN
+   ------------------------------------------------------------------------ */
+:where([data-scope="settings"]) { container: settings / inline-size; }
+:where([data-scope="settings"] > [data-part="layout"]) { display: grid; gap: var(--veneer-space-group); align-items: start; }
+:where([data-scope="settings"] [data-part="nav"]) {
+  display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border-block-end: 1px solid var(--veneer-color-border);
+  margin-inline: calc(var(--veneer-space-page) * -1); padding-inline: var(--veneer-space-page);
+}
+:where([data-scope="settings"] [data-part="nav"] a) {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; flex: none; min-block-size: var(--veneer-hit-min);
+  padding: 10px 10px; color: var(--veneer-color-text-subtle); text-decoration: none; font-size: var(--veneer-text-label-size); font-weight: 500;
+  border-radius: var(--veneer-radius-control); transition: color var(--veneer-duration-fast), background-color var(--veneer-duration-fast);
+}
+:where([data-scope="settings"] [data-part="nav"] a:hover) { color: var(--veneer-color-text); }
+:where([data-scope="settings"] [data-part="nav"] a[aria-current="true"]) { color: var(--veneer-color-text); }
+:where([data-scope="settings"] [data-part="nav"] a[aria-current="true"])::after {
+  content: ""; position: absolute; inset: auto 10px -1px; block-size: var(--veneer-border-emphasis); background: var(--veneer-color-accent-solid);
+}
+:where([data-scope="settings"] [data-part="nav"] a[data-tone="critical"]) { color: var(--veneer-color-critical-text); }
+:where([data-scope="settings"] [data-part="nav"] svg) { inline-size: 15px; block-size: 15px; }
+:where([data-scope="settings"] [data-part="content"]) { display: grid; gap: var(--veneer-space-group); min-inline-size: 0; padding-block-end: 88px; }
+@container settings (min-width: 760px) {
+  :where([data-scope="settings"] > [data-part="layout"]) { grid-template-columns: 200px minmax(0, 1fr); gap: var(--veneer-space-section); }
+  :where([data-scope="settings"] [data-part="nav"]) { position: sticky; inset-block-start: 0; flex-direction: column; border: 0; margin: 0; padding: 0; }
+  :where([data-scope="settings"] [data-part="nav"] a[aria-current="true"]) { background: var(--veneer-color-surface-hover); }
+  :where([data-scope="settings"] [data-part="nav"] a[aria-current="true"])::after { inset: 8px auto 8px -1px; inline-size: var(--veneer-border-emphasis); block-size: auto; }
+}
+/* a section = heading + one bordered group of rows. No card inside a card. */
+:where([data-scope="settings-section"]) { display: grid; gap: 12px; scroll-margin-block-start: 16px; }
+:where([data-scope="settings-section"] > header :is(h3)),
+:where([data-scope="settings-section"] > header :is(h4)) { margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.25 var(--veneer-text-heading-font); }
+:where([data-scope="settings-section"] > header p) { margin: 4px 0 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="settings-section"] > [data-part="group"]) {
+  background: var(--veneer-color-surface-raised); border: 1px solid var(--veneer-color-border); border-radius: var(--veneer-radius-surface);
+  padding-inline: var(--veneer-pad-surface);
+}
+:where([data-scope="setting-row"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 16px;
+  border-block-start: 1px solid var(--veneer-color-border);
+}
+:where([data-scope="setting-row"]:first-child) { border-block-start: 0; }
+:where([data-scope="setting-row"] b) { font-weight: 500; display: block; }
+:where([data-scope="setting-row"] p) { margin: 2px 0 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="setting-row"] [data-part="control"]) { display: flex; align-items: center; gap: 8px; justify-content: flex-start; }
+@container settings (min-width: 520px) {
+  :where([data-scope="setting-row"]) { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--veneer-space-group); }
+  :where([data-scope="setting-row"][data-layout="stack"]) { grid-template-columns: minmax(0, 1fr); }
+  :where([data-scope="setting-row"] [data-part="control"]) { justify-content: flex-end; }
+}
+/* danger zone: the only critical-bordered group on the page */
+:where([data-scope="settings-section"][data-tone="critical"] > header :is(h3)),
+:where([data-scope="settings-section"][data-tone="critical"] > header :is(h4)) { color: var(--veneer-color-critical-text); }
+:where([data-scope="settings-section"][data-tone="critical"] > [data-part="group"]) { border-color: var(--veneer-color-critical-border); }
+
+/* save bar: slides up from the bottom of its scroll container when dirty */
+:where([data-scope="save-bar"]) {
+  position: sticky; inset-block-end: 12px; z-index: 20; margin-block-start: -76px;
+  display: flex; align-items: center; gap: var(--veneer-space-related); justify-content: space-between; flex-wrap: wrap;
+  padding: 10px 10px 10px 16px; border-radius: var(--veneer-radius-surface);
+  background: var(--veneer-color-surface-inverse); color: var(--veneer-color-on-inverse); box-shadow: var(--veneer-elevation-3);
+  transform: translateY(calc(100% + 24px)); opacity: 0; visibility: hidden;
+  transition: transform var(--veneer-duration-slow) var(--veneer-ease-out), opacity var(--veneer-duration-base), visibility 0s linear var(--veneer-duration-slow);
+}
+:where([data-scope="save-bar"][data-open]) { transform: none; opacity: 1; visibility: visible; transition-delay: 0s; }
+:where([data-scope="save-bar"] p) { margin: 0; font-size: var(--veneer-text-label-size); display: flex; align-items: center; gap: 8px; }
+:where([data-scope="save-bar"] p)::before { content: ""; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--veneer-color-caution-solid); }
+:where([data-scope="save-bar"] [data-part="actions"]) { display: flex; gap: 8px; margin-inline-start: auto; }
+
+/* type-to-confirm (danger): the confirm field sweeps in critical, not accent */
+:where([data-scope="confirm"]) { display: grid; gap: var(--veneer-space-group); }
+:where([data-scope="confirm"] [data-scope="field"]) { --veneer-color-sweep: var(--veneer-color-critical-solid); --veneer-color-label-active: var(--veneer-color-critical-text); }
+:where([data-scope="confirm"] [data-scope="field"] > [data-part="control"]) { background: color-mix(in oklab, var(--veneer-color-critical-soft) 45%, var(--veneer-color-surface-overlay)); }
+:where([data-scope="confirm"] code) { padding: 1px 6px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); border: 1px solid var(--veneer-color-border); font-size: 0.92em; }
+:where([data-scope="confirm"] ul) { margin: 0; padding-inline-start: 18px; display: grid; gap: 4px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+
+/* plans: radio cards. Selection is a pinned sweep (a control, so every stop). */
+:where([data-scope="plans"]) { container: plans / inline-size; display: grid; gap: var(--veneer-space-group); }
+:where([data-scope="plans"] [data-part="grid"]) { display: grid; gap: 12px; }
+@container plans (min-width: 640px) { :where([data-scope="plans"] [data-part="grid"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+:where([data-scope="plan-card"]) {
+  position: relative; display: grid; align-content: start; gap: 10px; padding: 18px; cursor: pointer;
+  border-radius: var(--veneer-radius-surface); --veneer-sweep-radius: var(--veneer-radius-surface);
+  background: var(--veneer-color-surface-raised); transition: background-color var(--veneer-duration-base) var(--veneer-ease-out), box-shadow var(--veneer-duration-base);
+}
+:where([data-scope="plan-card"] > [data-part="sweep-base"]) { color: var(--veneer-color-sweep-base); }   /* 01 m4: the resting edge is the sweep-base token, not border-strong */
+:where([data-scope="plan-card"]:has(input:checked)) { background: color-mix(in oklab, var(--veneer-color-accent-soft) 45%, var(--veneer-color-surface-raised)); box-shadow: var(--veneer-elevation-2); }
+:where([data-scope="plan-card"]:has(input:checked)) { --_a: 1; --_on: 1; }
+:where([data-scope="plan-card"] input) { position: absolute; opacity: 0; inline-size: 1px; block-size: 1px; }
+:where([data-scope="plan-card"]:has(input:focus-visible)) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: var(--veneer-focus-offset); }
+:where([data-scope="plan-card"] [data-part="name"]) { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; }
+:where([data-scope="plan-card"] [data-part="price"]) { display: flex; align-items: baseline; gap: 6px; }
+:where([data-scope="plan-card"] [data-part="price"] b) { font: var(--veneer-text-title-weight) calc(var(--veneer-text-title-size) * 0.95)/1 var(--veneer-text-title-font); letter-spacing: var(--veneer-text-title-tracking); font-variant-numeric: tabular-nums; }
+:where([data-scope="plan-card"] [data-part="price"] span) { font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="plan-card"] ul) { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="plan-card"] li) { display: flex; gap: 8px; align-items: baseline; }
+:where([data-scope="plan-card"] li)::before { content: ""; flex: none; inline-size: 8px; block-size: 4px; border: solid var(--veneer-color-accent-text); border-width: 0 0 1.5px 1.5px; transform: translateY(-2px) rotate(-45deg); }
+:where([data-scope="plan-card"] [data-part="radio"]) {
+  inline-size: 18px; block-size: 18px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--veneer-color-border-control);
+  transition: box-shadow var(--veneer-duration-base) var(--veneer-ease-pop);
+}
+:where([data-scope="plan-card"]:has(input:checked) [data-part="radio"]) { box-shadow: inset 0 0 0 5px var(--veneer-color-accent-solid); }
+
+/* usage meters: the used part fills through the rail; tick at the warn line */
+:where([data-scope="usage"]) { display: grid; gap: 14px; }
+:where([data-scope="meter"]) { display: grid; gap: 7px; }
+:where([data-scope="meter"] [data-part="head"]) { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: var(--veneer-text-label-size); }
+:where([data-scope="meter"] [data-part="head"] span) { font-family: var(--veneer-font-mono); font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="meter"] [data-part="rail"]) { flex: none; inline-size: 100%; block-size: calc(var(--veneer-flow-rail) + 3px); overflow: visible; }
+:where([data-scope="meter"] [data-part="rail"] > [data-part="rail-fill"]) { border-radius: 99px; }
+:where([data-scope="meter"] [data-part="tick"]) { position: absolute; inset-block: -3px; inset-inline-start: var(--warn, 80%); inline-size: 1px; background: var(--veneer-color-border-strong); }
+:where([data-scope="meter"] [data-part="over"]) {
+  position: absolute; inset-block: 0; inset-inline-end: 0; inline-size: var(--over, 0%); border-radius: 0 99px 99px 0;
+  background: repeating-linear-gradient(-45deg, var(--veneer-color-critical-solid) 0 3px, var(--veneer-color-critical-soft) 3px 6px);
+  box-shadow: inset 1px 0 0 var(--veneer-color-surface-raised);
+}
+:where([data-scope="meter"][data-tone="caution"] [data-part="rail-fill"]) { background: var(--veneer-color-caution-solid); }
+:where([data-scope="meter"][data-tone="critical"] [data-part="rail-fill"]) { background: var(--veneer-color-critical-solid); }
+:where([data-scope="meter"] [data-part="note"]) { margin: 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="meter"][data-tone="caution"] [data-part="note"]) { color: var(--veneer-color-caution-text); }
+:where([data-scope="meter"][data-tone="critical"] [data-part="note"]) { color: var(--veneer-color-critical-text); }
+
+/* proration / order lines */
+:where([data-scope="lines"]) { display: grid; gap: 8px; margin: 0; font-size: var(--veneer-text-label-size); }
+:where([data-scope="lines"] > div) { display: flex; justify-content: space-between; gap: 12px; }
+:where([data-scope="lines"] dt) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="lines"] dd) { margin: 0; font-variant-numeric: tabular-nums; }
+:where([data-scope="lines"] [data-part="total"]) { padding-block-start: 10px; border-block-start: 1px solid var(--veneer-color-border); font-weight: 600; font-size: var(--veneer-text-body-size); }
+:where([data-scope="lines"] [data-part="total"] dt) { color: var(--veneer-color-text); }
+
+/* ---------------------------------------------------------------------------
+   5 · SYSTEM STATES: one anatomy (weave fragment, code, heading, sentence,
+   actions). Errors break one kerf thread in critical (00 §7).
+   ------------------------------------------------------------------------ */
+:where([data-scope="system-page"]) {
+  container: system / inline-size; display: grid; place-items: center; min-block-size: min(100%, 560px);
+  padding: var(--veneer-space-section) var(--veneer-space-page); text-align: center;
+}
+:where([data-scope="system-page"] [data-part="body"]) { display: grid; justify-items: center; gap: 14px; max-inline-size: 460px; }
+:where([data-scope="system-page"] [data-part="art"]) { position: relative; inline-size: 132px; block-size: 84px; color: var(--veneer-color-text); margin-block-end: 6px; }
+:where([data-scope="system-page"] [data-part="code"]) { font: 500 var(--veneer-text-eyebrow-size)/1 var(--veneer-text-eyebrow-font); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: uppercase; color: var(--veneer-color-text-subtle); }
+:where([data-scope="system-page"] :is(h2)),
+:where([data-scope="system-page"] :is(h3)) { margin: 0; font: var(--veneer-text-title-weight) var(--veneer-text-title-size)/1.1 var(--veneer-text-title-font); letter-spacing: var(--veneer-text-title-tracking); }
+:where([data-scope="system-page"] p) { margin: 0; color: var(--veneer-color-text-subtle); }
+:where([data-scope="system-page"] [data-part="actions"]) { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-block-start: 6px; }
+:where([data-scope="system-page"] [data-part="search"]) { inline-size: min(100%, 360px); text-align: start; }
+:where([data-scope="system-page"] [data-part="meta"]) { font: 400 var(--veneer-text-caption-size)/1.4 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+
+/* connection + deploy banners (the Banner primitive, with flow states) */
+:where([data-scope="conn"]) {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px 8px 14px;
+  font-size: var(--veneer-text-label-size); border-block-end: 1px solid var(--_b, var(--veneer-color-border));
+  background: var(--_s, var(--veneer-color-surface-sunken)); color: var(--_t, var(--veneer-color-text));
+  animation: veneer-conn-in var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+@keyframes veneer-conn-in { from { opacity: 0; transform: translateY(calc(-6px * var(--veneer-motion-scale))); } }
+:where([data-scope="conn"][data-state="offline"]) { --_s: var(--veneer-color-caution-soft); --_t: var(--veneer-color-caution-text); --_b: var(--veneer-color-caution-border); }
+:where([data-scope="conn"][data-state="reconnecting"]) { --_s: var(--veneer-color-surface-sunken); }
+:where([data-scope="conn"][data-state="online"]) { --_s: var(--veneer-color-positive-soft); --_t: var(--veneer-color-positive-text); --_b: var(--veneer-color-positive-border); }
+:where([data-scope="conn"][data-state="stale"]) { --_s: var(--veneer-color-info-soft); --_t: var(--veneer-color-info-text); --_b: var(--veneer-color-info-border); }
+:where([data-scope="conn"][data-state="limited"]) { --_s: var(--veneer-color-caution-soft); --_t: var(--veneer-color-caution-text); --_b: var(--veneer-color-caution-border); }
+:where([data-scope="conn"] [data-part="msg"]) { flex: 1 1 220px; min-inline-size: 0; }
+:where([data-scope="conn"] [data-part="msg"] b) { font-weight: 600; }
+:where([data-scope="conn"] svg) { inline-size: 16px; block-size: 16px; flex: none; }
+:where([data-scope="conn"] [data-part="rail"]) { flex: 1 0 100%; block-size: 2px; box-shadow: none; background: color-mix(in oklab, currentColor 18%, transparent); }
+:where([data-scope="conn"] [data-part="rail"] [data-part="rail-fill"]) { background: currentColor; clip-path: none; transform-origin: 0 50%; transform: scaleX(var(--p, 1)); transition: transform 1s linear; }
+/* rows waiting to sync while offline */
+:where([data-part="sync"]) { display: inline-flex; align-items: center; gap: 4px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-caution-text); }
+:where([data-part="sync"][data-state="synced"]) { color: var(--veneer-color-positive-text); }
+
+/* ---------------------------------------------------------------------------
+   6 · COMMERCE: cart, checkout, summary, confirmation
+   ------------------------------------------------------------------------ */
+:where([data-scope="checkout"]) { container: checkout / inline-size; }
+:where([data-scope="checkout"] > [data-part="layout"]) { display: grid; gap: var(--veneer-space-group); align-items: start; }
+@container checkout (min-width: 860px) {
+  :where([data-scope="checkout"] > [data-part="layout"]) { grid-template-columns: minmax(0, 1fr) 320px; gap: var(--veneer-space-section); }
+  :where([data-scope="checkout"] [data-part="summary"]) { position: sticky; inset-block-start: 16px; grid-column: 2; grid-row: 1 / span 2; }
+}
+:where([data-scope="checkout"] [data-part="summary"]) {
+  display: grid; gap: 14px; padding: var(--veneer-pad-surface); background: var(--veneer-color-surface-raised);
+  border: 1px solid var(--veneer-color-border); border-radius: var(--veneer-radius-surface);
+}
+:where([data-scope="checkout"] [data-part="summary"]:not([open])) { padding-block: 6px; gap: 0; }
+:where([data-scope="checkout"] [data-part="summary"] > summary) {
+  list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer;
+  min-block-size: var(--veneer-hit-min); font-weight: 500;
+}
+:where([data-scope="checkout"] [data-part="summary"] > summary)::-webkit-details-marker { display: none; }
+:where([data-scope="checkout"] [data-part="summary"] > summary svg) { inline-size: 14px; block-size: 14px; transition: transform var(--veneer-duration-base) var(--veneer-ease-out); }
+:where([data-scope="checkout"] [data-part="summary"][open] > summary svg) { transform: rotate(180deg); }
+:where([data-scope="checkout"] [data-part="summary"][open] > summary ~ *) { animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out) both; }
+:where([data-scope="checkout"] h3[data-part="step-title"]) { margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.25 var(--veneer-text-heading-font); }
+:where([data-scope="checkout"] [data-part="step-body"]) { display: grid; gap: 14px; }
+:where([data-scope="checkout"] [data-part="nav"]) { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-block-start: 6px; flex-wrap: wrap-reverse; }
+:where([data-scope="checkout"] [data-part="cols"]) { display: grid; gap: 14px; }
+@container checkout (min-width: 520px) { :where([data-scope="checkout"] [data-part="cols"]) { grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); } }
+
+:where([data-scope="line-item"]) { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding-block: 10px; border-block-start: 1px solid var(--veneer-color-border); }
+:where([data-scope="line-item"]:first-child) { border-block-start: 0; }
+:where([data-scope="line-item"] [data-part="thumb"]) { inline-size: 52px; block-size: 52px; border-radius: var(--veneer-radius-control); border: 1px solid var(--veneer-color-border); overflow: clip; background: var(--veneer-color-surface-sunken); }
+:where([data-scope="line-item"] [data-part="thumb"] svg) { inline-size: 100%; block-size: 100%; display: block; }
+:where([data-scope="line-item"] b) { display: block; font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="line-item"] small) { font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="line-item"] [data-part="price"]) { font-variant-numeric: tabular-nums; text-align: end; display: grid; gap: 6px; justify-items: end; }
+
+:where([data-scope="qty"]) {
+  display: inline-flex; align-items: center; block-size: var(--veneer-control-sm); border-radius: var(--veneer-radius-control);
+  box-shadow: inset 0 0 0 1px var(--veneer-color-border-control); background: var(--veneer-color-field);
+}
+:where([data-scope="qty"] button) { all: unset; display: grid; place-items: center; inline-size: max(28px, var(--veneer-target-min)); block-size: 100%; cursor: pointer; color: var(--veneer-color-text-subtle); border-radius: inherit; }
+:where([data-scope="qty"] button:hover) { color: var(--veneer-color-text); background: color-mix(in oklab, currentColor 7%, transparent); }
+:where([data-scope="qty"] button:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; }
+:where([data-scope="qty"] button:disabled) { opacity: var(--veneer-opacity-disabled); cursor: not-allowed; }
+:where([data-scope="qty"] output) { min-inline-size: 22px; text-align: center; font: 500 var(--veneer-text-label-size)/1 var(--veneer-font-mono); font-variant-numeric: tabular-nums; }
+:where([data-scope="qty"] svg) { inline-size: 12px; block-size: 12px; }
+
+/* shipping choice cards reuse the plan card's selection rule */
+:where([data-scope="choice"]) { display: grid; gap: 10px; border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+:where([data-scope="choice"] legend) { padding: 0; margin-block-end: 10px; font-size: var(--veneer-text-label-size); font-weight: 500; }
+:where([data-scope="choice"] [data-scope="plan-card"]) { grid-template-columns: auto 1fr auto; align-items: center; padding: 14px 16px; gap: 12px; }
+:where([data-scope="choice"] [data-scope="plan-card"] small) { display: block; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+
+/* payment: the provider's iframe lives in a fixed slot. veneer styles the slot,
+   never the provider's fields; it passes tokens to the provider's appearance API. */
+:where([data-scope="pay-frame"]) {
+  position: relative; display: grid; gap: 10px; padding: 14px; min-block-size: 148px;
+  border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-sunken); border: 1px dashed var(--veneer-color-border-strong);
+}
+:where([data-scope="pay-frame"] [data-part="head"]) { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="pay-frame"] [data-part="slot"]) { display: grid; gap: 8px; }
+:where([data-scope="pay-frame"] [data-part="slot"] i) { display: block; block-size: var(--veneer-field-height); border-radius: var(--veneer-radius-control); background: var(--veneer-color-field); box-shadow: inset 0 0 0 1px var(--veneer-color-border-control); }
+:where([data-scope="pay-frame"] [data-part="slot"] > div) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+:where([data-scope="pay-frame"][data-state="loading"] [data-part="slot"] i) {
+  box-shadow: none; background: linear-gradient(90deg, var(--veneer-color-surface-hover) 0 40%, var(--veneer-color-surface-active) 50%, var(--veneer-color-surface-hover) 60% 100%);
+  background-size: 300% 100%; animation: veneer-shimmer 1.4s linear infinite; animation-play-state: var(--veneer-loop-play);   /* mark the cells data-loop: veneer.base stops it under reduced motion (02 M6) */
+}
+
+/* confirmation: the order tracker's rails fill in sequence (job 5) */
+:where([data-scope="confirmation"]) { display: grid; gap: var(--veneer-space-group); justify-items: start; }
+:where([data-scope="tracker"]) { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 8px; inline-size: 100%; }
+:where([data-scope="tracker"] li) { display: contents; }
+:where([data-scope="tracker"] [data-part="stop"]) { display: grid; justify-items: center; gap: 6px; flex: none; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="tracker"] [data-part="stop"] i) { inline-size: 10px; block-size: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--veneer-color-border-control); transition: background-color var(--veneer-duration-base), box-shadow var(--veneer-duration-base); transition-delay: var(--dl, 0ms); }
+:where([data-scope="tracker"] [data-part="stop"][data-on] i) { background: var(--veneer-color-positive-solid); box-shadow: 0 0 0 3px var(--veneer-color-positive-soft); }
+:where([data-scope="tracker"] [data-part="stop"][data-on]) { color: var(--veneer-color-text); }
+:where([data-scope="tracker"] [data-part="rail"] [data-part="rail-fill"]) { background: var(--veneer-color-positive-solid); transition-delay: var(--dl, 0ms); }
+:where([data-scope="tracker"] [data-part="rail"]) { margin-block-end: 20px; }
+
+/* ---------------------------------------------------------------------------
+   7 · SHORTCUTS overlay (`?`): a Dialog with a filter and grouped kbd rows
+   ------------------------------------------------------------------------ */
+:where([data-scope="shortcuts"]) { display: grid; gap: var(--veneer-space-group); padding-block-start: 6px; }
+:where([data-scope="shortcuts"] [data-part="groups"]) { display: grid; gap: var(--veneer-space-group); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+:where([data-scope="shortcuts"] section h4) { margin: 0 0 6px; font: 500 var(--veneer-text-eyebrow-size)/1 var(--veneer-text-eyebrow-font); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: uppercase; color: var(--veneer-color-text-subtle); }
+:where([data-scope="shortcuts"] dl) { margin: 0; display: grid; }
+:where([data-scope="shortcuts"] dl > div) { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 7px; border-block-start: 1px solid var(--veneer-color-border); font-size: var(--veneer-text-label-size); }
+:where([data-scope="shortcuts"] dd) { margin: 0; display: flex; gap: 4px; align-items: center; color: var(--veneer-color-text-subtle); font-size: 11px; }
+:where([data-scope="shortcuts"] mark) { background: var(--veneer-color-highlight-soft); color: inherit; border-radius: 2px; }
+:where([data-scope="shortcuts"] [data-part="empty"]) { margin: 0; padding: 24px 0; text-align: center; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-label-size); }
+
+/* ---------------------------------------------------------------------------
+   8 · ADMIN: members (bulk bar), roles matrix, API keys, backup codes, gate.
+   Tables are 06 DataTable in the product; these are the flow-only parts.
+   ------------------------------------------------------------------------ */
+:where([data-scope="bulk-bar"]) {
+  display: flex; align-items: center; gap: 8px var(--veneer-space-related); flex-wrap: wrap; padding: 6px 8px 6px 14px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text);
+  font-size: var(--veneer-text-label-size); animation: veneer-conn-in var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="bulk-bar"] > b) { font-weight: 500; margin-inline-end: auto; font-variant-numeric: tabular-nums; }
+:where([data-scope="roles-matrix"] :is(td, thead th):not(:first-child)) { text-align: center; }
+:where([data-scope="roles-matrix"] [data-part="yes"]) { display: inline-grid; place-items: center; color: var(--veneer-color-positive-text); }
+:where([data-scope="roles-matrix"] [data-part="yes"] svg) { inline-size: 16px; block-size: 16px; }
+:where([data-scope="roles-matrix"] [data-part="no"]) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="api-key"]) { flex-wrap: wrap; }
+:where([data-scope="api-key"] > [data-part="info"]) { display: flex; gap: 10px; align-items: flex-start; flex: 1 1 240px; min-inline-size: 0; }
+:where([data-scope="api-key"] > [data-part="info"] > svg) { margin-block-start: 2px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="api-key"] [data-part="prefix"]) { font: 400 var(--veneer-text-code-size, 12.5px)/1.3 var(--veneer-font-mono); color: var(--veneer-color-text); }
+/* integrations: a grid of provider cards; status is a badge, the one action sits at the end */
+:where([data-scope="integrations"]) { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--veneer-space-related); grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+:where([data-scope="integration"]) {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; gap: 10px 12px; align-items: start; padding: var(--veneer-pad-surface);
+  background: var(--veneer-color-surface-raised); border: 1px solid var(--veneer-color-border); border-radius: var(--veneer-radius-surface);
+  transition: border-color var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="integration"][data-state="error"]) { border-color: var(--veneer-color-critical-border); }
+:where([data-scope="integration"] [data-part="logo"]) { display: grid; place-items: center; inline-size: 36px; block-size: 36px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); border: 1px solid var(--veneer-color-border); font: 600 15px/1 var(--veneer-text-heading-font); }
+:where([data-scope="integration"] [data-part="info"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-inline-size: 0; }
+:where([data-scope="integration"] [data-part="info"] > b) { font-weight: 500; }
+:where([data-scope="integration"] [data-part="info"] > .cap),
+:where([data-scope="integration"] [data-part="info"] > span:last-child) { flex-basis: 100%; }
+:where([data-scope="integration"] [data-part="actions"]) { grid-column: 2; display: flex; gap: 8px; }
+/* CSV import: the mapping table and the validation preview (an invalid cell says why, inline) */
+:where([data-scope="import-preview"] tr[data-invalid]) { background: color-mix(in oklab, var(--veneer-color-critical-soft) 45%, transparent); }
+:where([data-scope="import-preview"] td[data-invalid]) { color: var(--veneer-color-critical-text); }
+:where([data-scope="import-preview"] [data-part="error"]) { display: flex; align-items: center; gap: 4px; margin-block-start: 2px; font-size: var(--veneer-text-caption-size); }
+:where([data-scope="import-preview"] [data-part="error"] svg) { inline-size: 13px; block-size: 13px; flex: none; }
+:where([data-scope="import-preview"] td:last-child [data-part="error"]) { justify-content: flex-end; }
+:where([data-scope="import-map"] [data-scope="field"]) { min-inline-size: 150px; }
+@media (forced-colors: active) { :where([data-scope="import-preview"] td[data-invalid]) { outline: 2px solid Mark; outline-offset: -2px; } }
+
+/* backup codes: two columns of mono codes in a sunken well */
+:where([data-part="codes"]) {
+  list-style: none; margin: 0; padding: 12px 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); border: 1px solid var(--veneer-color-border);
+  font: 500 13px/1.5 var(--veneer-font-mono); font-variant-numeric: tabular-nums; counter-reset: code;
+}
+:where([data-part="codes"] li) { counter-increment: code; display: flex; gap: 8px; }
+:where([data-part="codes"] li)::before { content: counter(code, decimal-leading-zero); color: var(--veneer-color-text-subtle); }
+/* the gate's page stays visible but inert under the blocker (09 §2.4); give it room for the card */
+:where([data-scope="gate"] > [data-part="content"]) { min-block-size: 200px; }
+:where([data-scope="gate"] [data-part="blocker"] :is(h4)),
+:where([data-scope="gate"] [data-part="blocker"] :is(h5)) { margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.25 var(--veneer-text-heading-font); }
+@media (prefers-reduced-transparency: reduce) { :where([data-scope="gate"] > [data-part="blocker"]) { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--veneer-color-surface); } }
+@media (forced-colors: active) {
+  :where([data-scope="bulk-bar"]) { border: 1px solid CanvasText; }
+  :where([data-scope="gate"] > [data-part="blocker"]) { background: Canvas; forced-color-adjust: none; color: CanvasText; }
+}
+
+/* ---------------------------------------------------------------------------
+   REDUCED MOTION: same end states, no travel, no cascade.
+   ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  :where(:root:not([data-motion="full"])) :where([data-scope="otp"][data-state="success"] [data-part="cell"] > *) { transition-delay: 0ms; }
+  :where(:root:not([data-motion="full"])) :where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] path) { animation: none; stroke-dashoffset: 0; }
+}
+:where([data-motion="reduce"]) :where([data-scope="otp"][data-state="success"] [data-part="cell"] > *) { transition-delay: 0ms; }
+:where([data-motion="reduce"]) :where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] path) { animation: none; stroke-dashoffset: 0; }
+:where([data-motion="reduce"]) :where([data-scope="tracker"] *) { transition-delay: 0ms; }
+
+} /* @layer veneer.flows */

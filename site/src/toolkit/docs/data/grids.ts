@@ -34,7 +34,7 @@ export const grids: DocGroup['docs'] = [
         {
           prop: 'exportName',
           control: 'select',
-          options: ['export', 'weft-projects', 'off'],
+          options: ['export', 'kerf-projects', 'off'],
           initial: 'export',
           default: 'export',
         },

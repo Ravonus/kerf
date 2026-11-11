@@ -1,4 +1,4 @@
-import { Card } from '@weft-js/warp'
+import { Card } from '@kerf-js/veneer'
 
 const MENU = [
   {
@@ -31,7 +31,7 @@ export default function Menu() {
             key={id}
             style={{
               color: vegan
-                ? 'var(--warp-color-positive-text)'
+                ? 'var(--veneer-color-positive-text)'
                 : undefined,
             }}
           >

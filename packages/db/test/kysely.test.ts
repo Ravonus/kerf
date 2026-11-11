@@ -1,8 +1,8 @@
 // The `db.adapter` suite through real Kysely, on node:sqlite behind its SQLite dialect.
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite'
 import { Kysely, SqliteDialect } from 'kysely'
-import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
-import { decodeCursor } from '@weft-js/start/list'
+import { LIST_ROWS, listSuite } from '@kerf-js/core/test/plugins'
+import { decodeCursor } from '@kerf-js/start/list'
 import { kyselySource } from '../src/kysely'
 
 function database() {

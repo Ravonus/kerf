@@ -1,7 +1,7 @@
 // The tools an agent may see: every query and mutation that opted in with `agent:`, named by export, described by
-// `say` and typed by its input schema. The registry is weft's own (`fns`), so a new function with `agent:` is a new
+// `say` and typed by its input schema. The registry is kerf's own (`fns`), so a new function with `agent:` is a new
 // tool, and nothing else has to know about it.
-import { fns } from '@weft-js/start/data'
+import { fns } from '@kerf-js/start/data'
 import { allows, type AgentAccess, type ToolInfo } from './index'
 
 type Def = { agent?: boolean | AgentAccess; input?: unknown; tags?: unknown; invalidates?: unknown }

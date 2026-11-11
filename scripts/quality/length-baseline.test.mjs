@@ -26,7 +26,7 @@ const file = 'file:src/a.ts',
   fn = 'function:src/a.ts:run'
 
 function temp(run) {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-length-test-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-length-test-'))
   try {
     return run(dir)
   } finally {
@@ -51,15 +51,15 @@ await test('new and worsened findings fail, while removal and shrinkage pass', (
 
 // In a scratch tree, not the repository: the other check steps run at the same time and would see the folder.
 await test('package folder check rejects a mismatched name', () => {
-  const scratch = mkdtempSync(join(tmpdir(), 'weft-folder-check-'))
+  const scratch = mkdtempSync(join(tmpdir(), 'kerf-folder-check-'))
   try {
     mkdirSync(join(scratch, 'packages/right'), { recursive: true })
     const manifest = join(scratch, 'packages/right/package.json')
-    writeFileSync(manifest, JSON.stringify({ name: '@weft-js/right' }))
+    writeFileSync(manifest, JSON.stringify({ name: '@kerf-js/right' }))
     assert.deepEqual(packageProblems(scratch, ['packages/right']), [])
-    writeFileSync(manifest, JSON.stringify({ name: '@weft-js/wrong' }))
+    writeFileSync(manifest, JSON.stringify({ name: '@kerf-js/wrong' }))
     assert.deepEqual(packageProblems(scratch, ['packages/right']), [
-      'packages/right: package name @weft-js/wrong requires packages/wrong',
+      'packages/right: package name @kerf-js/wrong requires packages/wrong',
     ])
   } finally {
     rmSync(scratch, { recursive: true, force: true })
@@ -67,7 +67,7 @@ await test('package folder check rejects a mismatched name', () => {
 })
 
 await test('renamed offenders retain their trusted limit', () => {
-  const old = ['file:packages', 'weft', 'src/a.ts'].join('/')
+  const old = ['file:packages', 'kerf', 'src/a.ts'].join('/')
   const renamed = 'file:packages/core/src/a.ts'
   assert.deepEqual(compareLengths(entry(renamed, 500), entry(renamed, 500), entry(old, 500)), [])
   assert.match(

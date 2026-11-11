@@ -8,7 +8,7 @@ import { entryWatchLifecycle } from '../../src/vite/shape-entry-css.mjs'
 import { shapeHotUpdate } from '../../src/vite.mjs'
 
 function setup(t) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-shape-race-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-shape-race-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
   const write = (name, source) => writeFileSync(file(name), source)
@@ -49,7 +49,7 @@ function setup(t) {
       return { id: file(spec.slice(2)) }
     },
   })
-  const load = (ctx) => moduleLoad(state).handler.call(ctx, '\0virtual:weft/routes')
+  const load = (ctx) => moduleLoad(state).handler.call(ctx, '\0virtual:kerf/routes')
   return { root, file, page, state, server, release, reject, waiting, context, load }
 }
 

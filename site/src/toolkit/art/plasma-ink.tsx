@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { palette, quantize, tile } from '@weft-js/warp-core/dither'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
+import { palette, quantize, tile } from '@kerf-js/veneer-core/dither'
 import { type ArtProps, type Meta } from './shared'
 import code from './plasma-ink.tsx?raw'
 
@@ -24,11 +24,11 @@ export default function PlasmaInk({ live = true }: ArtProps) {
     shift = 0
   const draw = ({ ctx, width, height, time, tier, pointer, dt }: Frame) => {
     cells ??= palette(ctx.canvas.parentElement!, [
-      '--warp-color-page',
-      '--warp-color-accent-soft',
-      '--warp-color-accent-border',
-      '--warp-color-accent-solid',
-      '--warp-color-text',
+      '--veneer-color-page',
+      '--veneer-color-accent-soft',
+      '--veneer-color-accent-border',
+      '--veneer-color-accent-solid',
+      '--veneer-color-text',
     ])
     if (!image || image.width !== width || image.height !== height) {
       image = new ImageData(width, height)

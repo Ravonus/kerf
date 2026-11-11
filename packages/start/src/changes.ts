@@ -56,7 +56,7 @@ export interface Source {
   readonly tagged?: ((change: Change) => string[]) | undefined
   /** Ms a change waits for its barrier, when a feed delivers in slower batches than the default 25. */
   readonly hold?: number
-  /** The migration's input (`weft db live`). */
+  /** The migration's input (`kerf db live`). */
   defs?(): Promise<TableDef[]>
   readonly dialect?: string
   probe(): Promise<Probe>
@@ -76,7 +76,7 @@ export interface TableDef {
 export interface ChangeOptions {
   /** Direct `postgres://…` for the listener, when the app's URL goes through a pooler. */
   listenUrl?: string
-  /** `'external'`: a separately deployed listener publishes to the bus (`listen` from `@weft-js/start/listen`). */
+  /** `'external'`: a separately deployed listener publishes to the bus (`listen` from `@kerf-js/start/listen`). */
   listener?: 'external'
   /** Map a change to tags your queries use. Default `[table, `${table}:${id}`]`. */
   tagged?: (change: Change) => string[]
@@ -114,16 +114,16 @@ async function pkOf(table: unknown, dialect: DbHandle['dialect']): Promise<strin
 
 /** `realtime({ changes: dbChanges(db, [todos, notes]) })`: these tables' writes reach `.live`, whoever made them. */
 export function dbChanges(
-  db: { $weft?: DbHandle },
+  db: { $kerf?: DbHandle },
   tables: unknown[],
   options: ChangeOptions = {},
 ): Source {
-  const handle = db?.$weft
+  const handle = db?.$kerf
   if (!handle?.changes)
     throw new StartError(
       'R017',
-      '`dbChanges` needs a client from `@weft-js/start/db/sqlite`, `/postgres` or `/mysql`',
-      'for MongoDB use `mongoChanges` from `@weft-js/db/mongo`; for another client, write a `Source`',
+      '`dbChanges` needs a client from `@kerf-js/start/db/sqlite`, `/postgres` or `/mysql`',
+      'for MongoDB use `mongoChanges` from `@kerf-js/db/mongo`; for another client, write a `Source`',
     )
   const names = tables.map(nameOf)
   let source: Promise<Omit<Source, 'name' | 'tables'>> | undefined

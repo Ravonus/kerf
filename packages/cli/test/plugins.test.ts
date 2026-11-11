@@ -8,14 +8,14 @@ import { loadConfig } from '../src/load-config.mjs'
 import { explain, list, sync } from '../src/plugins.mjs'
 import { project } from './helpers.mjs'
 
-/** Two fixture plugins defined with @weft-js/core/plugin, in a config that lists them in `order`. */
+/** Two fixture plugins defined with @kerf-js/core/plugin, in a config that lists them in `order`. */
 const config = ({
   order = ['fonts', 'kit'],
   kit = '',
   fonts = '',
   extra = '',
-} = {}) => `import { defineConfig } from '@weft-js/core/config'
-import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+} = {}) => `import { defineConfig } from '@kerf-js/core/config'
+import { definePlugin, defineSlot, provide } from '@kerf-js/core/plugin'
 
 const fontBuild = defineSlot({ id: 'font.build', version: 1, cardinality: 'one', sides: ['build'] })
 const surface = defineSlot({ id: 'surface.renderer', version: 1, cardinality: 'keyed', sides: ['client'] })
@@ -61,7 +61,7 @@ const codes = (r: { diagnostics: object[] }) =>
 
 function registerPluginListing() {
   it('lists plugins sorted by name, with the slots they provide and bind', async () => {
-    const dir = project({ 'weft.config.ts': config() })
+    const dir = project({ 'kerf.config.ts': config() })
     const r = await list(dir)
     expect(r.diagnostics).toEqual([])
     expect(r.plugins.map((p) => p.name)).toEqual(['@acme/kit', '@acme/plugin-fonts'])
@@ -83,21 +83,21 @@ function registerPluginListing() {
     })
     expect((r.slots as Record<string, unknown>)['font.build']).toBe('@acme/plugin-fonts')
     expect((r.slots as Record<string, unknown>)['surface.renderer']).toEqual({
-      canvas2d: 'weft:default',
+      canvas2d: 'kerf:default',
       pixel: '@acme/plugin-fonts',
-      webgl2: 'weft:default',
+      webgl2: 'kerf:default',
     })
   })
 
   it('explains a binding down to the generated file', async () => {
-    const dir = project({ 'weft.config.ts': config() })
+    const dir = project({ 'kerf.config.ts': config() })
     const r = await explain(dir, 'font.build')
     expect(r).toMatchObject({
       slot: 'font.build',
-      file: '.weft/slots/font.build.ts',
-      import: 'weft:slot/font.build',
+      file: '.kerf/slots/font.build.ts',
+      import: 'kerf:slot/font.build',
       binding: {
-        config: 'weft.config.ts',
+        config: 'kerf.config.ts',
         plugin: '@acme/plugin-fonts',
         version: '1.2.0',
         sides: ['build'],
@@ -110,8 +110,8 @@ function registerPluginListing() {
 
 function registerPluginGeneration() {
   it('generates slot modules, slots.d.ts and token CSS on check and sync, byte-identical for any plugin order', async () => {
-    const a = project({ 'weft.config.ts': config() })
-    const b = project({ 'weft.config.ts': config({ order: ['kit', 'fonts'] }) })
+    const a = project({ 'kerf.config.ts': config() })
+    const b = project({ 'kerf.config.ts': config({ order: ['kit', 'fonts'] }) })
     await check(a)
     expect(
       await main(['plugins', 'sync', '--root', b], {
@@ -120,49 +120,49 @@ function registerPluginGeneration() {
       }),
     ).toBe(0)
     const files = ['font.build', 'text.measure', 'surface.renderer', 'realtime.bus']
-      .map((id) => `.weft/slots/${id}.ts`)
-      .concat('.weft/slots.d.ts', '.weft/tokens/kit.css')
+      .map((id) => `.kerf/slots/${id}.ts`)
+      .concat('.kerf/slots.d.ts', '.kerf/tokens/kit.css')
     for (const f of files)
       expect(readFileSync(join(a, f), 'utf8')).toBe(readFileSync(join(b, f), 'utf8'))
     expect(JSON.stringify(await list(a))).toBe(JSON.stringify(await list(b)).replaceAll(b, a))
 
-    const font = readFileSync(join(a, '.weft/slots/font.build.ts'), 'utf8')
+    const font = readFileSync(join(a, '.kerf/slots/font.build.ts'), 'utf8')
     expect(font).toContain('Do not edit')
     expect(font).toContain(
       `export const load = () => import("@acme/plugin-fonts/build").then(m => m["build"]({"subset":true}))`,
     )
-    expect(readFileSync(join(a, '.weft/slots/text.measure.ts'), 'utf8')).toContain(
+    expect(readFileSync(join(a, '.kerf/slots/text.measure.ts'), 'utf8')).toContain(
       "{ code: 'P101' }",
     )
-    expect(readFileSync(join(a, '.weft/slots/realtime.bus.ts'), 'utf8')).toContain(
-      'export const provider = "weft:default:memory"',
+    expect(readFileSync(join(a, '.kerf/slots/realtime.bus.ts'), 'utf8')).toContain(
+      'export const provider = "kerf:default:memory"',
     )
-    expect(readFileSync(join(a, '.weft/slots/surface.renderer.ts'), 'utf8')).toContain(
+    expect(readFileSync(join(a, '.kerf/slots/surface.renderer.ts'), 'utf8')).toContain(
       '"pixel": () => import("../../src/pixel.ts")',
     )
-    const dts = readFileSync(join(a, '.weft/slots.d.ts'), 'utf8')
-    expect(dts).toContain("declare module 'weft:slot/font.build'")
+    const dts = readFileSync(join(a, '.kerf/slots.d.ts'), 'utf8')
+    expect(dts).toContain("declare module 'kerf:slot/font.build'")
     expect(dts).not.toContain('text.measure')
-    expect(readFileSync(join(a, '.weft/tokens/kit.css'), 'utf8')).toContain('--kit-accent: red')
+    expect(readFileSync(join(a, '.kerf/tokens/kit.css'), 'utf8')).toContain('--kit-accent: red')
   })
 
   it('a contribute() that throws a coded error fails the build with that code, owned by the plugin', async () => {
     const dir = project({
-      'weft.config.ts': config({
+      'kerf.config.ts': config({
         kit: `...(() => { throw Object.assign(new Error('accent text is 3.1:1 on surface, needs 4.5:1'), { code: 'D010' }) })(),`,
       }),
     })
     const r = await check(dir)
     expect(r.ok).toBe(false)
     const d = r.diagnostics.find((x) => x.code === 'D010')
-    expect(d).toMatchObject({ severity: 'error', owner: '@acme/kit', file: 'weft.config.ts' })
+    expect(d).toMatchObject({ severity: 'error', owner: '@acme/kit', file: 'kerf.config.ts' })
     expect(d.why).toContain('3.1:1')
   })
 }
 
 function registerPluginDiagnostics() {
   it('P115: invalid options, with the path', async () => {
-    const dir = project({ 'weft.config.ts': config({ extra: 'fonts({ subset: 1 as any })' }) })
+    const dir = project({ 'kerf.config.ts': config({ extra: 'fonts({ subset: 1 as any })' }) })
     const r = await loadConfig(dir)
     expect(codes(r)).toEqual(['P115'])
     expect((r.diagnostics[0] as { why: string }).why).toContain('subset')
@@ -170,7 +170,7 @@ function registerPluginDiagnostics() {
 
   it('P112 (AGENTS section over 1 KB), P111 (code outside the namespace), P117 (impure contribute)', async () => {
     const dir = project({
-      'weft.config.ts': config({
+      'kerf.config.ts': config({
         kit: `agents: { title: 'kit', text: 'x'.repeat(1100) },`,
         fonts: `catalog: [{ name: 'Seed', import: '@acme/plugin-fonts', summary: String(Math.random()) }],`,
       }).replace("code: 'fonts/F001'", "code: 'F001'"),
@@ -180,7 +180,7 @@ function registerPluginDiagnostics() {
 
   it('P113: token namespace and catalog collisions', async () => {
     const dir = project({
-      'weft.config.ts': config({
+      'kerf.config.ts': config({
         fonts: `tokens: { namespace: 'kit' }, catalog: [{ name: 'Button', import: 'x', summary: 'y' }],`,
       }),
     })
@@ -188,7 +188,7 @@ function registerPluginDiagnostics() {
   })
 
   it('AGENTS.md gets a Plugins section in name order', async () => {
-    const dir = project({ 'weft.config.ts': config() })
+    const dir = project({ 'kerf.config.ts': config() })
     const md = await agentsMd(dir)
     expect(md.text).toContain('## Plugins\n\n### kit\n\nImport components from `@acme/kit`.')
     expect(md.overLimit).toBe(false)
@@ -196,8 +196,8 @@ function registerPluginDiagnostics() {
 
   it('data-only entries still work, and nothing is generated without plugins', async () => {
     const dir = project({
-      'weft.config.ts':
-        "import { defineConfig } from '@weft-js/core/config'\nexport default defineConfig({ plugins: [{ name: 'x', provides: ['text.measure'] }] })\n",
+      'kerf.config.ts':
+        "import { defineConfig } from '@kerf-js/core/config'\nexport default defineConfig({ plugins: [{ name: 'x', provides: ['text.measure'] }] })\n",
     })
     const r = await list(dir)
     expect(r.plugins).toMatchObject([
@@ -205,22 +205,22 @@ function registerPluginDiagnostics() {
     ])
     const bare = project()
     await check(bare)
-    expect(existsSync(join(bare, '.weft'))).toBe(false)
+    expect(existsSync(join(bare, '.kerf'))).toBe(false)
   })
 }
 
-describe('@weft-js/core/plugin + weft plugins', () => {
+describe('@kerf-js/core/plugin + kerf plugins', () => {
   registerPluginListing()
   registerPluginGeneration()
   registerPluginDiagnostics()
 })
 
 describe('build-side slots and check hooks (research 26 §2.5, §3.1)', () => {
-  it('sync writes .weft/slots/<id>.build.json for a bound build-side provider', async () => {
-    const dir = project({ 'weft.config.ts': config() })
+  it('sync writes .kerf/slots/<id>.build.json for a bound build-side provider', async () => {
+    const dir = project({ 'kerf.config.ts': config() })
     await check(dir)
     expect(
-      JSON.parse(readFileSync(join(dir, '.weft/slots/font.build.build.json'), 'utf8')),
+      JSON.parse(readFileSync(join(dir, '.kerf/slots/font.build.build.json'), 'utf8')),
     ).toEqual({
       plugin: '@acme/plugin-fonts',
       version: '1.2.0',
@@ -228,10 +228,10 @@ describe('build-side slots and check hooks (research 26 §2.5, §3.1)', () => {
       export: 'build',
       options: { subset: true },
     })
-    expect(existsSync(join(dir, '.weft/slots/surface.renderer.build.json'))).toBe(false) // client-only
-    const after = project({ 'weft.config.ts': config({ order: ['kit'] }) })
+    expect(existsSync(join(dir, '.kerf/slots/surface.renderer.build.json'))).toBe(false) // client-only
+    const after = project({ 'kerf.config.ts': config({ order: ['kit'] }) })
     await check(after)
-    expect(existsSync(join(after, '.weft/slots/font.build.build.json'))).toBe(false)
+    expect(existsSync(join(after, '.kerf/slots/font.build.build.json'))).toBe(false)
   })
 
   it("runs a plugin's check hook over its files: owner, span, fix; codes outside its namespace are P111", async () => {
@@ -243,7 +243,7 @@ describe('build-side slots and check hooks (research 26 §2.5, §3.1)', () => {
       }))).concat([{ code: 'X999', file: 'src/main.tsx', start: 0, end: 0, why: 'not mine' }]),
     },
     diagnostics: [{ code: 'D011', catches: 'Untyped button', fix: 'Add type="button"', severity: 'warning' }],`
-    const dir = project({ 'weft.config.ts': config({ kit }) }) // its `diagnostics` comes after the fixture's, so it wins
+    const dir = project({ 'kerf.config.ts': config({ kit }) }) // its `diagnostics` comes after the fixture's, so it wins
     const r = await check(dir)
     const d011 = r.diagnostics.filter((d) => d.code === 'D011')
     expect(d011.length).toBeGreaterThan(0)
@@ -266,9 +266,9 @@ describe('secondary token entries', () => {
     const tokens = { namespace: 'kit', cssEntries: { tailwind: '@theme {}' } }
     const loaded = { slots: {}, contributions: [{ name: 'kit', manifest: { tokens } }] }
     sync(dir, loaded)
-    const entry = join(dir, '.weft/tokens/kit.tailwind.css')
+    const entry = join(dir, '.kerf/tokens/kit.tailwind.css')
     expect(readFileSync(entry, 'utf8')).toBe(
-      '/* Generated from weft.config.ts (kit). Do not edit. */\n@theme {}',
+      '/* Generated from kerf.config.ts (kit). Do not edit. */\n@theme {}',
     )
     for (const cssEntries of [{ '../bad': 'x' }, { valid: 1 }, null, []]) {
       expect(() =>

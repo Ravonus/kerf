@@ -1,4 +1,4 @@
-import { Stack, Heading } from '@weft-js/warp'
+import { Stack, Heading } from '@kerf-js/veneer'
 
 export const HeadingRoles = () => (
   <Stack gap="related">

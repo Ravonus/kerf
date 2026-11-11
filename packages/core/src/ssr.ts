@@ -1,5 +1,5 @@
-// @weft-js/core/ssr: the string renderer, and the helpers weft's back end emits for `generate: 'ssr'` (research 19 §3). It
-// runs on weft's own reactive core with effects off. Each template renders as `ssr(k => "<li" + key(k) + … )`: `k`
+// @kerf-js/core/ssr: the string renderer, and the helpers kerf's back end emits for `generate: 'ssr'` (research 19 §3). It
+// runs on kerf's own reactive core with effects off. Each template renders as `ssr(k => "<li" + key(k) + … )`: `k`
 // is the instance's hydration key (research 19 §2.4), written as ` wk="…"` on the root when the output is
 // hydratable, and each hole renders in its own scope (`hole(k, slot, value)`), wrapped in `<!--[-->…<!--]-->` when
 // it shares its parent with other content. `renderToString` renders what it can now (a pending `resource` renders
@@ -7,7 +7,7 @@
 // and renders again until none is pending; `renderToStream` sends the shell at once (pending Boundaries show their
 // fallbacks) and then each Boundary's content as its resources resolve (research 25 §4).
 //
-// Hydratable output ends with `<script type="application/json" data-weft>`: resolved resources and boundary
+// Hydratable output ends with `<script type="application/json" data-kerf>`: resolved resources and boundary
 // states by key. Put the whole string in the container `hydrate()` gets.
 
 import { createRoot, memo, type SsrData } from './index'
@@ -167,8 +167,8 @@ function pass({
   Object.assign(keys, { on: true, hydrating: false, p: '', n: 0 })
   writeKeys = options.hydratable !== false
   ;(globalThis as unknown as Record<symbol, (() => void) | undefined>)[
-    Symbol.for('weft.render')
-  ]?.() // warp-core's ids (store.ts)
+    Symbol.for('kerf.render')
+  ]?.() // veneer-core's ids (store.ts)
   let html = ''
   const app = createApp(options.app)
   const prevApp = useApp(app) // a swap, not an owner: the render is synchronous
@@ -204,7 +204,7 @@ function pass({
   )
     return html
   const json = JSON.stringify({ r: data.r, b: data.b, ...(s && { s }) }).replace(/</g, '\\u003c')
-  return `${html}<script type="application/json" data-weft>${json}</script>`
+  return `${html}<script type="application/json" data-kerf>${json}</script>`
 }
 
 // ---- templates and holes --------------------------------------------------------------------------------------
@@ -272,7 +272,7 @@ export function island(
     if (bad)
       throw Object.assign(
         new Error(
-          `H009 prop \`${n}\` of an island (${id}) is ${bad}, which can't go from the server to the client. Pass plain data, or put \`/* @weft client */\` on the component that renders it.`,
+          `H009 prop \`${n}\` of an island (${id}) is ${bad}, which can't go from the server to the client. Pass plain data, or put \`/* @kerf client */\` on the component that renders it.`,
         ),
         { code: 'H009' },
       )

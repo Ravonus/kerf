@@ -11,7 +11,7 @@ if [ -n "$scripts" ]; then
   node_modules/.bin/oxlint --quiet --deny-warnings $scripts
 fi
 if printf '%s\n' "$staged" | grep -qE '^crates/.*\.rs$'; then
-  for crate in crates/weft-compiler crates/weft-layout crates/weft; do (cd "$crate" && cargo fmt --check); done
+  for crate in crates/kerf-compiler crates/kerf-layout crates/kerf; do (cd "$crate" && cargo fmt --check); done
 fi
 if command -v gitleaks >/dev/null 2>&1; then
   gitleaks git --staged --config .gitleaks.toml --redact --no-banner --log-level error

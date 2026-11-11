@@ -10,7 +10,7 @@
 
 Everything so far has been synchronous: a box changes, and what reads it follows at once. Data from a server doesn't
 work like that. You ask, you wait, and the answer comes later, or fails, or arrives after you've asked a different
-question. `resource` is Weft's tool for that wait. It's `derived` for values that arrive later: give it a function
+question. `resource` is Kerf's tool for that wait. It's `derived` for values that arrive later: give it a function
 that returns a promise, and it gives you a value that fills in when the promise does.
 
 :::demo loading
@@ -24,7 +24,7 @@ the request before it, through the `signal` the fetcher was given. Both parts ar
 ## `resource`
 
 ```tsx
-import { resource, state } from '@weft-js/core'
+import { resource, state } from '@kerf-js/core'
 
 type User = { name: string }
 
@@ -49,18 +49,18 @@ A resource has four parts:
 | `user.refresh()` | Fetch again. The current value stays until the new one lands |
 
 The function runs straight away in the browser, and again whenever a box it read changes. Here it reads `id.value`, so
-setting `id.value = 'grace'` fetches Grace. You don't list what it depends on; Weft watches what it reads, as it does for
+setting `id.value = 'grace'` fetches Grace. You don't list what it depends on; Kerf watches what it reads, as it does for
 `derived`.
 
 `resource(fetcher, { initial })` gives the value something to be before the first answer, when `undefined` is awkward.
 
 ### What it follows: reads before the first `await`
 
-Weft can only see reads that happen while the function is running. In an `async` function, that's the part before the
-first `await`. Everything after it runs later, from the microtask queue, when Weft is no longer watching:
+Kerf can only see reads that happen while the function is running. In an `async` function, that's the part before the
+first `await`. Everything after it runs later, from the microtask queue, when Kerf is no longer watching:
 
 ```tsx
-import { resource, state } from '@weft-js/core'
+import { resource, state } from '@kerf-js/core'
 
 export function Orders() {
   const page = state(1)
@@ -86,7 +86,7 @@ export function Orders() {
 Changing `page` fetches again; changing `sort` does nothing. Read every input at the top, before anything waits:
 
 ```tsx
-import { resource, state } from '@weft-js/core'
+import { resource, state } from '@kerf-js/core'
 
 export function Orders() {
   const page = state(1)
@@ -109,7 +109,7 @@ with an `async` function holds a promise, not the data: use `resource`.
 Requests don't come back in the order you sent them. Type "a", then "ab", and the answer for "a" can arrive second. A
 hand-written `watch` that fetches would then show results for the wrong query.
 
-A resource can't get that wrong. Each run gets its own `AbortSignal`. When a box it read changes, Weft aborts the
+A resource can't get that wrong. Each run gets its own `AbortSignal`. When a box it read changes, Kerf aborts the
 previous run's signal before starting the next one, and an answer from an aborted run is ignored even if it arrives.
 Pass `signal` to `fetch` and the old request is cancelled on the network too:
 
@@ -126,8 +126,8 @@ loads. That's on purpose. A resource keeps its value until the next one lands, s
 To show that something is updating, test `pending` *together with* a value:
 
 ```tsx
-import { resource, state } from '@weft-js/core'
-import { Badge } from '@weft-js/warp'
+import { resource, state } from '@kerf-js/core'
+import { Badge } from '@kerf-js/veneer'
 
 export function Rates() {
   const base = state('EUR')
@@ -149,7 +149,7 @@ export function Rates() {
 
 :::pitfall Don't put a skeleton behind `pending` alone
 `{x.pending && <Skeleton />}` shows the skeleton on every refetch, replacing data the user was reading with grey bars
-for a moment. Weft warns about it (**X033**). Let `<Boundary>` handle the first load, below, and show at most a small
+for a moment. Kerf warns about it (**X033**). Let `<Boundary>` handle the first load, below, and show at most a small
 "updating" hint while `pending` is true and there's a value.
 :::
 
@@ -159,8 +159,8 @@ Checking `value === undefined` in every component that loads something gets old 
 page deciding on its own when to show a spinner. A `<Boundary>` makes that decision once for a whole region:
 
 ```tsx
-import { Boundary, resource } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { Boundary, resource } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 type User = { name: string }
 
@@ -229,9 +229,9 @@ A resource outside any Boundary simply has `value === undefined` until it loads.
 (`{user.value?.name ?? 'Guest'}`), and you can still read `pending` and `error` yourself.
 
 :::deepdive Boundary and React's Suspense
-A Weft `Boundary` is React's `<Suspense>` and an error boundary in one element. The mechanics differ: React suspends by
+A Kerf `Boundary` is React's `<Suspense>` and an error boundary in one element. The mechanics differ: React suspends by
 throwing a promise from render and retrying the render when it settles, and its transitions keep old UI on screen. A
-Weft component never re-renders, so nothing is thrown or retried. Each resource registers with the nearest Boundary as
+Kerf component never re-renders, so nothing is thrown or retried. Each resource registers with the nearest Boundary as
 it's created, and the Boundary watches their `first value` flags. A refetch keeps old content by default, which is what
 `startTransition` buys you in React.
 :::
@@ -239,9 +239,9 @@ it's created, and the Boundary watches their `first value` flags. A refetch keep
 ### Sizing the fallback
 
 When `pending` is smaller or larger than the content that replaces it, everything below jumps at the swap. In
-development Weft measures both and warns when they differ by more than a pixel (**X031**). Two fixes:
+development Kerf measures both and warns when they differ by more than a pixel (**X031**). Two fixes:
 
-- Warp's `<Shape>` draws a skeleton of a given kind and count: `<Boundary pending={<Shape kind="list" rows={5} />}>`.
+- Veneer's `<Shape>` draws a skeleton of a given kind and count: `<Boundary pending={<Shape kind="list" rows={5} />}>`.
 - `<Boundary pending="shape">` asks the compiler to make the skeleton from the children's own markup. See
   [Text, media and shapes](/learn/text-media-and-shapes).
 
@@ -254,8 +254,8 @@ is enough:
 :::demo async
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 export function Save() {
   const saving = state(false)
@@ -286,7 +286,7 @@ export function Save() {
 Writes after an `await` are fine: a box is a box, whenever you write it. What you can't do after an `await` is create
 things that need an owner, such as `watch` or `on` (see [Cleanup and ownership](/learn/cleanup-and-ownership)).
 
-With `@weft-js/start`, actions that change server data are mutations, which also update the queries they affect: see
+With `@kerf-js/start`, actions that change server data are mutations, which also update the queries they affect: see
 [Server functions](/learn/server-functions).
 
 ## On the server
@@ -301,12 +301,12 @@ Whether the server waits depends on where the resource is:
   streams each Boundary's content as its data arrives, and the browser swaps it in.
 - **Outside any Boundary**, there's nowhere to stream to, so the first byte waits for it.
 
-`@weft-js/start` does all of this for you. Without it, `@weft-js/core/ssr` has the pieces: `renderToStringAsync` waits
+`@kerf-js/start` does all of this for you. Without it, `@kerf-js/core/ssr` has the pieces: `renderToStringAsync` waits
 for resources before returning HTML, and `renderToStream` sends a shell at once and one chunk per Boundary. On the
-client, `hydrate` from `@weft-js/core/dom` takes over that HTML without rebuilding it. [Reference: async](/reference/async)
+client, `hydrate` from `@kerf-js/core/dom` takes over that HTML without rebuilding it. [Reference: async](/reference/async)
 has the exact calls.
 
-In a `@weft-js/start` app you'll rarely write a `fetch` in a resource. You call a query from a server module, which
+In a `@kerf-js/start` app you'll rarely write a `fetch` in a resource. You call a query from a server module, which
 returns a resource with the same `.value`, `.pending`, `.error` and `.refresh()`, cached and shared across components.
 Route loaders, and the deferred fields they stream, are the server side of the same story:
 [Loading data](/learn/loading-data) covers both.
@@ -335,8 +335,8 @@ request is cancelled. The resource is made in `Details`, inside the Boundary, so
 and the error view.
 
 ```tsx
-import { Boundary, resource } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { Boundary, resource } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 type User = { name: string; email: string }
 
@@ -385,8 +385,8 @@ Every time the user picks another month, this report blanks out and shows "Loadi
 Make it keep the old numbers on screen, with a quiet hint while it updates.
 
 ```tsx
-import { resource, state } from '@weft-js/core'
-import { Select } from '@weft-js/warp'
+import { resource, state } from '@kerf-js/core'
+import { Select } from '@kerf-js/veneer'
 
 export function Report() {
   const month = state<string | null>('2026-10')
@@ -420,8 +420,8 @@ load, which it does only once, and show a hint beside the content while a refetc
 inside the Boundary, so the Boundary can see it:
 
 ```tsx
-import { Boundary, resource, state } from '@weft-js/core'
-import { Select } from '@weft-js/warp'
+import { Boundary, resource, state } from '@kerf-js/core'
+import { Select } from '@kerf-js/veneer'
 
 function Total(props: { month: string | null }) {
   const { month } = props
@@ -466,7 +466,7 @@ A dashboard loads a fast list of alerts and a slow chart of sales. Right now one
 for the chart. Make each appear as soon as its own data is ready.
 
 ```tsx
-import { Boundary, resource } from '@weft-js/core'
+import { Boundary, resource } from '@kerf-js/core'
 
 const wait = <T,>(ms: number, value: T) =>
   new Promise<T>((done) => {
@@ -502,7 +502,7 @@ export function Dashboard() {
 A resource reports to the nearest Boundary above it, so give each region its own:
 
 ```tsx
-import { Boundary, resource } from '@weft-js/core'
+import { Boundary, resource } from '@kerf-js/core'
 
 const wait = <T,>(ms: number, value: T) =>
   new Promise<T>((done) => {

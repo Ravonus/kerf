@@ -25,7 +25,7 @@ export function focusLoss(page) {
         look(el) === rest &&
         look(el.parentElement ?? el) === look(el.parentElement ?? el)
       ) {
-        // Fields draw the ring on a wrapper (warp's sweep, shadcn's ring on a parent): check two ancestors while focused.
+        // Fields draw the ring on a wrapper (veneer's sweep, shadcn's ring on a parent): check two ancestors while focused.
         const up = [el.parentElement, el.parentElement?.parentElement].filter(Boolean)
         const before = up.map(look)
         el.blur()

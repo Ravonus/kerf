@@ -46,7 +46,7 @@ async function settle(state: FeedState, src: Source) {
           mode: 'off',
           via: 'none',
           why: `${host} ends a process with its request, so nothing can hold a database connection`,
-          fix: "run `weft db listen` on an always-on host and set `listener: 'external'`, or deploy to a server preset",
+          fix: "run `kerf db listen` on an always-on host and set `listener: 'external'`, or deploy to a server preset",
         }
       : await src.probe().catch((e) => ({
           mode: 'off' as const,
@@ -61,19 +61,19 @@ async function settle(state: FeedState, src: Source) {
     fix: how.fix,
   }
   const line = `live: ${state.live.mode} (${state.live.via})${how.why ? `: ${how.why}` : ''}`
-  if (how.mode === 'feed') console.info(`weft ${line}`)
+  if (how.mode === 'feed') console.info(`kerf ${line}`)
   else {
-    console.warn(`weft ${line}${how.fix ? `\n  fix: ${how.fix}` : ''}`)
+    console.warn(`kerf ${line}${how.fix ? `\n  fix: ${how.fix}` : ''}`)
     report(state, 'R016', 'warning', `${line}. \`.live()\` shows \`degraded\``)
   }
   if (how.mode === 'feed' || !options.required?.length) return how
   state.refused = new StartError(
     'R015',
     `${options.required.map((n) => `\`${n}\``).join(', ')} require${options.required.length > 1 ? '' : 's'} a live feed, and this server has ${how.mode === 'poll' ? 'only polling' : 'none'}${how.why ? `: ${how.why}` : ''}`,
-    how.fix ?? 'see `weft doctor`',
+    how.fix ?? 'see `kerf doctor`',
     { status: 503 },
   )
-  console.error(`weft ${state.refused.message}`)
+  console.error(`kerf ${state.refused.message}`)
   if (!options.dev) proc.process?.exit(1)
   return how
 }
@@ -146,7 +146,7 @@ export function createFeedState(
       bump: (tags) => void (options.store ?? defaultStore).bump(tags),
       status: (down) => status(state, down),
     })
-  state.probed = source && !proc.process?.env.WEFT_BUILD ? settle(state, source) : Promise.resolve()
+  state.probed = source && !proc.process?.env.KERF_BUILD ? settle(state, source) : Promise.resolve()
   state.probed.catch(() => {})
   return {
     want: () => want(state),

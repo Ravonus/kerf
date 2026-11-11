@@ -1,4 +1,4 @@
-import { onMount, state } from '@weft-js/core'
+import { onMount, state } from '@kerf-js/core'
 import {
   Alert,
   Button,
@@ -7,7 +7,7 @@ import {
   Text,
   Toaster,
   toast,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import type { ToastTone } from './toasts'
 
 export function ToasterDismissed() {

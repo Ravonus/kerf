@@ -1,4 +1,4 @@
-import type { CommentThreadData } from '@weft-js/warp'
+import type { CommentThreadData } from '@kerf-js/veneer'
 import { LENA, JUN, PRIYA } from './peers'
 
 export const COMMENT_TIMEOUTS: CommentThreadData = {

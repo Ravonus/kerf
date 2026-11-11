@@ -1,10 +1,10 @@
-import { onCleanup, onMount, watch } from '@weft-js/core'
-import { copyButtons } from '@weft-js/warp-core'
-import { render } from '@weft-js/core/dom'
+import { onCleanup, onMount, watch } from '@kerf-js/core'
+import { copyButtons } from '@kerf-js/veneer-core'
+import { render } from '@kerf-js/core/dom'
 import { spotlightOpen } from '../lib/spotlight'
 
 /** The ⌘K launcher fetched on first use. Everything in it stays out of a page nobody searches from. */
-/* @weft client */
+/* @kerf client */
 export function SpotlightGate() {
   let box: HTMLElement | undefined
   let stop: (() => void) | undefined

@@ -26,7 +26,7 @@ const check = (ok, what) => {
 }
 
 const file = url.replace(/^file:/, '')
-/** The outside writer: a process of its own, knowing nothing of weft. */
+/** The outside writer: a process of its own, knowing nothing of kerf. */
 const outside = isPg
   ? (sql) =>
       run(process.execPath, [
@@ -64,12 +64,12 @@ async function setup() {
 }
 
 const env = { ...process.env, NODE_ENV: 'production' }
-// A fixture inside the package has no `@weft-js/start` of its own.
-mkdirSync(`${fixture}/node_modules/@weft-js`, { recursive: true })
-if (!existsSync(`${fixture}/node_modules/@weft-js/start`))
+// A fixture inside the package has no `@kerf-js/start` of its own.
+mkdirSync(`${fixture}/node_modules/@kerf-js`, { recursive: true })
+if (!existsSync(`${fixture}/node_modules/@kerf-js/start`))
   symlinkSync(
     fileURLToPath(new URL('../..', import.meta.url)),
-    `${fixture}/node_modules/@weft-js/start`,
+    `${fixture}/node_modules/@kerf-js/start`,
   )
 if (!process.env.SKIP_BUILD) {
   const b = spawnSync(
@@ -83,7 +83,7 @@ if (!process.env.SKIP_BUILD) {
         logLevel: 'error',
       }),
     ],
-    { cwd: new URL('../..', import.meta.url), env: { ...env, WEFT_BUILD: '1' }, stdio: 'inherit' },
+    { cwd: new URL('../..', import.meta.url), env: { ...env, KERF_BUILD: '1' }, stdio: 'inherit' },
   )
   if (b.status) throw new Error('build failed')
 }
@@ -105,7 +105,7 @@ const instance = async () => {
   })
   for (let i = 0; i < 300; i++) {
     if (
-      await fetch(`http://localhost:${port}/_weft/none`).then(
+      await fetch(`http://localhost:${port}/_kerf/none`).then(
         () => true,
         () => false,
       )
@@ -125,7 +125,7 @@ const open = async (inst, user) => {
   const page = await ctx.newPage()
   const seen = { gets: 0, bodies: [], pokes: 0 }
   page.on('response', async (r) => {
-    if (!r.url().includes('/_weft/fn/') || r.request().method() !== 'GET') return
+    if (!r.url().includes('/_kerf/fn/') || r.request().method() !== 'GET') return
     seen.gets++
     seen.bodies.push(await r.text().catch(() => ''))
   })
@@ -175,7 +175,7 @@ say(
   a
     .log()
     .split('\n')
-    .find((l) => l.includes('weft live')),
+    .find((l) => l.includes('kerf live')),
 )
 
 // ---- an outside write reaches the right browsers, and only them -----------------------------------------------------

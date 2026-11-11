@@ -1,12 +1,12 @@
-// @weft-js/core/media (research 26 §2): the header probe, <Media>'s markup, and @weft-js/core/vite's `?media` and `weft:fonts` loaders,
+// @kerf-js/core/media (research 26 §2): the header probe, <Media>'s markup, and @kerf-js/core/vite's `?media` and `kerf:fonts` loaders,
 // with and without a build-side provider.
-// weft-allow T005: the markup is the contract here (srcset, sizes, dimensions), so the test reads attributes
+// kerf-allow T005: the markup is the contract here (srcset, sizes, dimensions), so the test reads attributes
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { render } from '@weft-js/core/test'
-import { Media, mediaSizes, timedSources, timeline, type MediaAsset } from '@weft-js/core/media'
-import { flush } from '@weft-js/core'
+import { render } from '@kerf-js/core/test'
+import { Media, mediaSizes, timedSources, timeline, type MediaAsset } from '@kerf-js/core/media'
+import { flush } from '@kerf-js/core'
 import { probe } from '../media-probe.mjs'
 import { assets, readSources } from '../assets.mjs'
 
@@ -82,7 +82,7 @@ const AVIF = bytes(
   u32(1536),
 )
 
-test('probe() reads dimensions from every still format weft accepts', () => {
+test('probe() reads dimensions from every still format kerf accepts', () => {
   expect(probe(PNG)).toEqual({ width: 1200, height: 735, type: 'image/png' })
   expect(probe(GIF)).toEqual({ width: 320, height: 240, type: 'image/gif' })
   expect(probe(jpeg())).toEqual({ width: 640, height: 480, type: 'image/jpeg' })
@@ -333,7 +333,7 @@ test('<Media> of a single-file asset (a vector, or no provider) is one img, with
     name: 'logo.svg',
     sources: [],
   }
-  render(() => <Media src={icon} alt="weft" />)
+  render(() => <Media src={icon} alt="kerf" />)
   expect(document.querySelector('picture')).toBeNull()
   const img = document.querySelector('img')!
   expect([
@@ -344,7 +344,7 @@ test('<Media> of a single-file asset (a vector, or no provider) is one img, with
   expect(img.getAttribute('style')).not.toContain('background')
 })
 
-describe('@weft-js/core/vite assets', () => {
+describe('@kerf-js/core/vite assets', () => {
   const fixture = setupAssetTests()
   registerMediaAssetTests(fixture)
   registerFontAssetTests(fixture)
@@ -365,7 +365,7 @@ function setupAssetTests() {
   let root: string
   const provider = join(import.meta.dirname, 'fixtures', 'media', 'provider.mjs')
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'weft-assets-'))
+    root = mkdtempSync(join(tmpdir(), 'kerf-assets-'))
     writeFileSync(join(root, 'package.json'), '{}')
     writeFileSync(join(root, 'hero.png'), PNG)
   })
@@ -387,9 +387,9 @@ function setupAssetTests() {
     return { p, load, emitted, warnings }
   }
   const bind = (id: string, ref: object) => {
-    mkdirSync(join(root, '.weft', 'slots'), { recursive: true })
+    mkdirSync(join(root, '.kerf', 'slots'), { recursive: true })
     writeFileSync(
-      join(root, '.weft', 'slots', `${id}.build.json`),
+      join(root, '.kerf', 'slots', `${id}.build.json`),
       JSON.stringify({ plugin: '@test/p', version: '0.0.0', module: provider, ...ref }),
     )
   }
@@ -408,18 +408,18 @@ function registerMediaAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
   const { plugin, bind, record } = fixture
 
   test("readSources: the app's own text, without dependencies, build output or dot folders", () => {
-    for (const dir of ['src/routes', 'node_modules/x', 'dist', '.weft'])
+    for (const dir of ['src/routes', 'node_modules/x', 'dist', '.kerf'])
       mkdirSync(join(fixture.root, dir), { recursive: true })
     writeFileSync(join(fixture.root, 'src/routes/a.tsx'), 'in-tsx')
     writeFileSync(join(fixture.root, 'src/a.css'), 'in-css')
     writeFileSync(join(fixture.root, 'src/a.png'), 'in-png')
     writeFileSync(join(fixture.root, 'node_modules/x/a.css'), 'in-dep')
     writeFileSync(join(fixture.root, 'dist/a.js'), 'in-dist')
-    writeFileSync(join(fixture.root, '.weft/a.ts'), 'in-weft')
+    writeFileSync(join(fixture.root, '.kerf/a.ts'), 'in-kerf')
     const text = readSources(fixture.root)
     expect(text).toContain('in-tsx')
     expect(text).toContain('in-css')
-    expect(text).not.toMatch(/in-(png|dep|dist|weft)/)
+    expect(text).not.toMatch(/in-(png|dep|dist|kerf)/)
   })
 
   test('`?media` with no provider: the original file, its header size, emitted under assets/', async () => {
@@ -442,9 +442,9 @@ function registerMediaAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
     bind('media.build', { export: 'createMediaBuild', options: { warn: true } })
     const { p, load, emitted, warnings } = plugin('serve')
     const a = record(await load(join(fixture.root, 'hero.png') + '?media'))
-    expect(a.src).toBe('/@weft-assets/hero-640.jpg')
+    expect(a.src).toBe('/@kerf-assets/hero-640.jpg')
     expect(a.sources[0].srcset).toBe(
-      '/@weft-assets/hero-320.avif 320w, /@weft-assets/hero-640.avif 640w',
+      '/@kerf-assets/hero-320.avif 320w, /@kerf-assets/hero-640.avif 640w',
     )
     expect(emitted).toEqual([]) // dev serves from memory
     expect(warnings).toEqual(['M004 hero.png is large (dev)'])
@@ -454,7 +454,7 @@ function registerMediaAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
       end: (b: Buffer) => (served!.body = [...b]),
     }
     p.configureServer({
-      middlewares: { use: (fn) => fn({ url: '/@weft-assets/hero-320.avif' }, res, () => {}) },
+      middlewares: { use: (fn) => fn({ url: '/@kerf-assets/hero-320.avif' }, res, () => {}) },
     })
     expect(served).toEqual({
       'content-type': 'image/avif',
@@ -467,49 +467,49 @@ function registerMediaAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
 function registerFontAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
   const { plugin, bind } = fixture
 
-  test('weft:fonts: empty without font.build; with it, the CSS, the preloads, the files and .weft/fonts.json', async () => {
+  test('kerf:fonts: empty without font.build; with it, the CSS, the preloads, the files and .kerf/fonts.json', async () => {
     const { load } = plugin('build')
-    expect(await load('\0weft:fonts.css')).toBe('')
-    expect(await load('\0weft:fonts/preloads')).toBe('export const preloads = []\n')
+    expect(await load('\0kerf:fonts.css')).toBe('')
+    expect(await load('\0kerf:fonts/preloads')).toBe('export const preloads = []\n')
 
     bind('font.build', { export: 'createFontBuild', options: { family: 'Inter' } })
     const built = plugin('build')
-    expect(await built.load('\0weft:fonts.css')).toBe(
+    expect(await built.load('\0kerf:fonts.css')).toBe(
       '@font-face{font-family:"Inter";src:url(/assets/f-latin.woff2) format("woff2")}',
     )
-    expect(await built.load('\0weft:fonts/preloads')).toBe(
+    expect(await built.load('\0kerf:fonts/preloads')).toBe(
       'export const preloads = [{"href":"/assets/f-latin.woff2","type":"font/woff2"}]\n',
     )
     expect(built.emitted.map((f) => f.fileName)).toEqual(['assets/f-latin.woff2']) // built once for both modules
-    expect(JSON.parse(readFileSync(join(fixture.root, '.weft', 'fonts.json'), 'utf8'))).toEqual({
+    expect(JSON.parse(readFileSync(join(fixture.root, '.kerf', 'fonts.json'), 'utf8'))).toEqual({
       plugin: '@test/p',
       metrics: { Inter: { capHeight: 0.7 } },
       report: { preloadBytes: 3 },
     })
   })
 
-  test('with a font build the client imports weft:fonts itself: a Start entry, or an HTML page', () => {
+  test('with a font build the client imports kerf:fonts itself: a Start entry, or an HTML page', () => {
     const entry = (p: Hooks, id: string, consumer = 'client') =>
       p.transform.filter.id.test(id)
         ? p.transform.handler.call({ environment: { config: { consumer } } }, 'start()\n')
         : undefined
     const before = plugin('build').p
-    expect(entry(before, '\0virtual:weft/entry-client')).toBeUndefined()
+    expect(entry(before, '\0virtual:kerf/entry-client')).toBeUndefined()
     expect(before.transformIndexHtml.handler()).toBeUndefined()
 
     bind('font.build', { export: 'createFontBuild', options: { family: 'Inter' } })
     const { p } = plugin('build')
-    for (const id of ['\0virtual:weft/entry-client', join(fixture.root, 'src/entry.client.ts')])
-      expect(entry(p, id)).toEqual({ code: "import 'weft:fonts'\nstart()\n", map: null })
+    for (const id of ['\0virtual:kerf/entry-client', join(fixture.root, 'src/entry.client.ts')])
+      expect(entry(p, id)).toEqual({ code: "import 'kerf:fonts'\nstart()\n", map: null })
     expect(entry(p, join(fixture.root, 'src/entry.client.ts'), 'server')).toBeUndefined()
     expect(entry(p, join(fixture.root, 'src/app.ts'))).toBeUndefined()
-    expect(entry(p, '\0virtual:weft/entry-client?assets=client')).toBeUndefined()
+    expect(entry(p, '\0virtual:kerf/entry-client?assets=client')).toBeUndefined()
     expect(p.transformIndexHtml.order).toBe('pre')
     expect(p.transformIndexHtml.handler()).toEqual([
       {
         tag: 'script',
         attrs: { type: 'module' },
-        children: "import 'weft:fonts'",
+        children: "import 'kerf:fonts'",
         injectTo: 'head',
       },
     ])
@@ -524,9 +524,9 @@ function registerFontAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
     })
     const ssr: string[] = [],
       client: string[] = []
-    await p.load.handler.call(emit(ssr, 'ssr'), '\0weft:fonts/preloads')
-    await p.load.handler.call(emit(client, 'client'), '\0weft:fonts.css')
-    await p.load.handler.call(emit(client, 'client'), '\0weft:fonts/preloads')
+    await p.load.handler.call(emit(ssr, 'ssr'), '\0kerf:fonts/preloads')
+    await p.load.handler.call(emit(client, 'client'), '\0kerf:fonts.css')
+    await p.load.handler.call(emit(client, 'client'), '\0kerf:fonts/preloads')
     expect(ssr).toEqual(['assets/f-latin.woff2'])
     expect(client).toEqual(['assets/f-latin.woff2'])
   })

@@ -1,0 +1,26 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- segments (typed date / time entry) ------------------------------ */
+  :where([data-scope="field"] [data-part="segments"]) { display: flex; align-items: center; flex: 1; min-inline-size: 0; gap: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  :where([data-scope="field"] [data-part="segment"]:not([data-scope="field"] [data-scope="countdown"] *:not([data-scope="field"] [data-scope="countdown"] [data-scope="field"] *))) {
+    display: inline-block; box-sizing: border-box; min-inline-size: 24px; min-block-size: 24px; line-height: 22px; padding: 1px 2px; border-radius: var(--veneer-radius-mark);
+    caret-color: transparent; outline: none; cursor: text; text-align: center;
+    transition: background-color var(--veneer-duration-fast), color var(--veneer-duration-fast);
+  }
+  :where([data-scope="field"] [data-part="segment"][data-placeholder]:not([data-scope="field"] [data-scope="countdown"] *:not([data-scope="field"] [data-scope="countdown"] [data-scope="field"] *))) { color: var(--veneer-color-text-subtle); }
+  :where([data-scope="field"] [data-part="segment"]:focus:not([data-scope="field"] [data-scope="countdown"] *:not([data-scope="field"] [data-scope="countdown"] [data-scope="field"] *))) { background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); box-shadow: inset 0 calc(-1 * var(--veneer-border-emphasis)) 0 var(--veneer-color-accent-solid); }
+  :where([data-part="literal"]) { color: var(--veneer-color-text-subtle); padding-inline: 1px; }
+  :where([data-part="range-sep"]) { color: var(--veneer-color-text-subtle); padding-inline: var(--veneer-space-related); }
+  :where([data-scope="field"] [data-part="trigger"]:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) *:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) [data-scope="field"] *))) {
+    all: unset; display: grid; place-items: center; flex: none; cursor: pointer;
+    inline-size: max(28px, calc(var(--veneer-target-min) - 8px)); block-size: max(28px, calc(var(--veneer-target-min) - 8px));
+    margin-inline-end: calc(var(--veneer-pad-control) * -0.5); border-radius: var(--veneer-radius-mark); color: var(--veneer-color-text-subtle);
+    transition: color var(--veneer-duration-fast), background-color var(--veneer-duration-fast);
+  }
+  :where([data-scope="field"] [data-part="trigger"]:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) *:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) [data-scope="field"] *))) { position: relative; }   /* after all: unset; the expander below needs it */
+  :where([data-scope="field"] [data-part="trigger"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+  :where([data-scope="field"] [data-part="trigger"]:hover:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) *:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) [data-scope="field"] *))),
+  :where([data-scope="field"] [data-part="trigger"][aria-expanded="true"]:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) *:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) [data-scope="field"] *))) { color: var(--veneer-color-text); background: transparent /* the control's fill and ring run unbroken behind it */; }
+  :where([data-scope="field"] [data-part="trigger"]:focus-visible:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) *:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) [data-scope="field"] *))) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; }
+  :where([data-scope="field"] [data-part="trigger"]:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) *:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) [data-scope="field"] *)) svg) { inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); }
+}

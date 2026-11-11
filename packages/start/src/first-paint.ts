@@ -1,7 +1,7 @@
 // The first-paint CSS of whatever HTML is passed in, by lookups: the build's `pieces` table, nothing parsed here. It reads
 // the HTML rather than a list kept while rendering, so a cached or prerendered page, a static level and a streamed chunk
 // take one path, nothing is shared between requests, and the same HTML always gets the same CSS.
-import { markup } from '@weft-js/core/markup'
+import { markup } from '@kerf-js/core/markup'
 
 export interface Pieces {
   names: string[]
@@ -15,7 +15,7 @@ export interface Pieces {
 }
 
 const GATE =
-  '[data-weft=styled]{visibility:hidden;animation:weft-gate 0s 3s forwards}@keyframes weft-gate{to{visibility:visible}}'
+  '[data-kerf=styled]{visibility:hidden;animation:kerf-gate 0s 3s forwards}@keyframes kerf-gate{to{visibility:visible}}'
 const depth = (open: string) => open.split('{').length - 1
 
 /**
@@ -52,7 +52,7 @@ export function firstPaint(table: Pieces, sheets: string[], head = '') {
         )
           take(id)
       })
-    let css = !gated && has.has('[data-weft=styled]') ? ((gated = true), GATE) : ''
+    let css = !gated && has.has('[data-kerf=styled]') ? ((gated = true), GATE) : ''
     fresh.sort((a, b) => rank.get(table.pieces[a]![0])! - rank.get(table.pieces[b]![0])! || a - b)
     let open = 0,
       rule = ''

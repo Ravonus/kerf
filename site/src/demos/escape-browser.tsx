@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   lifecycle,
   media,
   on,
   online,
-} from '@weft-js/core/browser'
-import { Badge, Card } from '@weft-js/warp'
+} from '@kerf-js/core/browser'
+import { Badge, Card } from '@kerf-js/veneer'
 
 export default function Status() {
   // Each value follows the browser. Its listener leaves

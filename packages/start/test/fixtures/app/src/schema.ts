@@ -1,5 +1,5 @@
 // A tiny Standard Schema (standardschema.dev) so the fixture needs no validation library.
-import type { StandardSchemaV1 } from '@weft-js/start'
+import type { StandardSchemaV1 } from '@kerf-js/start'
 
 export function object<T extends Record<string, 'string' | 'number'>>(
   shape: T,

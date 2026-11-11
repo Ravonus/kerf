@@ -1,5 +1,5 @@
 // Under the plugin a page gets `box.get`, `box.set` and `state.linked` by mentioning them; the entry alone always has them.
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 test('this file mentions .get, so it has them', () => {
   const box = state({ a: 1 })

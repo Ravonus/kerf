@@ -1,4 +1,4 @@
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf-js/core/style'
 
 /** A button. Solid for the main action of a row, ghost for small steppers. */
 export const action = group('action', {

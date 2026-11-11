@@ -19,8 +19,8 @@ export const flowAuth: Doc[] = [
         title: 'In context',
         examples: [
           {
-            id: 'SignInWeft',
-            title: 'Signing in to Weft',
+            id: 'SignInKerf',
+            title: 'Signing in to Kerf',
             note: 'Nothing is sent: `onSubmit` is a stub. Sample values only, never a real password.',
             stage: 'narrow',
             height: 600,
@@ -96,7 +96,7 @@ export const flowAuth: Doc[] = [
         title: 'In context',
         examples: [
           {
-            id: 'SignUpWeft',
+            id: 'SignUpKerf',
             title: 'A new workspace',
             note: 'Use sample values. `onSubmit` is a stub.',
             stage: 'narrow',

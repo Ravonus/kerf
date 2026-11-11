@@ -1,4 +1,4 @@
-import type { PrefGroup } from '@weft-js/warp-core'
+import type { PrefGroup } from '@kerf-js/veneer-core'
 
 export const CHANNELS = [
   { id: 'inapp', label: 'In-app' },

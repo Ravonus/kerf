@@ -4,7 +4,7 @@ import type { StudioConfig } from './studio'
 const plain = (v: unknown): v is StudioConfig =>
   v !== null && typeof v === 'object' && !Array.isArray(v)
 
-const STORE = 'weft:site:theme-studio'
+const STORE = 'kerf:site:theme-studio'
 const toBase64 = (s: string) => btoa(String.fromCodePoint(...new TextEncoder().encode(s)))
 const fromBase64 = (s: string) =>
   new TextDecoder().decode(Uint8Array.from(atob(s), (c) => c.codePointAt(0)!))

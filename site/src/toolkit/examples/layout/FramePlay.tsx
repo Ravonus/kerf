@@ -1,4 +1,4 @@
-import { Frame, Text } from '@weft-js/warp'
+import { Frame, Text } from '@kerf-js/veneer'
 
 export const FramePlay = (p: {
   ratio?:

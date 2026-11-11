@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Card } from '@kerf-js/veneer'
 
 export default function Three() {
   const score = state(0)

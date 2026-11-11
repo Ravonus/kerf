@@ -1,10 +1,10 @@
 // `pay.order`: one payment for lines the app priced on the server, by a guest or a signed-in buyer. It grants nothing;
 // `onOrder` hears each verified state, and the event pokes `orders` and `order:<ref>`.
 import { expect, test } from 'vitest'
-import { orderTag, product, PayError, type PurchaseState } from '@weft-js/pay'
-import { definePay, memoryPayStore } from '@weft-js/pay/server'
-import { fakePay } from '@weft-js/pay/test'
-import { stripeRail } from '@weft-js/pay/stripe'
+import { orderTag, product, PayError, type PurchaseState } from '@kerf-js/pay'
+import { definePay, memoryPayStore } from '@kerf-js/pay/server'
+import { fakePay } from '@kerf-js/pay/test'
+import { stripeRail } from '@kerf-js/pay/stripe'
 
 const pro = product({
   id: 'pro',
@@ -140,8 +140,8 @@ test('Stripe charges each line and mails the guest a receipt', async () => {
     'line_items[0][quantity]': '2',
     'line_items[1][price_data][product_data][name]': 'Scone',
     customer_email: 'sam@example.com',
-    'payment_intent_data[metadata][weft_product]': 'order',
-    'payment_intent_data[metadata][weft_plan]': 'm1',
+    'payment_intent_data[metadata][kerf_product]': 'order',
+    'payment_intent_data[metadata][kerf_plan]': 'm1',
   })
 })
 

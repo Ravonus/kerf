@@ -1,0 +1,15 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* Section — vertical rhythm with an optional header; band = full-bleed surface */
+:where([data-scope="section"]) {
+  display: flex; flex-direction: column; gap: var(--veneer-space-group); padding-block: var(--veneer-space-section);
+}
+:where([data-scope="section"][data-divided]) { border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+:where([data-scope="section"][data-variant="band"]) {
+  background: var(--veneer-color-surface); border-block: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  padding-inline: max(var(--veneer-space-page), var(--veneer-safe-left)) max(var(--veneer-space-page), var(--veneer-safe-right));
+}
+:where([data-scope="section"][data-variant="inset"]) {
+  background: var(--veneer-color-surface-sunken); border-radius: var(--veneer-radius-surface); padding: var(--veneer-pad-surface);
+}
+}

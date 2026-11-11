@@ -1,4 +1,4 @@
-import { ConnectionPill } from '@weft-js/warp'
+import { ConnectionPill } from '@kerf-js/veneer'
 
 export const ConnectionPillStates = () => (
   <>

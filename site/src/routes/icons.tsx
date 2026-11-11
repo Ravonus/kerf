@@ -5,7 +5,7 @@ import icons from '../generated/icons.json'
 export const prerender = true
 export const meta = {
   title: 'Icon browser',
-  description: `${icons.names.length} icons, hollow and solid, drawn again for each of warp's three tiers. Search them all.`,
+  description: `${icons.names.length} icons, hollow and solid, drawn again for each of veneer's three tiers. Search them all.`,
 }
 
 export default function Icons() {

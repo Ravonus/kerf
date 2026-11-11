@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Card, Checkbox, Input } from '@weft-js/warp'
+import { derived, state } from '@kerf-js/core'
+import { Card, Checkbox, Input } from '@kerf-js/veneer'
 
 type Product = {
   category: string
@@ -66,7 +66,7 @@ function ProductRow({ product }: { product: Product }) {
         style={{
           color: product.stocked
             ? undefined
-            : 'var(--warp-color-critical-text)',
+            : 'var(--veneer-color-critical-text)',
         }}
       >
         {product.name}

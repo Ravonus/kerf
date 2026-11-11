@@ -1,1 +1,1 @@
-export * from '@weft-js/core/config'
+export * from '@kerf-js/core/config'

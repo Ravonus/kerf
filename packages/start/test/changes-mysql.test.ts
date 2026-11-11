@@ -1,4 +1,4 @@
-// The change feed on a real MySQL. `WEFT_TEST_MYSQL=mysql://…`, a database that's yours to lose.
+// The change feed on a real MySQL. `KERF_TEST_MYSQL=mysql://…`, a database that's yours to lose.
 import { until6000 as until } from './change-wait.helpers.mjs'
 import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import { createPool } from 'mysql2/promise'
@@ -6,9 +6,9 @@ import { createFeed, type Poke } from '../src/changes'
 import { changeStatements } from '../src/changes-sql.mjs'
 import { mysqlChanges } from '../src/db/changes-mysql'
 
-const url = process.env.WEFT_TEST_MYSQL!
+const url = process.env.KERF_TEST_MYSQL!
 
-// Needs a MySQL server, named by WEFT_TEST_MYSQL.
+// Needs a MySQL server, named by KERF_TEST_MYSQL.
 describe.skipIf(!url)('mysql change feed', () => {
   const pool = url ? createPool({ uri: url, connectionLimit: 4 }) : (undefined as never)
   const source = () => ({
@@ -23,7 +23,7 @@ describe.skipIf(!url)('mysql change feed', () => {
     for (const s of changeStatements('mysql', [{ name: 'live_a', pk: ['id'] }])) await pool.query(s)
   })
   afterAll(async () => {
-    await pool.query('drop table if exists live_a, live_b, __weft_changes')
+    await pool.query('drop table if exists live_a, live_b, __kerf_changes')
     await pool.end()
   })
   const on = () => {
@@ -47,7 +47,7 @@ describe.skipIf(!url)('mysql change feed', () => {
     ]
     await until(() => f.pokes.length > 0)
     expect(f.pokes).toEqual([{ t: ['live_a', `live_a:${r.insertId}`] }])
-    const [cols] = await pool.query('select * from __weft_changes')
+    const [cols] = await pool.query('select * from __kerf_changes')
     expect(JSON.stringify(cols)).not.toContain('hunter2')
     await f.feed.stop()
   })

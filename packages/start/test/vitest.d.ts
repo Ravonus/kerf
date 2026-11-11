@@ -5,7 +5,7 @@ declare module 'vitest' {
   interface ProvidedContext {
     url: string
   }
-  /** `@weft-js/core/test`'s matcher. */
+  /** `@kerf-js/core/test`'s matcher. */
   interface Assertion {
     toTouchAtMost(mutations: number, budget?: { runs?: number }): Promise<void>
   }

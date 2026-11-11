@@ -1,4 +1,4 @@
-import { Input } from '@weft-js/warp'
+import { Input } from '@kerf-js/veneer'
 import type { Knobs } from './shared'
 
 export const InputPlay = (p: Knobs) => (

@@ -1,4 +1,4 @@
-// weft() for Vite 8: one filtered transform hook, so only .tsx/.jsx files cross into JS (§3.6).
+// kerf() for Vite 8: one filtered transform hook, so only .tsx/.jsx files cross into JS (§3.6).
 import { createRequire } from 'node:module'
 import { assets } from './assets.mjs'
 import {
@@ -24,15 +24,15 @@ const { transform } = createRequire(import.meta.url)('./compiler.cjs')
 
 /**
  * `hydratable`: DOM output that adopts server HTML (`hydrate`), and SSR output with hydration keys. Vite's SSR
- * transforms get SSR output (imports from @weft-js/core/ssr). `import { App } from './App.tsx?weft-ssr'` (or `?weft-hydrate`)
+ * transforms get SSR output (imports from @kerf-js/core/ssr). `import { App } from './App.tsx?kerf-ssr'` (or `?kerf-hydrate`)
  * loads a component graph compiled that way into any process (round-trip tests); the query follows .tsx/.jsx imports.
  */
 /*
- * `style.taggedParts`: group parts carry `data-g` as well as `data-part`; `style.matrix: false`: no `.weft/styles.json`
+ * `style.taggedParts`: group parts carry `data-g` as well as `data-part`; `style.matrix: false`: no `.kerf/styles.json`
  * (style groups, below).
  */
 /*
- * `hmr` (default: when serving, outside vitest): client modules register their components with @weft-js/core/hmr and accept
+ * `hmr` (default: when serving, outside vitest): client modules register their components with @kerf-js/core/hmr and accept
  * their own updates (research 21). Never for SSR output.
  */
 /** The compiler's diagnostics as Vite errors and warnings, at their place in the file. */
@@ -50,10 +50,10 @@ function report(ctx, id, diagnostics) {
  * generated classes in a stylesheet (vite/csp.mjs) instead of style attributes.
  */
 /**
- * The Vite plugin: compiles TSX, wires hydration, styles and purging, and relays `weft browser` in dev.
+ * The Vite plugin: compiles TSX, wires hydration, styles and purging, and relays `kerf browser` in dev.
  * @param {{ dev?: boolean, hydratable?: boolean, hmr?: boolean, style?: { taggedParts?: boolean, matrix?: boolean }, purge?: false | { keep?: string[] }, off?: string[], csp?: 'strict' }} [options]
  */
-export default function weft({
+export default function kerf({
   dev,
   hydratable = false,
   hmr,
@@ -67,7 +67,7 @@ export default function weft({
   const style = styleGroups(styleOptions)
   const watching = shapeWatch((file) => style.forget(file))
   const main = {
-    name: 'weft',
+    name: 'kerf',
     enforce: 'pre',
     config(user, env) {
       isDev = dev ?? env.command === 'serve'
@@ -82,9 +82,9 @@ export default function weft({
       return await modeHooks.resolveId.call(this, source, importer)
     },
     transform: {
-      filter: { id: /\.[jt]sx(\?weft-(ssr|hydrate|shape))?$/ },
+      filter: { id: /\.[jt]sx(\?kerf-(ssr|hydrate|shape))?$/ },
       async handler(code, id, options) {
-        const standalone = id.endsWith('?weft-shape')
+        const standalone = id.endsWith('?kerf-shape')
         const mode = MODE.exec(id)?.[1]
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
@@ -127,7 +127,7 @@ export default function weft({
           : ''
         return {
           code: standalone
-            ? `${out.code}\nexport const $weftShapeCss = ${JSON.stringify(generated)};\nexport const $weftShapeThin = ${thinShape(out.code)};${
+            ? `${out.code}\nexport const $kerfShapeCss = ${JSON.stringify(generated)};\nexport const $kerfShapeThin = ${thinShape(out.code)};${
                 // A route edit changes its shape too: taking the update here keeps the page instead of reloading it.
                 isDev && !ssr ? '\nif (import.meta.hot) import.meta.hot.accept();' : ''
               }`

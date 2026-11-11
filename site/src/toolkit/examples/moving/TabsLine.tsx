@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Tabs, Text } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Tabs, Text } from '@kerf-js/veneer'
 import { SECTIONS, WORDS } from './shared'
 
 export function TabsLine() {

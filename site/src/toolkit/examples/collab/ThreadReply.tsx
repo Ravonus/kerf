@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
-import { CommentThread } from '@weft-js/warp'
+import { CommentThread } from '@kerf-js/veneer'
 
 import { COMMENT_TIMEOUTS } from '../../world'
 

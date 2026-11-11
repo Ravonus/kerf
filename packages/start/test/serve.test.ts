@@ -1,6 +1,6 @@
 import { inject } from 'vitest'
 import { pathPages } from '../src/derive.mjs'
-// The fixture app under `weft dev` (Vite + weftStart + Nitro), fetched the way a link-preview crawler fetches it:
+// The fixture app under `kerf dev` (Vite + kerfStart + Nitro), fetched the way a link-preview crawler fetches it:
 // one GET, no JavaScript (research 20 §1). Routing, metadata, status codes, streaming order, the navigation data
 // endpoint and share cards.
 const url = inject('url')
@@ -31,7 +31,7 @@ describe('a crawler fetching a param route sees every tag in the first response'
     const t = tags(r.text)
     const image = t.find((x) => x.startsWith('meta property=og:image content='))
     expect(image).toMatch(
-      /^meta property=og:image content=https:\/\/acme\.dev\/_weft\/og\/users\/42\.png\?v=[a-z0-9]+$/,
+      /^meta property=og:image content=https:\/\/acme\.dev\/_kerf\/og\/users\/42\.png\?v=[a-z0-9]+$/,
     )
     expect(t).toEqual([
       'title Alan Turing · Acme',
@@ -135,11 +135,11 @@ describe('streaming', () => {
     }
     try {
       await readUntil('Loading stock')
-      await readUntil('id="weft-route"')
+      await readUntil('id="kerf-route"')
       expect(all).toContain('<title data-wm>Slow page · Acme</title>')
       expect(all).toContain('</head>')
       expect(all).toContain('Loading reviews')
-      expect(all).toContain('id="weft-route"')
+      expect(all).toContain('id="kerf-route"')
       expect(all).not.toContain('In stock')
       await release('stock')
       await readUntil('In stock: <!--[-->7')
@@ -157,10 +157,10 @@ describe('streaming', () => {
     const reviews = all.indexOf('<li wk')
     expect(stock).toBeGreaterThan(all.indexOf('Loading stock'))
     expect(reviews).toBeGreaterThan(stock)
-    expect(all.lastIndexOf('id="weft-data"')).toBeGreaterThan(reviews)
+    expect(all.lastIndexOf('id="kerf-data"')).toBeGreaterThan(reviews)
     expect(all.match(/\$wb=function/g)).toHaveLength(1)
     // The resolved values travel in the page data, so the client never refetches them.
-    const data = JSON.parse([...all.matchAll(/id="weft-data">(.*?)<\/script>/g)].at(-1)![1]!)
+    const data = JSON.parse([...all.matchAll(/id="kerf-data">(.*?)<\/script>/g)].at(-1)![1]!)
     expect(Object.values(data.r as Record<string, { v: unknown }>).map((x) => x.v)).toEqual(
       expect.arrayContaining([7, ['Great', 'Fine']]),
     )
@@ -169,8 +169,8 @@ describe('streaming', () => {
 })
 
 describe('the navigation endpoint', () => {
-  test('/_weft/data/<path>: matches, params, data and the merged head, as JSON', async () => {
-    const res = await get('/_weft/data/users/1')
+  test('/_kerf/data/<path>: matches, params, data and the merged head, as JSON', async () => {
+    const res = await get('/_kerf/data/users/1')
     const body = await res.json()
     expect(body.m.map((m: { id: string }) => m.id)).toEqual([
       'layout:',
@@ -189,7 +189,7 @@ describe('the navigation endpoint', () => {
   })
 
   test('deferred fields arrive resolved, named in `d`', async () => {
-    const body = await (await get('/_weft/data/slow')).json()
+    const body = await (await get('/_kerf/data/slow')).json()
     expect(body.m[1]).toMatchObject({
       data: { title: 'Slow page', reviews: ['Great', 'Fine'], stock: 7 },
       d: ['reviews', 'stock'],
@@ -197,7 +197,7 @@ describe('the navigation endpoint', () => {
   })
 
   test('a missing page: the 404 route as data', async () => {
-    const body = await (await get('/_weft/data/users/999')).json()
+    const body = await (await get('/_kerf/data/users/999')).json()
     expect(body.s).toBe(404)
     expect(body.m.map((m: { id: string }) => m.id)).toEqual(['layout:', '404'])
   })
@@ -218,26 +218,26 @@ describe('share cards', () => {
   })
 
   test("only params the route's load accepts: anything else is a 404, not a card", async () => {
-    expect((await get('/_weft/og/users/999.png')).status).toBe(404)
-    expect((await get('/_weft/og/nowhere.png')).status).toBe(404)
+    expect((await get('/_kerf/og/users/999.png')).status).toBe(404)
+    expect((await get('/_kerf/og/nowhere.png')).status).toBe(404)
   })
 
   test('a route without its own card gets the default one', async () => {
-    const res = await get('/_weft/og/about.png')
+    const res = await get('/_kerf/og/about.png')
     expect(res.status).toBe(200)
     expect((await res.arrayBuffer()).byteLength).toBeGreaterThan(1000)
   })
 
   test('build mode: the server lists the cards to prerender (static routes and `prerender` params)', async () => {
-    expect((await get('/_weft/og-routes')).status).toBe(404) // only Nitro's prerender gets the list
-    const res = await get('/_weft/og-routes', {
-      headers: { 'x-nitro-prerender': '/_weft/og-routes' },
+    expect((await get('/_kerf/og-routes')).status).toBe(404) // only Nitro's prerender gets the list
+    const res = await get('/_kerf/og-routes', {
+      headers: { 'x-nitro-prerender': '/_kerf/og-routes' },
     })
     const list = res.headers.get('x-nitro-prerender')!.split(',')
-    expect(list).toContain('/_weft/og/index.png')
-    expect(list).toContain('/_weft/og/about.png')
-    expect(list).toContain('/_weft/og/users/1.png') // prerender: [{ id: '1' }]
-    expect(list).not.toContain('/_weft/og/users/2.png')
+    expect(list).toContain('/_kerf/og/index.png')
+    expect(list).toContain('/_kerf/og/about.png')
+    expect(list).toContain('/_kerf/og/users/1.png') // prerender: [{ id: '1' }]
+    expect(list).not.toContain('/_kerf/og/users/2.png')
     expect(list.some((p) => p.includes('boom') || p.includes('deferred'))).toBe(false)
   })
 })
@@ -248,7 +248,7 @@ describe('fonts', () => {
     const head = text.slice(0, text.indexOf('</head>'))
     const link =
       /<link rel="preload" as="font" type="font\/woff2" href="([^"]+)" crossorigin>/.exec(head)
-    expect(link?.[1]).toBe('/@weft-assets/acme-400-latin-0123abcd.woff2')
+    expect(link?.[1]).toBe('/@kerf-assets/acme-400-latin-0123abcd.woff2')
     const css = head.indexOf('rel="stylesheet"')
     if (css >= 0) expect(link!.index).toBeLessThan(css)
     const res = await get(link![1]!)
@@ -258,7 +258,7 @@ describe('fonts', () => {
 })
 
 test('the prerender list fits in a header, however big the site', () => {
-  const paths = Array.from({ length: 2000 }, (_, i) => `/_weft/og/docs/some-page-${i}.png`)
+  const paths = Array.from({ length: 2000 }, (_, i) => `/_kerf/og/docs/some-page-${i}.png`)
   const pages = pathPages(paths)
   expect(pages.length).toBeGreaterThan(1)
   expect(pages.flat()).toEqual(paths)

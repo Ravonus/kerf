@@ -10,7 +10,7 @@ import {
   Text,
   Toaster,
   toast,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import {
   TEAM_COUNTRIES,
   NEAR_CURRENCIES,
@@ -112,7 +112,7 @@ export function FormBilling() {
         <Input
           label="Company"
           autocomplete="organization"
-          defaultValue="weft GmbH"
+          defaultValue="kerf GmbH"
         />
         <AddressField
           label="Billing address"

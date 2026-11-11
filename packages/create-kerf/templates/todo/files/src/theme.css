@@ -1,0 +1,71 @@
+/*
+ * Daybook's own CSS, over veneer's tokens. The ink, paper, serif and square corners are veneer() options in kerf.config.ts;
+ * this file is the ruled page. Change those options first, then the rules here.
+ */
+body { margin: 0; }
+
+/* AuthScreen fills its parent, and here its parent is the page */
+[data-scope="auth"], [data-scope="auth"] > [data-part="layout"] { min-block-size: 100dvh; }
+
+/* the brand panel only shows from 1000 up, so narrower pages carry the name themselves */
+.auth-mark { display: flex; align-items: center; gap: var(--veneer-space-tight); font-weight: var(--veneer-text-heading-weight); }
+@container auth (min-width: 1000px) { .auth-mark { display: none; } }
+
+.logo { display: block; inline-size: 1.5rem; block-size: 1.5rem; flex: none; }
+
+.day {
+  inline-size: 100%;
+  max-inline-size: 40rem;
+  margin-inline: auto;
+  padding-block: var(--veneer-space-page);
+}
+
+.new-todo { display: grid; gap: var(--veneer-space-tight); }
+.new-todo-row { display: flex; align-items: end; gap: var(--veneer-space-related); }
+.new-todo-row [data-scope="field"] { flex: 1; min-inline-size: 0; }
+.new-todo-row > [data-scope="button"] { block-size: var(--veneer-field-height); }
+
+.form-error { margin: 0; color: var(--veneer-color-critical-text); font-size: var(--veneer-text-caption-size); }
+.form-error:empty { display: none; }
+
+.tally { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: var(--veneer-space-group); }
+.tally [data-part="label-row"] { display: none; }
+
+/* the ruled page: a hairline under each entry, and a margin rule down the left */
+.todos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--veneer-color-surface);
+  border-block-start: 2px solid var(--veneer-color-accent-solid);
+  box-shadow: inset 2.75rem 0 0 -2.6875rem var(--veneer-color-accent-border);
+}
+.todo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--veneer-space-related);
+  padding: var(--veneer-space-tight) var(--veneer-space-related);
+  border-block-end: 1px solid var(--veneer-color-border);
+  /* A row off screen isn't laid out until it nears the view: a list of 200 costs the few that show. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3rem;
+}
+.todo [data-scope="checkbox"] { flex: 1; min-inline-size: 0; overflow-wrap: anywhere; }
+.todo:has(input:checked) [data-part="label"] { color: var(--veneer-color-text-subtle); text-decoration: line-through; }
+@media (hover: hover) {
+  .todo > [data-scope="button"] { opacity: 0; }
+  .todo:hover > [data-scope="button"], .todo:focus-within > [data-scope="button"] { opacity: 1; }
+}
+
+.blank {
+  display: grid;
+  justify-items: center;
+  gap: var(--veneer-space-tight);
+  padding: var(--veneer-space-page) var(--veneer-space-group);
+  text-align: center;
+  border: 1px dashed var(--veneer-color-border-strong);
+}
+.blank > [data-icon] { inline-size: 2rem; block-size: 2rem; color: var(--veneer-color-accent-text); }
+
+.system-page { display: grid; place-items: center; min-block-size: 100dvh; background: var(--veneer-color-page); }

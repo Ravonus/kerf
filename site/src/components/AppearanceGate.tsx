@@ -1,5 +1,5 @@
-import { Button } from '@weft-js/warp'
-import { render } from '@weft-js/core/dom'
+import { Button } from '@kerf-js/veneer'
+import { render } from '@kerf-js/core/dom'
 
 const fetchMenu = () => import('./Appearance')
 

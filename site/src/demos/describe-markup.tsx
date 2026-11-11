@@ -1,4 +1,4 @@
-import { Card } from '@weft-js/warp'
+import { Card } from '@kerf-js/veneer'
 
 // The HTML this started as, made into TSX: one root,
 // every tag closed, attributes as JSX.

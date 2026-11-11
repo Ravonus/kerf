@@ -1,5 +1,5 @@
-import { state, watch } from '@weft-js/core'
-import { Card, Segmented } from '@weft-js/warp'
+import { state, watch } from '@kerf-js/core'
+import { Card, Segmented } from '@kerf-js/veneer'
 
 type Room = 'general' | 'travel' | 'music'
 

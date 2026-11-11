@@ -8,7 +8,7 @@
 :::
 
 On [Choosing the state structure](/learn/choosing-state-structure) you kept state small: only what can't be worked out
-from anything else. Everything that *can* be worked out is a derived value. You say how to compute it once, and Weft keeps
+from anything else. Everything that *can* be worked out is a derived value. You say how to compute it once, and Kerf keeps
 it right.
 
 :::demo rules
@@ -16,7 +16,7 @@ it right.
 ## One rule, never out of sync
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 export function Basket() {
   const price = 12
@@ -41,13 +41,13 @@ export function Basket() {
 `derived` tracks what its function reads. `total` reads `qty` and `shipping`, so it follows both. You never list them:
 there's no dependency array to keep up to date, and no way for it to go out of date.
 
-A derived value is read-only. To change it, change what it reads. Assigning to `total.value` is a type error, and Weft
+A derived value is read-only. To change it, change what it reads. Assigning to `total.value` is a type error, and Kerf
 reports it as **W007**.
 
 :::note Coming from React
 `derived` is what `useMemo` is for, without the dependency array, and also what you'd otherwise compute in the render
-body. In React the body runs on every render, so `const total = price * qty` stays right. In Weft the body runs once,
-so the same line would be computed once and never again. That's why Weft has a name for it.
+body. In React the body runs on every render, so `const total = price * qty` stays right. In Kerf the body runs once,
+so the same line would be computed once and never again. That's why Kerf has a name for it.
 :::
 
 ## Where to compute
@@ -93,7 +93,7 @@ That is what makes derived values cheap to chain. Each step stops the change whe
 A derived value tracks what it read *on its last run*, not every box its code mentions:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 export function Greeting() {
   const formal = state(false)
@@ -119,9 +119,9 @@ export function Greeting() {
 While `formal` is false, `greeting` read `formal` and `first`, so a change to `last` doesn't run it. Once `formal` turns
 true, it reads `last` and stops following `first`. You get the smallest set of dependencies without thinking about it.
 
-:::deepdive How Weft keeps a chain consistent
+:::deepdive How Kerf keeps a chain consistent
 A write to a box marks everything downstream: the readers that read it directly are *dirty*, and the readers of those are
-*check*. Nothing runs yet. When something is read, Weft first brings what it read up to date, in order, and only reruns a
+*check*. Nothing runs yet. When something is read, Kerf first brings what it read up to date, in order, and only reruns a
 step if one of its inputs actually changed.
 
 So in `total = subtotal + discount`, a change to `qty` never shows a `total` computed from a new `subtotal` and an old
@@ -138,7 +138,7 @@ A derived value can read other derived values. Split a long computation into nam
 its own inputs change:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 type Item = {
   id: string
@@ -202,7 +202,7 @@ Props are live, so a derived value can read them like boxes. When the parent pas
 follows:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 export function PriceTag({
   price,
@@ -229,7 +229,7 @@ export function PriceTag({
 }
 ```
 
-`price` and `currency` are destructured, and destructuring one level stays live in Weft. `derived` reads them each time it
+`price` and `currency` are destructured, and destructuring one level stays live in Kerf. `derived` reads them each time it
 runs. When the parent changes `price`, `label` recomputes.
 
 This is the answer to "how do I keep a copy of a prop in sync?": don't keep a copy. Derive what you need from the prop.
@@ -273,7 +273,7 @@ which is the async form of `derived` (see [Async and loading states](/learn/asyn
 **W012** in the catalog: it would give you a promise, not the data.
 
 :::deepdive `memo`, and what the compiler does with your JSX
-`@weft-js/core` also exports `memo(fn)`. It's `derived` that returns a function instead of an object with `.value`:
+`@kerf-js/core` also exports `memo(fn)`. It's `derived` that returns a function instead of an object with `.value`:
 `const total = memo(() => …)` and then `total()`. The compiler uses it for the expressions it lifts out of your JSX, and
 you'll see it in compiled output and in the dev graph. In your own code, prefer `derived`: `.value` reads the same as a
 box, so readers don't need to know which they have.
@@ -294,7 +294,7 @@ In the basket at the top of this page, shipping is free from three items. Show h
 until they do.
 :::solution
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 export function Basket() {
   const qty = state(1)
@@ -340,7 +340,7 @@ function Invoice() {
 The total is computed in the body, which runs once (W001). Make it derived and read `.value`:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 export function Invoice() {
   const lines = state<number[]>([20, 35])
@@ -390,7 +390,7 @@ function Signup() {
 ```
 :::solution
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 export function Signup() {
   const email = state('')
@@ -417,7 +417,7 @@ Given a `products` prop of `{ id, name, price }`, add a checkbox "Under $20" tha
 shown products in a heading.
 :::solution
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 type Product = { id: string; name: string; price: number }
 

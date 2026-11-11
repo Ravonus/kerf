@@ -20,14 +20,14 @@ export const compilerDiagnostics = [
     severity: 'error',
     by: 'cli',
     catches: 'An exported component with no written prop type',
-    fix: '`weft fix` writes the inferred type (`weft dev` does this on save)',
+    fix: '`kerf fix` writes the inferred type (`kerf dev` does this on save)',
   },
   {
     code: 'W082',
     severity: 'error',
     by: 'cli',
     catches: 'A generated `/*inferred*/` prop type no longer matches the callers',
-    fix: '`weft fix` rewrites it, or delete the comment to keep the type you have',
+    fix: '`kerf fix` rewrites it, or delete the comment to keep the type you have',
   },
   {
     code: 'W083',
@@ -66,7 +66,7 @@ export const compilerDiagnostics = [
     catches: 'Writing state inside `derived`',
     fix: 'Move the write to a handler, or make the target `derived`',
     example:
-      "import { state, derived } from '@weft-js/core'\nexport function A() { const a = state(0); const b = state(0); const d = derived(() => { b.value = a.value; return a.value }); return <p>{d.value}</p> }",
+      "import { state, derived } from '@kerf-js/core'\nexport function A() { const a = state(0); const b = state(0); const d = derived(() => { b.value = a.value; return a.value }); return <p>{d.value}</p> }",
   },
   {
     code: 'W003',
@@ -75,7 +75,7 @@ export const compilerDiagnostics = [
     catches: '`watch` writes state that its own source reads (cycle)',
     fix: 'Use `derived`',
     example:
-      "import { state, watch } from '@weft-js/core'\nexport function A() { const a = state(0); watch(() => a.value, v => { a.value = v + 1 }); return <p>{a.value}</p> }",
+      "import { state, watch } from '@kerf-js/core'\nexport function A() { const a = state(0); watch(() => a.value, v => { a.value = v + 1 }); return <p>{a.value}</p> }",
   },
   {
     code: 'W004',
@@ -84,7 +84,7 @@ export const compilerDiagnostics = [
     catches: '`watch` that only copies one value into another',
     fix: 'Replace with `derived`',
     example:
-      "import { state, watch } from '@weft-js/core'\nexport function A() { const a = state(0); const b = state(0); watch(() => a.value, v => { b.value = v }); return <p>{b.value}</p> }",
+      "import { state, watch } from '@kerf-js/core'\nexport function A() { const a = state(0); const b = state(0); watch(() => a.value, v => { b.value = v }); return <p>{b.value}</p> }",
   },
   {
     code: 'W005',
@@ -93,7 +93,7 @@ export const compilerDiagnostics = [
     catches: "`state(prop)`: React's `useState(prop)` bug, the box never follows the prop",
     fix: '`state.linked(() => prop)`, or `untrack` for a one-time copy',
     example:
-      "import { state } from '@weft-js/core'\nexport function A({ v }: any) { const s = state(v); return <p>{s.value}</p> }",
+      "import { state } from '@kerf-js/core'\nexport function A({ v }: any) { const s = state(v); return <p>{s.value}</p> }",
   },
   {
     code: 'W006',
@@ -141,7 +141,7 @@ export const compilerDiagnostics = [
     catches: '`derived(async …)`, or reads after `await` in `resource` (untracked)',
     fix: 'Use `resource`; read before the `await`',
     example:
-      "import { derived } from '@weft-js/core'\nexport function A() { const d = derived(async () => 1); return <p>{d.value}</p> }",
+      "import { derived } from '@kerf-js/core'\nexport function A() { const d = derived(async () => 1); return <p>{d.value}</p> }",
   },
   {
     code: 'W013',
@@ -157,10 +157,10 @@ export const compilerDiagnostics = [
     severity: 'error',
     by: 'compiler',
     catches:
-      'Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list: every row re-runs on every change (in-file, and across files via props in `weft check`)',
+      'Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list: every row re-runs on every change (in-file, and across files via props in `kerf check`)',
     fix: 'Replace only the changed item (`p.id === id ? { ...p, price } : p`), or read the changing field live',
     example:
-      "import { state } from '@weft-js/core'\nexport function A() { const xs = state([{ id: 'a', price: 1 }]); const push = (price: number) => { xs.value = xs.value.map(p => ({ ...p, price })) }; return <ul onClick={() => push(2)}>{xs.value.map(p => <li key={p.id}>{p.price}</li>)}</ul> }",
+      "import { state } from '@kerf-js/core'\nexport function A() { const xs = state([{ id: 'a', price: 1 }]); const push = (price: number) => { xs.value = xs.value.map(p => ({ ...p, price })) }; return <ul onClick={() => push(2)}>{xs.value.map(p => <li key={p.id}>{p.price}</li>)}</ul> }",
   },
   {
     code: 'W015',
@@ -169,7 +169,7 @@ export const compilerDiagnostics = [
     catches: 'A box rendered without `.value` in JSX (a child, or a native attribute)',
     fix: 'Add `.value`',
     example:
-      "import { state } from '@weft-js/core'\nexport function A() { const n = state(0); return <p>{n}</p> }",
+      "import { state } from '@kerf-js/core'\nexport function A() { const n = state(0); return <p>{n}</p> }",
   },
   {
     code: 'W016',
@@ -197,7 +197,7 @@ export const compilerDiagnostics = [
       '`const x = untrack(() => …reactive…)` in a component body that only the JSX reads: it renders the setup-time value and never updates',
     fix: '`derived(() => …)` and render `x.value`; `untrack` only for a value meant to stay fixed',
     example:
-      "import { untrack, type State } from '@weft-js/core'\nexport function A({ id, live }: { id: string; live: State<Record<string, number>> }) { const n = untrack(() => live.get(id)); return <p>{n}</p> }",
+      "import { untrack, type State } from '@kerf-js/core'\nexport function A({ id, live }: { id: string; live: State<Record<string, number>> }) { const n = untrack(() => live.get(id)); return <p>{n}</p> }",
   },
   {
     code: 'W019',
@@ -233,7 +233,7 @@ export const compilerDiagnostics = [
       'Early `return` in a component body that depends on state (runs once, never re-checked)',
     fix: 'Branch in JSX',
     example:
-      "import { state } from '@weft-js/core'\nexport function A() { const n = state(0); if (n.value > 1) return null; return <p>{n.value}</p> }",
+      "import { state } from '@kerf-js/core'\nexport function A() { const n = state(0); if (n.value > 1) return null; return <p>{n.value}</p> }",
   },
   {
     code: 'W041',
@@ -258,7 +258,7 @@ export const compilerDiagnostics = [
     by: 'cli',
     catches:
       '`data-x={true}` or `data-x={false}` on a native element: `data-*` booleans are presence flags, so these write `data-x=""` or nothing, not React\'s `"true"` and `"false"`',
-    fix: '`data-x` for a flag (`weft fix`), or `data-x="true"` for the word. CSS matches `[data-x]`',
+    fix: '`data-x` for a flag (`kerf fix`), or `data-x="true"` for the word. CSS matches `[data-x]`',
   },
   {
     code: 'W050',
@@ -266,7 +266,7 @@ export const compilerDiagnostics = [
     by: 'compiler',
     catches:
       'Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup (it outlives the component)',
-    fix: '`on(target, type, fn)` / `interval(ms, fn)` from @weft-js/core/browser, or clean it up in `onCleanup`',
+    fix: '`on(target, type, fn)` / `interval(ms, fn)` from @kerf-js/core/browser, or clean it up in `onCleanup`',
     example: "export function A() { window.addEventListener('keydown', () => {}); return <p /> }",
   },
   {
@@ -274,9 +274,9 @@ export const compilerDiagnostics = [
     severity: 'error',
     by: 'compiler',
     catches:
-      'A @weft-js/core/browser value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await`',
+      'A @kerf-js/core/browser value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await`',
     fix: "Create it in a component's (or `defineState`'s) setup, or inside `createRoot(dispose => …)`",
-    example: "import { online } from '@weft-js/core/browser'\nexport const up = online()",
+    example: "import { online } from '@kerf-js/core/browser'\nexport const up = online()",
   },
   {
     code: 'W052',
@@ -285,7 +285,7 @@ export const compilerDiagnostics = [
     catches: '`watch` folding a stream by hand',
     fix: '`fold` + `initial` where it is read: kept in the cache',
     example:
-      "import { state, watch } from '@weft-js/core'\nimport { prices } from './server/prices'\nexport function A() { const tick = prices({}); const list = state([]); watch(() => tick.value, m => { list.value = [...list.value, m] }); return <p>{list.value.length}</p> }",
+      "import { state, watch } from '@kerf-js/core'\nimport { prices } from './server/prices'\nexport function A() { const tick = prices({}); const list = state([]); watch(() => tick.value, m => { list.value = [...list.value, m] }); return <p>{list.value.length}</p> }",
   },
   {
     code: 'W053',
@@ -299,30 +299,30 @@ export const compilerDiagnostics = [
     severity: 'error',
     by: 'compiler',
     catches:
-      '`media(query)` without `ssr` in a server-rendered component (hydration mismatch); a warning when `weft check` cannot tell',
+      '`media(query)` without `ssr` in a server-rendered component (hydration mismatch); a warning when `kerf check` cannot tell',
     fix: 'Pass the server value: `media(query, { ssr: false })`',
     example:
-      "import { media } from '@weft-js/core/browser'\nexport function A() { const dark = media('(prefers-color-scheme: dark)'); return <p>{dark.value ? 'dark' : 'light'}</p> }",
+      "import { media } from '@kerf-js/core/browser'\nexport function A() { const dark = media('(prefers-color-scheme: dark)'); return <p>{dark.value ? 'dark' : 'light'}</p> }",
   },
   {
     code: 'W056',
     severity: 'warning',
     by: 'compiler',
     catches:
-      '`watch` that copies a live value (a @weft-js/core/browser value, `.live()`) into `state`',
+      '`watch` that copies a live value (a @kerf-js/core/browser value, `.live()`) into `state`',
     fix: 'Read `live.value` directly, or `derived(() => live.value)`',
     example:
-      "import { state, watch } from '@weft-js/core'\nimport { online } from '@weft-js/core/browser'\nexport function A() { const isOnline = online(); const up = state(true); watch(() => isOnline.value, v => { up.value = v }); return <p>{up.value}</p> }",
+      "import { state, watch } from '@kerf-js/core'\nimport { online } from '@kerf-js/core/browser'\nexport function A() { const isOnline = online(); const up = state(true); watch(() => isOnline.value, v => { up.value = v }); return <p>{up.value}</p> }",
   },
   {
     code: 'W060',
     severity: 'error',
     by: 'compiler',
     catches:
-      "A `group()` from @weft-js/core/style that can't be evaluated at build: a value that isn't a literal (named with its path), a `group()` outside a top-level `const`, or an accent that isn't literal tokens",
+      "A `group()` from @kerf-js/core/style that can't be evaluated at build: a value that isn't a literal (named with its path), a `group()` outside a top-level `const`, or an accent that isn't literal tokens",
     fix: "Inline the token name or literal; define groups as `export const x = group('x', { … })`; raw CSS goes in `css: { … }`",
     example:
-      "import { group } from '@weft-js/core/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
+      "import { group } from '@kerf-js/core/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
   },
   {
     code: 'W061',
@@ -332,6 +332,6 @@ export const compilerDiagnostics = [
       "`bind:x` on a native element, or `bind:x`/`bind(box)` with something that isn't a box or that isn't a component prop",
     fix: 'Write `<Card bind:person={name} />`. A form element takes `value` and `onChange`',
     example:
-      "import { bind, state } from '@weft-js/core'\nexport function A() { const n = state(1); return <input value={bind(n)} /> }",
+      "import { bind, state } from '@kerf-js/core'\nexport function A() { const n = state(1); return <input value={bind(n)} /> }",
   },
 ]

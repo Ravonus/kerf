@@ -1,4 +1,4 @@
-import { PeriodPicker, Stack } from '@weft-js/warp'
+import { PeriodPicker, Stack } from '@kerf-js/veneer'
 
 import { TODAY } from './shared-event'
 

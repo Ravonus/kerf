@@ -1,21 +1,21 @@
 # Editor and TypeScript setup
 
 :::learn
-- What your editor shows for a Weft app, and how to set it up
-- Why you run `weft tsc` rather than `tsc`, and what it adds
+- What your editor shows for a Kerf app, and how to set it up
+- Why you run `kerf tsc` rather than `tsc`, and what it adds
 - How to name another component's props with `Props<typeof X>`
 - Which build of the compiler you're running, and why you never need Rust
 - How to look at the live reactive graph in the browser
 :::
 
 You have an app from [Installation](/learn/installation). Before you write much of it, it helps to know what's watching
-your code: the editor, TypeScript, and Weft's compiler each see something different, and each has a place in your day.
+your code: the editor, TypeScript, and Kerf's compiler each see something different, and each has a place in your day.
 This page goes through all three, then the devtools that show you the running page.
 
 ## Your editor
 
-A Weft app is TypeScript and TSX, so any editor that speaks TypeScript works. What Weft adds is **prop inference**: you
-leave a component's props unannotated, and Weft works out their types from the places that render it.
+A Kerf app is TypeScript and TSX, so any editor that speaks TypeScript works. What Kerf adds is **prop inference**: you
+leave a component's props unannotated, and Kerf works out their types from the places that render it.
 
 ```tsx
 // src/components/Greeting.tsx
@@ -24,15 +24,15 @@ export function Greeting(props: { name: string; excited: boolean }) {
 }
 ```
 
-Written that way, the type is spelled out by hand. In a Weft app you can also write `function Greeting(props)` and let
+Written that way, the type is spelled out by hand. In a Kerf app you can also write `function Greeting(props)` and let
 the callers decide: `<Greeting name="Ada" excited />` makes `name` a `string` and `excited` a `boolean`. Your editor shows
-those types on hover, completes them, and reports a wrong one at the caller. For that, it has to see what Weft
+those types on hover, completes them, and reports a wrong one at the caller. For that, it has to see what Kerf
 inferred, and that takes one of two pieces:
 
-| Your editor runs | What gives it Weft's types | Set up by |
+| Your editor runs | What gives it Kerf's types | Set up by |
 |---|---|---|
-| TypeScript's own server (`tsserver`), as VS Code does | A plugin, `@weft-js/cli/ts-plugin`, in `tsconfig.json` | The generator, for VS Code |
-| TypeScript 7's `tsc --lsp` | `weft lsp`, a language server in front of it | You, in the editor's language-server settings |
+| TypeScript's own server (`tsserver`), as VS Code does | A plugin, `@kerf-js/cli/ts-plugin`, in `tsconfig.json` | The generator, for VS Code |
+| TypeScript 7's `tsc --lsp` | `kerf lsp`, a language server in front of it | You, in the editor's language-server settings |
 
 ### VS Code
 
@@ -41,7 +41,7 @@ A new app is already set up. Its `tsconfig.json` names the plugin:
 ```json
 {
   "compilerOptions": {
-    "plugins": [{ "name": "@weft-js/cli/ts-plugin" }]
+    "plugins": [{ "name": "@kerf-js/cli/ts-plugin" }]
   }
 }
 ```
@@ -58,14 +58,14 @@ For an app you made some other way, add both. Then restart the TypeScript server
 ### An editor on TypeScript 7
 
 TypeScript 7 loads no plugins: it reads the `plugins` entry in `tsconfig.json` and ignores it without a word. An editor
-that runs TypeScript 7's language server directly gets Weft's types from `weft lsp` instead. Point the editor's
+that runs TypeScript 7's language server directly gets Kerf's types from `kerf lsp` instead. Point the editor's
 TypeScript language-server command at it:
 
 ```bash
-npx weft lsp
+npx kerf lsp
 ```
 
-`weft lsp` sits between the editor and `tsc --lsp`, adds the inferred types, and maps every position back to your
+`kerf lsp` sits between the editor and `tsc --lsp`, adds the inferred types, and maps every position back to your
 source. Hover and diagnostics are tested. Completion and go-to-definition go through the same mapping. No editor
 extension launches it for you yet, so you set it up by hand.
 
@@ -74,15 +74,15 @@ extension launches it for you yet, so you set it up by hand.
 The editor shows TypeScript's errors, and the prop-inference diagnostics (W080–W085). The compiler's own diagnostics,
 such as W001 or W015, come from the compiler, which the editor doesn't run. You see those in two places:
 
-- **`weft dev`** compiles each file as you save it. An error stops that file and shows in the terminal and on the page;
+- **`kerf dev`** compiles each file as you save it. An error stops that file and shows in the terminal and on the page;
   a warning prints in the terminal.
-- **`weft check`** compiles every file and reports everything at once.
+- **`kerf check`** compiles every file and reports everything at once.
 
-[Diagnostics and weft check](/learn/diagnostics) is about reading them.
+[Diagnostics and kerf check](/learn/diagnostics) is about reading them.
 
 :::note Completion in the config
-`weft.config.ts` is typed through `defineConfig`, so the editor completes its keys. If you chose `--config json` or
-`yaml`, `weft check` writes `.weft/config.schema.json`, and the generated file already points at it (`$schema` in JSON, a
+`kerf.config.ts` is typed through `defineConfig`, so the editor completes its keys. If you chose `--config json` or
+`yaml`, `kerf check` writes `.kerf/config.schema.json`, and the generated file already points at it (`$schema` in JSON, a
 `yaml-language-server` comment in YAML).
 :::
 
@@ -100,51 +100,51 @@ The generator writes a strict `tsconfig.json`:
     "noEmit": true,
     "skipLibCheck": true,
     "jsx": "preserve",
-    "jsxImportSource": "@weft-js/core",
+    "jsxImportSource": "@kerf-js/core",
     "lib": ["es2023", "dom", "dom.iterable"],
     "paths": { "#/*": ["./src/*"] },
-    "types": ["@weft-js/core/client", "node"],
-    "plugins": [{ "name": "@weft-js/cli/ts-plugin" }]
+    "types": ["@kerf-js/core/client", "node"],
+    "plugins": [{ "name": "@kerf-js/cli/ts-plugin" }]
   },
-  "include": ["src", "weft.config.ts", ".weft/*.d.ts"]
+  "include": ["src", "kerf.config.ts", ".kerf/*.d.ts"]
 }
 ```
 
-The lines that are Weft's own:
+The lines that are Kerf's own:
 
-- **`"jsx": "preserve"` and `"jsxImportSource": "@weft-js/core"`** hand TSX to Weft's compiler and take its JSX types
-  from `@weft-js/core`. TypeScript doesn't turn TSX into function calls; the compiler turns it into DOM code.
-- **`"types": ["@weft-js/core/client"]`** declares what the Vite plugin adds to imports: a `.css` import, and the
+- **`"jsx": "preserve"` and `"jsxImportSource": "@kerf-js/core"`** hand TSX to Kerf's compiler and take its JSX types
+  from `@kerf-js/core`. TypeScript doesn't turn TSX into function calls; the compiler turns it into DOM code.
+- **`"types": ["@kerf-js/core/client"]`** declares what the Vite plugin adds to imports: a `.css` import, and the
   `?media` imports. `node` is there when the app has a server with a database.
 - **`"paths": { "#/*": ["./src/*"] }`** lets you write `import { db } from '#/db/index.server'` from anywhere in `src`.
-- **`.weft/*.d.ts`** are types Weft generates, such as the ones for plugin slots.
+- **`.kerf/*.d.ts`** are types Kerf generates, such as the ones for plugin slots.
 
 The app's `typescript` is pinned to version 7 in `devDependencies`, because the prop inference uses its checker.
 
-### `weft tsc`, not `tsc`
+### `kerf tsc`, not `tsc`
 
 Type-check the whole project with:
 
 ```bash
-npx weft tsc
+npx kerf tsc
 ```
 
-The app's `typecheck` script runs the same thing. `weft tsc` runs TypeScript's checker with Weft's inferred props
+The app's `typecheck` script runs the same thing. `kerf tsc` runs TypeScript's checker with Kerf's inferred props
 applied, so it sees what your editor sees. Plain `tsc` can't, and it goes wrong in two ways:
 
 - **It reports TS7006 on every inferred parameter.** To `tsc`, `function Greeting(props)` is a parameter with no type
   under `strict`. Nothing can change that from outside the file.
 - **It reports a `bind:` prop as missing.** `<Stepper bind:count={count} />` passes the box to `count`, and
-  `weft tsc` reads it as `count` with the box's value. `tsc` doesn't know the `bind:` prefix, so to it a required
+  `kerf tsc` reads it as `count` with the box's value. `tsc` doesn't know the `bind:` prefix, so to it a required
   `count` was never passed.
 
-Use `weft tsc` in CI, and anywhere you'd have run `tsc --noEmit`. When you need code that plain `tsc` also accepts, as
+Use `kerf tsc` in CI, and anywhere you'd have run `tsc --noEmit`. When you need code that plain `tsc` also accepts, as
 in a library others will type-check, write `count={bind(count)}`: it's the same binding, in a form `tsc` understands.
 [Writing to a parent with bind:](/learn/bind) is about what binding means.
 
 ```tsx
 // src/components/Stepper.tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf-js/veneer'
 
 export function Stepper(props: { count: number }) {
   return (
@@ -157,7 +157,7 @@ export function Stepper(props: { count: number }) {
 
 ```tsx
 // src/components/Counter.tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import { Stepper } from '#/components/Stepper'
 
 export function Counter() {
@@ -171,36 +171,36 @@ export function Counter() {
 }
 ```
 
-`weft tsc` accepts this, and would report an error if `count` held a string. `tsc` would say `count` is missing.
+`kerf tsc` accepts this, and would report an error if `count` held a string. `tsc` would say `count` is missing.
 
 ### Inferred types in your files
 
-An exported component is a public face, so Weft writes its inferred type into the file, with an `/*inferred*/` comment
-to show where it came from. `weft dev` does it when you save, and `weft fix` does it on demand. A diff then shows the
+An exported component is a public face, so Kerf writes its inferred type into the file, with an `/*inferred*/` comment
+to show where it came from. `kerf dev` does it when you save, and `kerf fix` does it on demand. A diff then shows the
 type, and code outside the app gets an ordinary typed function.
 
 The codes that go with it:
 
-- **W081**: an exported component has no written type yet. `weft fix` writes it.
-- **W082**: the written `/*inferred*/` type no longer matches the callers. `weft fix` rewrites it. Delete the comment
+- **W081**: an exported component has no written type yet. `kerf fix` writes it.
+- **W082**: the written `/*inferred*/` type no longer matches the callers. `kerf fix` rewrites it. Delete the comment
   to keep the type as you wrote it.
 - **W080**: a component with an untyped parameter that nothing renders. There's nothing to infer from: render it,
   delete it, or write the type.
 - **W084**: one caller passes a type the component can't handle while the others agree. The odd caller is flagged.
 
-`check: { props: 'manual' }` in `weft.config.ts` stops `weft dev` writing to your files, and leaves it to `weft fix`.
+`check: { props: 'manual' }` in `kerf.config.ts` stops `kerf dev` writing to your files, and leaves it to `kerf fix`.
 `check: { props: false }` turns inference off, and then every component needs a written type.
 
 :::pitfall An editor with unsaved changes
-When `weft dev` writes an inferred type into a file you have open with unsaved changes, your editor asks which version to
-keep when you next save. Keep yours and run `weft fix` afterwards, or set `check: { props: 'manual' }` while you're
+When `kerf dev` writes an inferred type into a file you have open with unsaved changes, your editor asks which version to
+keep when you next save. Keep yours and run `kerf fix` afterwards, or set `check: { props: 'manual' }` while you're
 editing exported components heavily.
 :::
 
 ### `Props<typeof X>`
 
 Sometimes you need another component's props as a type: to forward them, to build a list of them, or to wrap the
-component. `Props<typeof X>` from `@weft-js/core` names them, written or inferred:
+component. `Props<typeof X>` from `@kerf-js/core` names them, written or inferred:
 
 ```tsx
 // src/components/Badge.tsx
@@ -215,7 +215,7 @@ export function Badge(props: { label: string; count: number }) {
 
 ```tsx
 // src/components/BadgeList.tsx
-import type { Props } from '@weft-js/core'
+import type { Props } from '@kerf-js/core'
 import { Badge } from '#/components/Badge'
 
 export function BadgeList(
@@ -244,56 +244,56 @@ Inference covers most components. Write the type when:
 
 Inference also has edges worth knowing. A caller that passes `any` weakens the prop, and W083 names where the `any` came
 from. A prop that callers pass and the body never reads stays in the type. A component with more than one parameter
-isn't inferred: Weft components take one. The [props reference](/reference/props) has the full table.
+isn't inferred: Kerf components take one. The [props reference](/reference/props) has the full table.
 :::
 
 ## The compiler
 
-Weft's compiler is written in Rust, on [Oxc](https://oxc.rs). You never need Rust to use it, because it ships two ways
+Kerf's compiler is written in Rust, on [Oxc](https://oxc.rs). You never need Rust to use it, because it ships two ways
 and the install picks one:
 
 | Build | Where it comes from | Speed |
 |---|---|---|
-| A native addon | `@weft-js/compiler-<platform>`, an optional dependency that installs by itself on macOS, Linux and Windows (x64 and arm64) | The fastest |
-| WebAssembly | `weft-compiler.wasm`, inside `@weft-js/core` | Slower, and runs anywhere |
+| A native addon | `@kerf-js/compiler-<platform>`, an optional dependency that installs by itself on macOS, Linux and Windows (x64 and arm64) | The fastest |
+| WebAssembly | `kerf-compiler.wasm`, inside `@kerf-js/core` | Slower, and runs anywhere |
 
 Both give the same output and the same diagnostics, byte for byte; a test in the repo holds them to it. The addon only
-adds speed. When it's missing, or doesn't load on your machine, Weft uses WebAssembly and carries on.
+adds speed. When it's missing, or doesn't load on your machine, Kerf uses WebAssembly and carries on.
 
 To see which one you're on:
 
 ```bash
-npx weft doctor
+npx kerf doctor
 ```
 
 ```text
-weft 0.1.4 on Node v26.1.0
-compiler: native addon (@weft-js/compiler-darwin-arm64)
-rust: no cargo on PATH. Not needed for weft; only `weft add rust`
+kerf 0.1.4 on Node v26.1.0
+compiler: native addon (@kerf-js/compiler-darwin-arm64)
+rust: no cargo on PATH. Not needed for kerf; only `kerf add rust`
 sidecars and native() use it
 ```
 
 On WebAssembly, the second line says so, and names the addon that would make it faster where one exists for your
-platform. Nothing `weft doctor` reports about the compiler fails the command: it's information. `weft check --verbose`
+platform. Nothing `kerf doctor` reports about the compiler fails the command: it's information. `kerf check --verbose`
 adds the same compiler line to its summary.
 
-`WEFT_COMPILER=wasm` or `WEFT_COMPILER=native` in the environment pins one build, if you want to compare them or rule one
+`KERF_COMPILER=wasm` or `KERF_COMPILER=native` in the environment pins one build, if you want to compare them or rule one
 out.
 
 ### The no-Rust path
 
 There are two places Rust could come in, and neither is required:
 
-- **Building Weft itself.** A checkout of the repo builds its compiler with `cargo`, which is why `local.mjs` needs Rust
+- **Building Kerf itself.** A checkout of the repo builds its compiler with `cargo`, which is why `local.mjs` needs Rust
   today. A published install gets the prebuilt addon or WebAssembly and never builds anything.
-- **Server functions written in Rust.** That's a choice you make for CPU-heavy code, with `weft add rust`. Everything
+- **Server functions written in Rust.** That's a choice you make for CPU-heavy code, with `kerf add rust`. Everything
   else in an app is TypeScript. [Rust, in depth](/learn/rust) covers when it's worth it.
 
-A machine with no Rust toolchain creates, runs, checks, builds and starts a Weft app.
+A machine with no Rust toolchain creates, runs, checks, builds and starts a Kerf app.
 
 ## Devtools in the browser
 
-In dev, the Vite plugin loads Weft's devtools into every page. Production builds never include them. They give you the
+In dev, the Vite plugin loads Kerf's devtools into every page. Production builds never include them. They give you the
 **reactive graph**: every named box and derived value on the page, what each reads, and what reads it.
 
 Press **Alt+Shift+G** on the page to open the overlay. It lists the graph and refreshes as you click around:
@@ -306,36 +306,36 @@ Cart.total = 9 ← Cart.count → 1 binding in <Cart> (Cart.tsx:6)
 Names come from the code: `count` in a component named `Cart` is `Cart.count`, and a store made with `defineState` uses
 its own names. Type in the overlay's box to filter by name.
 
-The same is in the console as `__weft__`:
+The same is in the console as `__kerf__`:
 
 | Call | What it does |
 |---|---|
-| `__weft__.graph('Cart')` | The graph as data, filtered by a name prefix |
-| `__weft__.set('Cart.count', 5)` | Writes a box by its name, to reach a state quickly. A derived value can't be set |
-| `__weft__.errors()` | Errors the page has thrown since you last asked, with the component they came from |
-| `__weft__.overlay()` | Shows or hides the overlay |
+| `__kerf__.graph('Cart')` | The graph as data, filtered by a name prefix |
+| `__kerf__.set('Cart.count', 5)` | Writes a box by its name, to reach a state quickly. A derived value can't be set |
+| `__kerf__.errors()` | Errors the page has thrown since you last asked, with the component they came from |
+| `__kerf__.overlay()` | Shows or hides the overlay |
 
 When the app has `@testing-library/dom` and `@testing-library/user-event` installed, the page also gets
-`__weft__.agent`, which drives the page the way a test does. That's for agents and `weft browser`, and
+`__kerf__.agent`, which drives the page the way a test does. That's for agents and `kerf browser`, and
 [Working with AI agents](/learn/working-with-agents) covers it.
 
 :::note There's no browser extension
-Weft's devtools live in the page, so they work in any browser with nothing to install. React's are an extension; these
+Kerf's devtools live in the page, so they work in any browser with nothing to install. React's are an extension; these
 are a keyboard shortcut and a console global.
 :::
 
 ## Recap
 
 - VS Code is set up by the generator: a tsserver plugin in `tsconfig.json` and a line in `.vscode/settings.json`. An
-  editor on TypeScript 7's own server uses `weft lsp`.
-- The editor shows TypeScript's errors and the prop-inference codes. Compiler diagnostics show in `weft dev` and
-  `weft check`.
-- Run `weft tsc`, not `tsc`: it sees inferred props and `bind:`.
+  editor on TypeScript 7's own server uses `kerf lsp`.
+- The editor shows TypeScript's errors and the prop-inference codes. Compiler diagnostics show in `kerf dev` and
+  `kerf check`.
+- Run `kerf tsc`, not `tsc`: it sees inferred props and `bind:`.
 - `Props<typeof X>` names another component's props.
-- The compiler is a native addon or WebAssembly, with the same output. `weft doctor` says which. Rust is never required.
-- Alt+Shift+G opens the reactive graph in dev, and `__weft__` has it in the console.
+- The compiler is a native addon or WebAssembly, with the same output. `kerf doctor` says which. Rust is never required.
+- Alt+Shift+G opens the reactive graph in dev, and `__kerf__` has it in the console.
 
-Next, [Diagnostics and weft check](/learn/diagnostics): what the codes mean and how to fix them.
+Next, [Diagnostics and kerf check](/learn/diagnostics): what the codes mean and how to fix them.
 
 ## Try it
 
@@ -345,7 +345,7 @@ string, and shows the badge with the note beside it. Don't write `label: string;
 :::solution
 ```tsx
 // src/components/HighlightedBadge.tsx
-import type { Props } from '@weft-js/core'
+import type { Props } from '@kerf-js/core'
 import { Badge } from '#/components/Badge'
 
 export function HighlightedBadge(

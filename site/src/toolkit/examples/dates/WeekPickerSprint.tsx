@@ -1,8 +1,8 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
-import { Stack, Text, WeekPicker } from '@weft-js/warp'
+import { Stack, Text, WeekPicker } from '@kerf-js/veneer'
 
-import type { IsoWeek } from '@weft-js/warp'
+import type { IsoWeek } from '@kerf-js/veneer'
 
 import { TODAY } from './shared-event'
 

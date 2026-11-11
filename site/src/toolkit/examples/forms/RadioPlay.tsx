@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Radio, Stack } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Radio, Stack } from '@kerf-js/veneer'
 import type { Knobs } from './shared'
 
 export function RadioPlay(p: Knobs) {

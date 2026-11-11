@@ -1,17 +1,17 @@
-import type { IconName, ShellProps } from '@weft-js/warp'
+import type { IconName, ShellProps } from '@kerf-js/veneer'
 import { PEOPLE, PROJECTS, TRAFFIC } from '../../world'
 
 export const BOX =
   'display:grid;align-content:center;' +
   'gap:2px;' +
-  'padding:var(--warp-space-related);' +
-  'border:var(--warp-border-hairline) ' +
-  'solid var(--warp-color-border);' +
+  'padding:var(--veneer-space-related);' +
+  'border:var(--veneer-border-hairline) ' +
+  'solid var(--veneer-color-border);' +
   'border-radius:' +
-  'var(--warp-radius-surface);' +
-  'background:var(--warp-color-surface);' +
-  'color:var(--warp-color-text);' +
-  'font-size:var(--warp-text-caption-size);' +
+  'var(--veneer-radius-surface);' +
+  'background:var(--veneer-color-surface);' +
+  'color:var(--veneer-color-text);' +
+  'font-size:var(--veneer-text-caption-size);' +
   'min-inline-size:0'
 
 export const projectOf = (c: unknown) => {
@@ -41,7 +41,7 @@ export function Box({
         <>
           <strong>{projectOf(children)!.name}</strong>
           <span
-            style={'color:var(--warp-color-text-subtle)'}
+            style={'color:var(--veneer-color-text-subtle)'}
           >
             {projectOf(children)!.region}
           </span>
@@ -166,20 +166,20 @@ export const MAXES = [
 ] as const
 
 export const SCREEN =
-  '--warp-viewport-block:360px;' +
-  'border:var(--warp-border-hairline) ' +
-  'solid var(--warp-color-border);' +
+  '--veneer-viewport-block:360px;' +
+  'border:var(--veneer-border-hairline) ' +
+  'solid var(--veneer-color-border);' +
   'border-radius:' +
-  'var(--warp-radius-surface);' +
-  'padding-inline:var(--warp-space-group)'
+  'var(--veneer-radius-surface);' +
+  'padding-inline:var(--veneer-space-group)'
 
 export const FILL =
   'block-size:280px;' +
-  'border:var(--warp-border-hairline) ' +
-  'solid var(--warp-color-border);' +
+  'border:var(--veneer-border-hairline) ' +
+  'solid var(--veneer-color-border);' +
   'border-radius:' +
-  'var(--warp-radius-surface);' +
-  'padding-inline:var(--warp-space-group)'
+  'var(--veneer-radius-surface);' +
+  'padding-inline:var(--veneer-space-group)'
 
 export const RATIOS = [
   '21:9',
@@ -199,13 +199,13 @@ export const art = (a: string, b: string) => (
     <rect
       width="320"
       height="180"
-      fill={`var(--warp-color-data-${a})`}
+      fill={`var(--veneer-color-data-${a})`}
     />
     <circle
       cx="96"
       cy="150"
       r="130"
-      fill={`var(--warp-color-data-${b})`}
+      fill={`var(--veneer-color-data-${b})`}
     />
     <rect
       x="176"
@@ -213,7 +213,7 @@ export const art = (a: string, b: string) => (
       width="104"
       height="108"
       rx="8"
-      fill="var(--warp-color-surface)"
+      fill="var(--veneer-color-surface)"
       opacity="0.85"
     />
   </svg>
@@ -242,16 +242,16 @@ export function AppWindow({
   children?: unknown
 }) {
   const box = () =>
-    `--warp-viewport-block:${height}px;` +
+    `--veneer-viewport-block:${height}px;` +
     `block-size:${height}px;` +
     (wide
       ? `inline-size:min(100%,${wide}px);` +
         'margin-inline:auto;'
       : '') +
     'overflow:auto;contain:layout paint;' +
-    'border:var(--warp-border-hairline) solid ' +
-    'var(--warp-color-border);' +
-    'border-radius:var(--warp-radius-surface)'
+    'border:var(--veneer-border-hairline) solid ' +
+    'var(--veneer-color-border);' +
+    'border-radius:var(--veneer-radius-surface)'
   return <div style={box()}>{children}</div>
 }
 
@@ -266,7 +266,7 @@ export const MARK = () => (
       width="8"
       height="8"
       rx="2"
-      fill="var(--warp-color-accent-solid)"
+      fill="var(--veneer-color-accent-solid)"
     />
     <rect
       x="13"
@@ -274,7 +274,7 @@ export const MARK = () => (
       width="8"
       height="8"
       rx="2"
-      fill="var(--warp-color-accent-solid)"
+      fill="var(--veneer-color-accent-solid)"
     />
   </svg>
 )
@@ -297,7 +297,7 @@ export const ACCOUNT: ShellProps['account'] = {
   ],
 }
 
-export function weftNav(go: (id: string) => void) {
+export function kerfNav(go: (id: string) => void) {
   const item = (
     id: string,
     label: string,
@@ -347,7 +347,7 @@ export const pageOf: Record<string, string> = {
   settings: 'Settings',
 }
 
-export const ROOT_NAV = weftNav(() => {})
+export const ROOT_NAV = kerfNav(() => {})
 
 export const FOCUS_STEPS = [
   'Connect a repository',

@@ -1,4 +1,4 @@
-import { Row } from '@weft-js/warp'
+import { Row } from '@kerf-js/veneer'
 import { Box, TAGS } from './shared'
 
 export const RowWraps = () => (

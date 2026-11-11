@@ -1,4 +1,4 @@
-import { Suggestions } from '@weft-js/warp'
+import { Suggestions } from '@kerf-js/veneer'
 import { CHIPS } from './shared'
 
 export const SuggestionsChips = () => (

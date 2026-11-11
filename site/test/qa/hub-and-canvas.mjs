@@ -91,7 +91,7 @@ for (const path of ['/components', '/blocks', '/charts']) {
     PHONE,
   )
 }
-// Docs pages flow like the kit's: their paragraphs, lists and tables are in warp.flow (warp's prose families, with no
+// Docs pages flow like the kit's: their paragraphs, lists and tables are in veneer.flow (veneer's prose families, with no
 // attribute from the build), and below the fold they wait. Check the animation, not markup.
 for (const path of ['/reference/rules', '/reference/lists', '/learn/passing-props']) {
   await check(`docs content flows ${path}`, path, async (page) => {
@@ -110,7 +110,7 @@ for (const path of ['/reference/rules', '/reference/lists', '/learn/passing-prop
     same(moving, blocks, 'blocks animating')
   })
 }
-// The overlay cards on the hub show the surface open (warp's `inline`), not only the button that opens it.
+// The overlay cards on the hub show the surface open (veneer's `inline`), not only the button that opens it.
 await check('hub overlay cards show their surface /components', '/components', async (page) => {
   await mount(page)
   const cards = await page.evaluate(() =>

@@ -1,12 +1,12 @@
 /** design diagnostic entries in catalog order. */
 export const design = [
-  // The design language (PLAN §6, research 37): tokens and layout where the app has warp's tokens, contrast and accessibility everywhere.
+  // The design language (PLAN §6, research 37): tokens and layout where the app has veneer's tokens, contrast and accessibility everywhere.
   {
     code: 'D001',
     severity: 'error',
     by: 'cli',
     catches:
-      "A raw colour in `style`, app CSS, or a Tailwind arbitrary or palette class, in an app with warp's tokens: it won't follow the theme, the dials or dark mode",
+      "A raw colour in `style`, app CSS, or a Tailwind arbitrary or palette class, in an app with veneer's tokens: it won't follow the theme, the dials or dark mode",
     fix: "Use a colour token or a `tone`. No autofix: a token follows the theme, the raw value didn't",
   },
   {
@@ -22,7 +22,7 @@ export const design = [
     severity: 'warning',
     by: 'cli',
     catches: 'Raw type, radius or shadow (`font-size`, `text-lg`, `rounded-[7px]`, `box-shadow`)',
-    fix: '`<Heading role>` / `<Text role>`, the radius tokens, `--warp-elevation-*`; autofix for an exact radius',
+    fix: '`<Heading role>` / `<Text role>`, the radius tokens, `--veneer-elevation-*`; autofix for an exact radius',
   },
   {
     code: 'D004',
@@ -37,7 +37,7 @@ export const design = [
     severity: 'warning',
     by: 'cli',
     catches:
-      'The style gate (`data-weft="styled"`) on the main content or a page heading: the first paint hides what it should show',
+      'The style gate (`data-kerf="styled"`) on the main content or a page heading: the first paint hides what it should show',
     fix: 'Mark the secondary part that needs its late styles, or drop the marker',
   },
   {
@@ -53,8 +53,8 @@ export const design = [
     severity: 'warning',
     by: 'cli',
     catches:
-      'A browser-painted control in a warp app: `<button>`, `<select>`, `<textarea>`, an input type like `date`, `number` or `range`, or a `title` tooltip',
-    fix: 'The warp component: focus ring, sweep, tones and touch target come with it',
+      'A browser-painted control in a veneer app: `<button>`, `<select>`, `<textarea>`, an input type like `date`, `number` or `range`, or a `title` tooltip',
+    fix: 'The veneer component: focus ring, sweep, tones and touch target come with it',
   },
   {
     code: 'D006',
@@ -68,7 +68,7 @@ export const design = [
     code: 'D007',
     severity: 'warning',
     by: 'cli',
-    catches: 'A bare `<a href>` in a warp app',
+    catches: 'A bare `<a href>` in a veneer app',
     fix: "`<Link>`, or `Shell`'s `nav` for navigation (suggested edit)",
   },
   {
@@ -91,14 +91,14 @@ export const design = [
     severity: 'error',
     by: 'cli',
     catches: 'An `<input>`, `<select>` or `<textarea>` with no label',
-    fix: "A wrapping `<label>`, `<label for>`, `aria-label`, or warp's `<Input label>`",
+    fix: "A wrapping `<label>`, `<label for>`, `aria-label`, or veneer's `<Input label>`",
   },
   {
     code: 'D031',
     severity: 'error',
     by: 'cli',
     catches: 'A button or link with no accessible name (icon only, or empty)',
-    fix: "Text, or `aria-label`; warp's Button takes `label`",
+    fix: "Text, or `aria-label`; veneer's Button takes `label`",
   },
   {
     code: 'D032',
@@ -133,7 +133,7 @@ export const design = [
     severity: 'error',
     by: 'cli',
     catches: 'The focus ring removed with nothing in its place (`outline: none`, `outline-none`)',
-    fix: "Remove it: warp's `:focus-visible` is the ring. Or add a `focus-visible:` style",
+    fix: "Remove it: veneer's `:focus-visible` is the ring. Or add a `focus-visible:` style",
   },
   {
     code: 'D037',

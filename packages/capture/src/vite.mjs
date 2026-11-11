@@ -2,7 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-const ID = 'virtual:weft/posters'
+const ID = 'virtual:kerf/posters'
 const RESOLVED = `\0${ID}`
 
 /** The module for a manifest: one asset import per still, and the records under each scene's id. */
@@ -20,17 +20,17 @@ export function postersModule(folder, manifest) {
     entries.push(`${JSON.stringify(id)}: { ${fields.join(', ')} }`)
   }
   return [
-    `import { bakedPosters } from '@weft-js/warp/scenes'`,
+    `import { bakedPosters } from '@kerf-js/veneer/scenes'`,
     ...imports,
     `export default bakedPosters({ ${entries.join(', ')} })`,
   ].join('\n')
 }
 
-/** A Vite plugin: `import 'virtual:weft/posters'` registers what a bake wrote in `dir` (default `posters`). */
+/** A Vite plugin: `import 'virtual:kerf/posters'` registers what a bake wrote in `dir` (default `posters`). */
 export function posters(options = {}) {
   let root = process.cwd()
   return {
-    name: 'weft-capture-posters',
+    name: 'kerf-capture-posters',
     configResolved(config) {
       root = config.root
     },

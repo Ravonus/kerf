@@ -1,4 +1,4 @@
-import { Grid, Textarea } from '@weft-js/warp'
+import { Grid, Textarea } from '@kerf-js/veneer'
 
 export const TextareaVariants = () => (
   <Grid

@@ -65,7 +65,7 @@ export async function normalizeFonts(fonts) {
     fonts.map(async (f) => {
       const data = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data)
       const format = fontFormat(data)
-      if (!format) throw new Error(`weft/og: font "${f.name}" isn't TTF, OTF, WOFF or WOFF2`)
+      if (!format) throw new Error(`kerf/og: font "${f.name}" isn't TTF, OTF, WOFF or WOFF2`)
       return { ...f, data: format === 'woff' ? await woffToSfnt(data) : data }
     }),
   )

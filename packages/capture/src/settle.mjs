@@ -1,4 +1,4 @@
-// When a page may be captured: a weft stage says so (`data-stage-ready` is the offset it drew at); any page also
+// When a page may be captured: a kerf stage says so (`data-stage-ready` is the offset it drew at); any page also
 // waits for its transitions, fonts and the images in view.
 
 /** The page's sections, `selector` in document order, in CSS px from the document's top. */
@@ -31,7 +31,7 @@ export async function stageReady(page, seconds = 0, timeout = 60_000) {
   if (seconds === null) return
   await page.evaluate((at) => {
     for (const el of document.querySelectorAll('[data-stage]'))
-      Reflect.get(el, Symbol.for('weft.stage'))?.freeze(at)
+      Reflect.get(el, Symbol.for('kerf.stage'))?.freeze(at)
   }, seconds)
 }
 

@@ -1,5 +1,5 @@
-import { Boundary, onMount, resource, state, untrack } from '@weft-js/core'
-import { Form } from '@weft-js/start'
+import { Boundary, onMount, resource, state, untrack } from '@kerf-js/core'
+import { Form } from '@kerf-js/start'
 import { rename } from '../server/forms'
 
 export function Tap(props: { id: string }) {

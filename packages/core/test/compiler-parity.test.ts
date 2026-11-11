@@ -12,7 +12,7 @@ describe('native and WASM compilers', () => {
     expect(r.mismatches).toEqual([])
   }, 600_000)
 
-  it('WEFT_COMPILER picks the build, and each compiles through compiler.cjs', () => {
+  it('KERF_COMPILER picks the build, and each compiles through compiler.cjs', () => {
     const compiler = fileURLToPath(new URL('../compiler.cjs', import.meta.url))
     const run = (kind: string) =>
       JSON.parse(
@@ -25,7 +25,7 @@ describe('native and WASM compilers', () => {
       console.log(JSON.stringify({ kind: c.backend.kind, code: c.transform('export const A = () => <p>x</p>', { filename: process.cwd() + '/src/a.tsx', dev: true }).code }))
     `,
           ],
-          { env: { ...process.env, WEFT_COMPILER: kind }, encoding: 'utf8' },
+          { env: { ...process.env, KERF_COMPILER: kind }, encoding: 'utf8' },
         ),
       )
     const [native, wasm] = [run('native'), run('wasm')]

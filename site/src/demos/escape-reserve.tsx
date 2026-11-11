@@ -1,7 +1,7 @@
-import { state } from '@weft-js/core'
-import { Text } from '@weft-js/core/text'
-import { Button, Card } from '@weft-js/warp'
-import '@weft-js/warp/skeleton'
+import { state } from '@kerf-js/core'
+import { Text } from '@kerf-js/core/text'
+import { Button, Card } from '@kerf-js/veneer'
+import '@kerf-js/veneer/skeleton'
 
 const QUOTES = [
   'The best way to predict the future is to invent it.',

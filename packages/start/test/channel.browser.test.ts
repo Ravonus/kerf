@@ -8,7 +8,7 @@ import type * as Playwright from 'playwright-core'
 declare global {
   interface Window {
     __sockets: WebSocket[]
-    __weft?: { hydrated: boolean; misses: number; writes: number }
+    __kerf?: { hydrated: boolean; misses: number; writes: number }
   }
 }
 
@@ -32,14 +32,14 @@ async function open(context: Playwright.BrowserContext, path: string) {
     window.WebSocket = class extends Real {
       constructor(u: string | URL, ...a: [protocols?: string | string[]]) {
         super(u, ...a)
-        if (String(u).includes('/_weft/ws')) window.__sockets.push(this)
+        if (String(u).includes('/_kerf/ws')) window.__sockets.push(this)
       }
     }
   })
   page.on('console', (m) => process.env.DEBUG_B && console.log(m.type(), m.text()))
   await page.goto(url + path)
   await page
-    .waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+    .waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
     .catch((e) => {
       throw new Error(`${e.message}: ${errors.join('\n')}`)
     })

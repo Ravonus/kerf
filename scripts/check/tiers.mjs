@@ -16,10 +16,10 @@ export const RELEASE_TESTS = {
     'test/audit-indexing.browser.test.ts',
   ],
   'packages/core': ['test/oracle.test.tsx', 'test/compiler-parity.test.ts', 'test/hmr.test.ts'],
-  'packages/create': ['test/scaffold.test.ts', 'test/templates.test.ts'],
+  'packages/create-kerf': ['test/scaffold.test.ts', 'test/templates.test.ts'],
   // ui-state: multi-tab hover over real sockets, with real grace periods (51 s).
   'packages/start': ['test/build.test.ts', 'test/ui-state.browser.test.ts'],
-  'packages/warp': [
+  'packages/veneer': [
     'test/critical.browser.test.tsx',
     'test/field-text-css.browser.test.ts',
     'test/choice-css.browser.test.ts',
@@ -30,7 +30,7 @@ export const RELEASE_TESTS = {
     // every gallery component inside a Modal, Card, Popover and Alert (25 s)
     'test/compose-gallery.browser.test.ts',
   ],
-  'packages/warp-icons': ['test/generator.test.ts', 'test/distinct.test.ts', 'test/shake.test.ts'],
+  'packages/veneer-icons': ['test/generator.test.ts', 'test/distinct.test.ts', 'test/shake.test.ts'],
 }
 
 /** Paths whose change can't break a package's tests. */

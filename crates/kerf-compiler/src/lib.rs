@@ -1,0 +1,368 @@
+//! kerf's TSX compiler, Phase 1 spike.
+//!
+//! One Oxc parse per file. `analyze` reads the program with scopes and symbols and produces a plan plus
+//! diagnostics; `transform` applies the plan to the same AST (§3.3 props → live reads, §3.4 `.map` → keyed
+//! list); then kerf's back end (`emit`, research 19) lowers the JSX to template clones and fine-grained bindings
+//! against kerf's runtime (`@kerf-js/core/dom`), or to server code (`@kerf-js/core/ssr`).
+
+mod analyze;
+mod browser;
+mod diag;
+mod emit;
+mod hmr;
+pub mod hydration;
+pub mod project;
+mod react;
+mod shape;
+mod srcmap;
+pub mod style;
+mod transform;
+
+#[cfg(feature = "node")]
+#[cfg_attr(
+    test,
+    allow(dead_code, reason = "Node-API registers exports outside test builds")
+)]
+mod node;
+#[cfg(target_arch = "wasm32")]
+mod wasm;
+
+pub use diag::{Diagnostic, Edit, Fix, Severity};
+pub use project::Facts;
+
+use oxc_allocator::Allocator;
+use oxc_ast::ast::Program;
+use oxc_parser::Parser;
+use oxc_semantic::{Scoping, SemanticBuilder};
+use oxc_span::SourceType;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Options {
+    pub filename: String,
+    /// Runtime module the back end imports DOM helpers from.
+    pub module_name: String,
+    /// Run the analysis and diagnostics only (what `kerf check` needs).
+    pub check_only: bool,
+    pub dev: bool,
+    pub source_map: bool,
+    /// `"dom"` (default) or `"ssr"`: the back end's output mode. SSR output imports from `@kerf-js/core/ssr`.
+    pub generate: String,
+    /// DOM output that adopts server-rendered nodes (`hydrate`), and SSR output that marks them.
+    pub hydratable: bool,
+    /// Also return what each JSX node became (`Output::explain`).
+    pub explain: bool,
+    /// Dev DOM output only: register components for hot updates and keep their state (@kerf-js/core/hmr).
+    pub hmr: bool,
+    /// Style groups defined in other modules, keyed `"<absolute path without extension>#<export>"` (style.rs).
+    pub groups: std::collections::HashMap<String, style::Imported>,
+    /// Group parts carry `data-g` as well as `data-part` (veneer's `data-scope` + `data-part` shape). Off: parts carry
+    /// only `data-part`, and the group's `@scope` tells them apart.
+    pub tagged_parts: bool,
+    /// Emit a shape variant of each component (research 31 §5). The value lists imported components that have one,
+    /// keyed `"<absolute path without extension>#<export>"`. `None`: only what this file's `pending="shape"` needs.
+    pub shapes: Option<std::collections::HashMap<String, bool>>,
+    /// The sites the project's view made islands (hydration.rs). `None`: every component hydrates.
+    pub islands: Option<hydration::Islands>,
+    /// The working directory, for a build with no filesystem of its own (the WASM binding). `None`: ask the process.
+    pub cwd: Option<String>,
+    /// `KERF_OFF`, for a build with no environment of its own (the WASM binding).
+    pub off: Option<String>,
+    /// `"strict"`: output for a Content-Security-Policy with no `'unsafe-inline'` styles. Fixed `style` values become
+    /// generated classes in a stylesheet (emit/csp.rs) instead of style attributes. Anything else: off.
+    pub csp: String,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Self {
+            filename: "input.tsx".into(),
+            module_name: "@kerf-js/core/dom".into(),
+            check_only: false,
+            dev: false,
+            source_map: false,
+            generate: "dom".into(),
+            hydratable: false,
+            explain: false,
+            hmr: false,
+            groups: std::collections::HashMap::default(),
+            tagged_parts: false,
+            shapes: None,
+            islands: None,
+            cwd: None,
+            off: None,
+            csp: String::new(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct Output {
+    /// Compiled module. TypeScript syntax is kept; the host (Vite's Oxc pass) strips it.
+    pub code: Option<String>,
+    /// JSON source map back to the authored file, when `source_map` is set.
+    pub map: Option<String>,
+    pub diagnostics: Vec<Diagnostic>,
+    /// Per-file facts for `kerf check`'s project view (`project::link_w014`).
+    pub facts: Facts,
+    /// Each JSX node's lowering, by authored line (`explain`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub explain: Option<Vec<emit::Explained>>,
+}
+
+/// What every binding calls: text in, JSON text out, so the addon and the WASM build differ only in how the text travels.
+pub fn transform_json(source: &str, options_json: &str) -> String {
+    let options: Options = serde_json::from_str(options_json).unwrap_or_default();
+    serde_json::to_string(&compile(source, &options)).expect("serializable output")
+}
+
+pub fn compile(source: &str, options: &Options) -> Output {
+    emit::set_off(options.off.clone());
+    let source_type =
+        SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
+    // DOM output keeps each island's call site as an export, appended so every pass reads it as authored code.
+    let islands = options
+        .islands
+        .as_ref()
+        .filter(|i| !i.sites.is_empty() && !options.check_only);
+    let hoisted = islands
+        .filter(|_| options.generate != "ssr")
+        .and_then(|i| hydration::hoisted(source, source_type, i));
+    let Some(hoisted) = hoisted else {
+        return compile_source(source, source.len(), options);
+    };
+    compile_source(&format!("{source}{hoisted}"), source.len(), options)
+}
+
+fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
+    let allocator = Allocator::default();
+    let source_type =
+        SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
+    let parsed = Parser::new(&allocator, source, source_type).parse();
+    if !parsed.diagnostics.is_empty() || parsed.panicked {
+        let diagnostics = parsed
+            .diagnostics
+            .iter()
+            .map(|d| {
+                Diagnostic::syntax(
+                    source,
+                    d.to_string(),
+                    d.labels.first().map(|l| l.offset() as usize),
+                )
+            })
+            .collect();
+        return Output {
+            code: None,
+            map: None,
+            diagnostics,
+            facts: Facts::default(),
+            explain: None,
+        };
+    }
+    let mut program = parsed.program;
+
+    let semantic = SemanticBuilder::new().build(&program).semantic;
+    let plan = analyze::analyze(&program, semantic.scoping(), source);
+    let scoping = semantic.into_scoping();
+    let (diagnostics, mut facts) = program_facts(
+        &allocator,
+        &mut program,
+        &scoping,
+        &plan,
+        source,
+        authored,
+        options,
+    );
+    if options.check_only {
+        facts.shapes = shape::exports(&program);
+        return Output {
+            code: None,
+            map: None,
+            diagnostics,
+            facts,
+            explain: None,
+        };
+    }
+
+    let (shapes_code, footer) = prepare_program(
+        &allocator,
+        &mut program,
+        &scoping,
+        &plan,
+        source,
+        options,
+        &mut facts,
+    );
+    finish_output(
+        &program,
+        source,
+        options,
+        &shapes_code,
+        footer.as_deref(),
+        diagnostics,
+        facts,
+    )
+}
+
+fn prepare_program<'a>(
+    allocator: &'a Allocator,
+    program: &mut Program<'a>,
+    scoping: &Scoping,
+    plan: &analyze::Plan,
+    source: &str,
+    options: &Options,
+    facts: &mut Facts,
+) -> (String, Option<String>) {
+    // Before the pre-pass, which rewrites the params and lists the variants copy. Appended after printing.
+    let shapes = shape::apply(
+        allocator,
+        program,
+        scoping,
+        source,
+        &options.filename,
+        options.shapes.as_ref(),
+    );
+    facts.shapes = shapes.exports;
+
+    if options.generate == "ssr"
+        && options.hydratable
+        && let Some(islands) = &options.islands
+    {
+        hydration::mark(allocator, program, scoping, islands);
+    }
+    transform::apply(allocator, program, scoping, plan);
+
+    let ssr = options.generate == "ssr";
+    let footer = (options.hmr && options.dev && !ssr)
+        .then(|| hmr::apply(allocator, program, source, &options.filename))
+        .flatten();
+    // Dev DOM output names its boxes and derived values for the graph (`kerf browser`, the overlay).
+    let names = (options.dev && !ssr)
+        .then(|| hmr::names(allocator, program, &options.filename))
+        .flatten();
+    let footer = match (footer, names) {
+        (Some(a), Some(b)) => Some(a + &b),
+        (a, b) => a.or(b),
+    };
+    (shapes.code, footer)
+}
+
+fn program_facts<'a>(
+    allocator: &'a Allocator,
+    program: &mut Program<'a>,
+    scoping: &Scoping,
+    plan: &analyze::Plan,
+    source: &str,
+    authored: usize,
+    options: &Options,
+) -> (Vec<Diagnostic>, Facts) {
+    let mut diagnostics = plan.diagnostics.clone();
+    let hydration_facts = hydration::facts(program, scoping, source);
+    // @kerf-js/core/browser checks; W054 needs to know whether this file is server-rendered (`None`: only checking).
+    let ssr = if options.generate == "ssr" || options.hydratable {
+        Some(true)
+    } else if options.check_only {
+        None
+    } else {
+        Some(false)
+    };
+    diagnostics.extend(browser::check(program, scoping, source, ssr));
+    // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
+    let (groups, group_uses) = style::apply(
+        allocator,
+        program,
+        scoping,
+        source,
+        options,
+        &mut diagnostics,
+    );
+    diagnostics.retain(|d| (d.start as usize) <= authored);
+    diagnostics.sort_by_key(|d| d.start);
+    let mut facts = plan.facts.clone();
+    facts.hydration = hydration_facts;
+    facts.groups = groups;
+    facts.group_uses = group_uses;
+    (diagnostics, facts)
+}
+
+fn finish_output(
+    program: &Program<'_>,
+    source: &str,
+    options: &Options,
+    shapes_code: &str,
+    footer: Option<&str>,
+    mut diagnostics: Vec<Diagnostic>,
+    facts: Facts,
+) -> Output {
+    let ssr = options.generate == "ssr";
+    // Print the pre-pass's AST and lower its JSX from that text (spans index it). Codegen's map of the printed text
+    // goes through the emitter to the authored file. Each JSX node's authored line goes along by order
+    // (`JsxOrder`), for dev comments and `explain`. Nodes the pre-pass made have no span.
+    let mut order = emit::JsxOrder::default();
+    oxc_ast_visit::Visit::visit_program(&mut order, program);
+    let origins = order
+        .spans
+        .iter()
+        .map(|s| (s.end > 0).then(|| diag::line_col(source, s.start)))
+        .collect();
+    let opts = oxc_codegen::CodegenOptions {
+        source_map_path: options.source_map.then(|| options.filename.clone().into()),
+        ..Default::default()
+    };
+    let built = oxc_codegen::Codegen::new()
+        .with_options(opts)
+        .build(program);
+    let printed = built.code + shapes_code;
+    let points = built.map.as_ref().map(|m| srcmap::points(&printed, m));
+    let module = if ssr && options.module_name == "@kerf-js/core/dom" {
+        "@kerf-js/core/ssr"
+    } else {
+        &options.module_name
+    };
+    let display = display_path(&options.filename, options.cwd.as_deref());
+    let o = emit::EmitOptions {
+        filename: &options.filename,
+        display: &display,
+        module,
+        ssr,
+        hydratable: options.hydratable,
+        dev: options.dev,
+        csp: options.csp == "strict",
+        origins,
+        map: points.as_ref().map(|p| (p, source)),
+    };
+    match emit::emit(&printed, &o) {
+        Ok(out) => Output {
+            code: Some(out.code + footer.unwrap_or("")),
+            map: out.map,
+            diagnostics,
+            facts,
+            explain: options.explain.then_some(out.explain),
+        },
+        Err(e) => {
+            diagnostics.push(Diagnostic::syntax(
+                &printed,
+                e.message,
+                Some(e.offset as usize),
+            ));
+            Output {
+                code: None,
+                map: None,
+                diagnostics,
+                facts,
+                explain: None,
+            }
+        }
+    }
+}
+
+/// `filename` relative to the working directory when it's inside it (dev comments, `kerf explain`).
+fn display_path(filename: &str, cwd: Option<&str>) -> String {
+    let path = std::path::Path::new(filename);
+    let cwd = cwd
+        .map(std::path::PathBuf::from)
+        .or_else(|| std::env::current_dir().ok());
+    cwd.and_then(|cwd| path.strip_prefix(cwd).ok().map(|p| p.display().to_string()))
+        .unwrap_or_else(|| filename.to_string())
+}

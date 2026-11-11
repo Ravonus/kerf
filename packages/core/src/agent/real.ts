@@ -19,7 +19,7 @@ export const sleep = (ms: number) =>
     real.setTimeout(r, ms)
   })
 
-/** Let the app settle: Weft's queue, microtasks, then one real task. */
+/** Let the app settle: Kerf's queue, microtasks, then one real task. */
 export async function settle() {
   for (let i = 0; i < 3; i++) {
     await Promise.resolve()

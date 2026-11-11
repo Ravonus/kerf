@@ -5,7 +5,7 @@ import { HOST_HEADERS, cspDirectives, inlineAllowed, scriptsRun } from './rules.
 export function checkCsp(root, files, reporter) {
   // -- a CSP against the inlined sheets --
   const config = ['ts', 'mts', 'js', 'mjs', 'json', 'yaml', 'yml']
-    .map((x) => join(root, `weft.config.${x}`))
+    .map((x) => join(root, `kerf.config.${x}`))
     .find(existsSync)
   const configText = config ? readFileSync(config, 'utf8') : ''
   if (!/inlineCss['"]?\s*:\s*false/.test(configText)) {

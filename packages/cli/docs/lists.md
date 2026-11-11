@@ -16,7 +16,7 @@
   )
   ```
 
-  The compiler sees this inside one file; `weft check` follows the box through props into other files.
+  The compiler sees this inside one file; `kerf check` follows the box through props into other files.
 - **One entry per row (W017).** A row that reads `cart[p.id]` (a prop) or `cart.value[p.id]` depends on the whole
   `cart`, so adding one item re-runs all 150 rows. Read the entry from the box: `cart.get(p.id)` re-runs only the row
   whose entry changed (`Object.is`). For a prop, pass the box (`cart={cart}`, typed `State<Cart>`); the box form

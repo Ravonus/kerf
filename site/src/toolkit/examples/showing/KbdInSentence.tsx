@@ -1,4 +1,4 @@
-import { Text, Kbd } from '@weft-js/warp'
+import { Text, Kbd } from '@kerf-js/veneer'
 
 export const KbdInSentence = () => (
   <Text>

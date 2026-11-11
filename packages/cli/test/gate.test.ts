@@ -80,7 +80,7 @@ test('calls back', () => { expect(cb).toHaveBeenCalledWith(1) })`
     ).toEqual([])
     const allowed = v1.replace(
       "  test('zero'",
-      "  // weft-allow T020: zero stock is now a different screen, covered in empty.test.ts\n  test.skip('zero'",
+      "  // kerf-allow T020: zero stock is now a different screen, covered in empty.test.ts\n  test.skip('zero'",
     )
     expect(weakened(v1, allowed, 'a.test.ts')).toEqual([])
   })

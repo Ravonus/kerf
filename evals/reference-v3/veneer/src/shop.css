@@ -1,0 +1,11 @@
+/* App layout only: everything visual comes from veneer's tokens, so it follows the dial. */
+.shop { display: grid; gap: var(--veneer-space-group); max-inline-size: 56rem; margin-inline: auto; padding: var(--veneer-space-group); }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--veneer-space-related); }
+.tabs { display: flex; gap: var(--veneer-space-tight); }
+.bar h1 { margin: 0; font-size: var(--veneer-text-heading); }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--veneer-space-group); padding-block-start: var(--veneer-space-related); }
+.meta { margin: 0; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption); }
+.rows { display: grid; margin: 0; padding: 0; list-style: none; }
+.row { display: flex; align-items: center; gap: var(--veneer-space-related); min-block-size: var(--veneer-control-md); padding-block: var(--veneer-space-tight); border-block-end: 1px solid var(--veneer-color-border); }
+.row .name { flex: 1; font-weight: 500; }
+.total { margin: var(--veneer-space-related) 0 0; text-align: end; font-weight: 600; }

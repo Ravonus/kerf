@@ -1,4 +1,4 @@
-import { onCleanup, state } from '@weft-js/core'
+import { onCleanup, state } from '@kerf-js/core'
 
 import {
   Row,
@@ -6,9 +6,9 @@ import {
   SyncIndicator,
   Text,
   Textarea,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
-import type { SyncState } from '@weft-js/warp'
+import type { SyncState } from '@kerf-js/veneer'
 
 import { wait as _Shared0 } from './shared-wait'
 

@@ -1,27 +1,27 @@
-# @weft-js/capture
+# @kerf-js/capture
 
-Drive a built weft page in headless Chrome on the GPU: repeatable stills at scroll stops, frame times while it
+Drive a built kerf page in headless Chrome on the GPU: repeatable stills at scroll stops, frame times while it
 scrolls, contact sheets, and the bake that renders a scene stage's posters from the scenes themselves. A dev
 dependency only: nothing here goes into a page's bundle.
 
 ```bash
-pnpm add -D @weft-js/capture
+pnpm add -D @kerf-js/capture
 ```
 
 It drives the Chrome installed on the machine (`--chrome <path>` for another), with ANGLE on Metal on macOS.
 
 ## From a terminal
 
-`weft capture <command>` (or `weft-capture`). A target is a URL, or a built folder, which is served on 127.0.0.1
+`kerf capture <command>` (or `kerf-capture`). A target is a URL, or a built folder, which is served on 127.0.0.1
 while the command runs; `--path /page.html` picks a page in it.
 
 ```bash
-weft capture stills dist --stops 0,hero@0.5,2@1 \
+kerf capture stills dist --stops 0,hero@0.5,2@1 \
   --width 1440 --height 900 --dpr 2 --out shots --sheet
-weft capture frames dist --seconds 5 --speed 600 --cpu 4 \
+kerf capture frames dist --seconds 5 --speed 600 --cpu 4 \
   --out frames.json
-weft capture sheet shots/*.png --out sheet.png --cols 4
-weft capture bake dist --out src/posters --format avif
+kerf capture sheet shots/*.png --out sheet.png --cols 4
+kerf capture bake dist --out src/posters --format avif
 ```
 
 A stop is pixels (`1200`), a section at a share of its pass (`hero@0.5`, `2@0`: by id or index), or pixels past a
@@ -32,8 +32,8 @@ elements unless `sections` names another selector.
 ## From code
 
 ```js
-import { capture, frames, launch } from '@weft-js/capture'
-import { open, sheet } from '@weft-js/capture'
+import { capture, frames, launch } from '@kerf-js/capture'
+import { open, sheet } from '@kerf-js/capture'
 
 const browser = await launch()
 const stops = [0, { section: 'hero', at: 0.5 }]
@@ -62,14 +62,14 @@ with the clock stopped, at the scene's `hold` or else where its section fills th
 
 ```ts
 // vite.config.ts
-import { posters } from '@weft-js/capture/vite'
+import { posters } from '@kerf-js/capture/vite'
 export default { plugins: [posters({ dir: 'src/posters' })] }
 ```
 
 ```tsx
-/// <reference types="@weft-js/capture/posters" />
+/// <reference types="@kerf-js/capture/posters" />
 // registers the baked stills before anything renders
-import 'virtual:weft/posters'
+import 'virtual:kerf/posters'
 ```
 
 Build, bake, build: the first build has no posters yet, and the second carries them. The stage shows the tall
@@ -77,6 +77,6 @@ still on a tall screen, and on its poster tier (`<Stage tier="auto">` on a phone
 
 ## The page contract
 
-Any page can be captured. A weft scene stage adds two things: `data-stage-ready` on its root, the scroll offset
-of the last settled frame (`poster` on the poster tier), and `root[Symbol.for('weft.stage')]`, a `StageHandle`
-from `@weft-js/warp/scenes` that lists the scenes, freezes the clock and draws stills.
+Any page can be captured. A kerf scene stage adds two things: `data-stage-ready` on its root, the scroll offset
+of the last settled frame (`poster` on the poster tier), and `root[Symbol.for('kerf.stage')]`, a `StageHandle`
+from `@kerf-js/veneer/scenes` that lists the scenes, freezes the clock and draws stills.

@@ -1,7 +1,7 @@
 import { rt, settle, computation, owner, add, NONE, mounts, schedule, within, clean } from './graph'
 import type { Computation, Owner } from './types'
 
-/** A child hole (@weft-js/core/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. True: it read nothing, so it's done. */
+/** A child hole (@kerf-js/core/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. True: it read nothing, so it's done. */
 export function hole<H>(
   value: () => unknown,
   apply: (value: unknown, was: unknown, h: H) => void,

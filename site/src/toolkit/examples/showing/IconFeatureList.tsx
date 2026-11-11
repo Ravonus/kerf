@@ -1,4 +1,4 @@
-import { Stack, Row, Icon, Text } from '@weft-js/warp'
+import { Stack, Row, Icon, Text } from '@kerf-js/veneer'
 import { FACTS } from './icon-data'
 
 export const IconFeatureList = () => (

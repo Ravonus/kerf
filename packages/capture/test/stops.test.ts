@@ -1,4 +1,4 @@
-import { parseStop, resolveStop, stopName, type SectionMap } from '@weft-js/capture'
+import { parseStop, resolveStop, stopName, type SectionMap } from '@kerf-js/capture'
 
 // A 900 px viewport over a hero (one viewport), a tall section (three) and a short footer.
 const MAP: SectionMap = {

@@ -1,5 +1,5 @@
 // Server functions in Chrome (research 27): a page whose data comes from queries hydrates with 0 key misses, 0 DOM
-// writes and no fetch (the cache starts from #weft-cache); an optimistic toggle writes one attribute and the
+// writes and no fetch (the cache starts from #kerf-cache); an optimistic toggle writes one attribute and the
 // mutation's response carries the refreshed list; a failing mutation rolls back; the route's own data (its `meta`)
 // follows the invalidation; and a loader's redirect works in the client router. The dev server's todos are shared
 // with fn.test.ts, so counts here are relative.
@@ -33,12 +33,12 @@ async function open(path: string) {
     m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
   )
   page.on('request', (r) =>
-    r.url().includes('/_weft/')
+    r.url().includes('/_kerf/')
       ? calls.push(`${r.method()} ${new URL(r.url()).pathname.replace(/\.[0-9a-f]{6}$/, '')}`)
       : undefined,
   )
   await page.goto(url + path)
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   return { page, errors, calls }
 }
 
@@ -71,7 +71,7 @@ async function record(page: Playwright.Page) {
 const items = (page: Playwright.Page) =>
   page.$$eval('ul.todos li', (l) => l.map((li) => `${li.className}:${li.textContent}`))
 const slow = (page: Playwright.Page) =>
-  page.route('**/_weft/fn/**', async (r) => {
+  page.route('**/_kerf/fn/**', async (r) => {
     await new Promise((ok) => {
       setTimeout(ok, 300)
     })
@@ -80,7 +80,7 @@ const slow = (page: Playwright.Page) =>
 
 test('a page reading queries hydrates 0/0 and fetches nothing', async () => {
   const { page, errors, calls } = await open('/todos')
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect((await items(page)).length).toBeGreaterThanOrEqual(3)
   expect(calls).toEqual([])
   expect(errors).toEqual([])
@@ -102,7 +102,7 @@ test('an optimistic toggle writes one attribute, before the response, which carr
   await page.waitForTimeout(100)
   expect(await take()).toEqual(['attributes:LI.class']) // the server's list changed nothing more
   // The list came back in the mutation's response; the route's own data (its load read `todos`) is refetched.
-  expect(calls).toEqual(['POST /_weft/fn/toggleTodo', 'GET /_weft/data/todos'])
+  expect(calls).toEqual(['POST /_kerf/fn/toggleTodo', 'GET /_kerf/data/todos'])
   expect((await items(page))[1]).not.toBe(before[1])
   expect(errors).toEqual([])
   await page.close()

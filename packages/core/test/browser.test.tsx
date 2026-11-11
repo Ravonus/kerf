@@ -1,14 +1,14 @@
-// @weft-js/core/browser (PLAN §4.2, research 07 §6): values that subscribe on first read, share one listener per
-// (target, type), go with their owner, and have a defined server value. Plus @weft-js/core/test's page fakes and T012.
+// @kerf-js/core/browser (PLAN §4.2, research 07 §6): values that subscribe on first read, share one listener per
+// (target, type), go with their owner, and have a defined server value. Plus @kerf-js/core/test's page fakes and T012.
 import { screen } from '@testing-library/dom'
-import { createRoot, defineState, derived } from '@weft-js/core'
-import { devComponent } from '@weft-js/core/internal'
-import { interval, lifecycle, media, on, online, visible } from '@weft-js/core/browser'
-import { hydrate } from '@weft-js/core/dom'
-import { renderToString } from '@weft-js/core/ssr'
-import { assertNoLeaks, flush, leaks, net, page, render } from '@weft-js/core/test'
-import { Status as ServerStatus } from './fixtures/browser/Status.tsx?weft-ssr'
-import { Status as ClientStatus } from './fixtures/browser/Status.tsx?weft-hydrate'
+import { createRoot, defineState, derived } from '@kerf-js/core'
+import { devComponent } from '@kerf-js/core/internal'
+import { interval, lifecycle, media, on, online, visible } from '@kerf-js/core/browser'
+import { hydrate } from '@kerf-js/core/dom'
+import { renderToString } from '@kerf-js/core/ssr'
+import { assertNoLeaks, flush, leaks, net, page, render } from '@kerf-js/core/test'
+import { Status as ServerStatus } from './fixtures/browser/Status.tsx?kerf-ssr'
+import { Status as ClientStatus } from './fixtures/browser/Status.tsx?kerf-hydrate'
 
 /** Count native listeners added and removed for `type` on window and document while `fn` runs. */
 function listeners(type: string) {

@@ -1,5 +1,5 @@
-import type { DitherGlyphProps } from '@weft-js/warp'
-import { DitherGlyph } from '@weft-js/warp'
+import type { DitherGlyphProps } from '@kerf-js/veneer'
+import { DitherGlyph } from '@kerf-js/veneer'
 
 // -- DitherGlyph
 export const DitherGlyphPlay = (p: DitherGlyphProps) => (

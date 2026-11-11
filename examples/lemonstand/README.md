@@ -1,13 +1,13 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
 <h1 align="center">Lemonstand</h1>
 
 <p align="center">
-  <strong>A real marketing site measured in three stacks: Next, Weft and SolidStart.</strong><br>
+  <strong>A real marketing site measured in three stacks: Next, Kerf and SolidStart.</strong><br>
   Animated hero, audience tabs, a coach demo, two forms and two legal pages. No page reads the database while rendering.
 </p>
 
@@ -16,15 +16,15 @@
   <a href="#the-variants">Variants</a> ·
   <a href="#latest-numbers">Latest numbers</a> ·
   <a href="../README.md">All examples</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!NOTE]
 > This is a private benchmark app, not a published package. Nothing here is on npm. Only the SolidStart version lives in
-> this folder; the Next and Weft versions are separate checkouts outside the repository.
+> this folder; the Next and Kerf versions are separate checkouts outside the repository.
 
 Lemonstand is the one app in [`examples/`](../README.md) that is a real site rather than a benchmark contract. The same
-site exists in Next, in Weft and as a SolidStart port in this folder, so Weft is never compared with only one other
+site exists in Next, in Kerf and as a SolidStart port in this folder, so Kerf is never compared with only one other
 stack. It is the app the examples README uses to show the manifest format, and the one the parallel-versus-serial check
 (`--jobs=1`) was last run on.
 
@@ -57,7 +57,7 @@ From [`app.json`](./app.json):
 | Variant | Path | Notes |
 | --- | --- | --- |
 | `next` | `~/dev/lemonstand-landing` | The original Next site, outside this repository |
-| `weft` | `~/dev/lemonstand-weft` | The Weft conversion, outside this repository |
+| `kerf` | `~/dev/lemonstand-kerf` | The Kerf conversion, outside this repository |
 | `solid` | [`solid/`](./solid) | SolidStart 2.1.0, `solid-js` 1.9.17, Tailwind 4, Drizzle, `nodemailer` |
 
 A `~` in a path means `BENCH_HOME` when it is set, otherwise your home directory. Bench only reads those folders: it
@@ -79,17 +79,17 @@ file and the chart keep: a win is only called when no sample of one side overlap
 | Variant | Page | Mobile score | Mobile LCP | JS (brotli) | Hydration | Server req/s |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | next | `/` | 94 | 3016 ms | 135.2 KB | 696 ms | 720.5 |
-| weft | `/` | 98 | 2253 ms | 33.2 KB | 348 ms | 389 |
+| kerf | `/` | 98 | 2253 ms | 33.2 KB | 348 ms | 389 |
 | solid | `/` | 99 | 2253 ms | 53.7 KB | 365 ms | 445.5 |
 | next | `/privacy` | 100 | 755 ms | 135.4 KB | 198 ms | 2253.5 |
-| weft | `/privacy` | 100 | 752 ms | 13.9 KB | 64 ms | 1913.5 |
+| kerf | `/privacy` | 100 | 752 ms | 13.9 KB | 64 ms | 1913.5 |
 | solid | `/privacy` | 100 | 753 ms | 26.2 KB | 43 ms | 2126 |
 | next | `/terms` | 100 | 756 ms | 135.4 KB | 191 ms | 2525 |
-| weft | `/terms` | 100 | 920 ms | 13.9 KB | 62 ms | 2097 |
+| kerf | `/terms` | 100 | 920 ms | 13.9 KB | 62 ms | 2097 |
 | solid | `/terms` | 100 | 753 ms | 26.3 KB | 41 ms | 2291.5 |
 
 KB is bytes / 1024 of every script the page fetched, recompressed at brotli 11. The full run, including the diagnosis
-for the Weft variant, is in `results.json`, and `../evals/results/apps.html` charts it with history.
+for the Kerf variant, is in `results.json`, and `../evals/results/apps.html` charts it with history.
 
 ## Run it
 
@@ -104,17 +104,17 @@ pnpm run setup                         # repo root, once
 cd examples
 pnpm install                           # benchmark tools only
 node bench.mjs lemonstand
-node bench.mjs lemonstand --only weft --no-record    # try a change, write nothing
+node bench.mjs lemonstand --only kerf --no-record    # try a change, write nothing
 node bench.mjs lemonstand --detect                   # what it worked out, without building
 node bench.mjs lemonstand --jobs=1                   # everything in turn, to check parallel numbers
 ```
 
-### Click through the Weft build
+### Click through the Kerf build
 
 ```bash
 cd examples
 node bench.mjs lemonstand
-node show.mjs                          # the last Weft builds, from port 5501
+node show.mjs                          # the last Kerf builds, from port 5501
 ```
 
 ### Run the SolidStart version on its own

@@ -5,7 +5,7 @@ use std::sync::RwLock;
 
 use serde::Deserialize;
 
-weft::contract!();
+kerf::contract!();
 use contract::*;
 
 #[derive(Clone, Deserialize)]
@@ -70,9 +70,9 @@ struct Search {
 impl Service for Search {
     async fn search_docs(
         &self,
-        ctx: weft::Ctx,
+        ctx: kerf::Ctx,
         input: SearchDocsInput,
-    ) -> Result<SearchDocsOutput, weft::Error> {
+    ) -> Result<SearchDocsOutput, kerf::Error> {
         ctx.touch("docs");
         let index = self.index.read().expect("index");
         Ok(index
@@ -91,9 +91,9 @@ impl Service for Search {
 
     async fn popular(
         &self,
-        ctx: weft::SharedCtx,
+        ctx: kerf::SharedCtx,
         input: PopularInput,
-    ) -> Result<PopularOutput, weft::Error> {
+    ) -> Result<PopularOutput, kerf::Error> {
         ctx.touch("docs");
         let index = self.index.read().expect("index");
         Ok(index
@@ -109,7 +109,7 @@ impl Service for Search {
 
     async fn get_doc(
         &self,
-        ctx: weft::Ctx,
+        ctx: kerf::Ctx,
         input: GetDocInput,
     ) -> Result<GetDocOutput, GetDocError> {
         ctx.touch("docs");
@@ -128,9 +128,9 @@ impl Service for Search {
 
     async fn add_doc(
         &self,
-        ctx: weft::Ctx,
+        ctx: kerf::Ctx,
         input: AddDocInput,
-    ) -> Result<AddDocOutput, weft::Error> {
+    ) -> Result<AddDocOutput, kerf::Error> {
         ctx.touch("docs");
         let mut index = self.index.write().expect("index");
         let id = format!("added-{}", index.docs.len());
@@ -148,7 +148,7 @@ async fn main() -> std::io::Result<()> {
     let docs: Vec<Doc> = serde_json::from_str(include_str!("../../../src/server/corpus.json"))?;
     let mut index = Index::default();
     docs.into_iter().for_each(|d| index.add(d));
-    weft::serve(weft::router(contract::functions(Search {
+    kerf::serve(kerf::router(contract::functions(Search {
         index: RwLock::new(index),
     })))
     .await

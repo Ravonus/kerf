@@ -6,8 +6,8 @@
 // 30 §8 (W052, W053, T013, R001–R023, realtime), research 36 §8 and 39 (R101–R109, Rust), research 46 §12 (E001–E014, deploy), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
-// compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
-// come from `weft check`'s test pass (tests.mjs); their examples are test files, checked the same way.
+// compiler over the examples, so AGENTS.md and `docs` only claim what this kerf version actually reports. T-codes
+// come from `kerf check`'s test pass (tests.mjs); their examples are test files, checked the same way.
 
 import { compilerDiagnostics } from './catalog/compiler.mjs'
 import { design } from './catalog/design.mjs'

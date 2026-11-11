@@ -34,15 +34,15 @@ const { values, positionals } = parseArgs({
 const [command, target] = positionals
 const app = resolve(target)
 const LINKED = [
-  '@weft-js/core',
-  '@weft-js/start',
-  '@weft-js/cli',
-  '@weft-js/multiplayer',
-  '@weft-js/realtime-redis',
-  '@weft-js/realtime-nats',
-  '@weft-js/realtime-webrtc',
-  '@weft-js/realtime-socketio',
-  '@weft-js/realtime-livekit',
+  '@kerf-js/core',
+  '@kerf-js/start',
+  '@kerf-js/cli',
+  '@kerf-js/multiplayer',
+  '@kerf-js/realtime-redis',
+  '@kerf-js/realtime-nats',
+  '@kerf-js/realtime-webrtc',
+  '@kerf-js/realtime-socketio',
+  '@kerf-js/realtime-livekit',
 ]
 
 function must(cmd, args, cwd = app, env = process.env) {
@@ -51,27 +51,27 @@ function must(cmd, args, cwd = app, env = process.env) {
   return r.stdout
 }
 
-/** Which plugins the app lists, as `weft add` would leave them. A bus is one line here, so that is the line tested. */
+/** Which plugins the app lists, as `kerf add` would leave them. A bus is one line here, so that is the line tested. */
 function configure(bus) {
   const list = { redis: 'redis()', nats: 'nats()' }[bus]
   const imports =
     {
-      redis: "import redis from '@weft-js/realtime-redis/plugin'\n",
-      nats: "import nats from '@weft-js/realtime-nats/plugin'\n",
+      redis: "import redis from '@kerf-js/realtime-redis/plugin'\n",
+      nats: "import nats from '@kerf-js/realtime-nats/plugin'\n",
     }[bus] ?? ''
   writeFileSync(
-    join(app, 'weft.config.ts'),
-    `import { defineConfig } from '@weft-js/core/config'\n${imports}\nexport default defineConfig({\n  site: { name: 'Room', title: '%s · Room', description: 'Two browsers.' },\n  plugins: [${list ?? ''}],\n})\n`,
+    join(app, 'kerf.config.ts'),
+    `import { defineConfig } from '@kerf-js/core/config'\n${imports}\nexport default defineConfig({\n  site: { name: 'Room', title: '%s · Room', description: 'Two browsers.' },\n  plugins: [${list ?? ''}],\n})\n`,
   )
-  must(join(app, 'node_modules/.bin/weft'), ['plugins', 'sync'])
-  must(join(app, 'node_modules/.bin/weft'), ['plugins', 'approve', '--all'])
+  must(join(app, 'node_modules/.bin/kerf'), ['plugins', 'sync'])
+  must(join(app, 'node_modules/.bin/kerf'), ['plugins', 'approve', '--all'])
 }
 
 if (command === 'prepare') {
   must(
     'node',
     [
-      join(repo, 'packages/create/bin/create-weft.mjs'),
+      join(repo, 'packages/create-kerf/bin/create-kerf.mjs'),
       app,
       '--db',
       'none',
@@ -84,8 +84,8 @@ if (command === 'prepare') {
   )
   const file = join(app, 'package.json')
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
-  delete pkg.devDependencies?.['@weft-js/cli']
-  const where = (name) => `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
+  delete pkg.devDependencies?.['@kerf-js/cli']
+  const where = (name) => `file:${join(repo, 'packages', name.replace('@kerf-js/', ''))}`
   const tarballs =
     values.tarballs && JSON.parse(readFileSync(join(values.tarballs, 'tarballs.json'), 'utf8'))
   for (const name of LINKED) pkg.dependencies[name] = tarballs?.[name] ?? where(name)
@@ -305,15 +305,15 @@ if (routes.includes('socketio')) {
     const io = new Server(http, { cors: { origin: true } })
     const verify = t => { const [h, b, s] = String(t).split('.'); if (!s) return null; const want = createHmac('sha256', process.env.SECRET).update(h + '.' + b).digest('base64url'); if (want.length !== s.length || !timingSafeEqual(Buffer.from(want), Buffer.from(s))) return null; return JSON.parse(Buffer.from(b, 'base64url')) }
     io.use((s, next) => { const c = verify(s.handshake.auth?.ticket); if (!c?.sub) return next(new Error('bad ticket')); s.data = { peer: c.sub, room: c.room }; next() })
-    io.on('connection', async s => { await s.join(s.data.room); s.emit('weft:ok'); s.on('weft:f', t => s.to(s.data.room).volatile.emit('weft:f', s.data.peer, t)) })
+    io.on('connection', async s => { await s.join(s.data.room); s.emit('kerf:ok'); s.on('kerf:f', t => s.to(s.data.room).volatile.emit('kerf:f', s.data.peer, t)) })
     http.listen(${relayPort})
   `,
     ],
     { env: { ...process.env, SECRET: secret } },
   )
   extra = {
-    WEFT_E2E_SOCKETIO_SECRET: secret,
-    WEFT_E2E_SOCKETIO_URL: `http://127.0.0.1:${relayPort}`,
+    KERF_E2E_SOCKETIO_SECRET: secret,
+    KERF_E2E_SOCKETIO_URL: `http://127.0.0.1:${relayPort}`,
   }
   await sleep(500)
 }
@@ -326,7 +326,7 @@ try {
   for (const bus of buses) {
     configure(bus)
     for (const runtime of runtimes) {
-      must(join(app, 'node_modules/.bin/weft'), ['build', '--runtime', runtime], app, {
+      must(join(app, 'node_modules/.bin/kerf'), ['build', '--runtime', runtime], app, {
         ...process.env,
         NODE_ENV: 'production',
         ...env[bus],

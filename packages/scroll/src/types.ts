@@ -70,7 +70,7 @@ export interface ScrollOptions {
   axes?: Axis | 'both'
   thumb?: ThumbOptions
   bar?: BarOptions
-  /** Draws the bars. Default: DOM elements styled by CSS. `canvas()` from `@weft-js/scroll/canvas` paints them. */
+  /** Draws the bars. Default: DOM elements styled by CSS. `canvas()` from `@kerf-js/scroll/canvas` paints them. */
   renderer?: Renderer
   /** Animation length for wheel notches, keys and smooth `scrollTo`, ms. Default 220. */
   duration?: number

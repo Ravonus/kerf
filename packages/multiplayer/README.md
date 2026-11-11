@@ -1,38 +1,38 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/multiplayer</h1>
+<h1 align="center">@kerf-js/multiplayer</h1>
 
 <p align="center">
-  <strong>Presence, live cursors, a typed event relay and synced scroll, on a Weft <code>channel</code>.</strong><br>
+  <strong>Presence, live cursors, a typed event relay and synced scroll, on a Kerf <code>channel</code>.</strong><br>
   Who a peer is comes from the server, never from the client, and every frame is checked before it reaches a page.
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/multiplayer"><img src="https://img.shields.io/npm/v/@weft-js/multiplayer?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf-js/multiplayer"><img src="https://img.shields.io/npm/v/@kerf-js/multiplayer?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
 A shared document needs more than messages: who else is here, where their pointer is, what they just did. This package
-adds those to a `channel` from `@weft-js/start`. On the server, `multiplayer()` returns the message schemas and
+adds those to a `channel` from `@kerf-js/start`. On the server, `multiplayer()` returns the message schemas and
 handlers to spread into your channel. On the page, `presence()`, `cursors()`, `relay()` and `syncedScroll()` read and
-write them. It is a library, not a plugin: there is nothing to put in `weft.config.ts`.
+write them. It is a library, not a plugin: there is nothing to put in `kerf.config.ts`.
 
 ## Highlights
 
@@ -71,19 +71,19 @@ write them. It is a library, not a plugin: there is nothing to put in `weft.conf
 
 ```bash
 # npm
-npm install @weft-js/multiplayer
+npm install @kerf-js/multiplayer
 
 # pnpm
-pnpm add @weft-js/multiplayer
+pnpm add @kerf-js/multiplayer
 
 # bun
-bun add @weft-js/multiplayer
+bun add @kerf-js/multiplayer
 ```
 
-It's a library, not a plugin: there's nothing to add to `weft.config.ts`. You import it in a page and in
+It's a library, not a plugin: there's nothing to add to `kerf.config.ts`. You import it in a page and in
 `src/realtime.server.ts`.
 
-`@weft-js/core` and `@weft-js/start` are peer dependencies; every Weft app has them.
+`@kerf-js/core` and `@kerf-js/start` are peer dependencies; every Kerf app has them.
 
 ## Quick start
 
@@ -91,8 +91,8 @@ The server half goes into a `channel`, next to any messages of your own:
 
 ```ts
 // src/server/doc.ts
-import { channel } from '@weft-js/start'
-import { multiplayer } from '@weft-js/multiplayer/server'
+import { channel } from '@kerf-js/start'
+import { multiplayer } from '@kerf-js/multiplayer/server'
 import { z } from 'zod'
 
 const mp = multiplayer<{ id: string }>({
@@ -114,9 +114,9 @@ The page reads it:
 
 ```tsx
 // src/routes/room.tsx
-import { state } from '@weft-js/core'
-import { cursors, presence, relay } from '@weft-js/multiplayer'
-import { Cursors } from '@weft-js/multiplayer/ui'
+import { state } from '@kerf-js/core'
+import { cursors, presence, relay } from '@kerf-js/multiplayer'
+import { Cursors } from '@kerf-js/multiplayer/ui'
 import { doc } from '#/server/doc'
 
 export default function Room() {
@@ -159,7 +159,7 @@ board, and their pings.
 
 ## The server half
 
-`multiplayer(options)` from `@weft-js/multiplayer/server` returns four things to spread into `channel({ … })`:
+`multiplayer(options)` from `@kerf-js/multiplayer/server` returns four things to spread into `channel({ … })`:
 
 | Field    | Goes into         | What it is |
 | -------- | ----------------- | ---------- |
@@ -238,7 +238,7 @@ viewport. When the pointer leaves the page, `null` is sent and the cursor disapp
 `left`, `top` (page pixels on this screen), `moved` and `idle`. A cursor whose anchor isn't on this page isn't in the
 list: drawing it at (0, 0) would be wrong. Scrolling and resizing re-place them.
 
-`<Cursors of={pointers} />` from `@weft-js/multiplayer/ui` draws the list: a fixed, `aria-hidden` overlay with an arrow
+`<Cursors of={pointers} />` from `@kerf-js/multiplayer/ui` draws the list: a fixed, `aria-hidden` overlay with an arrow
 per peer, their `user.name` in a label, and a colour from `hue(user.id)`. Cursors glide over 120 ms, and jump under
 `prefers-reduced-motion`. Draw your own from `pointers.list` if you want a different look.
 
@@ -265,8 +265,8 @@ the server's schemas.
 Both write to a box that you share, such as a `sharedState`:
 
 ```tsx
-import { sharedState } from '@weft-js/start'
-import { syncedScroll, syncedHash } from '@weft-js/multiplayer'
+import { sharedState } from '@kerf-js/start'
+import { syncedScroll, syncedHash } from '@kerf-js/multiplayer'
 
 // One scroll position per document, as a fraction of the scrollable
 // height.
@@ -285,9 +285,9 @@ By default cursors go over the channel's socket, through the server. A transport
 
 | Package | Transport | Needs |
 | ------- | --------- | ----- |
-| [`@weft-js/realtime-webrtc`](https://www.npmjs.com/package/@weft-js/realtime-webrtc) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/realtime-webrtc)</sup> | `webrtc({ iceServers, max })`: browser to browser | STUN, and TURN across networks |
-| [`@weft-js/realtime-livekit`](https://www.npmjs.com/package/@weft-js/realtime-livekit) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/realtime-livekit)</sup> | `livekit({ url })`, ticket `livekitTicket()` | A LiveKit server or LiveKit Cloud |
-| [`@weft-js/realtime-socketio`](https://www.npmjs.com/package/@weft-js/realtime-socketio) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/realtime-socketio)</sup> | `socketio({ url, path })`, ticket `socketioTicket({ secret })` | A Socket.IO server you run, with `relay(io, { secret })` |
+| [`@kerf-js/realtime-webrtc`](https://www.npmjs.com/package/@kerf-js/realtime-webrtc) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/realtime-webrtc)</sup> | `webrtc({ iceServers, max })`: browser to browser | STUN, and TURN across networks |
+| [`@kerf-js/realtime-livekit`](https://www.npmjs.com/package/@kerf-js/realtime-livekit) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/realtime-livekit)</sup> | `livekit({ url })`, ticket `livekitTicket()` | A LiveKit server or LiveKit Cloud |
+| [`@kerf-js/realtime-socketio`](https://www.npmjs.com/package/@kerf-js/realtime-socketio) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/realtime-socketio)</sup> | `socketio({ url, path })`, ticket `socketioTicket({ secret })` | A Socket.IO server you run, with `relay(io, { secret })` |
 
 ```ts
 const live = presence(chat, { transport: webrtc() })
@@ -302,10 +302,10 @@ room, or it is dropped.
 To write your own, implement `PeerTransport`: `{ name, open(room: PeerRoom): PeerLink }`. `room` gives you `self`,
 `ticket`, `peers`, `signal(to, data)` and `onSignal(fn)` (which go through the server) and `receive(from, text)`.
 Return `{ up, send, close }`; `up` is true only while a `send` reaches every peer. `transportSuite` from
-`@weft-js/multiplayer/test` checks one:
+`@kerf-js/multiplayer/test` checks one:
 
 ```ts
-import { transportSuite } from '@weft-js/multiplayer/test'
+import { transportSuite } from '@kerf-js/multiplayer/test'
 
 const checks = await transportSuite({
   make: () => myTransport(),
@@ -322,7 +322,7 @@ and a closed link sends nothing.
 
 | Entry | Export | What it is |
 | ----- | ------ | ---------- |
-| `@weft-js/multiplayer` | `presence(conn, options?)` | Who else is on the connection. |
+| `@kerf-js/multiplayer` | `presence(conn, options?)` | Who else is on the connection. |
 | | `cursors(presence, options?)` | Sends this pointer and tracks the others. |
 | | `relay<K>(conn)` | `{ emit, on }` for typed events the server validates. |
 | | `syncedScroll(box, element?)` | A scroll position in a shared box, as a fraction. |
@@ -334,11 +334,11 @@ and a closed link sends nothing.
 | | `applyPeer(list, peer)` | The list with that peer added or replaced. |
 | | `readCursor(text)` | A transport frame as a cursor, `null` for "left", or `undefined` when refused. |
 | | types | `Peer`, `PeerUser`, `CursorAt`, `Presence`, `PresenceOptions`, `CursorOptions`, `Cursors`, `LiveCursor`, `RelayEvent`, `PeerRoom`, `PeerLink`, `PeerTransport` |
-| `@weft-js/multiplayer/server` | `multiplayer(options)` | `{ client, server, on, left }` for a `channel`. |
+| `@kerf-js/multiplayer/server` | `multiplayer(options)` | `{ client, server, on, left }` for a `channel`. |
 | | `signTicket`, `verifyTicket`, `roomId`, `cursorSchema` | See [The server half](#the-server-half). |
 | | types | `MultiplayerOptions`, `TicketArgs`, `Peer`, `PeerUser`, `CursorAt` |
-| `@weft-js/multiplayer/ui` | `Cursors` | `<Cursors of={cursors(…)} />`. |
-| `@weft-js/multiplayer/test` | `transportSuite({ make, ticket? })` | The conformance checks for a `PeerTransport`. Types `Check`, `TransportSuiteOptions`. |
+| `@kerf-js/multiplayer/ui` | `Cursors` | `<Cursors of={cursors(…)} />`. |
+| `@kerf-js/multiplayer/test` | `transportSuite({ make, ticket? })` | The conformance checks for a `PeerTransport`. Types `Check`, `TransportSuiteOptions`. |
 
 ## Recipes
 
@@ -408,8 +408,8 @@ reconnect replays at most what the channel keeps, and presence rebuilds itself o
 
 ## End-to-end tests
 
-From the repository, `pnpm --filter @weft-js/multiplayer test:e2e prepare <dir>` prepares a room;
-`pnpm --filter @weft-js/multiplayer test:e2e run <dir>` runs it in two browsers. The entrypoint
+From the repository, `pnpm --filter @kerf-js/multiplayer test:e2e prepare <dir>` prepares a room;
+`pnpm --filter @kerf-js/multiplayer test:e2e run <dir>` runs it in two browsers. The entrypoint
 stays `.mjs` because Node runs it directly, outside Vitest.
 
 `run` takes `--runtimes node,bun,deno`, `--bus memory,redis,nats` (each browser talks to its own instance, so
@@ -421,21 +421,21 @@ a throwaway server; `REDIS_URL` and `NATS_URL` use yours. `--via livekit` needs 
 
 | Package | What it is |
 | ------- | ---------- |
-| [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start) | `channel`, `sharedState` and `realtime()`, which this builds on. |
-| [`@weft-js/realtime-webrtc`](https://www.npmjs.com/package/@weft-js/realtime-webrtc) | Cursors browser to browser over WebRTC data channels. |
-| [`@weft-js/realtime-livekit`](https://www.npmjs.com/package/@weft-js/realtime-livekit) | Cursors over a LiveKit room, which also carries audio and video. |
-| [`@weft-js/realtime-socketio`](https://www.npmjs.com/package/@weft-js/realtime-socketio) | Cursors through a Socket.IO relay you run. |
-| [`@weft-js/realtime-redis`](https://www.npmjs.com/package/@weft-js/realtime-redis) | A `realtime.bus` over Redis, so a room spans several server instances. |
-| [`@weft-js/realtime-nats`](https://www.npmjs.com/package/@weft-js/realtime-nats) | A `realtime.bus` over NATS. |
-| [`@weft-js/realtime-durable-object`](https://www.npmjs.com/package/@weft-js/realtime-durable-object) | A `realtime.bus` on Cloudflare Durable Objects. |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core) | The compiler and reactive runtime, the Vite plugin, the plugin system and test utilities. |
+| [`@kerf-js/start`](https://www.npmjs.com/package/@kerf-js/start) | `channel`, `sharedState` and `realtime()`, which this builds on. |
+| [`@kerf-js/realtime-webrtc`](https://www.npmjs.com/package/@kerf-js/realtime-webrtc) | Cursors browser to browser over WebRTC data channels. |
+| [`@kerf-js/realtime-livekit`](https://www.npmjs.com/package/@kerf-js/realtime-livekit) | Cursors over a LiveKit room, which also carries audio and video. |
+| [`@kerf-js/realtime-socketio`](https://www.npmjs.com/package/@kerf-js/realtime-socketio) | Cursors through a Socket.IO relay you run. |
+| [`@kerf-js/realtime-redis`](https://www.npmjs.com/package/@kerf-js/realtime-redis) | A `realtime.bus` over Redis, so a room spans several server instances. |
+| [`@kerf-js/realtime-nats`](https://www.npmjs.com/package/@kerf-js/realtime-nats) | A `realtime.bus` over NATS. |
+| [`@kerf-js/realtime-durable-object`](https://www.npmjs.com/package/@kerf-js/realtime-durable-object) | A `realtime.bus` on Cloudflare Durable Objects. |
+| [`@kerf-js/core`](https://www.npmjs.com/package/@kerf-js/core) | The compiler and reactive runtime, the Vite plugin, the plugin system and test utilities. |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). From the repository,
-`pnpm --filter @weft-js/multiplayer test` runs the unit tests: the server fragment on its own, and the client against
-`@weft-js/core/test`'s fake socket with the real channel client and server.
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). From the repository,
+`pnpm --filter @kerf-js/multiplayer test` runs the unit tests: the server fragment on its own, and the client against
+`@kerf-js/core/test`'s fake socket with the real channel client and server.
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

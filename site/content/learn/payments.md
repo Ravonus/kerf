@@ -1,7 +1,7 @@
 # Payments
 
 :::learn
-- How to add payments with `weft add pay`, and what it writes
+- How to add payments with `kerf add pay`, and what it writes
 - How to describe what you sell in a catalog, in whole minor units
 - Why `checkout` grants nothing, and how a verified webhook does
 - How to enforce access on the server with `requires` and `ctx.entitlements`
@@ -12,7 +12,7 @@ Selling something is mostly bookkeeping that's easy to get subtly wrong. A price
 that marks the user as paid when they click it gives Pro to anyone who opens the console. A webhook handler that doesn't
 check signatures accepts forged events, and one that isn't idempotent grants twice when the provider retries.
 
-Weft's answer is a plugin, `@weft-js/pay`. It's a plugin in the plain sense: nothing in Weft names it, and an app that
+Kerf's answer is a plugin, `@kerf-js/pay`. It's a plugin in the plain sense: nothing in Kerf names it, and an app that
 doesn't use it carries none of its code. It owns one ledger of purchases, verifies every event from the payment
 provider, and turns what's in the ledger into *entitlements*: short names like `'pro'` that your server functions check.
 The provider is a *rail*, and today's rail is Stripe.
@@ -24,7 +24,7 @@ The provider is a *rail*, and today's rail is Stripe.
 Payments need a database and sign-in, so add those first ([Database](/learn/database), [Auth](/learn/auth)). Then:
 
 ```bash
-weft add pay
+kerf add pay
 ```
 
 That adds the Stripe rail to `plugins` and writes five files, which this page walks through:
@@ -32,18 +32,18 @@ That adds the Stripe rail to `plugins` and writes five files, which this page wa
 | File | What it holds |
 |---|---|
 | `src/pay/catalog.ts` | What you sell. It reaches the client, so names and amounts only. |
-| `src/pay.server.ts` | The ledger: `definePay({ … })`. Its webhook is served at `/_weft/x/pay/stripe`. |
+| `src/pay.server.ts` | The ledger: `definePay({ … })`. Its webhook is served at `/_kerf/x/pay/stripe`. |
 | `src/server/pay.ts` | The server functions your pages call: `entitlements`, `checkout`, `portal`. |
 | `src/db/pay.schema.ts` | The `purchases` and `pay_events` tables, re-exported from `src/db/schema.ts`. |
 | `.env` | `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`, as placeholders. |
 
-Then run `weft db generate` for the two tables, put your Stripe *test* keys in `.env`, and give Stripe the webhook URL
-`https://<your app>/_weft/x/pay/stripe`, subscribed to `customer.subscription.*`, `checkout.session.*`,
+Then run `kerf db generate` for the two tables, put your Stripe *test* keys in `.env`, and give Stripe the webhook URL
+`https://<your app>/_kerf/x/pay/stripe`, subscribed to `customer.subscription.*`, `checkout.session.*`,
 `charge.refunded` and `charge.dispute.*`. Nothing calls Stripe until a user checks out, and no page loads Stripe.js.
 
 :::note Keys live in the server's environment
 `stripe()` reads `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` from the server's environment. Never pass a key in its
-options or write one in source: options land in a generated file, so `weft check` refuses a key there (**PAY003**), and a
+options or write one in source: options land in a generated file, so `kerf check` refuses a key there (**PAY003**), and a
 server secret read in client code is PAY003 too. A missing `STRIPE_WEBHOOK_SECRET` is **PAY011**.
 :::
 
@@ -54,7 +54,7 @@ entitlements it grants:
 
 ```ts
 // src/pay/catalog.ts
-import { product } from '@weft-js/pay'
+import { product } from '@kerf-js/pay'
 
 export const pro = product({
   id: 'pro',
@@ -77,7 +77,7 @@ export const credits = product({
 - `kind` is `'subscription'` (priced per plan in `plans`), `'one-time'` or `'consumable'` (priced with `price`).
 - `use` is `'digital'`, `'physical'` or `'service'`; `shipping: true` collects an address for physical goods.
 - Amounts are whole minor units with a lowercase currency: `{ usd: 999 }` is $9.99, and JPY has no minor unit at all. A
-  float or an amount with no currency is **PAY008**, both in `weft check` and when the module loads.
+  float or an amount with no currency is **PAY008**, both in `kerf check` and when the module loads.
 - A plan named `month` or `year` is its own interval; any other name needs `interval`.
 - `grants` lists the entitlements a live purchase gives.
 
@@ -85,7 +85,7 @@ To show a price, never type it into the page (that's **PAY005**): ask the catalo
 for the reader's locale, by the currency's own number of decimals:
 
 ```tsx
-import { price } from '@weft-js/pay'
+import { price } from '@kerf-js/pay'
 import { pro } from '#/pay/catalog'
 
 export function Plans() {
@@ -101,7 +101,7 @@ export function Plans() {
 
 ## The ledger and the server functions
 
-`src/pay.server.ts` is the one ledger of the app. Here it is as `weft add pay` writes it for a Drizzle app:
+`src/pay.server.ts` is the one ledger of the app. Here it is as `kerf add pay` writes it for a Drizzle app:
 
 ```ts
 // src/db/pay.schema.ts
@@ -127,8 +127,8 @@ export const payEvents = sqliteTable('pay_events', {
 
 ```ts
 // src/pay.server.ts
-import { drizzlePayStore } from '@weft-js/pay/drizzle'
-import { definePay } from '@weft-js/pay/server'
+import { drizzlePayStore } from '@kerf-js/pay/drizzle'
+import { definePay } from '@kerf-js/pay/server'
 import { db } from '#/db/index.server'
 import { payEvents, purchases } from '#/db/pay.schema'
 import * as catalog from './pay/catalog'
@@ -140,7 +140,7 @@ export default definePay({
 })
 ```
 
-(`weft add pay` imports the tables from `#/db/schema`, which re-exports them; either path works.)
+(`kerf add pay` imports the tables from `#/db/schema`, which re-exports them; either path works.)
 
 `urls` are where a buyer comes back to after paying or giving up. They're set here, on the server, and never come from
 the client. `definePay` also takes `leeway` (how long access lasts past a paid period while a late renewal arrives, 3
@@ -150,8 +150,8 @@ Pages don't import the ledger. They call three server functions:
 
 ```ts
 // src/server/pay.ts
-import { entitlementTag } from '@weft-js/pay'
-import { mutation, query, redirect } from '@weft-js/start'
+import { entitlementTag } from '@kerf-js/pay'
+import { mutation, query, redirect } from '@kerf-js/start'
 import pay from '../pay.server'
 
 export const entitlements = query({
@@ -183,8 +183,8 @@ Here's a pricing page. The buttons call the mutations, and what the page shows c
 
 ```tsx
 // src/routes/pricing.tsx
-import { price } from '@weft-js/pay'
-import type { Meta } from '@weft-js/start'
+import { price } from '@kerf-js/pay'
+import type { Meta } from '@kerf-js/start'
 import { pro } from '#/pay/catalog'
 import { checkout, entitlements, portal } from '#/server/pay'
 
@@ -220,7 +220,7 @@ export default function Pricing() {
 ```
 
 `checkout` sends the buyer to the provider's hosted page, and that's all it does. When they finish paying, the
-provider posts an event to `/_weft/x/pay/stripe`, and *that* is what grants Pro:
+provider posts an event to `/_kerf/x/pay/stripe`, and *that* is what grants Pro:
 
 1. The event is verified against the exact bytes received, with `STRIPE_WEBHOOK_SECRET`. A bad signature answers 400.
 2. It's applied to the purchase in the ledger.
@@ -244,7 +244,7 @@ with the right secret and tolerance, look up whether you've seen this event, app
 status so the provider retries what failed. Each of those steps has a well-known way to go wrong, and **PAY011** flags
 a handler of payment events with no signature check.
 
-`definePay` is a *server extension*: the one way a plugin reaches the server, under `/_weft/x/<key>/`. It sees the raw
+`definePay` is a *server extension*: the one way a plugin reaches the server, under `/_kerf/x/<key>/`. It sees the raw
 request before anything reads the body, and it can invalidate tags like a mutation, which is how a verified event
 reaches your live readers. An app with no `src/pay.server.ts` has no such route and none of this code.
 :::
@@ -258,8 +258,8 @@ gives the order its own id, the *ref*; the client never sends an amount:
 <!-- example: skip fragments of an app's server modules -->
 ```ts
 // src/server/order.ts
-import { orderTag } from '@weft-js/pay'
-import { mutation, query, redirect } from '@weft-js/start'
+import { orderTag } from '@kerf-js/pay'
+import { mutation, query, redirect } from '@kerf-js/start'
 import { z } from 'zod'
 import pay from '../pay.server'
 import { priceCart, saveOrder } from './cart'
@@ -325,7 +325,7 @@ typed 403 with the code `ENTITLEMENT_REQUIRED`:
 
 ```ts
 // src/server/reports.ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf-js/start'
 import { eq } from 'drizzle-orm'
 import { todos } from '#/db/schema'
 
@@ -349,7 +349,7 @@ export const report = query({
 
 ```tsx
 // src/routes/reports/_layout.tsx
-import { redirect, type LoadArgs } from '@weft-js/start'
+import { redirect, type LoadArgs } from '@kerf-js/start'
 
 export const load = async ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
@@ -364,7 +364,7 @@ export default function ReportsLayout(props: { children?: unknown }) {
 
 :::pitfall Await `has`
 `if (ctx.entitlements.has('pro'))` without `await` tests a promise, and a promise is always truthy, so everyone gets in.
-That's **PAY015**, and `weft fix` adds the `await` in an `async` function.
+That's **PAY015**, and `kerf fix` adds the `await` in an `async` function.
 :::
 
 An entitlement checked only on the client, with nothing on the server enforcing it, is **PAY013**.
@@ -390,15 +390,15 @@ Two kinds of testing, for two jobs.
 
 **Stripe's test mode**, for trying the real flow in a browser. Put your `sk_test_…` key and the test webhook secret in
 `.env`, run the app, and pay with Stripe's test cards. To reach your machine from Stripe, use the Stripe CLI's
-forwarding to `localhost:<port>/_weft/x/pay/stripe` and use the signing secret it prints as `STRIPE_WEBHOOK_SECRET`.
+forwarding to `localhost:<port>/_kerf/x/pay/stripe` and use the signing secret it prints as `STRIPE_WEBHOOK_SECRET`.
 
 **`fakePay`**, for automated tests. It's a rail with no key and no network. Its events are signed and go through your
 own webhook and ledger, so a test sees exactly what a user would. `net.context` sets who the test's requests come
 from:
 
 ```tsx
-import { net, render, screen, user } from '@weft-js/core/test'
-import { fakePay } from '@weft-js/pay/test'
+import { net, render, screen, user } from '@kerf-js/core/test'
+import { fakePay } from '@kerf-js/pay/test'
 import { expect, test } from 'vitest'
 import pay from '#/pay.server'
 import Pricing from '#/routes/pricing'
@@ -430,23 +430,23 @@ server refuses to start with it (**PAY016**).
 ## Another provider
 
 The catalog, the server functions and your pages never name Stripe, so another provider is one line: replace `stripe()`
-in `plugins` with any plugin for the `pay.rail` slot. A rail implements `PayRail` from `@weft-js/pay` (`checkout`,
-`portal`, `verify`, and optionally `refund`) and passes `payRailSuite` from `@weft-js/pay/test`. `verify` gets the exact
+in `plugins` with any plugin for the `pay.rail` slot. A rail implements `PayRail` from `@kerf-js/pay` (`checkout`,
+`portal`, `verify`, and optionally `refund`) and passes `payRailSuite` from `@kerf-js/pay/test`. `verify` gets the exact
 bytes received and throws `PayError('PAY011', …)` for anything it can't prove.
 
 Two rails ship: Stripe, and Square for one-time payments, so a shop's web orders land in the same Square account as its
-card readers. Swap `stripe()` for `square()` from `@weft-js/pay/square/plugin`; it reads `SQUARE_ACCESS_TOKEN` and
-`SQUARE_LOCATION_ID`, and for its webhook at `/_weft/x/pay/square` (subscribe it to `payment.created` and
+card readers. Swap `stripe()` for `square()` from `@kerf-js/pay/square/plugin`; it reads `SQUARE_ACCESS_TOKEN` and
+`SQUARE_LOCATION_ID`, and for its webhook at `/_kerf/x/pay/square` (subscribe it to `payment.created` and
 `payment.updated`) `SQUARE_WEBHOOK_SIGNATURE_KEY` and `SQUARE_WEBHOOK_URL`, the exact URL you gave Square, which is part of
 what it signs. `SQUARE_ENV=sandbox` uses Square's sandbox. A subscription or `portal` on the Square rail is **PAY022**:
-sell those through Stripe. App-store rails, store policy and a `weft pay sync` command aren't built.
+sell those through Stripe. App-store rails, store policy and a `kerf pay sync` command aren't built.
 
 ## Recap
 
-- `weft add pay` writes a catalog, a ledger, three server functions and two tables. Keys live in the server's
+- `kerf add pay` writes a catalog, a ledger, three server functions and two tables. Keys live in the server's
   environment, never in source.
 - Products are whole minor units with a currency. Show prices with `price(product, plan)`, never typed into the page.
-- `checkout` only opens the provider's page. A verified event at `/_weft/x/pay/<rail>` is the only grant, and it pokes
+- `checkout` only opens the provider's page. A verified event at `/_kerf/x/pay/<rail>` is the only grant, and it pokes
   `entitlements:<user>`, so `.live()` readers update by themselves.
 - A cart is `pay.order(ctx, { ref, lines })`: the server prices the lines, a guest can pay, and `onOrder` hears the
   verified result.
@@ -462,7 +462,7 @@ the pricing page.
 :::solution
 ```ts
 // src/pay/lifetime.ts
-import { product } from '@weft-js/pay'
+import { product } from '@kerf-js/pay'
 
 export const lifetime = product({
   id: 'lifetime',
@@ -483,7 +483,7 @@ cents, and `price` divides by the currency's own exponent.
 The export page hides its button from free users. Is the export protected?
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf-js/start'
 import { eq } from 'drizzle-orm'
 import { todos } from '#/db/schema'
 
@@ -505,7 +505,7 @@ No. Anyone signed in can call `exportCsv` directly, whatever the page shows, whi
 the server:
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf-js/start'
 import { eq } from 'drizzle-orm'
 import { todos } from '#/db/schema'
 

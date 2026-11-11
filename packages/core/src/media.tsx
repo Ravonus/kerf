@@ -1,7 +1,7 @@
-// @weft-js/core/media: <Media> and the record a `?media` import evaluates to (research 15 §7, research 26 §2). No encoder and
-// no IO here: @weft-js/core/vite builds the record (with @weft-js/plugin-media's `media.build` provider, or a header probe
+// @kerf-js/core/media: <Media> and the record a `?media` import evaluates to (research 15 §7, research 26 §2). No encoder and
+// no IO here: @kerf-js/core/vite builds the record (with @kerf-js/media's `media.build` provider, or a header probe
 // without one), and this renders it with dimensions, a placeholder, `srcset` and `sizes`, so nothing shifts. Video and
-// audio records come from @weft-js/plugin-media-ffmpeg. The swap runtime is a chunk only a compatible copy loads.
+// audio records come from @kerf-js/media-ffmpeg. The swap runtime is a chunk only a compatible copy loads.
 
 import { onMount, untrack } from './index'
 import type { Timeline } from './media-timeline'
@@ -66,7 +66,7 @@ export interface MediaProps {
   [attr: string]: unknown
 }
 
-/** Warp's phone breakpoint: under 600 px a fractional width is the full viewport. */
+/** Veneer's phone breakpoint: under 600 px a fractional width is the full viewport. */
 const PHONE = '(max-width: 599px)'
 
 /**
@@ -199,7 +199,7 @@ function timed({
 
 /**
  * One source, everything automatic: `<Media src={hero} alt="…" />`. Renders `<picture>` with the efficient formats
- * when the asset has them (AVIF isn't in every engine Weft targets: iOS 15), else one `<img>`.
+ * when the asset has them (AVIF isn't in every engine Kerf targets: iOS 15), else one `<img>`.
  */
 export function Media(props: MediaProps) {
   return untrack(() =>

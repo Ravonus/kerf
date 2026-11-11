@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { runTask, tasks } from '../src/tasks.mjs'
 import { fixture, project } from './helpers.mjs'
 
-describe('weft tasks', () => {
+describe('kerf tasks', () => {
   registerBuiltinTasks()
 
   it('runs a project task at the project root and passes its exit code on', async () => {
     const dir = project({
-      'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'
+      'kerf.config.ts': `import { defineConfig } from '@kerf-js/core/config'
 export default defineConfig({ tasks: {
-  ok: { run: 'test -f weft.config.ts', description: 'Passes at the root', sideEffects: [] },
+  ok: { run: 'test -f kerf.config.ts', description: 'Passes at the root', sideEffects: [] },
   no: { run: 'exit 3', description: 'Fails', sideEffects: [] },
 } })`,
     })
@@ -20,7 +20,7 @@ export default defineConfig({ tasks: {
 
   it('adds project tasks with args as JSON Schema (plain or Zod), side effects and environments', async () => {
     const dir = project({
-      'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'
+      'kerf.config.ts': `import { defineConfig } from '@kerf-js/core/config'
 import { z } from 'zod'
 export default defineConfig({
   scope: { write: ['src/**'], forbid: ['.env*'] },
@@ -39,7 +39,7 @@ export default defineConfig({
     const seed = r.tasks.find((t) => t.name === 'seed')
     expect(seed).toMatchObject({
       kind: 'project',
-      command: 'weft run seed',
+      command: 'kerf run seed',
       sideEffects: ['db'],
       env: ['dev'],
       available: true,
@@ -57,7 +57,7 @@ export default defineConfig({
 
   it('carries P003/P004 so an agent sees broken tasks where it reads them', async () => {
     const dir = project({
-      'weft.config.ts': "export default { tasks: { build: { run: 'vite build' } } }\n",
+      'kerf.config.ts': "export default { tasks: { build: { run: 'vite build' } } }\n",
     })
     const r = await tasks(dir)
     expect(r.ok).toBe(false)
@@ -101,7 +101,7 @@ function registerBuiltinTasks() {
     for (const t of r.tasks) {
       expect(t).toMatchObject({
         kind: 'builtin',
-        command: expect.stringMatching(/^weft /),
+        command: expect.stringMatching(/^kerf /),
         description: expect.any(String),
         sideEffects: expect.any(Array),
       })

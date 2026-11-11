@@ -216,9 +216,9 @@ async function paymentLink(call: Call, options: SquareOptions, request: Checkout
       ...(line.plan && line.product === 'order' && { reference_id: line.plan.slice(0, 40) }),
       line_items: (request.lines ?? [line]).map(lineItem),
       metadata: {
-        weft_user: user.slice(0, 255),
-        weft_product: line.product,
-        ...(line.plan && { weft_plan: line.plan }),
+        kerf_user: user.slice(0, 255),
+        kerf_product: line.product,
+        ...(line.plan && { kerf_plan: line.plan }),
       },
     },
     checkout_options: { redirect_url: request.successUrl },
@@ -241,9 +241,9 @@ export function squareRail(options: SquareOptions = {}): PayRail {
     }
     const m = order?.metadata ?? {}
     return {
-      ...(m.weft_user && { user: m.weft_user }),
-      ...(m.weft_product && { product: m.weft_product }),
-      ...(m.weft_plan && { plan: m.weft_plan }),
+      ...(m.kerf_user && { user: m.kerf_user }),
+      ...(m.kerf_product && { product: m.kerf_product }),
+      ...(m.kerf_plan && { plan: m.kerf_plan }),
     }
   }
 

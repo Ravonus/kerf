@@ -1,0 +1,77 @@
+{
+  "name": "@kerf-js/keel",
+  "version": "0.1.0",
+  "description": "@kerf-js/keel: KEEL generation for kerf. The `keel-lit` surface kind (surface.renderer@1) and KEEL's generative modules: trees, looks, light.",
+  "keywords": [
+    "kerf"
+  ],
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/keel#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/kerf/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
+    "directory": "packages/keel"
+  },
+  "files": [
+    "src",
+    "vendor",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.mjs"
+    },
+    "./runtime": "./src/runtime.ts",
+    "./stage": "./src/stage.ts",
+    "./scene": "./src/scene.ts",
+    "./governor": "./src/governor.ts",
+    "./blend": "./src/blend.ts",
+    "./paint": {
+      "types": "./src/paint.d.mts",
+      "default": "./src/paint.mjs"
+    },
+    "./paint-live": "./src/paint-live.ts",
+    "./client": {
+      "types": "./src/client.d.ts"
+    },
+    "./lit": {
+      "types": "./vendor/lit.d.mts",
+      "default": "./vendor/lit.mjs"
+    },
+    "./modules/*": {
+      "types": "./vendor/modules/*.d.mts",
+      "default": "./vendor/modules/*.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:e2e": "node test/e2e.mjs && node test/paint-e2e.mjs",
+    "vendor": "node scripts/vendor.mjs"
+  },
+  "devDependencies": {
+    "@kerf-js/capture": "workspace:*",
+    "@kerf-js/core": "workspace:*",
+    "@kerf-js/media": "workspace:*",
+    "@kerf-js/scroll": "workspace:*",
+    "@kerf-js/veneer": "workspace:*",
+    "esbuild": "0.28.2",
+    "playwright-core": "1.64.1",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  },
+  "peerDependencies": {
+    "@kerf-js/core": "*"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

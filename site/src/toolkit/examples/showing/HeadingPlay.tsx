@@ -1,4 +1,4 @@
-import { Heading } from '@weft-js/warp'
+import { Heading } from '@kerf-js/veneer'
 
 export const HeadingPlay = (p: {
   children: string

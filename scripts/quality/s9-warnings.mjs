@@ -21,7 +21,7 @@ export function splitCommentWarnings(diagnostics) {
   const warnings = [],
     rest = []
   for (const diagnostic of diagnostics) {
-    if (diagnostic.code === 'weft(comment-budget)' && diagnostic.severity === 'warning')
+    if (diagnostic.code === 'kerf(comment-budget)' && diagnostic.severity === 'warning')
       warnings.push(
         `${diagnostic.filename}:${diagnostic.labels?.[0]?.span.line ?? 0} ${diagnostic.message}`,
       )

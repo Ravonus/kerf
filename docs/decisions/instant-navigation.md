@@ -17,7 +17,7 @@ Read against `d99bfa49`, whose Sprint 7 requirements are in
 | Static and reactive active links | `packages/start/src/view.tsx`, `Link`; `run/helpers.ts`, `current_` | Both must observe accepted navigation immediately. |
 | Boundary first-load tracking | `packages/core/src/async/boundary.ts:56`, `async.ts:54` | Initial pending differs from refetching. A refresh keeps its current value. |
 | Boundary delay | `packages/core/src/async/shared.ts:4`, `boundary.ts:222–229` | The current 150 ms delay and 400 ms hold cannot be the navigation policy. |
-| Compiler shapes | `crates/weft-compiler/src/shape.rs:234–313` | Reuse variants and their inert, sizing-preserving markup. Generation currently needs shape discovery or an authored shape site. |
+| Compiler shapes | `crates/kerf-compiler/src/shape.rs:234–313` | Reuse variants and their inert, sizing-preserving markup. Generation currently needs shape discovery or an authored shape site. |
 | Query shape refinement | `packages/start/src/data/query.ts:62–76` | Reuse same-input/last-seen masked values, then the declared/schema shape. |
 | Navigation data | `packages/start/src/server/navigation.tsx:18–65` | Deferred fields are awaited; responses currently use `no-cache` without ETags. Do not require a new streaming protocol for this sprint. |
 | Mutation ordering | `packages/start/src/data/mutation.ts:29–100`, `data/cache.ts:184–246` | Keep call-owned optimistic layers, rollback, tag invalidation and generation checks. |
@@ -102,7 +102,7 @@ event-specific checks kept explicit:
 
 - A real anchor in the event's composed path, with a valid HTTP(S) same-origin
   URL matching a page route in the client table. Unknown URLs use native
-  navigation. Exclude internal `/_weft/` URLs.
+  navigation. Exclude internal `/_kerf/` URLs.
 - Primary pointer and button zero, with no Meta, Ctrl, Shift or Alt; reject an
   already prevented event. Run delegated admission after app handlers have had
   their normal chance to prevent the event. A later click cannot veto an already
@@ -166,7 +166,7 @@ rules; do not add fixed dimensions to real content to manufacture a passing test
 Compiler changes are required. Merely wrapping each lazy page in
 `pending="shape"` still waits for the page's code and misses cold 3G deadlines.
 
-- In `crates/weft-compiler/src/shape.rs`, request variants for all route defaults
+- In `crates/kerf-compiler/src/shape.rs`, request variants for all route defaults
   and layouts even without an authored Boundary. Preserve named/default export
   handling in `shape/collect.rs` and reuse the existing generator in
   `shape/generate.rs` and sizing rules in `shape/elements.rs`.
@@ -184,7 +184,7 @@ Compiler changes are required. Merely wrapping each lazy page in
   from lazy page code; it is a real delivery cost, not free tree shaking.
 - `packages/core/src/plugin.mjs` carries the existing shape-discovery/compiler
   plumbing. Extend that path rather than introducing another JSX transform.
-  Add compiler cases in `crates/weft-compiler/tests/compile.rs` and product cases
+  Add compiler cases in `crates/kerf-compiler/tests/compile.rs` and product cases
   in `packages/start/test/shape.browser.test.ts`.
 
 `checkSwap` in `packages/core/src/async/view.ts` remains a useful development
@@ -315,8 +315,8 @@ dependencies are explicit. Internal contract types should land before consumers.
 
 | Ticket | Exact implementation files / new files | Acceptance and dependency |
 | --- | --- | --- |
-| N1: failing scaffold proof | New `packages/create/test/e2e/instant-navigation.mjs`; new `packages/create/test/e2e/navigation-metrics.mjs`; `packages/create/package.json`; `scripts/check.mjs` | First ticket. Wire a real failing Playwright/CDP run into check, before changing navigation. Use the public `packages/create/bin/create-weft.mjs` to generate the landing app; do not change template UI. |
-| N2: shape assets and manifest | `crates/weft-compiler/src/shape.rs`, `shape/collect.rs`, `shape/generate.rs`, `shape/elements.rs`; `crates/weft-compiler/tests/compile.rs`; `packages/core/src/plugin.mjs`; `packages/start/src/vite/route-modules.mjs`; `packages/start/src/run.tsx` | Independent of runtime work after agreeing manifest fields. Cold shapes/overrides contain no route setup or server code; report eager bytes and static/nested/default-export cases. |
+| N1: failing scaffold proof | New `packages/create-kerf/test/e2e/instant-navigation.mjs`; new `packages/create-kerf/test/e2e/navigation-metrics.mjs`; `packages/create-kerf/package.json`; `scripts/check.mjs` | First ticket. Wire a real failing Playwright/CDP run into check, before changing navigation. Use the public `packages/create-kerf/bin/create-kerf.mjs` to generate the landing app; do not change template UI. |
+| N2: shape assets and manifest | `crates/kerf-compiler/src/shape.rs`, `shape/collect.rs`, `shape/generate.rs`, `shape/elements.rs`; `crates/kerf-compiler/tests/compile.rs`; `packages/core/src/plugin.mjs`; `packages/start/src/vite/route-modules.mjs`; `packages/start/src/run.tsx` | Independent of runtime work after agreeing manifest fields. Cold shapes/overrides contain no route setup or server code; report eager bytes and static/nested/default-export cases. |
 | N3: accepted navigation and route gate | `packages/start/src/router.ts`, `run/navigation.ts`, `run/listeners.ts`, `run/helpers.ts`, `run/boot.tsx`, `view.tsx`, `client.tsx`, `boot.ts`; `packages/core/src/async/shared.ts`, `async/boundary.ts`; `packages/start/test/nav.browser.test.ts`, `shape.browser.test.ts` | Depends on N2 contract and N1 measurements. Immediate history/active links, route timing, cancellation, retained owners and both overrides; ordinary Boundary timing unchanged. Include internal-entry export plumbing in this scope. |
 | N4: route data validators | `packages/start/src/server/navigation.tsx`, `server/payload.ts`; new `packages/start/test/navigation-cache.test.ts` | Independent of N3 after header contract. Test 200/304, private/session variants, no-store, cookies and mutation-invalidated validators. |
 | N5: bounded client cache | New `packages/start/src/run/cache.ts`; `run/navigation.ts`, `run/helpers.ts`; new `packages/start/test/route-cache.test.ts`; `packages/start/test/nav.browser.test.ts` | Depends on N3/N4; sequential with N3 on shared files. Test hard byte/count caps, history, eviction, expiry, tag/session invalidation and stale 304 races. |
@@ -332,11 +332,11 @@ keep unrelated behavior out of them.
 ## Early failing proof and completion evidence
 
 N1 uses Playwright's `chromium` and `newCDPSession`, rather than extending the raw
-CDP helper in `packages/create/scripts/cdp.mjs` into another browser driver.
+CDP helper in `packages/create-kerf/scripts/cdp.mjs` into another browser driver.
 Generate an unmodified landing template in one owned temporary root, wire it to
 this checkout's packages, build and serve it, then exercise its existing links.
 Reuse public scaffold/package helpers where compatible with pnpm; do not use
-`packages/create/scripts/local.mjs`'s npm-only install path or silently test
+`packages/create-kerf/scripts/local.mjs`'s npm-only install path or silently test
 published packages instead of the candidate. Pin the existing Playwright tool
 version and include required package metadata if this test needs a direct
 development dependency. This ticket installs or runs none of that.
@@ -375,7 +375,7 @@ development dependency. This ticket installs or runs none of that.
   shift coverage. A broken server, missing browser or unexecuted case is a
   failure, not a timing sample or skip.
 
-Add `test:e2e` in `packages/create/package.json` for the raw Node entrypoint.
+Add `test:e2e` in `packages/create-kerf/package.json` for the raw Node entrypoint.
 Add a slow `instant-navigation` step to `scripts/check.mjs` that invokes it and
 propagates nonzero status. A filtered check can run that step alone; normal
 `pnpm run check` includes both profiles. Enumerate the tracked matching test
@@ -387,9 +387,9 @@ An early deliberately red ticket is not permission to merge a failing final gate
 Keep bounded timing/shift/byte receipts with the candidate SHA and environment;
 close the browser, server and owned temporary scaffold on success and failure.
 For runtime/compiler changes, follow `CONTRIBUTING.md` and `CLAUDE.md`: package
-checks, size checks and the full comparison across Weft + Warp, Solid,
+checks, size checks and the full comparison across Kerf + Veneer, Solid,
 React + Radix, React + Zustand and React + MUI. Commit comparison history and
-HTML; retain the 50 KB Warp ceiling. No benchmark or 3G acceptance ran for this
+HTML; retain the 50 KB Veneer ceiling. No benchmark or 3G acceptance ran for this
 design-only ticket.
 
 M2 owns public coordination: reference types and exports, the Learn page's

@@ -1,4 +1,4 @@
-// `/_weft/rt` over real HTTP on the fixture's dev server: the protocol a browser's reader speaks, the cursor a page
+// `/_kerf/rt` over real HTTP on the fixture's dev server: the protocol a browser's reader speaks, the cursor a page
 // carries, and a closed socket reaching the server. test/hub.test.ts covers the hub's decisions without a network.
 import { inject } from 'vitest'
 import { connect, frameId, pageCursor, rpc } from './rt-client.mjs'
@@ -39,17 +39,17 @@ test('adding to a connection in place answers 204; an unknown id 404', async () 
   const counter = frameId(url, 'counter')
   const c = await connect(url, {})
   const { k } = await c.until('h')
-  const res = await fetch(`${url}/_weft/rt`, {
+  const res = await fetch(`${url}/_kerf/rt`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-weft': '1' },
+    headers: { 'content-type': 'application/json', 'x-kerf': '1' },
     body: JSON.stringify({ k, s: [[9, 'q', counter]] }),
   })
   expect(res.status).toBe(204)
   expect((await c.until('a'))[0]).toBe(9)
   c.close()
-  const gone = await fetch(`${url}/_weft/rt`, {
+  const gone = await fetch(`${url}/_kerf/rt`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-weft': '1' },
+    headers: { 'content-type': 'application/json', 'x-kerf': '1' },
     body: JSON.stringify({ k: 'nope' }),
   })
   expect(gone.status).toBe(404)
@@ -63,7 +63,7 @@ test("a page that reads `.live` carries the cursor; one that doesn't, doesn't", 
 test('a client that goes away closes its connection on the server', async () => {
   const stats = frameId(url, 'rtStats')
   const read = async () =>
-    (await fetch(`${url}/_weft/fn/${stats}`).then((r) => r.json())).v.connections
+    (await fetch(`${url}/_kerf/fn/${stats}`).then((r) => r.json())).v.connections
   const before = await read()
   const c = await connect(url, {})
   await c.until('h')
@@ -74,5 +74,5 @@ test('a client that goes away closes its connection on the server', async () => 
 
 test("Q009: a stream can't be called as a server function", async () => {
   const feed = frameId(url, 'noteFeed')
-  expect((await fetch(`${url}/_weft/fn/${feed}`)).status).toBe(405)
+  expect((await fetch(`${url}/_kerf/fn/${feed}`)).status).toBe(405)
 })

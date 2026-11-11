@@ -1,5 +1,5 @@
 // React event names and mount behaviour on native elements, written directly and through a spread.
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 type P = { log: (what: string) => void }
 

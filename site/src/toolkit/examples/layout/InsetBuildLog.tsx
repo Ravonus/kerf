@@ -1,4 +1,4 @@
-import { Card, Inset, Stack, Text } from '@weft-js/warp'
+import { Card, Inset, Stack, Text } from '@kerf-js/veneer'
 import { LOG } from './shared'
 
 export const InsetBuildLog = () => (

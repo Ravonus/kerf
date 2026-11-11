@@ -1,0 +1,20 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* SideNavTitle: the header's brand word, and the open panel's title stacked on it. While an `under` panel is open the
+   word lifts and fades out as the title rises into its place; closing reverses it. */
+:where([data-scope="sidenav-title"]) { display: inline-grid; align-items: center; justify-items: start; }
+:where([data-scope="sidenav-title"] > *) {
+  grid-area: 1 / 1; white-space: nowrap;
+  transition: translate var(--veneer-duration-slow) var(--veneer-ease-out), opacity var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="sidenav-title"] > [data-part="title"]) { translate: 0 0.5em; opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+:where([data-scope="sidenav"]),
+  :where([data-scope="sidenav"] > [data-part="panel"]),
+  :where([data-scope="sidenav"] > [data-part="backdrop"]),
+  :where([data-scope="sidenav"] [data-part="scroll"]),
+  :where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))),
+  :where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg),
+  :where([data-scope="sidenav-title"] > *) { transition: none; }
+}
+}

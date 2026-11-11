@@ -106,7 +106,7 @@ describe('route shape style preparation', () => {
     const f = fixture()
     try {
       const foreign = f.doc.createElement('style')
-      foreign.setAttribute('data-weft-shape-style', '')
+      foreign.setAttribute('data-kerf-shape-style', '')
       f.doc.head.insertBefore(foreign, f.doc.querySelector('#app'))
       const first = prepareRouteShape(f.routes, '/generated', f.doc)!
       const second = prepareRouteShape({ ...f.routes, build: 'build-b' }, '/custom', f.doc)!

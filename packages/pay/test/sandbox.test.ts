@@ -1,10 +1,10 @@
 // Sandbox switching for both rails: which host and key mode a config picks, and that a key from the other mode is a
 // clear PAY032 before anything is sent. Every `fetch` here is a stub that records the URL; nothing reaches a network.
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { definePay, memoryPayStore } from '@weft-js/pay/server'
+import { definePay, memoryPayStore } from '@kerf-js/pay/server'
 import { stripeKeyMode, stripeRail } from '../src/stripe'
 import { squareRail, squareSandbox } from '../src/square'
-import type { CheckoutRequest } from '@weft-js/pay'
+import type { CheckoutRequest } from '@kerf-js/pay'
 import squarePlugin from '../square-plugin.mjs'
 import { setup as paySetup } from '../src/setup.mjs'
 
@@ -226,14 +226,14 @@ test('pay.sandbox() reads the bound rail, for a test-mode banner', async () => {
   expect(await pay.sandbox()).toBe(false)
 })
 
-// ---- what `weft add` writes ------------------------------------------------------------------------------------
+// ---- what `kerf add` writes ------------------------------------------------------------------------------------
 
-test('`weft add pay` writes STRIPE_MODE=test beside the test-key placeholder', () => {
+test('`kerf add pay` writes STRIPE_MODE=test beside the test-key placeholder', () => {
   const plan = paySetup.run({ engine: null, layer: null, read: () => 'server: {\n' })
   expect(plan.env).toMatchObject({ STRIPE_MODE: 'test', STRIPE_SECRET_KEY: 'sk_test_placeholder' })
 })
 
-test('`weft add pay-square` writes the sandbox switch and the empty sandbox variables', () => {
+test('`kerf add pay-square` writes the sandbox switch and the empty sandbox variables', () => {
   const { setup } = squarePlugin().contribute({
     command: 'check',
     mode: 'development',

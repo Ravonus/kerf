@@ -93,7 +93,7 @@ function resolveDefinition(g: GroupSource, def: Def, where: string, report: Repo
         'D025',
         'error',
         e.message,
-        'Use a token from the vocabulary (`weft style explain` lists them), or `css: { … }` for a raw value (D023).',
+        'Use a token from the vocabulary (`kerf style explain` lists them), or `css: { … }` for a raw value (D023).',
       )
       continue
     }
@@ -314,7 +314,7 @@ function similarGroups(
         file: file!,
         line: Number(line),
         message: `groups ${names[i]} (${ga.file}) and ${names[j]} resolve to ${Math.round(s * 100)}% the same CSS`,
-        help: `Merge them into one group, with an axis for what differs (\`weft style explain ${names[i]}\` and \`${names[j]}\` side by side).`,
+        help: `Merge them into one group, with an axis for what differs (\`kerf style explain ${names[i]}\` and \`${names[j]}\` side by side).`,
       })
     }
   return similar

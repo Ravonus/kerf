@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { Badge, Table } from '@weft-js/warp'
-import type { Column, TableSort } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Badge, Table } from '@kerf-js/veneer'
+import type { Column, TableSort } from '@kerf-js/veneer'
 
 type Bean = {
   id: string

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { SideNav } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { SideNav } from '@kerf-js/veneer'
 import { GUIDE, follow } from './shared'
 
 export function SideNavFilter() {

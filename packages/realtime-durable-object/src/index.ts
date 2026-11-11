@@ -1,17 +1,17 @@
-// A Durable Object per channel (research 32 §6). `WeftBusObject` holds the sockets, through the hibernation API, and
+// A Durable Object per channel (research 32 §6). `KerfBusObject` holds the sockets, through the hibernation API, and
 // nothing else: a publish is a POST it writes to all of them. A hub's subscribe is a WebSocket to the object, and a
 // lost one is a `gap`. No runtime imports, so workerd can run this file as it is.
 //
 // A Worker's I/O belongs to the request that opened it, so a stateless Worker can't hold that socket: this needs a hub
-// that lives in a Durable Object, Nitro's `cloudflare_durable` preset (`weft build` refuses the others, R002).
+// that lives in a Durable Object, Nitro's `cloudflare_durable` preset (`kerf build` refuses the others, R002).
 
-import type { Bus } from '@weft-js/start/bus'
+import type { Bus } from '@kerf-js/start/bus'
 
 /** The parts of Workers' API used here, so an app doesn't need `@cloudflare/workers-types` for this file. */
 interface Stub {
   fetch(url: string, init?: RequestInit): Promise<Response & { webSocket?: CfSocket | null }>
 }
-/** A Durable Object namespace binding, as far as the bus uses one: `env.WEFT_BUS` fits it. */
+/** A Durable Object namespace binding, as far as the bus uses one: `env.KERF_BUS` fits it. */
 export interface DurableObjectNamespaceLike {
   idFromName(name: string): unknown
   get(id: unknown): Stub
@@ -28,10 +28,10 @@ interface CfState {
 }
 declare const WebSocketPair: new () => [CfSocket, CfSocket]
 
-const BASE = 'https://weft-bus/'
+const BASE = 'https://kerf-bus/'
 
-/** Export it from the worker entry and bind it: `new_sqlite_classes: ['WeftBusObject']`, binding `WEFT_BUS`. */
-export class WeftBusObject {
+/** Export it from the worker entry and bind it: `new_sqlite_classes: ['KerfBusObject']`, binding `KERF_BUS`. */
+export class KerfBusObject {
   constructor(
     private state: CfState,
     _env?: unknown,
@@ -60,7 +60,7 @@ export class WeftBusObject {
   }
 }
 
-/** The `realtime.bus` for `src/realtime.server.ts`: one `WeftBusObject` per channel, which must be reached from a Durable Object hub. */
+/** The `realtime.bus` for `src/realtime.server.ts`: one `KerfBusObject` per channel, which must be reached from a Durable Object hub. */
 export function durableObjectBus({ namespace }: { namespace: DurableObjectNamespaceLike }): Bus {
   const stub = (channel: string) => namespace.get(namespace.idFromName(channel))
   const open = new Set<() => void>()

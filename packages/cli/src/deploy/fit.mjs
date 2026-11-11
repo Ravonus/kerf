@@ -5,7 +5,7 @@ import { HOSTS } from './hosts.mjs'
 
 const SERVERS = "`deploy: { target: 'fly' }` or `'render'`: a server that stays up"
 const SPLIT =
-  'or keep the pages here and run realtime on a small server (the split, `weft docs deploy`)'
+  'or keep the pages here and run realtime on a small server (the split, `kerf docs deploy`)'
 
 /** What a disk need asks of a host, with the config that gives it one. */
 function disk(h, need, cfg = {}, assume) {
@@ -15,7 +15,7 @@ function disk(h, need, cfg = {}, assume) {
       fix:
         need.what === 'a SQLite file'
           ? `${SERVERS}, with a volume or disk, or a hosted database here (Postgres on Neon or Supabase, Turso for SQLite)`
-          : `${SERVERS}, with a volume or disk: this weft has no object store for uploads yet (research 46 §9)`,
+          : `${SERVERS}, with a volume or disk: this kerf has no object store for uploads yet (research 46 §9)`,
     }
   const has = h.id === 'fly' ? cfg.fly?.volume : cfg.render?.disk
   if (has) return
@@ -54,7 +54,7 @@ export function fit(needs, h, { deploy = {}, assume = false, local = false } = {
       'error',
       needs.required,
       `${needs.required.what} needs a change feed that stays connected, and ${h.name} keeps no process between requests (R013)`,
-      `${SERVERS}, run \`weft db listen\` on one with \`listener: 'external'\`, or drop \`required\``,
+      `${SERVERS}, run \`kerf db listen\` on one with \`listener: 'external'\`, or drop \`required\``,
     )
   if (needs.sidecar && !h.sidecars)
     add(
@@ -62,7 +62,7 @@ export function fit(needs, h, { deploy = {}, assume = false, local = false } = {
       'error',
       needs.sidecar,
       `${needs.sidecar.what} is a second process next to the server, and ${h.name} runs only the server`,
-      `${SERVERS} (the image runs both), or deploy the sidecar on its own and set \`rust.services.<name>.external: true\` with its \`WEFT_RUST_<NAME>_URL\``,
+      `${SERVERS} (the image runs both), or deploy the sidecar on its own and set \`rust.services.<name>.external: true\` with its \`KERF_RUST_<NAME>_URL\``,
     )
   if (needs.native && h.kind === 'workers')
     add(
@@ -90,7 +90,7 @@ export function fit(needs, h, { deploy = {}, assume = false, local = false } = {
       'warning',
       needs.feed,
       `${needs.feed.what} needs a process that stays up: on ${h.name}, writes from outside the app won't reach \`.live()\``,
-      `${SERVERS}, or \`weft db listen\` on one with \`listener: 'external'\``,
+      `${SERVERS}, or \`kerf db listen\` on one with \`listener: 'external'\``,
     )
   if (needs.memoryBus && h.many)
     add(
@@ -100,7 +100,7 @@ export function fit(needs, h, { deploy = {}, assume = false, local = false } = {
       `${needs.memoryBus.what} reaches the clients of one instance, and ${h.name} runs many`,
       h.id === 'cloudflare'
         ? '`durableObjectBus` in `src/realtime.server.ts`'
-        : '`weft add redis` or `weft add nats`, or `postgresBus({ url })` in `src/realtime.server.ts`',
+        : '`kerf add redis` or `kerf add nats`, or `postgresBus({ url })` in `src/realtime.server.ts`',
     )
   if (needs.addons && local && h.prebuilt && process.platform !== 'linux')
     add(

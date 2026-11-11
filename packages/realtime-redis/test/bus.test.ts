@@ -1,8 +1,8 @@
-// redis against a real server, through the `realtime.bus` suite. `WEFT_TEST_REDIS` is the path to a binary (the test
+// redis against a real server, through the `realtime.bus` suite. `KERF_TEST_REDIS` is the path to a binary (the test
 // runs its own, so it can restart it); without it the server half skips, which is reported, not hidden.
 import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { spawn, type ChildProcess } from 'node:child_process'
-import { busSuite } from '@weft-js/core/test/plugins'
+import { busSuite } from '@kerf-js/core/test/plugins'
 import { bus, redisBus } from '../src/index'
 
 const stop = (c: ChildProcess) =>
@@ -11,9 +11,9 @@ const stop = (c: ChildProcess) =>
     c.kill('SIGKILL')
   })
 
-const binary = process.env.WEFT_TEST_REDIS
+const binary = process.env.KERF_TEST_REDIS
 
-// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`: the suite restarts a real server.
+// Needs a `redis-server` binary, named by `KERF_TEST_REDIS`: the suite restarts a real server.
 test.skipIf(!binary)(
   'redisBus passes realtime.bus@1 on a real server, a restart included',
   async () => {

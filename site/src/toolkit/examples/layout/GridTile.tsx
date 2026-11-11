@@ -1,4 +1,4 @@
-import { Grid } from '@weft-js/warp'
+import { Grid } from '@kerf-js/veneer'
 import { Box, SIX } from './shared'
 
 export const GridTile = () => (

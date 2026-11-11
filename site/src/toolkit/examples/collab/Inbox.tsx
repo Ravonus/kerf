@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 import {
   ConversationList,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 import { CONVERSATIONS } from '../../world'
 

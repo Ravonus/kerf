@@ -1,5 +1,5 @@
 import { TONES } from '../../world'
-import { Tag } from '@weft-js/warp'
+import { Tag } from '@kerf-js/veneer'
 
 export const TagTones = () => (
   <>

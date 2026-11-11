@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Stack,
   Switch,
   Toaster,
   toast,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 const previewHint =
   'Every pull request gets its own address.'

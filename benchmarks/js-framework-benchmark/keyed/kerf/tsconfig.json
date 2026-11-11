@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "jsxImportSource": "@kerf-js/core",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["@kerf-js/core/client"]
+  },
+  "include": ["src"]
+}

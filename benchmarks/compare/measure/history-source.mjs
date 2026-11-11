@@ -86,33 +86,33 @@ export class HistoryRepository {
 /** Renames retain their source identity instead of looking like newly added code. */
 export function canonicalPath(path) {
   return path
-    .replace(/^packages\/ui-core\//, 'packages/warp-core/')
-    .replace(/^packages\/weft\//, 'packages/core/')
+    .replace(/^packages\/ui-core\//, 'packages/veneer-core/')
+    .replace(/^packages\/kerf\//, 'packages/core/')
     .replace(/^evals\/compare\//, 'benchmarks/compare/')
 }
 
 /** Source categories are separate from archived emitted/compressed measurements. */
 export function inputGroup(path) {
-  if (/^docs\/design\/warp\/tokens\/.*\.css$/.test(path)) return 'canonical-css'
-  if (/^packages\/warp-core\/styles\/.*\.css$/.test(path)) return 'generated-css'
-  if (/^packages\/warp\/src\/.*\.css$/.test(path)) return 'warp-css'
-  if (/^crates\/weft-compiler\/(src\/|Cargo\.|build.rs|rust-toolchain)/.test(path))
+  if (/^docs\/design\/veneer\/tokens\/.*\.css$/.test(path)) return 'canonical-css'
+  if (/^packages\/veneer-core\/styles\/.*\.css$/.test(path)) return 'generated-css'
+  if (/^packages\/veneer\/src\/.*\.css$/.test(path)) return 'veneer-css'
+  if (/^crates\/kerf-compiler\/(src\/|Cargo\.|build.rs|rust-toolchain)/.test(path))
     return 'compiler'
   const manifest =
     '(package(-lock)?\\.json|pnpm-lock\\.yaml|pnpm-workspace\\.yaml|\\.nvmrc|\\.npmrc)'
   if (
     new RegExp(
-      `^${manifest}$|^packages/(core|warp|warp-core)/${manifest}$|^benchmarks/compare/((weft-warp|weft-plain|solid-kobalte|react-radix|react-zustand|react-mui)/)?${manifest}$`,
+      `^${manifest}$|^packages/(core|veneer|veneer-core)/${manifest}$|^benchmarks/compare/((kerf-veneer|kerf-plain|solid-kobalte|react-radix|react-zustand|react-mui)/)?${manifest}$`,
     ).test(path)
   )
     return 'dependencies'
   if (!/\.[cm]?[jt]sx?$/.test(path)) return null
-  if (path.startsWith('packages/warp/src/')) return 'warp-js'
-  if (/^packages\/warp-core\/(src|bindings)\//.test(path)) return 'warp-core-js'
+  if (path.startsWith('packages/veneer/src/')) return 'veneer-js'
+  if (/^packages\/veneer-core\/(src|bindings)\//.test(path)) return 'veneer-core-js'
   if (path.startsWith('packages/core/src/')) return 'core-js'
   if (/^packages\/core\/(node|vite|compiler)/.test(path)) return 'build-js'
   if (
-    /^benchmarks\/compare\/(measure|shared\/|(weft-warp|weft-plain|solid-kobalte|react-radix|react-zustand|react-mui)\/)/.test(
+    /^benchmarks\/compare\/(measure|shared\/|(kerf-veneer|kerf-plain|solid-kobalte|react-radix|react-zustand|react-mui)\/)/.test(
       path,
     )
   )
@@ -162,7 +162,7 @@ export function stampCompilerFiles(files) {
 
 /** Fingerprint the historical compiler source without executing historical JavaScript. */
 export function compilerInputs(repo, ref) {
-  const prefix = 'crates/weft-compiler/'
+  const prefix = 'crates/kerf-compiler/'
   const files = repo
     .tree(ref)
     .filter((file) => file.path.startsWith(prefix))

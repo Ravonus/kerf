@@ -4,28 +4,28 @@ Sprint 8 design, 2026-11-08. This decision defines the implementation contract. 
 implement the API or claim that its checks have passed. The source baseline is `90fbeee3`
 (Sprint 8 after the scope amendment).
 
-This revision follows `/Users/ravonus/dev/weft-orchestra/sprints/S8/NOTICE.md` and the Sprint 8
+This revision follows `/Users/ravonus/dev/kerf-orchestra/sprints/S8/NOTICE.md` and the Sprint 8
 section read from `origin/main:docs/ROADMAP-1.0.md`. It supersedes the colour-only contract in
 the first T01 commit. Implementation is still unstarted.
 
 ## Existing contracts
 
-- `packages/warp/plugin.mjs` validates options with paths, fits seed hues, and runs D010. Its
+- `packages/veneer/plugin.mjs` validates options with paths, fits seed hues, and runs D010. Its
   `SCOPES` reapply overrides wherever the system tokens are derived. The current D010 filter can
   exclude light/dark and expression stops through `dials`; that is insufficient for named themes
   which can appear anywhere in the document.
-- `packages/warp-core/scripts/split-css.mjs` generates `styles/` from
-  `docs/design/warp/tokens/`. Changing only generated component CSS is not a source change.
+- `packages/veneer-core/scripts/split-css.mjs` generates `styles/` from
+  `docs/design/veneer/tokens/`. Changing only generated component CSS is not a source change.
   `build()` and `--check` compare the generated strings, including comments and whitespace.
-- `packages/warp-core/styles/warp.css` defines layers, system tokens, the sweep, label colours and
+- `packages/veneer-core/styles/veneer.css` defines layers, system tokens, the sweep, label colours and
   focus rings. Button also paints through tone channels, pseudo-elements, relative colours and
   highlight mixes. Replacing its first `background` declaration does not theme its animated fill.
 - Nav paints both a moving indicator and a pre-script current-link indicator. Tabs has line,
   enclosed and pill variants. Link paints its underline with `currentColor`. Pill already has
-  stylesheet rules, but there is no exported `Pill` component in the current warp entrypoint.
-- `packages/warp-core/src/dial.ts` writes attributes synchronously, stores root choices under
-  `warp:dials`, and announces `warp:dial`. `dialScript` restores those choices before first paint.
-- `packages/warp/tailwind.css` uses `@theme inline` so utilities read tokens at the element.
+  stylesheet rules, but there is no exported `Pill` component in the current veneer entrypoint.
+- `packages/veneer-core/src/dial.ts` writes attributes synchronously, stores root choices under
+  `veneer:dials`, and announces `veneer:dial`. `dialScript` restores those choices before first paint.
+- `packages/veneer/tailwind.css` uses `@theme inline` so utilities read tokens at the element.
   `Contributions.tokens.alias` in `packages/core/src/plugin.d.ts` already supports selecting a
   different module at build time. No compiler or core plugin API change is needed for CSS selection.
 
@@ -34,7 +34,7 @@ as they are. No existing screenshot or contrast expectation changes to accept th
 
 ## Configuration and names
 
-Keep the roadmap's `warp({ system, colors, seed, parts, themes, dials })` shape. Add these types
+Keep the roadmap's `veneer({ system, colors, seed, parts, themes, dials })` shape. Add these types
 to `plugin.d.mts`; the implementation accepts plain objects only:
 
 - A colour is `#rrggbb`, a colour name, readable raw CSS colour, or `{ hue, chroma }`.
@@ -69,11 +69,11 @@ dials.palette: unknown theme `oceen`; use default, ocean, sunset
 ```
 
 Raw high-level colours must parse and resolve through the same checked colour grammar as D010
-(hex, oklch, light-dark, supported colour-mix and known warp references). An alias used as a
+(hex, oklch, light-dark, supported colour-mix and known veneer references). An alias used as a
 seed must resolve to a hex/family; a conditional raw colour is a seed path error. Keep `tokens`
 as the existing raw CSS escape hatch with its safety checks. Known colour-bearing raw tokens,
 including the new part tokens, must be readable by D010. An unresolved expression in a checked
-pair is an error, never an omitted pair or a passing result. Unknown custom `--warp-*` tokens
+pair is an error, never an omitted pair or a passing result. Unknown custom `--veneer-*` tokens
 retain today's validation; an unused custom property does not itself constitute a colour pair.
 
 ### Exact colours and hue families
@@ -92,34 +92,34 @@ label roles for labels. The unfilled sweep's active copy uses text; the filled c
 on-solid. D010 checks both. This is role resolution, not permission to repair a failing
 explicitly pinned colour.
 
-The public utility value is `--warp-named-<name>`: a literal for hex colours, the family's solid
-role for hue/chroma colours. Internal family role tokens use `--warp-named-<name>-<role>`.
+The public utility value is `--veneer-named-<name>`: a literal for hex colours, the family's solid
+role for hue/chroma colours. Internal family role tokens use `--veneer-named-<name>-<role>`.
 Resolve aliases before emission, and sort names for deterministic output.
 
 ## Part and state tokens
 
-The spelling is `--warp-<part>-<property>[-<state>]`. The following table records the required
+The spelling is `--veneer-<part>-<property>[-<state>]`. The following table records the required
 colour aliases; the registry tables below extend it to every token consumer and every value
 family. Top-level properties are resting settings. No `rest` object is accepted.
 
-<!-- warp-theme-schema:begin -->
+<!-- veneer-theme-schema:begin -->
 
 | Part | Resting properties | State properties | Token examples |
 | --- | --- | --- | --- |
-| `button` | `bg`, `text`, `border`, `highlight` | `hover`, `focus`, `press`, `disabled`: `bg`, `text`, `border`, `highlight` | `--warp-button-bg`, `--warp-button-text-hover`, `--warp-button-highlight-press` |
-| `sweep` | `stroke`, `base`, `label`, `text` | `invalid`: `stroke`, `label`, `text` | `--warp-sweep-stroke`, `--warp-sweep-base`, `--warp-sweep-label`, `--warp-sweep-text`, `--warp-sweep-stroke-invalid` |
-| `nav` | `text`, `underline` | `hover`, `focus`, `active`, `disabled`: `text`, `underline` | `--warp-nav-underline`, `--warp-nav-text-active` |
-| `tabs` | `text`, `underline` | `hover`, `focus`, `active`, `disabled`: `text`, `underline` | `--warp-tabs-underline`, `--warp-tabs-text-focus` |
-| `link` | `text`, `underline` | `hover`, `focus`, `press`, `disabled`: `text`, `underline` | `--warp-link-text`, `--warp-link-text-hover` |
-| `pill` | `bg`, `text`, `border` | `hover`, `focus`, `active`, `disabled`: `bg`, `text`, `border` | `--warp-pill-bg`, `--warp-pill-text-active` |
-| `badge` | `bg`, `text`, `border` | none | `--warp-badge-bg`, `--warp-badge-text` |
-| `field` | `label`, `bg` | `floated`: `label`; `hover`, `focus`, `invalid`: `label`, `bg`; `focus`, `invalid`: also `ring`; `disabled`, `readonly`: `label`, `bg` | `--warp-field-label`, `--warp-field-label-floated`, `--warp-field-label-focus`, `--warp-field-ring-focus` |
-| `focus` | `ring` | none | `--warp-focus-ring` |
+| `button` | `bg`, `text`, `border`, `highlight` | `hover`, `focus`, `press`, `disabled`: `bg`, `text`, `border`, `highlight` | `--veneer-button-bg`, `--veneer-button-text-hover`, `--veneer-button-highlight-press` |
+| `sweep` | `stroke`, `base`, `label`, `text` | `invalid`: `stroke`, `label`, `text` | `--veneer-sweep-stroke`, `--veneer-sweep-base`, `--veneer-sweep-label`, `--veneer-sweep-text`, `--veneer-sweep-stroke-invalid` |
+| `nav` | `text`, `underline` | `hover`, `focus`, `active`, `disabled`: `text`, `underline` | `--veneer-nav-underline`, `--veneer-nav-text-active` |
+| `tabs` | `text`, `underline` | `hover`, `focus`, `active`, `disabled`: `text`, `underline` | `--veneer-tabs-underline`, `--veneer-tabs-text-focus` |
+| `link` | `text`, `underline` | `hover`, `focus`, `press`, `disabled`: `text`, `underline` | `--veneer-link-text`, `--veneer-link-text-hover` |
+| `pill` | `bg`, `text`, `border` | `hover`, `focus`, `active`, `disabled`: `bg`, `text`, `border` | `--veneer-pill-bg`, `--veneer-pill-text-active` |
+| `badge` | `bg`, `text`, `border` | none | `--veneer-badge-bg`, `--veneer-badge-text` |
+| `field` | `label`, `bg` | `floated`: `label`; `hover`, `focus`, `invalid`: `label`, `bg`; `focus`, `invalid`: also `ring`; `disabled`, `readonly`: `label`, `bg` | `--veneer-field-label`, `--veneer-field-label-floated`, `--veneer-field-label-focus`, `--veneer-field-ring-focus` |
+| `focus` | `ring` | none | `--veneer-focus-ring` |
 
 `nav.underline`, `tabs.underline` and `link.underline` accept the original colour scalar or `{
 color, width, offset }`. A scalar normalizes to `{ color: value }`. The colour keeps
-`--warp-nav-underline` (and its tabs/link equivalents); width/offset use
-`--warp-nav-underline-width` and `--warp-nav-underline-offset`, with state last. Reject mixed
+`--veneer-nav-underline` (and its tabs/link equivalents); width/offset use
+`--veneer-nav-underline-width` and `--veneer-nav-underline-offset`, with state last. Reject mixed
 scalar/object siblings for the same normalized leaf. Width is thickness; offset is the gap to
 the existing track/underline, not its axis length. Map both Nav indicators on both axes. For
 Link, offset maps text-underline-offset and the existing gradient placement. The pill Tabs
@@ -137,10 +137,10 @@ animation. Root `font` settings target the component's existing text role and in
 its owned label; specific label/floated-label records can override that role.
 
 The expansion rule makes every token name exact: for instance, every `button.hover` property is
-`--warp-button-<property>-hover`, without aliases such as `fill`, `fg`, or `pressed`.
+`--veneer-button-<property>-hover`, without aliases such as `fill`, `fg`, or `pressed`.
 `sweep.label` is the resting frame label. `sweep.text` is the copy revealed while the sweep
 runs, including the filled-frame copy. It is deliberately different from a field's label. The
-existing `--warp-sweep-fill` remains a raw token; it is not renamed or stripped by the build.
+existing `--veneer-sweep-fill` remains a raw token; it is not renamed or stripped by the build.
 
 `press` means a physical press (`:active` or the existing `data-press`), for Button and Link.
 `active` means current/selected/toggled (`aria-current`, `aria-selected="true"`,
@@ -166,15 +166,15 @@ site, including its tone channels, `currentColor`, opacity, mix, and light/dark 
 
 | Paint | Existing fallback and required coverage |
 | --- | --- |
-| Button fill, ink, border | `--warp-tone-fill/ink/edge` over `--_fill/ink/edge`; preserve primary roles for a button without an explicit tone, and soft/outline/ghost/frame/link emphasis |
+| Button fill, ink, border | `--veneer-tone-fill/ink/edge` over `--_fill/ink/edge`; preserve primary roles for a button without an explicit tone, and soft/outline/ghost/frame/link emphasis |
 | Button animated fill | `--_layer`, `--_pa`, `--_pb`, their highlight mixes and relative-colour branch; supplied state `bg` must colour every visible fill stop, not only the host background |
-| Button highlight | `--warp-color-highlight-solid` at each mix; without an override the entire mix stays byte-for-byte intact |
-| Sweep stroke and base | `--warp-color-sweep`, tone/field `--_tint` and `--_base`, `--warp-color-sweep-base`; also frame corners and all six outline segments |
+| Button highlight | `--veneer-color-highlight-solid` at each mix; without an override the entire mix stays byte-for-byte intact |
+| Sweep stroke and base | `--veneer-color-sweep`, tone/field `--_tint` and `--_base`, `--veneer-color-sweep-base`; also frame corners and all six outline segments |
 | Sweep label and active text | `--_tone` over accent-text at rest; text for an unfilled copy; `--_tone-ink` over on-solid for a filled copy |
 | Invalid sweep | critical-solid stroke and critical-text label; ordinary sweep settings cannot erase the invalid treatment |
 | Nav | subtle text at rest, text on hover/focus/current; accent-solid for both moving and pre-script indicators, on both axes |
 | Tabs | subtle text at rest, text on hover/selected; accent-solid for the line/enclosed indicator; retain raised-surface fill for the pill indicator |
-| Link | accent-text, inherited ink for `subtle`, and currentColor for the underline/gradient; cover bare anchors in `warp/src/links.css` as well |
+| Link | accent-text, inherited ink for `subtle`, and currentColor for the underline/gradient; cover bare anchors in `veneer/src/links.css` as well |
 | Pill | raised-surface/subtle-text/border at rest; text on hover; accent-soft/accent-text/accent-border when selected |
 | Badge | the existing soft/text, solid/on-solid and outline/border tone channels |
 | Field | label inside, label-rest floated, label-active on hover/focus, critical-text when invalid; field/field-active/field-invalid backgrounds, including classic and line variants |
@@ -189,7 +189,7 @@ colours in a configurable fallback.
 
 ## Registry, system scale and value domains
 
-The tables between `warp-theme-schema` markers are machine-readable design input. The follow-up
+The tables between `veneer-theme-schema` markers are machine-readable design input. The follow-up
 schema generator reads these tables from this file; no second hand-written schema is created. It
 parses canonical CSS with a CSS/selector parser and expands the consumer rules into records: `{
 part, subpart, path, state, token, domain, units, selector, atRules, source, fallbackSpan }`. A
@@ -202,7 +202,7 @@ records below.
 This file is the authority for exposed names/domains; canonical CSS is the authority for exact
 bindings and fallbacks. The generator rejects an unclassified consumer, unsupported table path,
 duplicate output token, source binding that matches nothing, and missing fallback. It emits
-`packages/warp-core/theme.schema.json`, the entire `packages/warp/plugin.d.mts` from a template,
+`packages/veneer-core/theme.schema.json`, the entire `packages/veneer/plugin.d.mts` from a template,
 and `packages/cli/docs/theme-tokens.md`. The generated docs expand every part/property/state
 record, including its custom property, unit, source and fallback. All three outputs contain the
 same schema digest. `--check` regenerates in memory and compares bytes. Types have finite part
@@ -216,8 +216,8 @@ expanding records. It must report every candidate it excludes and why; it cannot
 negative/query-only selectors. A root setting affects its own paint and owned descendants,
 ending at a nested different component scope. `parts['field/label']` addresses that actual
 subpart; it does not collide with the scalar `parts.field.label` colour alias. Its token prefix
-is `--warp-field--label-`, with double hyphens separating scope and subpart. Standalone
-`[data-part]` hosts use the `part/<name>` namespace and `--warp-part--<name>-` prefix.
+is `--veneer-field--label-`, with double hyphens separating scope and subpart. Standalone
+`[data-part]` hosts use the `part/<name>` namespace and `--veneer-part--<name>-` prefix.
 Scope-free foundations use `root`; type role settings use `text/<role>`. No new component export
 is implied by a stylesheet scope, including the marketing specimens. Existing shipped families
 stay shipped; marketing source-only records are labelled source-only in generated docs, not
@@ -232,23 +232,23 @@ they do not add JSX prop values to components with a closed intent-prop union.
 
 | system path | keys | domain | binding |
 | --- | --- | --- | --- |
-| space | hair,tight,related,group,section,page; user keys | space | --warp-space-<key>; numeric key 2 is a name, not a multiplier |
+| space | hair,tight,related,group,section,page; user keys | space | --veneer-space-<key>; numeric key 2 is a name, not a multiplier |
 | radius | control,surface,card,mark,round,pill; user keys | radius | card aliases surface; pill aliases round; reject both aliases set differently |
-| font | body,display,mono; user keys | family | body aliases --warp-font-sans; other existing keys keep --warp-font-<key> |
-| text | display,title,heading,body,prose,label,eyebrow,caption,code,control,button; user keys | text-role | existing --warp-text-<role>-*; only fields with a real role consumer |
-| shadow | none,sm,md,lg; user keys | shadow | none/sm/md/lg alias --warp-elevation-0/1/2/3 |
-| border | hairline,emphasis | width | --warp-border-hairline/emphasis |
-| focus | width,offset,color | focus-role | --warp-focus-width/offset and --warp-color-focus |
-| padding | control,surface | space | --warp-pad-control/surface |
-| control | sm,md,lg | length | --warp-control-sm/md/lg; preserve existing hit-area floor in final size |
-| field | height | length | --warp-field-height; preserve existing target-min floor |
-| density | compact,cozy,comfortable | density-role | factor -> --warp-density-k; control.sm/md/lg -> --warp-ref-control-* at that stop |
-| motion.duration | every actual --warp-duration-* and --warp-*-duration token | time | token basename is key; instant/fast/base/slow plus fill,spring,touch-out,sweep,frame,label-float,label-char,message and declared family durations |
-| motion.easing | every actual --warp-ease-* plus sweep,sweep-in,label-float | easing | exact existing ease/sweep-ease/label-float-ease token |
+| font | body,display,mono; user keys | family | body aliases --veneer-font-sans; other existing keys keep --veneer-font-<key> |
+| text | display,title,heading,body,prose,label,eyebrow,caption,code,control,button; user keys | text-role | existing --veneer-text-<role>-*; only fields with a real role consumer |
+| shadow | none,sm,md,lg; user keys | shadow | none/sm/md/lg alias --veneer-elevation-0/1/2/3 |
+| border | hairline,emphasis | width | --veneer-border-hairline/emphasis |
+| focus | width,offset,color | focus-role | --veneer-focus-width/offset and --veneer-color-focus |
+| padding | control,surface | space | --veneer-pad-control/surface |
+| control | sm,md,lg | length | --veneer-control-sm/md/lg; preserve existing hit-area floor in final size |
+| field | height | length | --veneer-field-height; preserve existing target-min floor |
+| density | compact,cozy,comfortable | density-role | factor -> --veneer-density-k; control.sm/md/lg -> --veneer-ref-control-* at that stop |
+| motion.duration | every actual --veneer-duration-* and --veneer-*-duration token | time | token basename is key; instant/fast/base/slow plus fill,spring,touch-out,sweep,frame,label-float,label-char,message and declared family durations |
+| motion.easing | every actual --veneer-ease-* plus sweep,sweep-in,label-float | easing | exact existing ease/sweep-ease/label-float-ease token |
 | motion | scale,press,stagger,stagger-max,distance,scale-from | motion-role | existing motion-scale,press,stagger,stagger-max,motion-distance,motion-scale-from; reduction still wins |
-| layout | bar,tabbar,rail,sidebar,list,aside,measure,narrow,content,wide | length | --warp-layout-<key> |
+| layout | bar,tabbar,rail,sidebar,list,aside,measure,narrow,content,wide | length | --veneer-layout-<key> |
 | breakpoint | each existing width query, keyed by source family/container/operator/default threshold | build-length | rewrite only that recorded query; never substitute all equal numbers |
-| color | every existing --warp-color-* token suffix | color | existing semantic colour scale; same checks as tokens; colors is the named dictionary |
+| color | every existing --veneer-color-* token suffix | color | existing semantic colour scale; same checks as tokens; colors is the named dictionary |
 
 A `text-role` object has the property-table font fields that exist for that role. `density-role`
 is `{ factor, control: { sm, md, lg } }`, not an arbitrary CSS object. `motion-role` fields use
@@ -257,7 +257,7 @@ a nonnegative integer, distance is a length. A focus role has width/offset/colou
 space values remain the existing density/air formulas; an explicitly assigned scale value is
 exact and is not multiplied a second time. A custom space key has no hidden density multiplier.
 The existing compact/cozy/comfortable factors are 0.75/1/1.25 and reference control sizes are
-24/32/40, 28/36/44 and 32/40/48 px respectively (`warp.css:331-341`).
+24/32/40, 28/36/44 and 32/40/48 px respectively (`veneer.css:331-341`).
 
 ### Property table
 
@@ -354,12 +354,12 @@ subfields use the preceding explicit rows. Required colour aliases use their Par
 }
 ```
 
-For example `padding-inline` maps to `paddingInline` and then `--warp-button-padding-inline`;
+For example `padding-inline` maps to `paddingInline` and then `--veneer-button-padding-inline`;
 `font.weight` maps to `font-weight`. A candidate name already declared in canonical CSS gets
-`local-` after its part prefix, so `parts.sweep.width` uses `--warp-sweep-local-width`,
-`sweep.duration` uses `--warp-sweep-local-duration`, and field height uses
-`--warp-field-local-height`. Keep the existing `--warp-sweep-width`, `--warp-sweep-duration`,
-and `--warp-field-height` as inherited raw/system inputs. Never register, strip or reinterpret a
+`local-` after its part prefix, so `parts.sweep.width` uses `--veneer-sweep-local-width`,
+`sweep.duration` uses `--veneer-sweep-local-duration`, and field height uses
+`--veneer-field-local-height`. Keep the existing `--veneer-sweep-width`, `--veneer-sweep-duration`,
+and `--veneer-field-height` as inherited raw/system inputs. Never register, strip or reinterpret a
 pre-existing property as a new noninheriting local slot. The expanded generated reference lists
 every collision result, so authors need not infer this rule.
 
@@ -403,7 +403,7 @@ control geometry.
 
 ### Canonical consumer inventory
 
-This bounded source inventory counts declarations with a direct `var(--warp-*)` read, including
+This bounded source inventory counts declarations with a direct `var(--veneer-*)` read, including
 custom-property assignments. It is lexical evidence, not a browser or ownership proof. There are
 13 source files, 481 distinct declared public-token names and 359 distinct scope names
 (including the type shim). The source-aware generator also follows local `--_` channels; a dash
@@ -415,23 +415,23 @@ candidates.
 
 | source | scope names | direct token-read declarations |
 | --- | --- | --- |
-| `docs/design/warp/tokens/warp-app.css` | 78 | 939 |
-| `docs/design/warp/tokens/warp-canvas.css` | 3 | 33 |
-| `docs/design/warp/tokens/warp-components.css` | 80 | 937 |
-| `docs/design/warp/tokens/warp-data.css` | 40 | 724 |
-| `docs/design/warp/tokens/warp-flows.css` | 36 | 341 |
-| `docs/design/warp/tokens/warp-inputs-rich.css` | 30 | 606 |
-| `docs/design/warp/tokens/warp-inputs.css` | 41 | 579 |
-| `docs/design/warp/tokens/warp-layout.css` | 40 | 667 |
-| `docs/design/warp/tokens/warp-marketing.css` | 71 | 958 |
-| `docs/design/warp/tokens/warp.css` | 48 | 442 |
-| `packages/warp/src/links.css` | 0 | 2 |
-| `packages/warp/src/type.css` | 1 | 37 |
-| `packages/warp/src/layout.css` | 0 | 1 |
+| `docs/design/veneer/tokens/veneer-app.css` | 78 | 939 |
+| `docs/design/veneer/tokens/veneer-canvas.css` | 3 | 33 |
+| `docs/design/veneer/tokens/veneer-components.css` | 80 | 937 |
+| `docs/design/veneer/tokens/veneer-data.css` | 40 | 724 |
+| `docs/design/veneer/tokens/veneer-flows.css` | 36 | 341 |
+| `docs/design/veneer/tokens/veneer-inputs-rich.css` | 30 | 606 |
+| `docs/design/veneer/tokens/veneer-inputs.css` | 41 | 579 |
+| `docs/design/veneer/tokens/veneer-layout.css` | 40 | 667 |
+| `docs/design/veneer/tokens/veneer-marketing.css` | 71 | 958 |
+| `docs/design/veneer/tokens/veneer.css` | 48 | 442 |
+| `packages/veneer/src/links.css` | 0 | 2 |
+| `packages/veneer/src/type.css` | 1 | 37 |
+| `packages/veneer/src/layout.css` | 0 | 1 |
 | Total (scope names overlap) | 359 distinct | 6266 |
 
-Family names in the last column refer to the corresponding canonical `warp-<family>.css`; `warp`
-is foundations and `shim-*` is `packages/warp/src/*.css`. Root parts plus observed subparts
+Family names in the last column refer to the corresponding canonical `veneer-<family>.css`; `veneer`
+is foundations and `shim-*` is `packages/veneer/src/*.css`. Root parts plus observed subparts
 expand into finite schema entries; they are not wildcard component names.
 
 | scope or standalone part | direct CSS properties | observed states | observed subparts | sources |
@@ -448,7 +448,7 @@ expand into finite schema entries; they are not wildcard component names.
 | `announcement` | background,block-size,color,font-size,gap,inline-size,inset-block,padding | - | dismiss | layout |
 | `announcer` | - | - | - | components |
 | `api-key` | color,font | - | info,prefix | flows |
-| `artifact` | background,border-block-end,border-inline-start,border-radius,box-shadow,font | - | head,preview | app,warp |
+| `artifact` | background,border-block-end,border-inline-start,border-radius,box-shadow,font | - | head,preview | app,veneer |
 | `assistant` | animation,background,border-radius,box-shadow,color,font-size,line-height | active | actions,content,mark,token | app |
 | `auth` | background,border,border-block-start,border-radius,box-shadow,color,font,font-family,font-size,font-style,font-weight,gap,inline-size,letter-spacing,padding,padding-block,text-decoration-color,text-decoration-thickness | - | brand,divider,fine,lede,logo,main,panel,row,title | flows |
 | `auto-track` | color,font-size | - | - | app |
@@ -460,7 +460,7 @@ expand into finite schema entries; they are not wildcard component names.
 | `back-to-top` | animation,background,block-size,border,box-shadow,color,inline-size,inset-block-end,margin-inline-end | - | - | layout |
 | `backdrop` | animation,backdrop-filter,background,border,border-radius,color,font,font-size,letter-spacing,padding,z-index | - | state | components,marketing |
 | `backdrops` | gap | - | - | marketing |
-| `badge` | animation,border,border-radius,box-shadow,font-family,font-size,inset-block-end,inset-inline-start,letter-spacing,text-box,text-transform | - | eyebrow | app,components,marketing,warp |
+| `badge` | animation,border,border-radius,box-shadow,font-family,font-size,inset-block-end,inset-inline-start,letter-spacing,text-box,text-transform | - | eyebrow | app,components,marketing,veneer |
 | `banner` | animation,border,border-block-end,border-inline-start,border-radius,color,font-size,gap,padding | - | actions | components,layout |
 | `bar-list` | animation,animation-delay,background,border-radius,font-size | - | - | data |
 | `bell` | box-shadow,inset-block-end,inset-inline-start | - | - | app |
@@ -474,7 +474,7 @@ expand into finite schema entries; they are not wildcard component names.
 | `breadcrumb` | background,border-radius,color,transition | active,hover | - | layout |
 | `breadcrumbs` | background,border-radius,color,min-block-size,transition | active,hover | back,ellipsis | components |
 | `bulk-bar` | animation,background,border-radius,color,font-size,gap | - | - | flows |
-| `button` | background,background-color,background-image,block-size,border,border-radius,box-shadow,color,font-family,font-size,font-weight,gap,inline-size,inset,inset-inline,letter-spacing,margin-inline-start,min-block-size,min-inline-size,opacity,padding-inline,scale,text-box,text-decoration-thickness,text-transform,transform,transition,transition-duration,translate | active,disabled,focus,hover,open,press | actions,bulk,close,eyebrow,footer,label,moves,status,sweep | app,components,data,inputs,inputs-rich,marketing,warp |
+| `button` | background,background-color,background-image,block-size,border,border-radius,box-shadow,color,font-family,font-size,font-weight,gap,inline-size,inset,inset-inline,letter-spacing,margin-inline-start,min-block-size,min-inline-size,opacity,padding-inline,scale,text-box,text-decoration-thickness,text-transform,transform,transition,transition-duration,translate | active,disabled,focus,hover,open,press | actions,bulk,close,eyebrow,footer,label,moves,status,sweep | app,components,data,inputs,inputs-rich,marketing,veneer |
 | `button-group` | box-shadow,gap,inline-size,margin-inline-start | - | - | components |
 | `calendar` | animation,background,background-color,background-image,block-size,border,border-block-end,border-block-start,border-inline-end,border-inline-start,border-radius,box-shadow,color,font,font-family,font-size,font-weight,gap,grid-template-columns,inset-block-start,letter-spacing,max-block-size,min-inline-size,outline,padding,padding-block-start,padding-inline,text-transform,transition | active,disabled,focus,hover,open | allday,allday-cell,caption,chip,col,cols,corner,day,day-cell,dayhead,draft,event,event-meta,event-start,event-time,event-title,foot,ghost,grid,gutter,gutter-label,head,hour,lane,lane-label,mini,mini-note,month,months,more,now,now-label,off-hours,rail,range-label,readout,resize,root,sources,timeline,top,tz,year-wrap | app,inputs-rich |
 | `call-controls` | background,block-size,border-radius,box-shadow,color,font,gap,inset-inline-end,margin-inline-start,min-inline-size,padding,transition | active,hover | control,end,group,leave | app |
@@ -482,32 +482,32 @@ expand into finite schema entries; they are not wildcard component names.
 | `canvas` | background,background-color,background-image,border,border-radius,box-shadow,inset-block-end,inset-inline-end,inset-inline-start | - | controls,minimap,viewport | canvas,layout |
 | `card` | background,background-color,border-radius,box-shadow,color,font-size,outline,outline-offset,padding | focus,hover | card,node | data |
 | `card-grid` | gap | - | - | data |
-| `carousel` | background,block-size,border-radius,color,font,font-variant-numeric,gap,inline-size,transform,transition | active | controls,dot,fraction,progress,slide,viewport | marketing,warp |
+| `carousel` | background,block-size,border-radius,color,font,font-variant-numeric,gap,inline-size,transform,transition | active | controls,dot,fraction,progress,slide,viewport | marketing,veneer |
 | `cart` | animation,background,border-block-end,border-block-start,border-radius,color,font-size,font-variant-numeric | - | check,line,pane,totals | marketing |
 | `center` | padding-inline | - | - | layout |
-| `changelog` | animation-name,animation-range,animation-timing-function,background,border,border-radius,color,font,font-family,font-size,gap,inline-size,inset-block-start,padding-block | - | card,head,item,knot,media,release,what,when | marketing,warp |
-| `chart` | animation,animation-delay,animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-radius,color,fill,font,font-family,font-size,gap,stop-opacity,stroke,stroke-width,transition | active,focus | card,head,item,state,summary,svg,table | data,warp |
-| `checkbox` | background,border,border-radius,border-width,box-shadow,clip-path,color,column-gap,font-size,inset,line-height,min-block-size,opacity,outline,scale,stroke,transition | disabled,focus,hover,invalid,press | cell,control,hint,icon,mark,preview,select,sweep,sweep-base,track | app,components,data,inputs,marketing,warp |
+| `changelog` | animation-name,animation-range,animation-timing-function,background,border,border-radius,color,font,font-family,font-size,gap,inline-size,inset-block-start,padding-block | - | card,head,item,knot,media,release,what,when | marketing,veneer |
+| `chart` | animation,animation-delay,animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-radius,color,fill,font,font-family,font-size,gap,stop-opacity,stroke,stroke-width,transition | active,focus | card,head,item,state,summary,svg,table | data,veneer |
+| `checkbox` | background,border,border-radius,border-width,box-shadow,clip-path,color,column-gap,font-size,inset,line-height,min-block-size,opacity,outline,scale,stroke,transition | disabled,focus,hover,invalid,press | cell,control,hint,icon,mark,preview,select,sweep,sweep-base,track | app,components,data,inputs,marketing,veneer |
 | `checklist` | animation,background,block-size,border,border-block-start,border-radius,box-shadow,color,font,font-size,gap,padding,text-decoration-color,transition | - | count,done,head,item,progress,title | flows |
 | `checkout` | animation,background,border,border-radius,font,gap,min-block-size,padding,transition | - | layout,step-title,summary | flows |
 | `checkpoint` | border-block-start,color,font | - | - | app |
-| `chip` | background,block-size,border,border-color,border-radius,border-width,clip-path,color,font,font-size,gap,inset,inset-block,opacity,outline,padding-inline,scale,text-box,transition,transition-duration | active,checked,disabled,focus,hover,invalid,press | cell,control,eyebrow,icon,preview,sweep,sweep-base,track | components,data,inputs,inputs-rich,marketing,warp |
+| `chip` | background,block-size,border,border-color,border-radius,border-width,clip-path,color,font,font-size,gap,inset,inset-block,opacity,outline,padding-inline,scale,text-box,transition,transition-duration | active,checked,disabled,focus,hover,invalid,press | cell,control,eyebrow,icon,preview,sweep,sweep-base,track | components,data,inputs,inputs-rich,marketing,veneer |
 | `chips` | color,font-size,outline | focus | clear | data |
 | `choice` | color,font-size | - | - | flows |
 | `choice-card` | background,border-radius,border-width,clip-path,color,font,font-size,gap,opacity,outline,padding,transition | checked,disabled,focus,invalid | cell,control,hint,icon,label,meta,preview,sweep,sweep-base,track | app,inputs |
 | `cite` | background,border-radius,box-shadow,color,font,inset-block,inset-inline | hover,open | - | app |
 | `click-ripple` | animation | - | - | app |
 | `code` | background,border,border-radius,font | - | - | inputs-rich |
-| `codeblock` | animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-radius,box-shadow,color,font,font-family,font-size,transition | active,focus | card,file,head,item,lang,line | inputs-rich,warp |
+| `codeblock` | animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-radius,box-shadow,color,font,font-family,font-size,transition | active,focus | card,file,head,item,lang,line | inputs-rich,veneer |
 | `codetabs` | background,border,border-color,border-radius,box-shadow,color,font,min-block-size,outline | active,focus | - | inputs-rich |
 | `color` | border-radius,box-shadow,gap,inset,outline,transition | checked,focus | area,area-thumb,swatch | inputs |
 | `comment-anchor` | background,border-block-end | active | - | app |
-| `comment-thread` | background,border-radius,box-shadow,color,font,outline,transition,translate | active,focus | comment,reply | app,warp |
+| `comment-thread` | background,border-radius,box-shadow,color,font,outline,transition,translate | active,focus | comment,reply | app,veneer |
 | `commit` | background,border-radius,box-shadow,color,font-family | - | - | app |
 | `compare` | background,border,border-radius,box-shadow,color,font,inline-size,outline | focus | handle,tag | marketing |
 | `compare-table` | background,border,border-block-start,border-radius,color,font-family,font-size,letter-spacing,text-transform | - | - | marketing |
 | `comparison` | background,border-block-end,border-start-end-radius,border-start-start-radius,color,font,font-family,font-size,font-weight,letter-spacing,min-block-size,text-transform | - | no,section,yes | data |
-| `composer` | background,border-radius,box-shadow,color,font,font-size,margin,min-block-size,padding-block | - | file,hint,quote-by,quote-draft,quote-text,send | app,warp |
+| `composer` | background,border-radius,box-shadow,color,font,font-size,margin,min-block-size,padding-block | - | file,hint,quote-by,quote-draft,quote-text,send | app,veneer |
 | `confetti` | z-index | - | - | marketing |
 | `confirm` | background,border,border-radius,color,font-size,gap | - | control | flows |
 | `confirmation` | gap | - | - | flows |
@@ -535,7 +535,7 @@ expand into finite schema entries; they are not wildcard component names.
 | `dither` | background,color,font-family,padding,transition | - | - | canvas |
 | `doc-tabs` | background,border,border-block-end,border-color,border-radius,color,font-size,inset,min-block-size,padding-inline | active,hover | close | layout |
 | `docs` | gap,inset-block-start,max-block-size,max-inline-size,min-block-size,padding,padding-block-start | - | article,body,sidenav,toc | layout |
-| `drawer` | - | - | - | warp |
+| `drawer` | - | - | - | veneer |
 | `dropzone` | background,border-radius,border-width,clip-path,color,font-size,gap,padding,transition,translate | focus,invalid | cell,control,hint,icon,preview,sweep,sweep-base,title,touch,track | inputs |
 | `edges` | inset-inline-start,transition | - | - | layout |
 | `editable` | border-radius,border-width,clip-path,color,gap,min-block-size,transition | focus,hover,invalid | cell,control,icon,preview,sweep,sweep-base,track | inputs |
@@ -550,23 +550,23 @@ expand into finite schema entries; they are not wildcard component names.
 | `fancy-presets` | gap | - | - | marketing |
 | `fancy-stage` | background,border,border-radius,color,font | - | empty | marketing |
 | `feedback` | color,font-size | - | thanks | inputs-rich |
-| `field` | animation,animation-name,animation-range,animation-timing-function,background,background-color,block-size,border,border-block-start-color,border-color,border-radius,border-top-width,border-width,box-shadow,caret-color,clip-path,color,font-family,font-size,font-weight,gap,inline-size,inset,inset-block-end,inset-block-start,inset-inline-start,letter-spacing,margin-block-start,margin-inline-end,margin-inline-start,max-block-size,min-block-size,opacity,outline,padding,padding-block,padding-block-start,padding-inline,transition,transition-delay,transition-duration,transition-timing-function | active,disabled,floated,focus,hover,invalid,open,press | action,body,card,cell,clear,control,counter,end,error,head,hint,icon,indicator,input,item,label,mask,message,pick,prefix,preview,segments,spinner,status,step,stepper,steps,suffix,swatch-dot,sweep,sweep-base,track,trigger,value | app,components,data,flows,inputs,inputs-rich,marketing,warp |
+| `field` | animation,animation-name,animation-range,animation-timing-function,background,background-color,block-size,border,border-block-start-color,border-color,border-radius,border-top-width,border-width,box-shadow,caret-color,clip-path,color,font-family,font-size,font-weight,gap,inline-size,inset,inset-block-end,inset-block-start,inset-inline-start,letter-spacing,margin-block-start,margin-inline-end,margin-inline-start,max-block-size,min-block-size,opacity,outline,padding,padding-block,padding-block-start,padding-inline,transition,transition-delay,transition-duration,transition-timing-function | active,disabled,floated,focus,hover,invalid,open,press | action,body,card,cell,clear,control,counter,end,error,head,hint,icon,indicator,input,item,label,mask,message,pick,prefix,preview,segments,spinner,status,step,stepper,steps,suffix,swatch-dot,sweep,sweep-base,track,trigger,value | app,components,data,flows,inputs,inputs-rich,marketing,veneer |
 | `filter-panel` | accent-color,border-block-end,color,font,font-size,letter-spacing,min-block-size,opacity,outline,text-transform | focus | facet | data |
 | `filterbar` | animation,background,block-size,border,border-inline-start,border-radius,color,font,min-block-size,min-inline-size,outline | focus | add,body,control,fchip,input,remove | inputs-rich |
 | `float-panel` | animation,background,border,border-block-end,border-radius,box-shadow,font-size,gap,min-block-size,padding,padding-block-end,padding-inline,z-index | - | body,handle | layout |
 | `flow` | animation,animation-delay,background,background-color,border,border-radius,box-shadow,font-size,inset-block,outline,stroke | active,focus,hover | card,handle,node,step | data,flows |
 | `follow-flag` | background,border-radius,color,font,z-index | - | - | app |
 | `footer` | border-block-start,color,font,font-family,font-size,gap,letter-spacing,min-block-size,padding,padding-block-start,text-transform | hover | base,inner,top,wordmark | marketing |
-| `form` | animation-name,animation-range,animation-timing-function,backdrop-filter,background,border-block-start,color,column-gap,font-family,font-size,font-weight,gap,letter-spacing,margin-inline,padding,padding-block-start,z-index | - | actions,card,grid,head,item,section,section-head,status | inputs,warp |
+| `form` | animation-name,animation-range,animation-timing-function,backdrop-filter,background,border-block-start,color,column-gap,font-family,font-size,font-weight,gap,letter-spacing,margin-inline,padding,padding-block-start,z-index | - | actions,card,grid,head,item,section,section-head,status | inputs,veneer |
 | `frame` | background | - | - | layout |
 | `fx-pause` | - | - | - | marketing |
-| `gallery` | animation-name,animation-range,animation-timing-function,background,border-radius,box-shadow,color,gap,outline,outline-offset,scale,transform,transition,translate | focus,hover | card,head,item,open,select | marketing,warp |
+| `gallery` | animation-name,animation-range,animation-timing-function,background,border-radius,box-shadow,color,gap,outline,outline-offset,scale,transform,transition,translate | focus,hover | card,head,item,open,select | marketing,veneer |
 | `gate` | backdrop-filter,background,border-radius,filter,font,padding | - | blocker,content | flows |
 | `gate-badge` | - | - | - | flows |
 | `gradient` | border,border-radius,box-shadow,gap,inset,outline | active,focus | preview,stop | inputs |
 | `grid` | gap,grid-template-columns | - | - | layout |
 | `group` | color,column-gap,font-family,font-size,font-weight,gap,letter-spacing,margin-block-end,opacity | invalid | choices,control,description,items,label,message | app,inputs |
-| `hero` | background,block-size,border,border-radius,color,column-gap,font-family,font-size,font-variation-settings,font-weight,gap,letter-spacing,line-height,margin-block-end,margin-block-start,padding,padding-block,padding-block-start,text-box | hover | actions,announce,copy,inner,lede,proof,title | marketing,warp |
+| `hero` | background,block-size,border,border-radius,color,column-gap,font-family,font-size,font-variation-settings,font-weight,gap,letter-spacing,line-height,margin-block-end,margin-block-start,padding,padding-block,padding-block-start,text-box | hover | actions,announce,copy,inner,lede,proof,title | marketing,veneer |
 | `histogram` | background,transition | - | - | inputs |
 | `hover-card` | background,border,border-radius,box-shadow,color,font-size,gap,line-height,padding,scale,transform-origin,transition,translate | open | content | components |
 | `hover-scope` | background,border-radius,color,font-size,gap,outline,transition | focus,hover | text | inputs |
@@ -585,7 +585,7 @@ expand into finite schema entries; they are not wildcard component names.
 | `item` | border-radius,box-shadow,color,font-size,gap,padding | - | description | components |
 | `item-list` | box-shadow | - | - | components |
 | `jsontree` | background,border,border-inline-start,border-radius,color,font,min-block-size,outline,transition | focus | - | inputs-rich |
-| `kanban` | animation,animation-name,animation-range,animation-timing-function,background,background-color,block-size,border,border-color,border-radius,box-shadow,color,font,font-size,gap,inline-size,inset-block,min-block-size,opacity,outline,outline-offset,transition | disabled,focus,hover | card,column,column-head,count,head,item,label-chip,menu,move,node,placeholder | app,data,warp |
+| `kanban` | animation,animation-name,animation-range,animation-timing-function,background,background-color,block-size,border,border-color,border-radius,box-shadow,color,font,font-size,gap,inline-size,inset-block,min-block-size,opacity,outline,outline-offset,transition | disabled,focus,hover | card,column,column-head,count,head,item,label-chip,menu,move,node,placeholder | app,data,veneer |
 | `kbd` | background,border,border-radius,color,font | - | - | components |
 | `knob` | background,border,border-width,box-shadow,clip-path,color,font,transition | focus,invalid | arc,cell,control,icon,pointer,preview,sweep,sweep-base,track,value | inputs |
 | `knob-row` | color,font,font-size,gap,letter-spacing | - | caption | inputs |
@@ -598,9 +598,9 @@ expand into finite schema entries; they are not wildcard component names.
 | `lines` | border-block-start,color,font-size | - | total | flows |
 | `link` | background,background-size,border-radius,color,inset,text-decoration-thickness,transition | focus,hover | anchor,toggle | components |
 | `linkcard` | background,border,border-color,border-radius,color,outline,transition | focus,hover | media,text | inputs-rich |
-| `list` | animation-name,animation-range,animation-timing-function,background,border,border-block-start,border-radius,color,font-size,min-block-size,outline,transition | focus,hover | actions,card,content,head,item,trailing | data,warp |
+| `list` | animation-name,animation-range,animation-timing-function,background,border,border-block-start,border-radius,color,font-size,min-block-size,outline,transition | focus,hover | actions,card,content,head,item,trailing | data,veneer |
 | `listbox` | background,border,border-color,border-inline-start,border-radius,box-shadow,color,font-family,font-size,font-weight,letter-spacing,padding,transition | active,focus | group-label,item-check | inputs |
-| `listing` | animation,animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-radius,box-shadow,color,font,font-size,font-variant-numeric,letter-spacing,outline,outline-offset,transition | focus,hover | art,card,grid,head,item,meta,name,price,pub,sweep-base,tags | marketing,warp |
+| `listing` | animation,animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-radius,box-shadow,color,font,font-size,font-variant-numeric,letter-spacing,outline,outline-offset,transition | focus,hover | art,card,grid,head,item,meta,name,price,pub,sweep-base,tags | marketing,veneer |
 | `live-room` | animation,background,border,border-block-start,border-color,border-radius,box-shadow,color,font,font-size,font-variant-numeric,gap,padding,transition | checked | actions,bar,crumb,gates,peer-cursor,peer-ring,step,steps | marketing |
 | `live-status` | background,border,border-color,border-radius,color,font,transition | - | - | components |
 | `load-more` | color,font-size | - | - | data |
@@ -608,7 +608,7 @@ expand into finite schema entries; they are not wildcard component names.
 | `locale` | - | - | - | layout |
 | `lock` | background,border-radius,color | - | - | app |
 | `log` | border-radius,box-shadow,font | focus | - | inputs-rich |
-| `logo` | color,inset,stroke | - | anchor,toggle,weft | components |
+| `logo` | color,inset,stroke | - | anchor,toggle,kerf | components |
 | `logos` | color,font-size,gap,min-block-size | - | caption,caption-row,pause | marketing |
 | `map` | background,block-size,border,border-radius,box-shadow,color,fill,font,font-size,inline-size,inset,outline,stroke | active,focus | attribution,cluster,controls,marker,popup | data |
 | `mark` | background,box-shadow | - | - | components |
@@ -637,7 +637,7 @@ expand into finite schema entries; they are not wildcard component names.
 | `page-header` | color,font-family,font-size,font-weight,gap,letter-spacing,line-height,max-inline-size,text-transform | - | actions,description,eyebrow,heading,meta,title | layout |
 | `pager` | border,border-radius,color,font-size,gap,margin-block-start,padding | - | - | layout |
 | `pagination` | background,background-color,block-size,border,border-color,border-radius,box-shadow,color,font,font-size,inset,inset-inline-end,inset-inline-start,min-inline-size,opacity,outline,padding-inline,transition | active,disabled,focus,hover | item,jump,page,summary | components,data,marketing |
-| `palette` | backdrop-filter,background,border,border-block-end,border-block-start,border-radius,border-width,box-shadow,color,font,font-family,font-size,gap,inline-size,inset,letter-spacing,min-block-size,outline,padding,padding-inline,padding-inline-start,scale,scroll-margin-block,text-transform,transition,translate | active,focus,hover,open | crumb,empty,footer,group-label,hint,input,input-row,item,list,row,shortcut,sweep,sweep-base | components,warp |
+| `palette` | backdrop-filter,background,border,border-block-end,border-block-start,border-radius,border-width,box-shadow,color,font,font-family,font-size,gap,inline-size,inset,letter-spacing,min-block-size,outline,padding,padding-inline,padding-inline-start,scale,scroll-margin-block,text-transform,transition,translate | active,focus,hover,open | crumb,empty,footer,group-label,hint,input,input-row,item,list,row,shortcut,sweep,sweep-base | components,veneer |
 | `panel` | background,border,border-radius,box-shadow,color,font-family,font-size,font-weight,gap,letter-spacing,padding | - | card,description,header,title | data |
 | `part/app-bar` | background,border-block-end,font-family,font-size,font-weight,gap,letter-spacing,padding | - | - | app |
 | `part/app-title` | font-family,font-size,font-weight,letter-spacing | - | - | app |
@@ -654,9 +654,9 @@ expand into finite schema entries; they are not wildcard component names.
 | `part/countdown` | background,border-radius,color,font | - | - | app |
 | `part/country` | background,border-end-start-radius,border-inline-end,border-radius,border-start-start-radius,color,font,margin-inline-start,outline,padding-inline | focus,hover | - | inputs-rich |
 | `part/diagram` | background,border,border-block-end,border-radius,color,font | - | - | inputs-rich |
-| `part/eyebrow` | color,font-family,font-size,font-weight,gap,letter-spacing,margin-block-end,margin-block-start,text-transform | - | - | app,data,marketing,warp |
+| `part/eyebrow` | color,font-family,font-size,font-weight,gap,letter-spacing,margin-block-end,margin-block-start,text-transform | - | - | app,data,marketing,veneer |
 | `part/frame` | transition | - | - | inputs-rich |
-| `part/frame-corners` | block-size,color,inline-size | - | - | warp |
+| `part/frame-corners` | block-size,color,inline-size | - | - | veneer |
 | `part/glow` | background,opacity | - | - | marketing |
 | `part/hit` | background | - | - | data |
 | `part/icon` | clip-path | - | - | inputs-rich |
@@ -681,43 +681,43 @@ expand into finite schema entries; they are not wildcard component names.
 | `part/pop-head` | border-block-end | - | - | inputs-rich |
 | `part/provider` | color,font,transition | - | - | inputs-rich |
 | `part/rail` | background,block-size,box-shadow,transition | - | - | flows |
-| `part/rail-fill` | background,block-size,box-shadow,clip-path,transition | checked | - | flows,warp |
-| `part/rail-hover` | background,clip-path | - | - | warp |
+| `part/rail-fill` | background,block-size,box-shadow,clip-path,transition | checked | - | flows,veneer |
+| `part/rail-hover` | background,clip-path | - | - | veneer |
 | `part/range-sep` | color,padding-inline | - | - | inputs-rich |
 | `part/rays` | animation-play-state,background,opacity | - | - | marketing |
-| `part/row` | transition | - | - | warp |
+| `part/row` | transition | - | - | veneer |
 | `part/rule` | animation,background,block-size,margin-block-start | - | - | marketing |
 | `part/scrim` | animation,backdrop-filter,background,z-index | open | - | inputs-rich |
 | `part/search` | background,block-size,border,border-color,border-radius,box-shadow,color,font-size | focus | - | inputs-rich |
 | `part/segment` | background,border-radius,box-shadow,color,transition | focus | - | inputs-rich |
-| `part/shuttle` | background,block-size,border-radius,translate | - | - | warp |
+| `part/shuttle` | background,block-size,border-radius,translate | - | - | veneer |
 | `part/skeleton` | background,border-radius | - | - | data |
-| `part/spacer` | transition | - | - | warp |
+| `part/spacer` | transition | - | - | veneer |
 | `part/spark` | fill,opacity,stroke,stroke-width | - | - | data |
 | `part/spot` | background,opacity,transition | hover | - | marketing |
 | `part/stars` | color | - | - | marketing |
-| `part/sweep` | border,clip-path,color | invalid | - | inputs-rich,warp |
-| `part/sweep-base` | border,clip-path,color | - | - | app,inputs-rich,warp |
-| `part/sweep-content` | color | - | - | warp |
-| `part/sweep-corners` | block-size,color,inline-size | - | - | warp |
-| `part/sweep-fill` | background,color,transition | - | - | warp |
-| `part/sweep-label` | color | - | - | warp |
-| `part/sweep-outline` | background,color | - | - | warp |
+| `part/sweep` | border,clip-path,color | invalid | - | inputs-rich,veneer |
+| `part/sweep-base` | border,clip-path,color | - | - | app,inputs-rich,veneer |
+| `part/sweep-content` | color | - | - | veneer |
+| `part/sweep-corners` | block-size,color,inline-size | - | - | veneer |
+| `part/sweep-fill` | background,color,transition | - | - | veneer |
+| `part/sweep-label` | color | - | - | veneer |
+| `part/sweep-outline` | background,color | - | - | veneer |
 | `part/switcher` | color,font-size | - | - | layout |
 | `part/sync` | color,font-size | - | - | flows |
-| `part/thumb` | transition | - | - | warp |
+| `part/thumb` | transition | - | - | veneer |
 | `part/tilt` | transition | - | - | marketing |
 | `part/tool-frame` | border-radius,color | - | - | app |
-| `part/track` | clip-path | checked | - | warp |
+| `part/track` | clip-path | checked | - | veneer |
 | `part/version` | background,border,color,font | - | - | layout |
 | `part/view-toggle` | background,block-size,border,border-radius,box-shadow,color,inline-size,inset-block,outline | active,focus | - | data |
 | `part/weave` | animation,animation-delay,color,stroke,stroke-width | - | - | flows,marketing |
 | `pay-frame` | animation-play-state,background,block-size,border,border-radius,box-shadow,color,font-size | - | head,slot | flows |
 | `person` | background,border,border-radius,color,font,font-family,font-size,min-block-size,transition | - | color,links,name,photo,role | marketing |
 | `persona` | color,font-size | - | secondary | components |
-| `pill` | background,border,border-color,border-radius,color,font,inset-block,text-box,transition | active,hover | count,eyebrow | components,warp |
+| `pill` | background,border,border-color,border-radius,color,font,inset-block,text-box,transition | active,hover | count,eyebrow | components,veneer |
 | `pip` | border-radius,box-shadow,transition,z-index | - | - | app |
-| `plan` | animation,animation-name,animation-range,animation-timing-function,background,border,border-block-start,border-color,border-radius,box-shadow,color,font,font-family,font-size,font-variant-numeric,font-weight,gap,letter-spacing,padding,text-decoration-color,transition | focus,hover | amount,box,card,desc,features,head,header,item,name,per,queue,sweep-base | app,marketing,warp |
+| `plan` | animation,animation-name,animation-range,animation-timing-function,background,border,border-block-start,border-color,border-radius,box-shadow,color,font,font-family,font-size,font-variant-numeric,font-weight,gap,letter-spacing,padding,text-decoration-color,transition | focus,hover | amount,box,card,desc,features,head,header,item,name,per,queue,sweep-base | app,marketing,veneer |
 | `plan-card` | background,border,border-radius,box-shadow,color,font,font-size,letter-spacing,outline,outline-offset,transition | checked,focus | price,radio,sweep-base | flows |
 | `plans` | gap | - | - | flows |
 | `player` | background,block-size,border,border-radius,box-shadow,color,font,font-family,font-size,gap,inline-size,min-inline-size,outline,outline-color,outline-offset,padding,scale,transition,translate | active,focus,hover,press | big-play,chip,controls,meta,play,preview,rail,scrubber,thumb,ticks,time,tool,wave | marketing |
@@ -725,17 +725,17 @@ expand into finite schema entries; they are not wildcard component names.
 | `popconfirm` | - | - | - | components |
 | `popover` | animation,background,border,border-radius,box-shadow,color,font-size,gap,line-height,margin,margin-block-end,margin-block-start,padding,scale,transform-origin,transition,translate,z-index | open | content,description,handle,sheet-head,title | app,components,inputs-rich |
 | `popup` | animation,background,border,border-inline-start,border-radius,box-shadow,color,font-family,font-size,font-weight,letter-spacing,padding,transition,z-index | - | chev,empty,group-label | inputs |
-| `post` | animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-inline-end,border-radius,box-shadow,color,font,font-family,font-size,font-weight,letter-spacing,outline,outline-offset,text-transform,transition | focus,hover | art,card,excerpt,head,item,meta,sweep-base,tag,title | marketing,warp |
+| `post` | animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-inline-end,border-radius,box-shadow,color,font,font-family,font-size,font-weight,letter-spacing,outline,outline-offset,text-transform,transition | focus,hover | art,card,excerpt,head,item,meta,sweep-base,tag,title | marketing,veneer |
 | `prefs` | border-block-start,color,font-size | - | hint | components |
 | `prefs-matrix` | background,border-block-start,border-radius,border-start-end-radius,border-start-start-radius,box-shadow,color,font,font-family,font-size,gap,letter-spacing,min-block-size,outline,padding,text-transform | focus | ch-head,ch-name,corner,footer,grid,group,head,lock,na,status | app |
 | `prejoin` | background,border-radius,gap | checked | layout,meter,preview,stack | app |
 | `presence` | color,font-size | - | - | marketing |
 | `pricing` | gap | - | period,plans | marketing |
 | `product` | color,font-family,font-size,font-variant-numeric,font-weight,gap,letter-spacing | - | info,media,name,price | marketing |
-| `progress` | animation,background,block-size,border-radius,clip-path,color,font,font-size,gap,stroke,stroke-width,transition | - | label-row,range,root,track,value-text | app,components,warp |
+| `progress` | animation,background,block-size,border-radius,clip-path,color,font,font-size,gap,stroke,stroke-width,transition | - | label-row,range,root,track,value-text | app,components,veneer |
 | `prompt` | background,block-size,border-radius,color,font | hover | model | app |
 | `props` | border,border-block-start,border-radius,box-shadow,color,font | focus | - | inputs-rich |
-| `prose` | animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-block-end-color,border-block-start,border-inline-start,border-radius,color,font,font-family,font-size,font-weight,letter-spacing,line-height,margin-block,min-block-size,min-inline-size,transition | hover | anchor,card,footnotes,head,item | inputs-rich,warp |
+| `prose` | animation-name,animation-range,animation-timing-function,background,border,border-block-end,border-block-end-color,border-block-start,border-inline-start,border-radius,color,font,font-family,font-size,font-weight,letter-spacing,line-height,margin-block,min-block-size,min-inline-size,transition | hover | anchor,card,footnotes,head,item | inputs-rich,veneer |
 | `pull-refresh` | background,border,box-shadow,color,transition | - | content,indicator | layout |
 | `push-ask` | background,border-radius,box-shadow,color,padding | - | mark | app |
 | `qr` | background,border,border-radius,color,fill,font,gap | - | plate,pupil,value | components |
@@ -743,8 +743,8 @@ expand into finite schema entries; they are not wildcard component names.
 | `quantity` | background,block-size,border-radius,border-width,clip-path,color,font,inline-size,opacity,transition | disabled,focus,hover,invalid | cell,control,icon,preview,sweep,sweep-base,track | inputs |
 | `query` | background,block-size,border,border-inline-start,border-radius,box-shadow,color,font,inset-inline-end | - | group,join | data |
 | `question` | background,border-radius,box-shadow,color,min-block-size | checked | - | app |
-| `quote` | animation-name,animation-range,animation-timing-function,background,border,border-inline-start,border-radius,box-shadow,color,font,font-family,font-size,font-style,gap,line-height,padding | - | card,head,item,source | components,marketing,warp |
-| `radio` | background,border-radius,border-width,clip-path,color,column-gap,font-size,line-height,min-block-size,opacity,scale,transition | checked,disabled,focus,invalid,press | cell,control,hint,icon,preview,sweep,sweep-base,track | components,inputs,warp |
+| `quote` | animation-name,animation-range,animation-timing-function,background,border,border-inline-start,border-radius,box-shadow,color,font,font-family,font-size,font-style,gap,line-height,padding | - | card,head,item,source | components,marketing,veneer |
+| `radio` | background,border-radius,border-width,clip-path,color,column-gap,font-size,line-height,min-block-size,opacity,scale,transition | checked,disabled,focus,invalid,press | cell,control,hint,icon,preview,sweep,sweep-base,track | components,inputs,veneer |
 | `range-head` | color,font,gap,letter-spacing | - | - | inputs |
 | `range-panel` | background,border,border-inline-end,border-radius,box-shadow,color,font-size,gap,min-block-size,outline,padding-inline-end | active,focus,hover | - | inputs-rich |
 | `rating` | background,block-size,border,border-radius,color,fill,font-family,font-size,font-variant-numeric,gap,inline-size,outline,padding,scale,transition,transition-delay | checked,focus,press | bar,bars,input,score,summary | inputs,marketing |
@@ -761,18 +761,18 @@ expand into finite schema entries; they are not wildcard component names.
 | `room` | animation,background,border-block-end,border-radius,box-shadow,color,font,font-size,gap,margin,padding,z-index | - | header,people,rail,rec,root,share,sidebar,stage,strip | app |
 | `route-progress` | background,transition,z-index | - | - | layout |
 | `row` | gap | - | - | layout |
-| `rte` | background,block-size,border,border-block-end,border-block-start,border-color,border-inline-start,border-radius,box-shadow,color,font,font-family,font-size,font-weight,gap,inline-size,letter-spacing,line-height,outline,padding,transition,z-index | active,focus,hover | content,frame,linkbar,sep,slash,tool | inputs-rich,warp |
+| `rte` | background,block-size,border,border-block-end,border-block-start,border-color,border-inline-start,border-radius,box-shadow,color,font,font-family,font-size,font-weight,gap,inline-size,letter-spacing,line-height,outline,padding,transition,z-index | active,focus,hover | content,frame,linkbar,sep,slash,tool | inputs-rich,veneer |
 | `rules` | color,font-size,transition | - | - | inputs |
 | `run` | background,border-radius,box-shadow,color,font,font-size | - | approve,detail,dot | app |
 | `save-bar` | background,border-radius,box-shadow,clip-path,color,font-size,gap,transition | - | text | flows,inputs |
-| `scene` | background,block-size,border,border-radius,box-shadow,color,font,transition | - | bar,cap,card,dots,knot,layer,row,thread,warp | marketing |
+| `scene` | background,block-size,border,border-radius,box-shadow,color,font,transition | - | bar,cap,card,dots,knot,layer,row,thread,veneer | marketing |
 | `scroll-area` | outline-offset,scroll-padding-inline | focus | - | layout |
-| `scroll-grid` | background,border,border-block-end,border-inline-end,border-radius,box-shadow,color,font,font-size,letter-spacing,outline,text-transform | active,focus | cell,col-head,corner,row-head | data,warp |
+| `scroll-grid` | background,border,border-block-end,border-inline-end,border-radius,box-shadow,color,font,font-size,letter-spacing,outline,text-transform | active,focus | cell,col-head,corner,row-head | data,veneer |
 | `scroll-progress` | background,block-size,inset | - | - | marketing |
 | `section` | background,border-block,border-block-start,border-radius,gap,padding,padding-block,padding-inline | - | - | layout |
 | `section-message` | border-block,color,padding | - | - | components |
 | `section-peers` | - | - | - | app |
-| `segmented` | background,block-size,border-radius,border-width,box-shadow,clip-path,color,font,font-size,inline-size,outline,padding-inline,transition,translate | checked,focus,hover,invalid | cell,control,count,icon,indicator,item,list,preview,shuttle,sweep,sweep-base,track | inputs,warp |
+| `segmented` | background,block-size,border-radius,border-width,box-shadow,clip-path,color,font,font-size,inline-size,outline,padding-inline,transition,translate | checked,focus,hover,invalid | cell,control,count,icon,indicator,item,list,preview,shuttle,sweep,sweep-base,track | inputs,veneer |
 | `select` | background,block-size,border,border-color,border-radius,box-shadow,color,font,font-family,font-size,gap,inline-size,letter-spacing,line-height,margin-block-end,min-block-size,opacity,outline,padding,padding-inline,scale,scroll-margin-block,text-transform,transform-origin,transition,translate | active,disabled,focus,hover,open | content,done,empty,group-label,handle,indicator,item,item-hint,list,search,sheet-head,shuttle,trigger | components,inputs |
 | `selection-bar` | background,border,border-color,border-radius,box-shadow,color,font-size,font-variant-numeric,gap,inset-block-start,margin-block-end,min-block-size,transition | active | count,hint | marketing |
 | `selection-toolbar` | animation,background,border-radius,box-shadow,color,font,z-index | - | - | components |
@@ -782,32 +782,32 @@ expand into finite schema entries; they are not wildcard component names.
 | `settings` | background,block-size,border-block-end,border-radius,color,font-size,gap,inline-size,margin-inline,min-block-size,padding-inline,transition | active,hover | content,layout,nav | flows |
 | `settings-section` | background,border,border-color,border-radius,color,font,font-size,padding-inline | - | group | flows |
 | `share` | background,border-radius,color | - | link,person,target | app,components |
-| `sheet` | animation,backdrop-filter,background,block-size,border,border-block-start,border-end-end-radius,border-end-start-radius,border-start-end-radius,border-start-start-radius,box-shadow,color,font-family,font-size,font-weight,gap,inset-block,letter-spacing,line-height,opacity,outline,padding,padding-block-end,padding-block-start,transition,translate | focus,hover | body,description,footer,handle,header,title | components,warp |
-| `shell` | animation,animation-delay,backdrop-filter,background,block-size,border,border-block-end,border-block-start,border-inline-end,border-inline-end-color,border-radius,border-start-end-radius,border-start-start-radius,box-shadow,color,font,font-family,font-size,font-weight,gap,inline-size,inset-block-start,inset-inline-end,inset-inline-start,letter-spacing,margin,margin-block-start,max-block-size,max-inline-size,min-block-size,min-inline-size,padding,padding-block-end,padding-block-start,padding-inline,text-transform,transform,transition,z-index | active,focus,hover | actions,brand,command,command-hint,command-label,dock,edge-tab,header,icon,layout,main,menu,nav,nav-count,nav-extra,nav-foot,nav-group,nav-item,nav-label,nav-toggle,page,palette,scrim,sheet,skip,switcher,title | layout,warp |
-| `shimmer` | animation,background,color | - | - | app,warp |
+| `sheet` | animation,backdrop-filter,background,block-size,border,border-block-start,border-end-end-radius,border-end-start-radius,border-start-end-radius,border-start-start-radius,box-shadow,color,font-family,font-size,font-weight,gap,inset-block,letter-spacing,line-height,opacity,outline,padding,padding-block-end,padding-block-start,transition,translate | focus,hover | body,description,footer,handle,header,title | components,veneer |
+| `shell` | animation,animation-delay,backdrop-filter,background,block-size,border,border-block-end,border-block-start,border-inline-end,border-inline-end-color,border-radius,border-start-end-radius,border-start-start-radius,box-shadow,color,font,font-family,font-size,font-weight,gap,inline-size,inset-block-start,inset-inline-end,inset-inline-start,letter-spacing,margin,margin-block-start,max-block-size,max-inline-size,min-block-size,min-inline-size,padding,padding-block-end,padding-block-start,padding-inline,text-transform,transform,transition,z-index | active,focus,hover | actions,brand,command,command-hint,command-label,dock,edge-tab,header,icon,layout,main,menu,nav,nav-count,nav-extra,nav-foot,nav-group,nav-item,nav-label,nav-toggle,page,palette,scrim,sheet,skip,switcher,title | layout,veneer |
+| `shimmer` | animation,background,color | - | - | app,veneer |
 | `shortcuts` | background,border-block-start,color,font,font-size,gap,letter-spacing | - | empty,groups | flows |
 | `sidenav` | background,block-size,border,border-block-end,border-inline-end,border-radius,box-shadow,color,font-size,gap,inline-size,inset-block,inset-block-start,inset-inline-start,margin-block,min-block-size,outline,outline-offset,padding,padding-block-end,padding-block-start,padding-inline,transition,z-index | focus,hover,open | backdrop,bar,chevron,empty,filter,group-label,head,indicator,item,lead,panel,scroll,sections,title | layout |
 | `signature` | border-block-end,color,font,font-size,transition | - | baseline,empty,typed | inputs-rich |
-| `skeleton` | animation,background,border-radius,transition | - | - | components,warp |
+| `skeleton` | animation,background,border-radius,transition | - | - | components,veneer |
 | `skeleton-scope` | animation,background,border-radius,opacity | - | - | components |
 | `slider` | background,block-size,border,border-radius,box-shadow,color,font,inset,opacity,transition | disabled,focus | bubble,range,thumb,ticks,track | inputs |
 | `snippet` | background,border,border-radius,color,font | - | - | inputs-rich |
-| `sortable` | background,block-size,border,border-color,border-radius,box-shadow,color,font,font-size,gap,inline-size,inset,min-block-size,outline,transition | active,floated,focus,hover | handle,item,moves,pos,rank,text | data,inputs-rich,warp |
+| `sortable` | background,block-size,border,border-color,border-radius,box-shadow,color,font,font-size,gap,inline-size,inset,min-block-size,outline,transition | active,floated,focus,hover | handle,item,moves,pos,rank,text | data,inputs-rich,veneer |
 | `sources` | background,border-radius,color,font | - | - | app |
 | `spacer` | - | - | - | layout |
 | `speech` | background,border-radius,color,font,font-size,min-block-size | - | interim,level,mic,strip,time,transcript,wave | app |
 | `speed-dial` | background,border,border-radius,box-shadow,color,font-size,transition,transition-delay,translate | open | action,action-label | components |
-| `spinner` | animation | - | - | components,warp |
+| `spinner` | animation | - | - | components,veneer |
 | `split` | gap,inset-block-start | - | - | layout |
 | `split-pane` | background,border,border-radius,inline-size,inset-inline-start,transition | focus,hover | separator | layout |
 | `sso` | gap | - | - | flows |
 | `stack` | background,border-block-start,border-color,border-inline-start,border-radius,color,font,gap,padding-block-start | - | error | inputs-rich,layout |
 | `stage` | animation,background,border,border-radius,caret-color,color,padding,transition | active | - | canvas |
-| `stat` | animation,animation-name,animation-range,animation-timing-function,background,background-color,border,border-radius,color,font-family,font-size,font-weight,letter-spacing,opacity,outline,outline-offset,padding | focus,hover | caption,card,head,item,node,number,spark,value | data,warp |
+| `stat` | animation,animation-name,animation-range,animation-timing-function,background,background-color,border,border-radius,color,font-family,font-size,font-weight,letter-spacing,opacity,outline,outline-offset,padding | focus,hover | caption,card,head,item,node,number,spark,value | data,veneer |
 | `stat-row` | background,border-block-start,border-inline-start,border-radius,color,font,font-family,font-size,gap,letter-spacing,text-transform | - | - | data |
 | `stat-strip` | border-block,border-block-start,border-inline-start,color,font,font-size,font-variant-numeric,letter-spacing,margin | - | - | marketing |
 | `stats` | background,border,border-block,border-inline-start,border-radius,color,font-family,font-size,font-variant-numeric,font-weight,letter-spacing,padding | - | label,stat,value | marketing |
-| `status-bar` | background,border-block-start,color,font,min-block-size,padding-block-end,padding-inline | hover | close | layout,warp |
+| `status-bar` | background,border-block-start,color,font,min-block-size,padding-block-end,padding-inline | hover | close | layout,veneer |
 | `status-dot` | animation,background,box-shadow | - | - | app,components |
 | `status-light` | font-size | - | - | components |
 | `steps` | background,block-size,border,border-color,border-radius,box-shadow,color,font,font-size,gap,margin-block-start,transition | active | compact,description,indicator,item,title | components,inputs |
@@ -817,16 +817,16 @@ expand into finite schema entries; they are not wildcard component names.
 | `strength` | background,color,font,font-size,letter-spacing,transition | - | - | inputs |
 | `suggest` | animation,background,border-radius,box-shadow,color,font,font-size,z-index | active | cmd,group | app |
 | `suggestions` | background,border-radius,color,min-block-size,outline | focus | - | app |
-| `surface` | animation-name,animation-range,animation-timing-function,background,border,border-radius,box-shadow,color,font-family,font-size,font-weight,gap,letter-spacing,line-height,padding,scale,text-transform,transition,transition-duration | focus,hover,press | card,content,eyebrow,head,item,panel,title,value | components,layout,warp |
+| `surface` | animation-name,animation-range,animation-timing-function,background,border,border-radius,box-shadow,color,font-family,font-size,font-weight,gap,letter-spacing,line-height,padding,scale,text-transform,transition,transition-duration | focus,hover,press | card,content,eyebrow,head,item,panel,title,value | components,layout,veneer |
 | `swatches` | border-radius,box-shadow | checked | - | components |
-| `switch` | background,border-radius,border-width,clip-path,color,column-gap,font-size,line-height,min-block-size,opacity,scale | checked,disabled,focus,invalid,press | cell,control,hint,icon,preview,sweep,sweep-base,thumb,track | components,inputs,warp |
+| `switch` | background,border-radius,border-width,clip-path,color,column-gap,font-size,line-height,min-block-size,opacity,scale | checked,disabled,focus,invalid,press | cell,control,hint,icon,preview,sweep,sweep-base,thumb,track | components,inputs,veneer |
 | `sync` | color | - | - | app |
 | `synced-form` | background,border-radius,box-shadow,color,font,transition | - | control,peer-tag | app |
 | `system-page` | animation,animation-delay,background,border-radius,box-shadow,color,fill,font,font-size,letter-spacing,min-block-size,padding,stroke,stroke-width,text-transform | focus,hover | accounts,art,code,keyhole,lock,meta,pending,shackle,weave | app,flows |
-| `table` | animation,animation-delay,animation-name,animation-range,animation-timing-function,background,block-size,border,border-block-end,border-block-end-color,border-block-start,border-color,border-end-end-radius,border-end-start-radius,border-inline-start,border-radius,border-start-end-radius,border-start-start-radius,box-shadow,color,font,font-family,font-size,gap,inline-size,inset,inset-block-start,inset-inline-end,inset-inline-start,letter-spacing,margin-inline-start,max-block-size,min-block-size,min-inline-size,opacity,outline,padding,padding-block,stroke,text-transform,transition | active,focus,hover,invalid | aggregate,bulk,card,control,count,detail,editor,expand,filters,footer,group,head,item,loading,mono,resize,secondary,select,sheet,skeleton,slide,sort,sort-icon,sortbar,state,toggle,toolbar,tree-cell,tree-label,viewport | data,warp |
+| `table` | animation,animation-delay,animation-name,animation-range,animation-timing-function,background,block-size,border,border-block-end,border-block-end-color,border-block-start,border-color,border-end-end-radius,border-end-start-radius,border-inline-start,border-radius,border-start-end-radius,border-start-start-radius,box-shadow,color,font,font-family,font-size,gap,inline-size,inset,inset-block-start,inset-inline-end,inset-inline-start,letter-spacing,margin-inline-start,max-block-size,min-block-size,min-inline-size,opacity,outline,padding,padding-block,stroke,text-transform,transition | active,focus,hover,invalid | aggregate,bulk,card,control,count,detail,editor,expand,filters,footer,group,head,item,loading,mono,resize,secondary,select,sheet,skeleton,slide,sort,sort-icon,sortbar,state,toggle,toolbar,tree-cell,tree-label,viewport | data,veneer |
 | `tabnav` | background,block-size,border-block-end,border-radius,color,gap,inline-size,inset-inline,padding-inline,transition | active,hover | - | layout |
-| `tabs` | animation,background,block-size,border,border-color,border-radius,box-shadow,color,font,gap,inline-size,padding,padding-inline,transition,translate | active,focus,hover | content,indicator,list,root,shuttle,trigger | app,components,warp |
-| `tag` | animation,background,border,border-radius,box-shadow,color,font-size,inset,text-box | hover | eyebrow,remove | components,inputs,warp |
+| `tabs` | animation,background,block-size,border,border-color,border-radius,box-shadow,color,font,gap,inline-size,padding,padding-inline,transition,translate | active,focus,hover | content,indicator,list,root,shuttle,trigger | app,components,veneer |
+| `tag` | animation,background,border,border-radius,box-shadow,color,font-size,inset,text-box | hover | eyebrow,remove | components,inputs,veneer |
 | `team` | gap | - | - | marketing |
 | `tests` | background,border,border-radius,color,font,font-size,min-block-size | - | summary | inputs-rich |
 | `text` | color,font-family,font-size,font-weight,letter-spacing,line-height,text-transform | - | - | shim-type,type |
@@ -834,10 +834,10 @@ expand into finite schema entries; they are not wildcard component names.
 | `thread-replies` | color,min-block-size | - | - | app |
 | `thumbs` | background,border,border-color,border-radius,box-shadow,gap | active | - | marketing |
 | `ticker` | transition | - | digit | components |
-| `tile` | animation,animation-name,animation-range,animation-timing-function,backdrop-filter,background,border,border-radius,box-shadow,clip-path,color,font,font-family,font-size,font-weight,gap,letter-spacing,padding,transition | focus,hover | art,body,card,flag,head,icon,item,level,name,sweep-base | app,marketing,warp |
-| `timeline` | animation,animation-name,animation-range,animation-timing-function,background,border,border-radius,box-shadow,color,font,font-size | - | card,detail,head,item,knot,when | data,warp |
-| `toast` | background,border,border-radius,box-shadow,color,font-size,gap,inset-block,inset-block-end,inset-inline,inset-inline-end,line-height,padding,transition,translate,z-index | - | description,icon,progress,region,root | app,components,warp |
-| `toggle` | background,block-size,border,border-color,border-radius,box-shadow,color,font,font-size,gap,inline-size,inset-block,inset-inline,inset-inline-end,inset-inline-start,min-block-size,min-inline-size,opacity,padding-inline,scale,transition,transition-duration | active,checked,hover,press | close | components,warp |
+| `tile` | animation,animation-name,animation-range,animation-timing-function,backdrop-filter,background,border,border-radius,box-shadow,clip-path,color,font,font-family,font-size,font-weight,gap,letter-spacing,padding,transition | focus,hover | art,body,card,flag,head,icon,item,level,name,sweep-base | app,marketing,veneer |
+| `timeline` | animation,animation-name,animation-range,animation-timing-function,background,border,border-radius,box-shadow,color,font,font-size | - | card,detail,head,item,knot,when | data,veneer |
+| `toast` | background,border,border-radius,box-shadow,color,font-size,gap,inset-block,inset-block-end,inset-inline,inset-inline-end,line-height,padding,transition,translate,z-index | - | description,icon,progress,region,root | app,components,veneer |
+| `toggle` | background,block-size,border,border-color,border-radius,box-shadow,color,font,font-size,gap,inline-size,inset-block,inset-inline,inset-inline-end,inset-inline-start,min-block-size,min-inline-size,opacity,padding-inline,scale,transition,transition-duration | active,checked,hover,press | close | components,veneer |
 | `toggle-group` | background,block-size,border,border-color,border-radius,box-shadow,color,inset-block,inset-inline,inset-inline-end,inset-inline-start,min-inline-size,transition | active,checked | indicator | components |
 | `toggletip` | border-radius,color,inset | hover,open | trigger | components |
 | `tool-call` | animation,background,block-size,border-block-start,border-radius,box-shadow,color,font,font-size,min-block-size,outline,transition | focus | approve,arg,chev,dur,io,name | app |
@@ -845,7 +845,7 @@ expand into finite schema entries; they are not wildcard component names.
 | `tooltip` | background,border,border-radius,box-shadow,color,font,font-size,scale,transform-origin,transition,translate,z-index | open | chart-tip,content | components,data |
 | `topbar` | backdrop-filter,background,block-size,border-block-end,border-radius,color,font-family,font-weight,gap,margin,padding-inline,z-index | hover | actions,brand,links | marketing |
 | `topnav` | animation,backdrop-filter,background,block-size,border-block-end,border-radius,box-shadow,color,font-size,gap,min-block-size,padding,transition,z-index | active,hover | actions,link,mega,menu | layout |
-| `tour` | animation,background,border,border-radius,box-shadow,color,font,font-size,letter-spacing,transition | checked | card,count,pips,spotlight,step-count | components,flows,warp |
+| `tour` | animation,background,border,border-radius,box-shadow,color,font,font-size,letter-spacing,transition | checked | card,count,pips,spotlight,step-count | components,flows,veneer |
 | `trace` | background,color,font | - | - | app |
 | `tracker` | background,block-size,box-shadow,color,font-size,outline,transition | active,checked,focus,hover | bars,rail,rail-fill,stop | data,flows |
 | `transcript` | background,border-block-start,border-radius,color,font,font-size,margin-block-start,min-block-size,outline,padding-block-start | active,focus,hover | - | marketing |
@@ -872,10 +872,10 @@ expand into finite schema entries; they are not wildcard component names.
 The root/role records are `root` (foundations token declarations and root/type paints),
 `text/display`, `text/title`, `text/heading`, `text/body`, `text/prose`, `text/label`,
 `text/eyebrow`, `text/caption`, `text/code`, `text/control`, and `text/button`, where each role
-expands only its actual `--warp-text-<role>-*` consumers. Bare anchors bind the `link` record.
+expands only its actual `--veneer-text-<role>-*` consumers. Bare anchors bind the `link` record.
 The space-intent selectors (`data-gap`, `data-pad`) bind the system scale, not a new component.
 
-<!-- warp-theme-schema:end -->
+<!-- veneer-theme-schema:end -->
 
 ## Merge and scope rules
 
@@ -913,9 +913,9 @@ inputs inherit; a density/expression/theme scope inside a palette recomputes usi
 The config default's resolved semantic page/text/accent values also feed generated share cards;
 part-only settings do not recolour a card. Existing legacy-only card defaults stay unchanged.
 For system-token overrides, use inherited private input slots, such as
-`--warp-config-color-page`, and read them at each system declaration with the original
+`--veneer-config-color-page`, and read them at each system declaration with the original
 expression as fallback. Assign the private inputs at palette roots, then rebind the public
-tokens at dial roots. Merely assigning `--warp-color-page` at an outer palette root loses to a
+tokens at dial roots. Merely assigning `--veneer-color-page` at an outer palette root loses to a
 nested dial's declaration. Apply the same rule to radius/fonts and legacy raw overrides in the
 themed path. Do not emit fallback aliases that eagerly resolve component-local `--_fill` or
 `currentColor`.
@@ -930,13 +930,13 @@ palette boundary.
 
 ## Byte-identical output without configuration
 
-Adding `var(--warp-button-bg, old)` to shipped CSS changes its bytes even when it paints
+Adding `var(--veneer-button-bg, old)` to shipped CSS changes its bytes even when it paints
 identically. Keep two generated variants, selected through the existing token alias facility:
 
-1. Author valid, tokenized CSS in the canonical `docs/design/warp/tokens` sources. At each paint
+1. Author valid, tokenized CSS in the canonical `docs/design/veneer/tokens` sources. At each paint
    site wrap the exact old expression, without changing its interior text. For example,
-   `var(--warp-button-bg, var(--warp-config-part-button-bg,
-   var(--warp-tone-fill, var(--_fill))))` wraps the existing fallback. The example is one
+   `var(--veneer-button-bg, var(--veneer-config-part-button-bg,
+   var(--veneer-tone-fill, var(--_fill))))` wraps the existing fallback. The example is one
    declaration; its original interior whitespace is retained from its source span.
    Public local part tokens use the registration/private-input scheme below; original fallback
    expressions stay at the host. Legacy output includes no new registrations.
@@ -944,13 +944,13 @@ identically. Keep two generated variants, selected through the existing token al
    motion reduction and hit-target floors, gate the supplied value through the existing safety
    formula; do not gate the already-gated default twice. Lower the entire generated expression
    back to its recorded source span, not a guessed/minified equivalent.
-2. Add one lexical helper, `packages/warp-core/scripts/theme-css.mjs`, used by generation and
+2. Add one lexical helper, `packages/veneer-core/scripts/theme-css.mjs`, used by generation and
    compatibility verification. It recognizes balanced `var()` calls for the explicit new token
    schema, including public local slots and their private configuration fallbacks for every
    value family, and unwraps them to the original fallback for the legacy variant. Retain each
    fallback byte,
    comment, selector, whitespace and rule order. Reject missing fallbacks. Do not use a global
-   regex or strip any existing `--warp-*` variable (especially `--warp-sweep-fill`).
+   regex or strip any existing `--veneer-*` variable (especially `--veneer-sweep-fill`).
 3. Run the existing splitter on that lowered legacy source. Existing `styles/` paths and
    `manifest.json` must match the pre-tokenization bytes. Generate part-aware counterparts under
    `styles/themed/` for changed files, including the scope derivation changes, non-colour inputs and local registrations.
@@ -958,19 +958,19 @@ identically. Keep two generated variants, selected through the existing token al
    in configured variants. Non-colour optional insertion spans lower to zero bytes. Keep the split
    ownership, selective choice/text sheets, layers and forced-colour tails identical. Include
    those new artifacts in `build()` and `--check`, so their staleness also fails the package test.
-4. For nonempty `system`, `colors`, `parts`, or `themes`, or raw use of a new part token, `warp()` contributes
-   aliases from each changed `@weft-js/warp-core/styles/<path>` to its themed counterpart. Alias
-   `@weft-js/warp/links.css` to its packaged themed counterpart too. Give the existing bare-link
-   import in `styles.ts` that stable package id and add its export in warp's `package.json`;
+4. For nonempty `system`, `colors`, `parts`, or `themes`, or raw use of a new part token, `veneer()` contributes
+   aliases from each changed `@kerf-js/veneer-core/styles/<path>` to its themed counterpart. Alias
+   `@kerf-js/veneer/links.css` to its packaged themed counterpart too. Give the existing bare-link
+   import in `styles.ts` that stable package id and add its export in veneer's `package.json`;
    today's alias resolver matches raw import strings, so an absolute alias key cannot intercept
    `./links.css`. Cover the real import chain in an ordinary build fixture. Leave unchanged CSS
    imports alone. The default plugin contributes no aliases and no new CSS. Empty dictionaries
    are equivalent to absence. Legacy-only seed/fields/dials/radius/fonts/tokens retain their
    existing path unless a new part token is present. The plugin's read permissions must include
-   its own packaged CSS as well as warp-core when inspecting these artifacts.
-5. Named palette declarations and tone selectors are config-dependent CSS in `weft:tokens/warp`.
+   its own packaged CSS as well as veneer-core when inspecting these artifacts.
+5. Named palette declarations and tone selectors are config-dependent CSS in `kerf:tokens/veneer`.
    They supply inputs to the aliased rules; they do not duplicate entire component rules in a
-   higher layer. Shared palette defaults belong after `warp.tokens` in the existing `warp.base`
+   higher layer. Shared palette defaults belong after `veneer.tokens` in the existing `veneer.base`
    layer, while component-local tone channels keep their component layer. Author/Tailwind
    precedence therefore remains intact, and original forced-colour rules still win.
 
@@ -978,7 +978,7 @@ There is one editable source, not a maintained copy of the old styles. Package b
 through the existing `styles/*` export. A framework-free consumer that wants part tokens without
 the plugin explicitly imports the corresponding `styles/themed/` sheets. This opt-in is
 necessary to meet the byte contract; default imports cannot gain working token reads without
-changing bytes. For the three warp shim sheets (`links.css`, `type.css`, `layout.css`), keep
+changing bytes. For the three veneer shim sheets (`links.css`, `type.css`, `layout.css`), keep
 their existing legacy sources unchanged. Generate their themed counterparts by applying schema
 binding spans to those inputs. Give all three stable package CSS exports/import ids; the alias
 resolver matches raw import strings and cannot safely use a global `./type.css` alias. No
@@ -1015,7 +1015,7 @@ scale. Alias chains resolve after the theme merge with cycle/path errors, just l
 Raw CSS values are parsed as one declaration of the target native property using the installed
 CSS parser in strict mode, without recovery or reparsing/minifying default fallbacks. Allow
 valid typed lengths (`px`, `rem`, `em`, `%`, `ch`, viewport/container units),
-calc/min/max/clamp, registered warp var references and colour/easing/shadow/gradient syntax that
+calc/min/max/clamp, registered veneer var references and colour/easing/shadow/gradient syntax that
 the relevant domain can evaluate. Reject declaration injection, unmatched
 comments/quotes/brackets, controls, `!important`, at-rules, URLs, `expression()`, unknown
 functions and prototype-bearing objects. Keep strings out of selectors and property names;
@@ -1040,21 +1040,21 @@ runtime `var()` breakpoint API. Empty config retains every original query byte.
 
 For each documented part property, emit a noninheriting public custom property in the themed
 variant (`@property` with universal syntax, inherits false, no initial value). The private theme
-input `--warp-config-part-<id>-<property>[-state]` inherits separately. A consumer reads its
+input `--veneer-config-part-<id>-<property>[-state]` inherits separately. A consumer reads its
 local public value, then its inherited private theme input, then its exact source fallback. This
-keeps `style={{ '--warp-button-radius': '12px' }}` local to that button while a palette's button
+keeps `style={{ '--veneer-button-radius': '12px' }}` local to that button while a palette's button
 radius still reaches every button. Pass host settings to its existing sweep/label parts through
 private host channels; stop at nested component roots. A subpart's own public property is local
 to that subpart. Test registration/inheritance in every supported browser; no silent inheriting
 fallback can claim one-element isolation. Only imported part variants carry their registrations.
 
-The local property/state spelling follows the table (`--warp-button-scale-press`,
-`--warp-button-padding-inline`, `--warp-field--label-font-size`). Numeric values in CSS need
+The local property/state spelling follows the table (`--veneer-button-scale-press`,
+`--veneer-button-padding-inline`, `--veneer-field--label-font-size`). Numeric values in CSS need
 native units, for example 12px, 400ms; config's number convenience does not apply to inline CSS.
 Ordinary `class` and `style` keep their priority and semantics. A custom property set on a
 non-consuming ancestor does not act as a theme provider; use a palette attribute or inherited
-system input (`--warp-space-related` together with `data-warp`) for a subtree. Direct system
-inputs and nested `data-warp` roots are preserved when selecting a named palette; more-local
+system input (`--veneer-space-related` together with `data-veneer`) for a subtree. Direct system
+inputs and nested `data-veneer` roots are preserved when selecting a named palette; more-local
 authored inputs beat inherited configuration. Theme/reset roots install their full merged system
 inputs, not a sparse patch that can leak another palette's radius, font, spacing, duration or
 shadow.
@@ -1101,7 +1101,7 @@ ratio and threshold. For example:
 ```text
 D010 themes.ocean.parts.button.hover.text:
   ocean/dark/balanced button hover solid
---warp-button-text-hover on --warp-button-bg-hover
+--veneer-button-text-hover on --veneer-button-bg-hover
   is 2.10:1, needs 4.5:1
 ```
 
@@ -1120,8 +1120,8 @@ explicitly selects the base. Persistence keeps explicit `default` and removes `a
 the existing dials.
 
 Keep existing dial unions narrow; only `DialValue<'palette'>` admits dynamic strings. Emit safe
-root metadata `--warp-palette-names` (the space-separated names including `default`) and
-`--warp-palette-default` in the themed config CSS. Emit `--warp-palette-current` at the default
+root metadata `--veneer-palette-names` (the space-separated names including `default`) and
+`--veneer-palette-default` in the themed config CSS. Emit `--veneer-palette-current` at the default
 root and every palette/theme-tone boundary, including the unknown-name base reset. These values
 are unquoted identifiers with the validated grammar. The palette setter validates against that
 metadata after styles load; absent metadata allows only `default`/`auto`. Unknown values throw
@@ -1130,7 +1130,7 @@ network request or per-component reactive owner is needed. `getDial('palette', r
 effective palette marker from CSS, so an inherited/default palette is reported correctly; other
 `getDial` semantics stay unchanged.
 
-Root persistence continues using `warp:dials.palette`. A subtree call changes only that subtree;
+Root persistence continues using `veneer:dials.palette`. A subtree call changes only that subtree;
 for the new palette dial, `persist: true` or `url: true` on a non-document root throws before
 changing anything, because there is no stable subtree identity in the current storage or query
 format. No new storage key or selector serialization is introduced.
@@ -1167,19 +1167,19 @@ configuration part/property/state types from this decision are required.
 
 ## Tailwind
 
-Keep `@weft-js/warp/tailwind.css` and its existing tokens unchanged for default consumers. When
+Keep `@kerf-js/veneer/tailwind.css` and its existing tokens unchanged for default consumers. When
 system/themes/colours are enabled, alias that entry to a generated Tailwind entry containing the
-current `@theme inline` block plus `--color-<name>: var(--warp-named-<name>)` for each
+current `@theme inline` block plus `--color-<name>: var(--veneer-named-<name>)` for each
 configured colour. Use a packaged template and a deterministic build-generated file selected by
 token aliases. Add optional `tokens.cssEntries: Record<string, string>` to `Contributions` in
 `packages/core/src/plugin.d.ts`. The writer in `packages/cli/src/plugins.mjs` emits each entry
-as `.weft/tokens/<namespace>.<entry>.css`, with the same generated header and stale-file cleanup
+as `.kerf/tokens/<namespace>.<entry>.css`, with the same generated header and stale-file cleanup
 as the primary CSS. Entry names match `[a-z][a-z0-9-]*`; reject separators and invalid types
-before writing. The warp contribution supplies `{ tailwind: generatedCss }` and aliases
-`@weft-js/warp/tailwind.css` to the absolute app-root path `.weft/tokens/warp.tailwind.css`,
+before writing. The veneer contribution supplies `{ tailwind: generatedCss }` and aliases
+`@kerf-js/veneer/tailwind.css` to the absolute app-root path `.kerf/tokens/veneer.tailwind.css`,
 using the contribution's existing `env.root`. The alias resolver in
 `packages/core/vite/config-plugins.mjs` already resolves that file through `this.resolve`. Do
-not alias to `weft:tokens/warp.tailwind`: `skipSelf: true` would skip the same resolver that
+not alias to `kerf:tokens/veneer.tailwind`: `skipSelf: true` would skip the same resolver that
 handles that virtual id. No resolver behaviour change or write to `node_modules` is needed. Keep
 the type/writer extension separate from compiler/runtime work. Do not put `@theme` directives in
 the ordinary runtime stylesheet: builds without Tailwind must remain valid.
@@ -1208,17 +1208,17 @@ edit another owner's schema/types/docs output to make its own tests pass.
 
 | owner | exclusive files and deliverable |
 | --- | --- |
-| Schema/types/reference | This `docs/decisions/theming.md`; new `packages/warp-core/scripts/theme-schema.mjs`, new `packages/warp-core/theme.schema.json`, `packages/warp-core/package.json` for schema packaging; new `packages/warp/plugin.template.d.mts`, generated `packages/warp/plugin.d.mts`; new generated `packages/cli/docs/theme-tokens.md`; new `packages/warp-core/test/theme-schema.test.ts` and new `packages/warp/test/theme-types.test.ts` and `test/theme-types.tsconfig.json`. Own all table expansion, exact binding classification, source coverage counts, type/doc drift checks, and public config types. Other owners read the schema. |
-| CSS/build | All ten existing `docs/design/warp/tokens/*.css` files in the inventory; `packages/warp-core/scripts/split-css.mjs`, new `scripts/theme-css.mjs`, generated `packages/warp-core/styles/**`; `packages/warp/src/styles.ts`, `src/links.css`, `src/type.css`, `src/layout.css` as shim inputs, new generated `src/links-themed.css`, `src/type-themed.css`, `src/layout-themed.css`; `packages/warp/package.json` for stable shim exports; `packages/warp-core/test/styles.test.ts`, new `test/theme-css.test.ts`, new `scripts/theme-compat.mjs`. Own all-family/scale lowering, shorthand bindings, local registrations and breakpoint branches. Do not change schema output; request a table correction from its owner if a real consumer is missing. |
-| Config/resolution | `packages/warp/plugin.mjs`, `src/plugin/dtcg.mjs`, new `src/plugin/themes.mjs`; `packages/warp/test/plugin.test.ts`, new `test/themes.test.ts`. Own `system`/parts/theme merge, typed domain resolution and validation, metadata, aliases, head-script text, D010 subprocess input, default cards and new-theme DTCG contexts. Consume generated types; do not edit `plugin.d.mts`. Legacy DTCG output stays unchanged without new config. |
-| Contrast | `packages/warp-core/scripts/contrast-check.mjs`, `scripts/contrast-check-colors.mjs`, matching canonical `docs/design/warp/scripts/contrast-check.mjs` and `contrast-check-colors.mjs`, new `packages/warp-core/test/theme-contrast.test.ts`. Own all effective-state pairs and failures. The existing style test requires canonical and packaged checker files to stay identical; update those copies together, preserving thresholds. |
-| Runtime | `packages/warp-core/src/dial.ts`, new `test/palette.test.ts`, new `packages/warp/test/palette.browser.test.tsx`. Own sync switches, URL/storage atomicity, nested system/theme overrides, element isolation and first-paint browser fixtures. Config owner alone edits `dialScript` text in plugin.mjs. |
-| Components | `packages/warp/src/Button.tsx`, `Badge.tsx`, `Type.tsx`, `Nav.tsx`, new `Pill.tsx`, new `theme-tone.ts`, `src/index.ts`; new `packages/warp/test/theme-tone.test.tsx`. Own only the five requested tone surfaces and Pill/PillLink over existing pill CSS. Do not widen unrelated semantic Tone users or alter existing anatomy/interactions. |
-| Tailwind/token writer | `packages/warp/tailwind.css`, new `tailwind.template.css`, new `src/plugin/tailwind.mjs`; `packages/core/src/plugin.d.ts`, `packages/cli/src/plugins.mjs`, `packages/cli/test/plugins.test.ts`; new `packages/warp/test/tailwind-theme.test.ts`, new `test/e2e/theme-entry.mjs` and new `test/e2e/theme-entry/` fixtures. Own extra generated CSS entries, strict entry-name tests, actual CSS alias/Tailwind processing and scale utilities. The existing Vite alias resolver needs no source change. Config owner calls the helper after this lands. |
+| Schema/types/reference | This `docs/decisions/theming.md`; new `packages/veneer-core/scripts/theme-schema.mjs`, new `packages/veneer-core/theme.schema.json`, `packages/veneer-core/package.json` for schema packaging; new `packages/veneer/plugin.template.d.mts`, generated `packages/veneer/plugin.d.mts`; new generated `packages/cli/docs/theme-tokens.md`; new `packages/veneer-core/test/theme-schema.test.ts` and new `packages/veneer/test/theme-types.test.ts` and `test/theme-types.tsconfig.json`. Own all table expansion, exact binding classification, source coverage counts, type/doc drift checks, and public config types. Other owners read the schema. |
+| CSS/build | All ten existing `docs/design/veneer/tokens/*.css` files in the inventory; `packages/veneer-core/scripts/split-css.mjs`, new `scripts/theme-css.mjs`, generated `packages/veneer-core/styles/**`; `packages/veneer/src/styles.ts`, `src/links.css`, `src/type.css`, `src/layout.css` as shim inputs, new generated `src/links-themed.css`, `src/type-themed.css`, `src/layout-themed.css`; `packages/veneer/package.json` for stable shim exports; `packages/veneer-core/test/styles.test.ts`, new `test/theme-css.test.ts`, new `scripts/theme-compat.mjs`. Own all-family/scale lowering, shorthand bindings, local registrations and breakpoint branches. Do not change schema output; request a table correction from its owner if a real consumer is missing. |
+| Config/resolution | `packages/veneer/plugin.mjs`, `src/plugin/dtcg.mjs`, new `src/plugin/themes.mjs`; `packages/veneer/test/plugin.test.ts`, new `test/themes.test.ts`. Own `system`/parts/theme merge, typed domain resolution and validation, metadata, aliases, head-script text, D010 subprocess input, default cards and new-theme DTCG contexts. Consume generated types; do not edit `plugin.d.mts`. Legacy DTCG output stays unchanged without new config. |
+| Contrast | `packages/veneer-core/scripts/contrast-check.mjs`, `scripts/contrast-check-colors.mjs`, matching canonical `docs/design/veneer/scripts/contrast-check.mjs` and `contrast-check-colors.mjs`, new `packages/veneer-core/test/theme-contrast.test.ts`. Own all effective-state pairs and failures. The existing style test requires canonical and packaged checker files to stay identical; update those copies together, preserving thresholds. |
+| Runtime | `packages/veneer-core/src/dial.ts`, new `test/palette.test.ts`, new `packages/veneer/test/palette.browser.test.tsx`. Own sync switches, URL/storage atomicity, nested system/theme overrides, element isolation and first-paint browser fixtures. Config owner alone edits `dialScript` text in plugin.mjs. |
+| Components | `packages/veneer/src/Button.tsx`, `Badge.tsx`, `Type.tsx`, `Nav.tsx`, new `Pill.tsx`, new `theme-tone.ts`, `src/index.ts`; new `packages/veneer/test/theme-tone.test.tsx`. Own only the five requested tone surfaces and Pill/PillLink over existing pill CSS. Do not widen unrelated semantic Tone users or alter existing anatomy/interactions. |
+| Tailwind/token writer | `packages/veneer/tailwind.css`, new `tailwind.template.css`, new `src/plugin/tailwind.mjs`; `packages/core/src/plugin.d.ts`, `packages/cli/src/plugins.mjs`, `packages/cli/test/plugins.test.ts`; new `packages/veneer/test/tailwind-theme.test.ts`, new `test/e2e/theme-entry.mjs` and new `test/e2e/theme-entry/` fixtures. Own extra generated CSS entries, strict entry-name tests, actual CSS alias/Tailwind processing and scale utilities. The existing Vite alias resolver needs no source change. Config owner calls the helper after this lands. |
 | T09: CLI/learn/agent docs | `packages/cli/docs/theme.md`, `packages/cli/docs/design.md`, `site/content/learn/theming.md`, generated `site/public/llms.txt` and `site/public/llms-full.txt`. Document system/colors/parts/themes/tone/local overrides, link/include the generated full table, add the short theme-your-app learn step, and regenerate agent docs through the existing generator. The full agent text must include the new API/table content, not stale descriptions. No edits to the schema owner's generated `theme-tokens.md`. |
 | T10: Theming editor | `site/src/toolkit/Theming.tsx`, `site/src/toolkit/docs/theming.ts`, `site/src/toolkit/docs/index.ts`, `site/src/routes/toolkit/[slug].tsx`, `site/src/styles/toolkit.css`. Own the live all-family part/state editor, checked preview retention, light/dark and copyable config. Preserve other pages. |
 | T11: Component-page coverage | `site/src/components/ComponentPage.tsx`, new `site/src/components/ThemingTable.tsx`, per-component entries under `site/src/toolkit/**` excluding the five T10 paths, new `site/scripts/theme-pages.mjs`, new `site/test/theme-pages.test.mjs`. Generate a Theming section next to PropsTable from the shared schema: part/property/state/default/config key/custom property. Components with no themeable parts say so. Check every component page against its schema records; missing, extra or stale rows fail. Serialize toolkit edits after T10 as its ticket requires. |
-| T12: Preview controls | `site/src/components/Playground.tsx`, `site/src/components/FrameTools.tsx`, `site/src/components/ExampleFrame.tsx`, new `site/src/components/ThemeControls.tsx`, new `site/test/theme-controls.test.tsx`. Add theme knobs beside prop knobs, the named-theme picker and live preview; printed output reproduces JSX plus warp config or local overrides. Add the palette switch beside existing frame controls. Preserve their placement, values and interactions. |
+| T12: Preview controls | `site/src/components/Playground.tsx`, `site/src/components/FrameTools.tsx`, `site/src/components/ExampleFrame.tsx`, new `site/src/components/ThemeControls.tsx`, new `site/test/theme-controls.test.tsx`. Add theme knobs beside prop knobs, the named-theme picker and live preview; printed output reproduces JSX plus veneer config or local overrides. Add the palette switch beside existing frame controls. Preserve their placement, values and interactions. |
 
 Schema lands first; config/build follow its generated contract; Tailwind's writer/type extension
 lands before config emits secondary entries. Runtime/components follow metadata and style rules.
@@ -1243,38 +1243,38 @@ manager runs heavy package/build/measurement work through PROTOCOL, after checki
 space. No screenshot baselines are updated for the no-config branch.
 
 ```sh
-node packages/warp-core/scripts/theme-schema.mjs --check
+node packages/veneer-core/scripts/theme-schema.mjs --check
 node site/scripts/theme-pages.mjs --check
 node site/scripts/sample-width.mjs
-node packages/warp-core/scripts/split-css.mjs --check
-node packages/warp-core/scripts/theme-compat.mjs --baseline 90fbeee3
-pnpm --filter @weft-js/warp-core exec vitest run \
+node packages/veneer-core/scripts/split-css.mjs --check
+node packages/veneer-core/scripts/theme-compat.mjs --baseline 90fbeee3
+pnpm --filter @kerf-js/veneer-core exec vitest run \
   test/theme-schema.test.ts
-pnpm --filter @weft-js/warp-core exec vitest run \
+pnpm --filter @kerf-js/veneer-core exec vitest run \
   test/theme-css.test.ts
-pnpm --filter @weft-js/warp exec vitest run test/theme-types.test.ts
-pnpm --filter @weft-js/warp exec tsc \
+pnpm --filter @kerf-js/veneer exec vitest run test/theme-types.test.ts
+pnpm --filter @kerf-js/veneer exec tsc \
   -p test/theme-types.tsconfig.json --noEmit
-pnpm --filter @weft-js/warp-core exec vitest run \
+pnpm --filter @kerf-js/veneer-core exec vitest run \
   test/theme-contrast.test.ts
-pnpm --filter @weft-js/warp-core exec vitest run test/palette.test.ts
-pnpm --filter @weft-js/warp exec vitest run \
+pnpm --filter @kerf-js/veneer-core exec vitest run test/palette.test.ts
+pnpm --filter @kerf-js/veneer exec vitest run \
   test/plugin.test.ts test/themes.test.ts
-pnpm --filter @weft-js/warp exec vitest run test/theme-tone.test.tsx
-pnpm --filter @weft-js/warp exec vitest run \
+pnpm --filter @kerf-js/veneer exec vitest run test/theme-tone.test.tsx
+pnpm --filter @kerf-js/veneer exec vitest run \
   test/palette.browser.test.tsx
-pnpm --filter @weft-js/warp exec vitest run \
+pnpm --filter @kerf-js/veneer exec vitest run \
   test/tailwind-theme.test.ts
-node packages/warp/test/e2e/theme-entry.mjs --baseline 90fbeee3
-node packages/warp-core/scripts/contrast-check.mjs \
-  packages/warp-core/styles/warp.css --json
-node packages/warp/scripts/size.mjs
+node packages/veneer/test/e2e/theme-entry.mjs --baseline 90fbeee3
+node packages/veneer-core/scripts/contrast-check.mjs \
+  packages/veneer-core/styles/veneer.css --json
+node packages/veneer/scripts/size.mjs
 pnpm run check --only=lint,types
 node benchmarks/compare/measure.mjs
 ```
 
-`theme-compat.mjs` compares every baseline tracked `packages/warp-core/styles/*.css`
-recursively, the old manifest, and warp's bare-link, type, layout and Tailwind entries against
+`theme-compat.mjs` compares every baseline tracked `packages/veneer-core/styles/*.css`
+recursively, the old manifest, and veneer's bare-link, type, layout and Tailwind entries against
 the candidate defaults. It prints checked/expected counts derived from `git ls-tree -r
 --name-only 90fbeee3` and verifies the candidate inventory against `git ls-files`; themed
 additions are listed separately. It must fail on a missing file, extra legacy path, changed byte
@@ -1282,7 +1282,7 @@ or absent baseline ref. Its `--negative-control` mode changes one byte in a temp
 and exits nonzero. Prove it:
 
 ```sh
-if node packages/warp-core/scripts/theme-compat.mjs \
+if node packages/veneer-core/scripts/theme-compat.mjs \
   --baseline 90fbeee3 --negative-control; then
   exit 1
 fi
@@ -1290,7 +1290,7 @@ fi
 
 The ordinary-consumer fixture builds the same imports against baseline and candidate in one
 owned staging root, pins the same compiler/toolchain, and compares concatenated emitted CSS
-bytes with normalized asset filenames only. Exercise no plugin, `warp()`, empty new
+bytes with normalized asset filenames only. Exercise no plugin, `veneer()`, empty new
 dictionaries, and existing seed/token/dial configs; the latter compare like-for-like old
 configurations. The themed fixture must prove aliases select part-aware sheets for ordinary
 imports, selective input sheets, bare anchors and the Tailwind entry. Also pack/install the
@@ -1329,6 +1329,6 @@ implementation evidence.
 
 The manager also runs the affected package tests, type/lint checks and integration gate. It
 commits the all-stack comparison history and regenerated chart once the integrated source is
-measured, as CONTRIBUTING requires. Every new scenario runs across weft + warp, Solid, React +
+measured, as CONTRIBUTING requires. Every new scenario runs across kerf + veneer, Solid, React +
 Radix, React + Zustand and React + MUI. Record size and speed results; this design makes no size
 or speed claim. Clean owned staging and stop owned test processes after verification.

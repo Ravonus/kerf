@@ -1,4 +1,4 @@
-// Plugin trust (research 13 §2.9): a new permission or changed code is reported and blocked until `weft plugins approve`.
+// Plugin trust (research 13 §2.9): a new permission or changed code is reported and blocked until `kerf plugins approve`.
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -20,7 +20,7 @@ import {
 import { bin, project } from './helpers.mjs'
 
 const body = (permissions = '{}', extra = '') =>
-  `import { definePlugin } from '@weft-js/core/plugin'\n${extra}\nexport default definePlugin({ name: 'acme', version: '1.0.0', permissions: ${permissions}, options: o => o ?? {}, contribute: () => ({}) })\n`
+  `import { definePlugin } from '@kerf-js/core/plugin'\n${extra}\nexport default definePlugin({ name: 'acme', version: '1.0.0', permissions: ${permissions}, options: o => o ?? {}, contribute: () => ({}) })\n`
 const pkg = {
   name: 'acme',
   version: '1.0.0',
@@ -34,7 +34,7 @@ const installed = (source = body()) => ({
 const app = (source: string, config = "{ plugins: ['acme'] }") =>
   project({
     ...installed(source),
-    'weft.config.json': config.replace(/(\w+):/g, '"$1":').replaceAll("'", '"'),
+    'kerf.config.json': config.replace(/(\w+):/g, '"$1":').replaceAll("'", '"'),
   })
 const update = (dir: string, source: string) =>
   writeFileSync(join(dir, 'node_modules/acme/plugin.mjs'), source)
@@ -49,7 +49,7 @@ const approve = async (dir: string, options: { all?: boolean; names?: string[] }
 const audit = async (dir: string) => auditCommand(dir, await loadConfig(dir))
 const trust = (r: { diagnostics: { code: string; why: string; fix: { text: string } }[] }) =>
   r.diagnostics.filter((d) => d.code === 'P109' || d.code === 'P110')
-const weft = (...args: string[]) =>
+const kerf = (...args: string[]) =>
   spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
 const io = () => {
   const out = { stdout: '', stderr: '' }
@@ -66,24 +66,24 @@ describe('the plugin lock', () => {
   // Through the real CLI: a fresh process sees the updated package, as it does after a real install.
   it('reports a new permission, blocks check until it is approved, then passes', () => {
     const dir = app(body())
-    expect(weft('plugins', 'approve', '--all', '--root', dir).status).toBe(0)
-    expect(weft('check', '--root', dir).status).toBe(0)
+    expect(kerf('plugins', 'approve', '--all', '--root', dir).status).toBe(0)
+    expect(kerf('check', '--root', dir).status).toBe(0)
 
     update(dir, body(`{ net: ['api.acme.dev'], native: true }`))
-    const blocked = weft('check', '--json', '--root', dir)
+    const blocked = kerf('check', '--json', '--root', dir)
     expect(blocked.status).toBe(1)
     const found = trust(JSON.parse(blocked.stdout))
     expect(found.map((d) => d.code)).toEqual(['P109', 'P110'])
-    expect(found[0]).toMatchObject({ severity: 'error', owner: 'acme', file: 'weft.config.json' })
+    expect(found[0]).toMatchObject({ severity: 'error', owner: 'acme', file: 'kerf.config.json' })
     expect(found[0]!.why).toContain('native, net:api.acme.dev')
-    expect(found[0]!.fix.text).toContain('weft plugins approve acme')
+    expect(found[0]!.fix.text).toContain('kerf plugins approve acme')
 
-    const audited = weft('plugins', 'audit', '--root', dir)
+    const audited = kerf('plugins', 'audit', '--root', dir)
     expect(audited.status).toBe(1)
     expect(audited.stderr).toContain('+net:api.acme.dev')
 
-    expect(weft('plugins', 'approve', 'acme', '--root', dir).status).toBe(0)
-    expect(weft('check', '--root', dir).status).toBe(0)
+    expect(kerf('plugins', 'approve', 'acme', '--root', dir).status).toBe(0)
+    expect(kerf('check', '--root', dir).status).toBe(0)
     expect(lock(dir).plugins.acme.permissions).toEqual(['native', 'net:api.acme.dev'])
   })
 
@@ -93,7 +93,7 @@ describe('the plugin lock', () => {
     expect(existsSync(join(dir, lockFile))).toBe(false)
   })
 
-  it('stops `weft build` and `weft dev` before any build hook runs', async () => {
+  it('stops `kerf build` and `kerf dev` before any build hook runs', async () => {
     const dir = app(body(`{ net: ['x.dev'] }`))
     await expect(buildCommand(dir)).rejects.toMatchObject({
       code: 'E_TRUST',
@@ -125,8 +125,8 @@ function registerLockIntegrityTests() {
 
   it('an unchanged plugin stays approved, and narrowing a permission needs no approval', async () => {
     const dir = project({
-      'weft.config.ts':
-        "import { definePlugin } from '@weft-js/core/plugin'\nconst p = definePlugin({ name: 'mine', version: '1.0.0', permissions: { env: ['A', 'B'] }, options: o => o ?? {}, contribute: () => ({}) })\nexport default { plugins: [p()] }\n",
+      'kerf.config.ts':
+        "import { definePlugin } from '@kerf-js/core/plugin'\nconst p = definePlugin({ name: 'mine', version: '1.0.0', permissions: { env: ['A', 'B'] }, options: o => o ?? {}, contribute: () => ({}) })\nexport default { plugins: [p()] }\n",
     })
     await approve(dir)
     expect((await audit(dir)).plugins[0]).toMatchObject({
@@ -135,8 +135,8 @@ function registerLockIntegrityTests() {
       blocked: false,
     })
     writeFileSync(
-      join(dir, 'weft.config.ts'),
-      readFileSync(join(dir, 'weft.config.ts'), 'utf8').replace("['A', 'B']", "['A']"),
+      join(dir, 'kerf.config.ts'),
+      readFileSync(join(dir, 'kerf.config.ts'), 'utf8').replace("['A', 'B']", "['A']"),
     )
     expect(await audit(dir)).toMatchObject({
       ok: true,
@@ -168,7 +168,7 @@ function registerLockIntegrityTests() {
   })
 }
 
-describe('weft plugins approve', () => {
+describe('kerf plugins approve', () => {
   it('shows what is waiting and writes nothing without a name or --all', async () => {
     const dir = app(body(`{ net: ['x.dev'] }`))
     const { sink, out } = io()
@@ -194,7 +194,7 @@ describe('weft plugins approve', () => {
   it('--all drops plugins that are gone; a named approve leaves them', async () => {
     const dir = app(body())
     await approve(dir)
-    writeFileSync(join(dir, 'weft.config.json'), '{ "plugins": [] }')
+    writeFileSync(join(dir, 'kerf.config.json'), '{ "plugins": [] }')
     expect((await audit(dir)).stale).toEqual(['acme'])
     await approve(dir)
     expect(lock(dir).plugins).toEqual({})
@@ -202,16 +202,16 @@ describe('weft plugins approve', () => {
 
   it('makes a gitignored lock committable', async () => {
     const dir = app(body())
-    writeFileSync(join(dir, '.gitignore'), 'node_modules/\n.weft/\n')
+    writeFileSync(join(dir, '.gitignore'), 'node_modules/\n.kerf/\n')
     expect(await approve(dir)).toMatchObject({ gitignore: true })
     expect(readFileSync(join(dir, '.gitignore'), 'utf8')).toBe(
-      `node_modules/\n.weft/*\n!${lockFile}\n`,
+      `node_modules/\n.kerf/*\n!${lockFile}\n`,
     )
     expect(await approve(dir)).toMatchObject({ gitignore: false })
   })
 })
 
-describe('weft plugins audit', () => {
+describe('kerf plugins audit', () => {
   const uses = async (source: string) => (await audit(app(source))).plugins[0]
 
   it.each([
@@ -243,7 +243,7 @@ describe('weft plugins audit', () => {
   it('follows relative imports and modules named by slots, and says which dependencies it stopped at', async () => {
     const dir = project({
       ...installed(
-        `import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'\nimport './lib/a.mjs'\nimport 'left-pad'\nconst build = defineSlot({ id: 'font.build', version: 1, cardinality: 'one', sides: ['build'] })\nexport default definePlugin({ name: 'acme', version: '1.0.0', options: o => o ?? {}, contribute: () => ({ provides: [provide(build, { sides: { build: { module: 'acme/build', export: 'b' } } })] }) })\n`,
+        `import { definePlugin, defineSlot, provide } from '@kerf-js/core/plugin'\nimport './lib/a.mjs'\nimport 'left-pad'\nconst build = defineSlot({ id: 'font.build', version: 1, cardinality: 'one', sides: ['build'] })\nexport default definePlugin({ name: 'acme', version: '1.0.0', options: o => o ?? {}, contribute: () => ({ provides: [provide(build, { sides: { build: { module: 'acme/build', export: 'b' } } })] }) })\n`,
       ),
       'node_modules/acme/package.json': JSON.stringify({
         ...pkg,
@@ -253,11 +253,11 @@ describe('weft plugins audit', () => {
       'node_modules/left-pad/index.js': '',
       'node_modules/acme/lib/a.mjs': "import 'node:child_process'\n",
       'node_modules/acme/build.mjs': "import 'node:fs'\n",
-      'weft.config.json': '{ "plugins": ["acme"] }',
+      'kerf.config.json': '{ "plugins": ["acme"] }',
     })
     expect((await audit(dir)).plugins[0]).toMatchObject({
       undeclared: ['fs', 'spawn'],
-      dependencies: ['@weft-js/core', 'left-pad'],
+      dependencies: ['@kerf-js/core', 'left-pad'],
     })
   })
 
@@ -269,7 +269,7 @@ describe('weft plugins audit', () => {
     expect(trust(await check(dir))).toEqual([])
   })
 
-  it.each(['text', 'plugin-media', 'plugin-surface-keel', 'warp'])(
+  it.each(['text', 'plugin-media', 'plugin-surface-keel', 'veneer'])(
     '%s declares what it uses',
     async (name) => {
       const dir = fileURLToPath(new URL(`../../${name}/`, import.meta.url))
@@ -292,20 +292,20 @@ describe('weft plugins audit', () => {
   )
 })
 
-describe('weft add', () => {
+describe('kerf add', () => {
   it('says what a plugin asks for and leaves approving to you', async () => {
     const dir = project({
       ...installed(body(`{ net: ['x.dev'] }`)),
-      'weft.config.ts': 'export default {}\n',
+      'kerf.config.ts': 'export default {}\n',
     })
     const r = await addCommand(dir, 'acme', { install: false })
     expect(r.approve).toEqual({ added: ['net:x.dev'], undeclared: [] })
-    expect(r.actions.at(-1)).toContain('weft plugins approve acme')
+    expect(r.actions.at(-1)).toContain('kerf plugins approve acme')
     expect(existsSync(join(dir, lockFile))).toBe(false)
   })
 
   it('stays quiet for a plugin that asks for nothing', async () => {
-    const dir = project({ ...installed(), 'weft.config.ts': 'export default {}\n' })
+    const dir = project({ ...installed(), 'kerf.config.ts': 'export default {}\n' })
     expect(await addCommand(dir, 'acme', { install: false })).not.toHaveProperty('approve')
   })
 })

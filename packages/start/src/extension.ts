@@ -1,14 +1,14 @@
 // `server.extension@1`: how a plugin reaches the server without a private path. One provider per key adds what it needs,
 // and only an app with `src/<key>.server.ts` runs it, so nothing arrives behind the app's back (P118). The provider exports
-// a function from that file's default export to a `ServerExtension`; `weft docs plugins` has a worked example.
+// a function from that file's default export to a `ServerExtension`; `kerf docs plugins` has a worked example.
 //
-// Four things, each optional. Routes live under `/_weft/x/<key>/`. `context` adds to `ctx`. `guard` runs before every server
+// Four things, each optional. Routes live under `/_kerf/x/<key>/`. `context` adds to `ctx`. `guard` runs before every server
 // function, and options it reads come from augmenting `FnOptions`. `check` runs before the first request.
 
 import type { Context } from './data'
 
 /** The path prefix an extension's routes answer under. */
-export const EXTENSION = '/_weft/x/'
+export const EXTENSION = '/_kerf/x/'
 
 /** What a server extension is handed. */
 export interface ExtensionApi {
@@ -24,7 +24,7 @@ export interface ExtensionApi {
 
 /** A plugin's server half: its routes, what it adds to `ctx`, and what it guards. */
 export interface ServerExtension {
-  /** Serves `/_weft/x/<key>/<path>`. It sees the raw request: nothing has read the body. */
+  /** Serves `/_kerf/x/<key>/<path>`. It sees the raw request: nothing has read the body. */
   handle?(request: Request, path: string, api: ExtensionApi): Promise<Response> | Response
   /** Merged into `ctx`, after the app's own. It may replace `user` (a caller with a token) and may look things up first. */
   context?(ctx: Context): object | Promise<object>

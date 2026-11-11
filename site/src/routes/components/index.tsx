@@ -1,16 +1,16 @@
-import type { Meta } from '@weft-js/start'
-import { WarpIndex } from '../../components/WarpIndex'
+import type { Meta } from '@kerf-js/start'
+import { VeneerIndex } from '../../components/VeneerIndex'
 
 export const prerender = true
-export const meta: Meta = { title: 'Components', description: 'Warp components, for Weft.' }
+export const meta: Meta = { title: 'Components', description: 'Veneer components, for Kerf.' }
 
 export default function Index() {
   return (
-    <WarpIndex
+    <VeneerIndex
       area="components"
       title="Components"
       lede={
-        'The building blocks: buttons, fields, overlays, layout, data and dates. Install <code data-scope="code">@weft-js/warp</code> and import what you use.'
+        'The building blocks: buttons, fields, overlays, layout, data and dates. Install <code data-scope="code">@kerf-js/veneer</code> and import what you use.'
       }
     />
   )

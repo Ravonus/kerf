@@ -1,4 +1,4 @@
-import { Button, Row, Stack, Text } from '@weft-js/warp'
+import { Button, Row, Stack, Text } from '@kerf-js/veneer'
 
 export const ButtonDeleteProject = () => (
   <Stack gap="related">

@@ -1,5 +1,5 @@
-import { state, untrack } from '@weft-js/core'
-import { Toggle } from '@weft-js/warp'
+import { state, untrack } from '@kerf-js/core'
+import { Toggle } from '@kerf-js/veneer'
 
 export function TogglePlay(p: {
   children: string

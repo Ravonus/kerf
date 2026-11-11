@@ -1,7 +1,7 @@
 // Keep the shared world available to the example reader.
 import { REGIONS as _REGIONS } from '../../world'
-import { state } from '@weft-js/core'
-import { Slider } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Slider } from '@kerf-js/veneer'
 
 export function SliderRange() {
   const copies = state<[number, number]>([2, 6])

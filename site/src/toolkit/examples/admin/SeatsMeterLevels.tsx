@@ -1,4 +1,4 @@
-import { SeatsMeter, Stack } from '@weft-js/warp'
+import { SeatsMeter, Stack } from '@kerf-js/veneer'
 
 export const SeatsMeterLevels = () => (
   <Stack gap="group">

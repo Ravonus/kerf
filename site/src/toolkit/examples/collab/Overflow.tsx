@@ -1,4 +1,4 @@
-import { PresenceStack } from '@weft-js/warp'
+import { PresenceStack } from '@kerf-js/veneer'
 
 import { PEERS } from '../../world'
 

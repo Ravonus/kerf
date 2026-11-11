@@ -1,0 +1,5 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Status light: dot + label, the word is always present */
+:where([data-scope="status-light"]) { display: inline-flex; align-items: center; gap: 8px; font-size: var(--veneer-text-body-size); }
+}

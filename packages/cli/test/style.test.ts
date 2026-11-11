@@ -8,12 +8,12 @@ import { handle } from '../src/mcp.mjs'
 import { classSoup, findGroups, parseTarget, styleMatrix } from '../src/style.mjs'
 import { bin, project } from './helpers.mjs'
 
-const weft = (...args: string[]) => {
+const kerf = (...args: string[]) => {
   const r = spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
   return { code: r.status, stdout: r.stdout, stderr: r.stderr }
 }
 
-const cards = `import { group } from '@weft-js/core/style'
+const cards = `import { group } from '@kerf-js/core/style'
 
 /** A summary card for one order in a list. */
 export const orderCard = group('order-card', {
@@ -33,7 +33,7 @@ export const statusBadge = group('status-badge', {
 })
 `
 
-const orders = `import { state } from '@weft-js/core'
+const orders = `import { state } from '@kerf-js/core'
 import { orderCard, statusBadge } from './cards'
 
 export function Orders(props: { orders: { id: string; name: string; status: 'open' | 'shipped' | 'late' }[] }) {
@@ -54,7 +54,7 @@ export function Orders(props: { orders: { id: string; name: string; status: 'ope
 /** A clean project: two groups, one consumer. */
 const clean = () => project({ 'src/cards.tsx': cards, 'src/orders.tsx': orders })
 
-describe('weft style find', () => {
+describe('kerf style find', () => {
   it('finds the group that fits by name, doc, part or token, best first', async () => {
     const { matrix } = await styleMatrix(clean())
     const card = findGroups(matrix, 'card')
@@ -79,10 +79,10 @@ describe('weft style find', () => {
 
   it('from the bin: JSON with --json, a list for humans otherwise', () => {
     const dir = clean()
-    const r = weft('style', 'find', 'order', '--json', '--root', dir)
+    const r = kerf('style', 'find', 'order', '--json', '--root', dir)
     expect(r.code).toBe(0)
     expect(JSON.parse(r.stdout).groups[0].name).toBe('order-card')
-    expect(weft('style', 'find', 'badge', '--root', dir).stderr).toMatch(
+    expect(kerf('style', 'find', 'badge', '--root', dir).stderr).toMatch(
       /^status-badge\s+src\/cards\.tsx:14\n {4}A small status label next to a title\.\n {4}level: info\|bad · 1 uses$/m,
     )
   })
@@ -90,7 +90,7 @@ describe('weft style find', () => {
 
 function registerStyleResolution() {
   it('resolves one variation, root and parts, with where each value came from', () => {
-    const r = weft(
+    const r = kerf(
       'style',
       'explain',
       'order-card',
@@ -109,13 +109,13 @@ function registerStyleResolution() {
     const root = out.elements.find((e: { element: string }) => e.element === 'root').decls
     expect(root).toContainEqual({
       prop: 'padding',
-      value: 'var(--warp-space-group)',
+      value: 'var(--veneer-space-group)',
       from: 'pad: group',
       at: 'base',
     })
     expect(root).toContainEqual({
       prop: '--_text',
-      value: 'var(--warp-color-critical-text)',
+      value: 'var(--veneer-color-critical-text)',
       from: 'tone: critical',
       at: 'status=late',
     })
@@ -139,14 +139,14 @@ function registerStyleResolution() {
         (d: { prop: string; at: string }) => d.prop === 'font-size' && d.at === 'compound 0',
       ),
     ).toMatchObject({
-      value: 'var(--warp-text-label-size)',
+      value: 'var(--veneer-text-label-size)',
       from: 'text: label',
     })
     expect(out.css).toContain('@scope ([data-g="order-card"]) to ([data-g])')
     expect(out.css).toContain(':scope[data-status="late"] [data-part="meta"]')
     // the meta part reads the root's tone, so the channel stays (a tone only folds where it's set and read on one element)
     expect(out.css).toContain(
-      ':scope[data-status="late"] {\n      --_text: var(--warp-color-critical-text);',
+      ':scope[data-status="late"] {\n      --_text: var(--veneer-color-critical-text);',
     )
     expect(out.sites).toEqual([
       { file: 'src/orders.tsx', line: 9, axes: { status: 'dynamic' }, states: ['selected'] },
@@ -155,29 +155,29 @@ function registerStyleResolution() {
 
   it('takes a DOM selector, as copied from devtools, and prints it for humans', () => {
     const dir = clean()
-    const r = weft('style', 'explain', '[data-g="status-badge"][data-level="bad"]', '--root', dir)
+    const r = kerf('style', 'explain', '[data-g="status-badge"][data-level="bad"]', '--root', dir)
     expect(r.code).toBe(0)
     expect(r.stderr).toMatch(
       /^status-badge {2}src\/cards\.tsx:14 {2}— A small status label next to a title\.$/m,
     )
     expect(r.stderr).toMatch(
-      /^ {6}--_soft: var\(--warp-color-critical-soft\) +← tone: critical \(level=bad\)$/m,
+      /^ {6}--_soft: var\(--veneer-color-critical-soft\) +← tone: critical \(level=bad\)$/m,
     )
-    expect(r.stderr).toContain('background-color: var(--warp-color-critical-soft)')
+    expect(r.stderr).toContain('background-color: var(--veneer-color-critical-soft)')
   })
 }
 
 function registerStyleTargets() {
   it('unknown names are D025 with the closest ones', () => {
     const dir = clean()
-    const r = weft('style', 'explain', 'order-crd', '--json', '--root', dir)
+    const r = kerf('style', 'explain', 'order-crd', '--json', '--root', dir)
     expect(r.code).toBe(2)
     expect(JSON.parse(r.stdout).error).toEqual({
       code: 'E_UNKNOWN_GROUP',
       message: expect.stringMatching(/^D025 no group `order-crd`; did you mean `order-card`\?/),
     })
     expect(
-      JSON.parse(weft('style', 'explain', 'order-card[status=lat]', '--json', '--root', dir).stdout)
+      JSON.parse(kerf('style', 'explain', 'order-card[status=lat]', '--json', '--root', dir).stdout)
         .error.message,
     ).toBe(
       "D025 `lat` isn't a value of order-card's `status` axis (Did you mean `late`? values: open, shipped, late)",
@@ -212,7 +212,7 @@ function registerStyleTargets() {
   })
 }
 
-describe('weft style explain', () => {
+describe('kerf style explain', () => {
   registerStyleResolution()
   registerStyleTargets()
 })
@@ -222,8 +222,8 @@ function registerCleanStyleCheck() {
     const dir = clean()
     const r = await check(dir)
     expect(r.diagnostics.filter((d) => d.code.startsWith('D0'))).toEqual([])
-    expect(r.styles).toEqual({ groups: 2, matrix: '.weft/styles.json' })
-    const m = JSON.parse(readFileSync(join(dir, '.weft/styles.json'), 'utf8'))
+    expect(r.styles).toEqual({ groups: 2, matrix: '.kerf/styles.json' })
+    const m = JSON.parse(readFileSync(join(dir, '.kerf/styles.json'), 'utf8'))
     expect(Object.keys(m.groups)).toEqual(['order-card', 'status-badge'])
     expect(m.groups['order-card']).toMatchObject({
       file: 'src/cards.tsx:4',
@@ -317,11 +317,11 @@ export const G = () => <p {...orderCard()} {...statusBadge()} />
       'No intent sets these properties; keep the escape, or propose an intent for the vocabulary.',
     )
     expect(r.ok).toBe(false)
-    expect(existsSync(join(dir, '.weft/styles.json'))).toBe(true)
+    expect(existsSync(join(dir, '.kerf/styles.json'))).toBe(true)
   })
 }
 
-describe('weft check: the style D-codes and .weft/styles.json', () => {
+describe('kerf check: the style D-codes and .kerf/styles.json', () => {
   registerCleanStyleCheck()
   registerStyleDiagnostics()
 })

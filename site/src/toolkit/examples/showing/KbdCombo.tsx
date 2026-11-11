@@ -1,4 +1,4 @@
-import { Row, Kbd } from '@weft-js/warp'
+import { Row, Kbd } from '@kerf-js/veneer'
 
 export const KbdCombo = () => (
   <Row gap="hair">

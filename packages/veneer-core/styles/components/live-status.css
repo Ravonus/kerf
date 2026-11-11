@@ -1,0 +1,20 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Live status (kerf .live: connecting · live · reconnecting · offline) -------- */
+:where([data-scope="live-status"]) {
+  display: inline-flex; align-items: center; gap: 7px; block-size: 26px; padding-inline: 9px 10px;
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border); border-radius: var(--veneer-radius-round);
+  background: var(--veneer-color-surface-raised); color: var(--veneer-color-text-subtle);
+  font: 500 var(--veneer-text-caption-size)/1 var(--veneer-text-body-font); white-space: nowrap;
+  transition: color var(--veneer-duration-fast), border-color var(--veneer-duration-fast), background-color var(--veneer-duration-fast);
+}
+:where([data-scope="live-status"] [data-scope="spinner"]) { --_size: 10px; border-width: 1.5px; }
+:where([data-scope="live-status"][data-state="live"]) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="live-status"][data-state="reconnecting"]) { background: var(--veneer-color-caution-soft); border-color: var(--veneer-color-caution-border); color: var(--veneer-color-caution-text); }
+:where([data-scope="live-status"][data-state="offline"]) { background: var(--veneer-color-critical-soft); border-color: var(--veneer-color-critical-border); color: var(--veneer-color-critical-text); }
+
+
+/* ---------------------------------------------------------------------------
+   5 · DISPLAY ATOMS AND SMALL ACTIONS (COVERAGE: comp rows)
+   ------------------------------------------------------------------------ */
+}

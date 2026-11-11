@@ -5,7 +5,7 @@ import { check } from './check'
 import { store, VALUE } from './rooms'
 import type { Hubbed, Value } from './types'
 
-const roomName = (id: string, params: unknown) => `weft:c:${id}:${stable(params)}`
+const roomName = (id: string, params: unknown) => `kerf:c:${id}:${stable(params)}`
 
 export function sharedWriter(stateOf: (h: Hub) => Hubbed) {
   /** A shared value written by the server: `deckSlide.in(key).set(3)`. */

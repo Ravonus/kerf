@@ -1,20 +1,20 @@
 /** styleGroups diagnostic entries in catalog order. */
 export const styleGroups = [
-  // Style groups (research 23 §3). D010 is warp's contrast gate (its own plugin); D040 and D081 are reserved by warp's docs.
+  // Style groups (research 23 §3). D010 is veneer's contrast gate (its own plugin); D040 and D081 are reserved by veneer's docs.
   {
     code: 'D020',
     severity: 'warning',
     by: 'cli',
     catches:
       'Class soup: a static `class`/`className` with more than 8 classes, or the same class list (4+ classes) in two or more places',
-    fix: "Extract a style group (`group('order-card', …)`, name suggested from the component) and spread it; `weft style find` first, one may already fit",
+    fix: "Extract a style group (`group('order-card', …)`, name suggested from the component) and spread it; `kerf style find` first, one may already fit",
   },
   {
     code: 'D021',
     severity: 'warning',
     by: 'cli',
     catches:
-      'Two style groups resolve to 90% or more of the same CSS (`similar` in .weft/styles.json)',
+      'Two style groups resolve to 90% or more of the same CSS (`similar` in .kerf/styles.json)',
     fix: 'Merge them into one group with an axis for what differs',
   },
   {
@@ -36,10 +36,10 @@ export const styleGroups = [
     severity: 'error',
     by: 'compiler',
     catches:
-      "Styles that fight with no order: two group roots spread on one element; two compounds that can match at once and set one property differently, or an accent that sets what the site's own axis value sets (`weft check`)",
+      "Styles that fight with no order: two group roots spread on one element; two compounds that can match at once and set one property differently, or an accent that sets what the site's own axis value sets (`kerf check`)",
     fix: 'One group per element (nest an element, or make it an axis); exclusive compound `when`s; drop the accent or make it an axis value',
     example:
-      "import { group } from '@weft-js/core/style'\nconst a = group('a', { base: { pad: 'group' } })\nconst b = group('b', { base: { gap: 'related' } })\nexport function X() { return <li {...a()} {...b()} /> }",
+      "import { group } from '@kerf-js/core/style'\nconst a = group('a', { base: { pad: 'group' } })\nconst b = group('b', { base: { gap: 'related' } })\nexport function X() { return <li {...a()} {...b()} /> }",
   },
   {
     code: 'D025',
@@ -47,8 +47,8 @@ export const styleGroups = [
     by: 'compiler',
     catches:
       "Unknown name in a style group: an axis value, axis, state or part a call site uses that the group doesn't have, or an intent or token that isn't in the vocabulary (also a type error)",
-    fix: 'Use one of the names listed (the closest come first); `weft style explain <group>` shows them all',
+    fix: 'Use one of the names listed (the closest come first); `kerf style explain <group>` shows them all',
     example:
-      "import { group } from '@weft-js/core/style'\nconst card = group('card', { axes: { status: { open: {}, late: {} } } })\nexport function X() { return <article {...card({ status: 'lost' })} /> }",
+      "import { group } from '@kerf-js/core/style'\nconst card = group('card', { axes: { status: { open: {}, late: {} } } })\nexport function X() { return <article {...card({ status: 'lost' })} /> }",
   },
 ]

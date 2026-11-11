@@ -1,0 +1,17 @@
+{
+  "name": "kerf-tailwind",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@kerf-js/core": "file:../../../../packages/core",
+    "@kerf-js/cli": "file:../../../../packages/cli"
+  },
+  "devDependencies": {
+    "vite": "8.3.5",
+    "tailwindcss": "4.3.3",
+    "@tailwindcss/vite": "4.3.3"
+  }
+}

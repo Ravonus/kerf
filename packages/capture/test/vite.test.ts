@@ -1,8 +1,8 @@
-import { postersModule } from '@weft-js/capture/vite'
+import { postersModule } from '@kerf-js/capture/vite'
 
 test('before a bake the posters module registers none', () => {
   expect(postersModule('/p', null)).toBe(
-    "import { bakedPosters } from '@weft-js/warp/scenes'\nexport default bakedPosters({  })",
+    "import { bakedPosters } from '@kerf-js/veneer/scenes'\nexport default bakedPosters({  })",
   )
 })
 

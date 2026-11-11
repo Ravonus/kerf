@@ -1,0 +1,44 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Anchor (heading permalink): appears on hover/focus, copies the URL ------- */
+:where([data-scope="anchor-heading"]) { position: relative; scroll-margin-block-start: 72px; }
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]) {
+  margin-inline-start: 6px; color: var(--veneer-color-text-faint); text-decoration: none; opacity: 0;
+  transition: opacity var(--veneer-duration-fast), color var(--veneer-duration-fast);
+}
+:where([data-scope="anchor-heading"]:hover > a[data-part="anchor"]),
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]:focus-visible) { opacity: 1; }
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]:hover) { color: var(--veneer-color-accent-text); }
+@media (pointer: coarse) { :where([data-scope="anchor-heading"] > a[data-part="anchor"]) { opacity: 1; } }
+:where(:target[data-scope="anchor-heading"]) { animation: veneer-target calc(1600ms * var(--veneer-motion-scale) + 1ms) var(--veneer-ease-out); }
+@keyframes veneer-target { from { background: var(--veneer-color-highlight-soft); } }
+
+
+
+
+/* ---------------------------------------------------------------------------
+   TOUCH TARGETS (00 §1.5; 01 §2 "Touch floor"). Every target reaches hit-min (44px on a coarse
+   pointer, 24px on a fine one) without changing its visual box: a centred ::after expander,
+   never smaller than the target. --_hit is the per-axis inset; 0 when the box is already big enough.
+   ------------------------------------------------------------------------ */
+:where(a[data-scope="link"]),
+:where([data-scope="logo"]),
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]),
+:where([data-scope="relative-time"]),
+:where([data-scope="truncate"] > [data-part="toggle"]),
+:where([data-scope="menubar"] > [role="menuitem"]),
+:where([data-scope="ai-label"]) { position: relative; }
+
+/* links (standalone and in running text: the expander reaches into the lines above and below, with no
+   layout change), the logo, the heading anchor, relative time (a tooltip trigger), Show more, the AI label */
+@media screen {
+:where(a[data-scope="link"])::after,
+  :where([data-scope="logo"])::after,
+  :where([data-scope="anchor-heading"] > a[data-part="anchor"])::after,
+  :where([data-scope="relative-time"])::after,
+  :where([data-scope="truncate"] > [data-part="toggle"])::after,
+  :where([data-scope="ai-label"])::after {
+    content: ""; position: absolute; inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2));
+  }
+}
+}

@@ -1,14 +1,14 @@
 // renderToStream (research 25 §4): the shell goes out with pending Boundaries' fallbacks between markers, then each
 // Boundary's content as its resources resolve, in resolve order, and hydration of the swapped page is 0 misses and
-// 0 DOM writes. The server and client compile the same fixture (`?weft-ssr` / `?weft-hydrate`, vite.mjs).
-// weft-allow T005: framework test of streaming SSR; server markup, chunk order and node identity are the subject
-// weft-allow T004: the stream interleaves resolves with its own macrotask ticks and timeout, so resolve order needs real timers
-import { renderToStream, SWAP } from '@weft-js/core/ssr'
-import { hydrate } from '@weft-js/core/dom'
+// 0 DOM writes. The server and client compile the same fixture (`?kerf-ssr` / `?kerf-hydrate`, vite.mjs).
+// kerf-allow T005: framework test of streaming SSR; server markup, chunk order and node identity are the subject
+// kerf-allow T004: the stream interleaves resolves with its own macrotask ticks and timeout, so resolve order needs real timers
+import { renderToStream, SWAP } from '@kerf-js/core/ssr'
+import { hydrate } from '@kerf-js/core/dom'
 import { hydration } from '../src/hydrate'
 // oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
-import { Bare as ServerBare, Page as ServerPage } from './fixtures/ssr/Streamed.tsx?weft-ssr'
-import { Page as ClientPage } from './fixtures/ssr/Streamed.tsx?weft-hydrate'
+import { Bare as ServerBare, Page as ServerPage } from './fixtures/ssr/Streamed.tsx?kerf-ssr'
+import { Page as ClientPage } from './fixtures/ssr/Streamed.tsx?kerf-hydrate'
 
 const later = <T,>(ms: number, v: T) =>
   new Promise<T>((ok) => {

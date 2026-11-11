@@ -3,7 +3,7 @@ import {
   Row,
   SectionPeers,
   Stack,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 import { IN_CHANNEL, ONE_READER } from './shared-wait'
 

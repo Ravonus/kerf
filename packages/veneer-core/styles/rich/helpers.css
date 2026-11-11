@@ -1,0 +1,18 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- helpers: the small layout pieces the fields share ---- */
+  :where(.muted) { color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
+  :where(.row) { display: flex; flex-wrap: wrap; gap: var(--veneer-space-related); align-items: center; }
+  :where(.addr-foot) { margin: 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+  :where(.sr) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+  :where(.chips) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  :where(.dt-cap) { margin: 0 0 6px; font: 500 10px/1.2 var(--veneer-font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--veneer-color-text-subtle); }
+  :where(.readout span) { white-space: nowrap; }
+  :where(.readout) { display: flex; gap: 8px; align-items: baseline; padding: 8px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font: 400 12px/1.4 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); overflow-wrap: anywhere; }
+  :where(.readout b) { color: var(--veneer-color-text); font-weight: 500; }
+  :where(.stack) { display: grid; gap: var(--veneer-space-group); }
+  :where(.linkish) { all: unset; cursor: pointer; color: var(--veneer-color-accent-text); font-size: var(--veneer-text-caption-size); text-decoration: underline; text-underline-offset: 2px; }
+  :where(.linkish:focus-visible) { outline: 2px solid var(--veneer-color-focus); outline-offset: 2px; border-radius: 2px; }
+  :where(.linkish) { display: inline-flex; align-items: center; min-block-size: var(--veneer-hit-min); }   /* touch target (review 02 M7) */
+  :where(.addr-foot) { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; font-size: var(--veneer-text-caption-size); }
+}

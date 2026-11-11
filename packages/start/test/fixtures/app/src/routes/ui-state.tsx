@@ -1,11 +1,11 @@
 // Research 45: Ana and Ben, two panes, one row per person. `?rows=40` adds rows; `?unshared` is plain boxes.
-import { derived, state, untrack, watch } from '@weft-js/core'
-import { interaction, type Interaction } from '@weft-js/core/interaction'
+import { derived, state, untrack, watch } from '@kerf-js/core'
+import { interaction, type Interaction } from '@kerf-js/core/interaction'
 import { linkStats } from '../../../../../src/link'
 import { shareStats } from '../../../../../src/share'
-import '../../../../../../warp/src/ui'
-import { Button } from '../../../../../../warp/src/Button'
-import { Checkbox } from '../../../../../../warp/src/Choice'
+import '../../../../../../veneer/src/ui'
+import { Button } from '../../../../../../veneer/src/Button'
+import { Checkbox } from '../../../../../../veneer/src/Choice'
 import './ui-state.css'
 
 const query = () =>

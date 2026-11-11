@@ -1,4 +1,4 @@
-import { Button, Badge } from '@weft-js/warp'
+import { Button, Badge } from '@kerf-js/veneer'
 
 export const BadgeOnAButton = () => (
   <Button

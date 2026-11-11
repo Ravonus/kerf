@@ -4,11 +4,11 @@ import { createRequire } from 'node:module'
 import { test } from 'node:test'
 import { checkRenderedBlocks, settleBlock } from './rendered-readiness.mjs'
 
-const { chromium } = createRequire(new URL('../../../packages/warp/package.json', import.meta.url))(
+const { chromium } = createRequire(new URL('../../../packages/veneer/package.json', import.meta.url))(
   'playwright-core',
 )
 const css = [
-  '../../../packages/warp-core/styles/warp.css',
+  '../../../packages/veneer-core/styles/veneer.css',
   '../../src/styles/site.css',
   '../../src/styles/example.css',
 ]
@@ -21,8 +21,8 @@ await test('home flow makes scrolled code measurable at each viewport', async ()
     for (const width of [390, 1024, 1440]) {
       const page = await browser.newPage({ viewport: { width, height: 900 } })
       await page.setContent(`<!doctype html><style>${css}
-        :root { --warp-space-group:16px; --warp-ref-flow-reach:20%;
-          --warp-ref-flow-out:280px; --warp-ref-flow-ease:linear }
+        :root { --veneer-space-group:16px; --veneer-ref-flow-reach:20%;
+          --veneer-ref-flow-out:280px; --veneer-ref-flow-ease:linear }
         body { margin:0 } pre { font:13px/22px monospace }
         </style><main><div style="height:3000px"></div><section data-site="example">
         <div data-part="pair" data-flow="card"><div data-part="run">example</div>

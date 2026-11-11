@@ -2,7 +2,7 @@
 // and a frame is fanned out with the ticket's subject as its sender.
 
 import type { Server, Socket } from 'socket.io'
-import { roomId, signTicket, verifyTicket } from '@weft-js/multiplayer/server'
+import { roomId, signTicket, verifyTicket } from '@kerf-js/multiplayer/server'
 
 const FRAME = 1024
 
@@ -17,10 +17,10 @@ export function relay(io: Server, { secret }: { secret: string }) {
   io.use((socket: Socket, next) => void admit(socket, next))
   io.on('connection', async (socket: Socket) => {
     await socket.join(socket.data.room)
-    socket.emit('weft:ok')
-    socket.on('weft:f', (text: unknown) => {
+    socket.emit('kerf:ok')
+    socket.on('kerf:f', (text: unknown) => {
       if (typeof text === 'string' && text.length <= FRAME)
-        socket.to(socket.data.room).volatile.emit('weft:f', socket.data.peer, text)
+        socket.to(socket.data.room).volatile.emit('kerf:f', socket.data.peer, text)
     })
   })
 }

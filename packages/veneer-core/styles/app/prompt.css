@@ -1,0 +1,13 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* prompt input: the composer with a model picker, attachments and slash commands */
+:where([data-scope="prompt"]) { margin: 0; }
+:where([data-scope="prompt"] [data-part="model"]) {
+  all: unset; display: inline-flex; align-items: center; gap: 6px; block-size: 28px; padding-inline: 8px; border-radius: var(--veneer-radius-control);
+  font: 500 12px/1 var(--veneer-text-body-font); color: var(--veneer-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="prompt"] [data-part="model"]:hover) { background: var(--veneer-color-surface-hover); color: var(--veneer-color-text); }
+:where([data-scope="prompt"] [data-part="model"] i) { inline-size: 6px; block-size: 6px; border-radius: 9px; background: var(--veneer-color-positive-solid); }
+:where([data-scope="prompt"] [data-part="model"]),
+:where([data-scope="reasoning"] summary) { block-size: max(28px, var(--veneer-hit-min)); }
+}

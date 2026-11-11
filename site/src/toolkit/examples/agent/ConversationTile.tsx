@@ -2,7 +2,7 @@ import {
   Assistant,
   Stack,
   UserMessage,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { QUESTION, SHORT } from './shared'
 
 /** The hub's card: one exchange, without the frame's

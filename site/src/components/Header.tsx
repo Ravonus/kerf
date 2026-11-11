@@ -1,10 +1,10 @@
-import { Link } from '@weft-js/start'
+import { Link } from '@kerf-js/start'
 import { AppearanceGate } from './AppearanceGate'
 import { BrandTitle } from './BrandTitle'
 import { NAV } from '../lib/nav'
 import { SiteMenu } from './SiteMenu'
 import { SearchTrigger } from './SearchTrigger'
-import { Nav } from '@weft-js/warp'
+import { Nav } from '@kerf-js/veneer'
 
 /** The bar on every page. Static: its links need no script, and the three controls are islands. */
 export function Header() {
@@ -30,7 +30,7 @@ export function Header() {
           data-emphasis="ghost"
           data-tone="neutral"
           data-size="sm"
-          href="https://github.com/Ravonus/weft"
+          href="https://github.com/Ravonus/kerf"
           rel="external"
         >
           GitHub

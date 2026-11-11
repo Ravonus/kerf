@@ -1,5 +1,5 @@
-import { flush } from '@weft-js/core'
-import { rt } from '@weft-js/core/internal'
+import { flush } from '@kerf-js/core'
+import { rt } from '@kerf-js/core/internal'
 import type { Component, Match, RoutePayload } from '../router'
 import type { ClientRoutes } from '../run'
 import type { Navigation } from './navigation'
@@ -29,7 +29,7 @@ export function deferred(path: string, level: number, key: string): PromiseLike<
 }
 
 export const ask = (url: URL, signal?: AbortSignal, tag?: string) =>
-  fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, {
+  fetch(`/_kerf/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, {
     signal: signal ?? null,
     cache: 'no-cache',
     headers: { accept: 'application/json', ...(tag && { 'if-none-match': tag }) },
@@ -55,7 +55,7 @@ export function ours(target: EventTarget | null) {
   )
     return
   const url = new URL(a.href, location.href)
-  if (url.origin !== location.origin || url.pathname.startsWith('/_weft/')) return
+  if (url.origin !== location.origin || url.pathname.startsWith('/_kerf/')) return
   return url.pathname === location.pathname && url.search === location.search && url.hash
     ? undefined
     : url // not an in-page anchor

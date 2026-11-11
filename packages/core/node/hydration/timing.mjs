@@ -39,7 +39,7 @@ export const timing = (n, s, local, rel) => {
     seen.add(o)
     if (o.force === 'visible') return void (forced = o)
     if (o.force === 'static' || o.force === 'interaction') return
-    if (o.force === 'client') return halt(`\`@weft client\` on ${at(o)}`)
+    if (o.force === 'client') return halt(`\`@kerf client\` on ${at(o)}`)
     if (o.early)
       halt(
         `${o.early} in ${at(o)}`,
@@ -63,9 +63,9 @@ export const timing = (n, s, local, rel) => {
   if (marks.start && away.length)
     return {
       why: `${marks.start} can reach \`${away[0]}\`, past the island`,
-      fix: `\`/* @weft visible */\` above the component, when that only matters once it's on screen`,
+      fix: `\`/* @kerf visible */\` above the component, when that only matters once it's on screen`,
     }
-  if (forced) return { when: 'v', why: `\`@weft visible\` on ${at(forced)}` }
+  if (forced) return { when: 'v', why: `\`@kerf visible\` on ${at(forced)}` }
   if (marks.start) return { when: 'v', why: `${marks.start} stays inside the island` }
   if (marks.data) return { when: 'v', why: `${marks.data} reads server data` }
   return { when: 'i', why: 'handlers only: nothing happens before an event' }
@@ -75,22 +75,22 @@ function lookAt(owner, names, { local, at, halt, visit, marks }) {
   for (const u of names) {
     const i = owner.mod.imports.get(u)
     if (i && OPAQUE.test(i.source)) {
-      if (i.source === '@weft-js/core' && STARTS.has(i.imported))
+      if (i.source === '@kerf-js/core' && STARTS.has(i.imported))
         marks.start ??= `\`${i.imported}\` in ${at(owner)}`
-      else if (i.source === '@weft-js/core' && DATA.has(i.imported))
+      else if (i.source === '@kerf-js/core' && DATA.has(i.imported))
         marks.data ??= `\`${i.imported}\` in ${at(owner)}`
-      else if (i.source === '@weft-js/core' && BOXES.has(i.imported)) {
+      else if (i.source === '@kerf-js/core' && BOXES.has(i.imported)) {
         if (owner.value)
           halt(
             `\`${owner.name}\` is a box at module level (${at(owner)}): a write from outside couldn't reach an island that isn't running`,
             `make the box inside the component, or pass it down from one that runs: nothing else keeps this island from waiting`,
           )
-      } else if (i.source === '@weft-js/core/media' && i.imported === 'Media')
+      } else if (i.source === '@kerf-js/core/media' && i.imported === 'Media')
         marks.start ??= `\`Media\` in ${at(owner)}` // a video's motion, a swap for a better copy
       else if (!QUIET[i.source]?.has(i.imported))
         halt(
           `\`${i.imported}\` from ${i.source} in ${at(owner)} isn't known to wait`,
-          `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`,
+          `\`/* @kerf visible */\` above ${owner.name}, when it does nothing until it's on screen`,
         )
       continue
     }
@@ -104,7 +104,7 @@ function lookAt(owner, names, { local, at, halt, visit, marks }) {
     else if (t === true)
       halt(
         `\`${u}\` in ${at(owner)} is code the compiler can't see into`,
-        `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`,
+        `\`/* @kerf visible */\` above ${owner.name}, when it does nothing until it's on screen`,
       )
     else if (t) visit(t)
   }

@@ -54,9 +54,9 @@ export interface Line {
 
 let nth = 0
 
-declare const __WEFT_SOCKETS__: boolean | undefined
-/** Whether this deploy can hold a socket. `weft build` says no for a function host (Netlify, Vercel, Lambda…). */
-export const SOCKETS = typeof __WEFT_SOCKETS__ === 'undefined' || __WEFT_SOCKETS__
+declare const __KERF_SOCKETS__: boolean | undefined
+/** Whether this deploy can hold a socket. `kerf build` says no for a function host (Netlify, Vercel, Lambda…). */
+export const SOCKETS = typeof __KERF_SOCKETS__ === 'undefined' || __KERF_SOCKETS__
 
 /** Sockets that never said hello in a row: the page's way to learn this host has none. */
 export let socketFailures = 0
@@ -69,7 +69,7 @@ export const noSockets = () => {
 }
 export const probeLink = () => election?.probe()
 
-/** `c`: a socket's frames (socket.ts). `r`: realtime events, opened with a `/_weft/rt` body (hub.ts). */
+/** `c`: a socket's frames (socket.ts). `r`: realtime events, opened with a `/_kerf/rt` body (hub.ts). */
 export function openLine(
   kind: 'c' | 'r',
   hello: string,
@@ -165,9 +165,9 @@ let theirs: ((u: string | undefined) => void) | undefined
 
 /** One round trip, once, the first time a tab that didn't dial opens a line: a new socket used to cost the same. */
 function checkSession() {
-  const mine = fetch('/_weft/rt', {
+  const mine = fetch('/_kerf/rt', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-weft': '1' },
+    headers: { 'content-type': 'application/json', 'x-kerf': '1' },
     body: '{"w":1}',
   })
     .then((r) => (r.ok ? r.json() : undefined))
@@ -288,7 +288,7 @@ function dial() {
   if (ws || !election?.leading()) return
   linkStats.dials++
   const s = new WebSocket(
-    `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/_weft/ws?mux=1`,
+    `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/_kerf/ws?mux=1`,
   )
   ws = s
   s.onmessage = (e) => arriveFrom(e.data)

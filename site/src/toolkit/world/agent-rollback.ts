@@ -1,4 +1,4 @@
-import type { AgentEvent } from '@weft-js/warp'
+import type { AgentEvent } from '@kerf-js/veneer'
 
 export const ROLLBACK_ARGS =
   '{\n  "project": "mobile-bff",\n ' +

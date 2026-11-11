@@ -1,4 +1,4 @@
-import { Icon } from '@weft-js/warp'
+import { Icon } from '@kerf-js/veneer'
 
 export const IconSizes = () => (
   <>

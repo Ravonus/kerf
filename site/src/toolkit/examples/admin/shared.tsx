@@ -1,8 +1,8 @@
-import { PayFrame } from '@weft-js/warp'
+import { PayFrame } from '@kerf-js/veneer'
 import type {
   OrderStage,
   Permission,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import {
   API_KEYS,
   AUDIT,

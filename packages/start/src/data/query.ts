@@ -1,5 +1,5 @@
-import { DEV, effect, getOwner, onCleanup, resource, untrack, type Resource } from '@weft-js/core'
-import { fill, mask } from '@weft-js/core/shape'
+import { DEV, effect, getOwner, onCleanup, resource, untrack, type Resource } from '@kerf-js/core'
+import { fill, mask } from '@kerf-js/core/shape'
 import { entries, entry, fresh, lastSeen, load, predicted } from './cache'
 import { rt, runtime, server, skip, net } from './foundation'
 import { liveApi } from './live-api'

@@ -7,9 +7,9 @@ import {
   Row,
   Button,
   Badge,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
-// Ordinary warp components sit on the stage and paint
+// Ordinary veneer components sit on the stage and paint
 // themselves; only the skinned parts are drawn in cells.
 export const StageHybrid = () => (
   <DitherStage

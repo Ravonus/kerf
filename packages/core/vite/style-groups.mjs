@@ -4,12 +4,12 @@ import { join } from 'node:path'
 import { transform } from './compiler.mjs'
 import { css, defsOf, importedGroups, validate, writeMatrix } from './style-registry.mjs'
 
-const GROUPS_CSS = 'virtual:weft/groups.css'
+const GROUPS_CSS = 'virtual:kerf/groups.css'
 
 /** The Vite hooks for group CSS and the build's project scan. */
 function stylePlugin(s) {
   return {
-    name: 'weft:style',
+    name: 'kerf:style',
     configResolved(config) {
       s.root = config.root
       s.isDev = config.command === 'serve'
@@ -39,7 +39,7 @@ function stylePlugin(s) {
       if (!s.matrix) return
       // The project-wide style codes (research 23 §3): errors stop the build, the rest are warnings.
       for (const d of writeMatrix(s).diagnostics) {
-        const text = `${d.code} @weft-js/core/style: ${d.message}\n  help: ${d.help}`
+        const text = `${d.code} @kerf-js/core/style: ${d.message}\n  help: ${d.help}`
         const loc = { file: join(s.root, d.file), line: d.line, column: 0 }
         if (d.severity === 'error') this.error({ message: text, loc })
         else this.warn({ message: text, loc })
@@ -54,7 +54,7 @@ function stylePlugin(s) {
   }
 }
 
-/** Keep the facts and hooks for a single weft plugin instance. */
+/** Keep the facts and hooks for a single kerf plugin instance. */
 export function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {}) {
   const s = {
     taggedParts,

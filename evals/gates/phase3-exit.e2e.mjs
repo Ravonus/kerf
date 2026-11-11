@@ -33,7 +33,7 @@ export default async function ({ url, log }) {
       await b.page.waitForLoadState('networkidle')
     }
     const ids = await a.page.evaluate(() =>
-      JSON.parse(document.getElementById('weft-cache').textContent)
+      JSON.parse(document.getElementById('kerf-cache').textContent)
         .find((w) => Array.isArray(w[2]) && w[2][0]?.title)[2]
         .map((x) => [x.title, x.id]),
     )
@@ -76,7 +76,7 @@ async function recipientChecks({ a, b, check, eq, titles, shared, bobReload }) {
   await check('a hydrated shared list fetches nothing', async () => {
     const calls = []
     const listen = (r) => {
-      if (r.url().includes('/_weft/fn/')) calls.push(r.url())
+      if (r.url().includes('/_kerf/fn/')) calls.push(r.url())
     }
     b.page.on('request', listen)
     await b.page.reload()

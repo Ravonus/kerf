@@ -8,7 +8,7 @@ import { install } from './install.mjs'
 
 export async function fixture(mode) {
   if (!['success', 'failure'].includes(mode)) throw new Error('unknown fixture')
-  const dir = mkdtempSync(join(tmpdir(), 'weft-eval-fixture-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-eval-fixture-'))
   const app = join(dir, 'app')
   let installs = 0
   try {

@@ -1,5 +1,5 @@
 ```tsx
-import { derived } from '@weft-js/core'
+import { derived } from '@kerf-js/core'
 
 export function Cart({ items, taxRate }: {
   items: { id: string; name: string; price: number }[]

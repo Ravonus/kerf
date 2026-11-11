@@ -5,8 +5,8 @@
 // renders its new route, and everything inside it goes. One state per request on the server (passed down as a
 // prop), one per tab on the client.
 
-import { state, untrack, type State, type SsrData } from '@weft-js/core'
-import type { Merged } from '@weft-js/core/ssr'
+import { state, untrack, type State, type SsrData } from '@kerf-js/core'
+import type { Merged } from '@kerf-js/core/ssr'
 import type { Wire } from './data'
 import type { PreparedRouteShape } from './run/shape-preparation'
 
@@ -76,7 +76,7 @@ export interface RouteState {
   around?: (depth: number, id: string, body: () => unknown) => unknown
 }
 
-/** What `/_weft/data/<path>` answers and what the page carries in `#weft-route`: the matches, the head, the status. */
+/** What `/_kerf/data/<path>` answers and what the page carries in `#kerf-route`: the matches, the head, the status. */
 export interface RoutePayload {
   m: Match[]
   p: string
@@ -84,7 +84,7 @@ export interface RoutePayload {
   h?: Merged
   /** A redirect (the client navigates there instead). */
   r?: string
-  /** The queries the loaders resolved, for the client cache (navigation only; a page carries `#weft-cache`). */
+  /** The queries the loaders resolved, for the client cache (navigation only; a page carries `#kerf-cache`). */
   c?: Wire[]
   /** The islands in the static levels that can't wait, whose code has to be there first. */
   i?: string[]
@@ -188,7 +188,7 @@ export interface NavigateOptions {
 /** This tab's line to the app's other tabs: a list of tags a write invalidated, or `0` when the session changed. */
 export const peers =
   typeof document !== 'undefined' && typeof BroadcastChannel !== 'undefined'
-    ? new BroadcastChannel('weft:tags')
+    ? new BroadcastChannel('kerf:tags')
     : undefined
 
 /** Go to `href` without a page load (a full load before `start()` ran, or for another origin). */

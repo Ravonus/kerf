@@ -1,6 +1,6 @@
 // A query's result shape from its `output` schema (research 31 §3). The client never gets the schema: the plugin puts
 // this tree in the query's stub, and the server computes the same one, so a streamed fallback hydrates cleanly.
-// @weft-js/core/shape's `fill` turns a tree into a placeholder value.
+// @kerf-js/core/shape's `fill` turns a tree into a placeholder value.
 
 /** A Standard Schema as JSON Schema (draft 2020-12), or undefined when it has no converter or can't be represented. */
 export function toJson(schema, side) {

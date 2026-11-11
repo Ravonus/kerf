@@ -1,4 +1,4 @@
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf-js/veneer'
 import { spotlightOpen } from '../lib/spotlight'
 
 export function SpotlightHint() {

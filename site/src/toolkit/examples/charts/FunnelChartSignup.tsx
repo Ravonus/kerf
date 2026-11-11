@@ -1,4 +1,4 @@
-import { FunnelChart } from '@weft-js/warp'
+import { FunnelChart } from '@kerf-js/veneer'
 
 import { SIGNUP_FUNNEL } from '../../world'
 

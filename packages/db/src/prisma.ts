@@ -11,7 +11,7 @@ import {
   type ListParams,
   type ListSource,
   type SourceSpec,
-} from '@weft-js/start/list'
+} from '@kerf-js/start/list'
 
 /** What a generated client's model has, whatever its schema. */
 export interface PrismaDelegate {

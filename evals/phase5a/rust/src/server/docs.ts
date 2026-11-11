@@ -1,5 +1,5 @@
 // After the swap: every `run` became `impl: search`, and `rank.ts` went. Nothing else changed.
-import { mutation, query } from '@weft-js/start'
+import { mutation, query } from '@kerf-js/start'
 import { z } from 'zod'
 import { search } from './rust'
 

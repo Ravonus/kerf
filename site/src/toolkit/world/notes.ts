@@ -1,4 +1,4 @@
-import type { Note } from '@weft-js/warp'
+import type { Note } from '@kerf-js/veneer'
 
 export const NOTES: Note[] = [
   {
@@ -29,7 +29,7 @@ export const NOTES: Note[] = [
   },
   {
     id: 'n3',
-    actor: 'weft',
+    actor: 'kerf',
     kind: 'system',
     verb: 'failed the health check on',
     object: 'd-4819',

@@ -1,14 +1,14 @@
-// The studio's open end: any part in any state, any `--warp-*` token, and the whole config as JSON.
-import { derived, state, untrack, watch } from '@weft-js/core'
-import { Button, CompactSelect, JsonEditor } from '@weft-js/warp'
-import { allParts, propsOf, statesOf, type PartProp } from '@weft-js/warp/theme-parts'
+// The studio's open end: any part in any state, any `--veneer-*` token, and the whole config as JSON.
+import { derived, state, untrack, watch } from '@kerf-js/core'
+import { Button, CompactSelect, JsonEditor } from '@kerf-js/veneer'
+import { allParts, propsOf, statesOf, type PartProp } from '@kerf-js/veneer/theme-parts'
 import { compile, configJson, TOKEN_NAMES, type StudioConfig } from '../../lib/studio'
 import { edit, type Cfg } from './rows'
 
 const PARTS = new Map(allParts())
 const PART_OPTIONS = [...PARTS.keys()].map((p) => ({ value: p, label: p }))
 const HINT: Record<PartProp['kind'], string> = {
-  color: 'a colour name, a warp colour (accent-text) or #hex',
+  color: 'a colour name, a veneer colour (accent-text) or #hex',
   length: 'px, or any CSS length',
   space: 'px, or a step: related, group, page',
   radius: 'px, or control, surface, pill, none',
@@ -132,7 +132,7 @@ export function PartsEditor(props: { cfg: Cfg }) {
   )
 }
 
-/** Any token warp declares, set to any value: the escape hatch under everything else. */
+/** Any token veneer declares, set to any value: the escape hatch under everything else. */
 export function TokensEditor(props: { cfg: Cfg }) {
   const name = state('')
   const value = state('')
@@ -140,7 +140,7 @@ export function TokensEditor(props: { cfg: Cfg }) {
     <section data-studio="group">
       <h3>Tokens</h3>
       <p data-studio="hint">
-        Any of warp's {TOKEN_NAMES.length} tokens. Colours take #rrggbb or oklch().
+        Any of veneer's {TOKEN_NAMES.length} tokens. Colours take #rrggbb or oklch().
       </p>
       <datalist id="studio-tokens">
         {TOKEN_NAMES.map((t) => (
@@ -161,7 +161,7 @@ export function TokensEditor(props: { cfg: Cfg }) {
         <input
           aria-label="Token"
           list="studio-tokens"
-          placeholder="--warp-…"
+          placeholder="--veneer-…"
           value={name.value}
           onInput={(e) => (name.value = e.currentTarget.value)}
         />
@@ -197,7 +197,7 @@ export function JsonPanel(props: { cfg: Cfg }) {
   }
   return (
     <JsonEditor
-      label="warp() config"
+      label="veneer() config"
       value={text.value}
       schema={problem}
       onValueChange={(v) => {

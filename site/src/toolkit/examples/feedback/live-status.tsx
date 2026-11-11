@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   Grid,
@@ -9,8 +9,8 @@ import {
   Text,
   Toaster,
   toast,
-} from '@weft-js/warp'
-import type { LiveState } from '@weft-js/warp'
+} from '@kerf-js/veneer'
+import type { LiveState } from '@kerf-js/veneer'
 
 export const LiveStatusWords = () => (
   <>

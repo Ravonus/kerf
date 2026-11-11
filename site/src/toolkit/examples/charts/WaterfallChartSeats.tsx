@@ -1,4 +1,4 @@
-import { WaterfallChart } from '@weft-js/warp'
+import { WaterfallChart } from '@kerf-js/veneer'
 
 import { SEATS_BRIDGE } from '../../world'
 

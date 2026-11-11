@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { ContextMeter } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { ContextMeter } from '@kerf-js/veneer'
 import { CONTEXT } from '../../world'
 
 export function ContextMeterCompact() {

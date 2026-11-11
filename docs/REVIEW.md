@@ -26,4 +26,4 @@ Early `return` on state in a run-once body (most likely bug) → W040. `let` mut
 - No perf gate in Phase 1.
 
 ## Missing pieces
-`flush()` (batched DOM vs `focus()` right after a write), `@weft-js/core/test` (needed by the eval), HMR state preservation, hydration (keep dom-expressions keys), JSX typings, mapping TS2540 into the catalog, dev-only graph names, defining "server code" for W030 as reachable from the server entry, CSRF/GET-safety/nullable `ctx.user`, MIT NOTICEs + Keel license check, one schema for surface props.
+`flush()` (batched DOM vs `focus()` right after a write), `@kerf-js/core/test` (needed by the eval), HMR state preservation, hydration (keep dom-expressions keys), JSX typings, mapping TS2540 into the catalog, dev-only graph names, defining "server code" for W030 as reachable from the server entry, CSRF/GET-safety/nullable `ctx.user`, MIT NOTICEs + Keel license check, one schema for surface props.

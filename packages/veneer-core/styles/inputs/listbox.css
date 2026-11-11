@@ -1,0 +1,75 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs {
+/* ===========================================================================
+   4 · POPUP + LISTBOX (select, combobox, search suggestions, inline listbox)
+   ======================================================================== */
+:where([data-scope="popup"]) {
+  position: absolute; inset-inline: 0; inset-block-start: calc(100% + 6px); z-index: var(--veneer-z-menu);
+  max-block-size: min(320px, 50vh); overflow: auto; overscroll-behavior: contain; padding: 4px;
+  background: var(--veneer-color-surface-overlay); border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: calc(var(--veneer-radius-control) + 2px); box-shadow: var(--veneer-elevation-2);
+  cursor: default; transform-origin: top center; font-family: var(--veneer-text-body-font);
+  animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="popup"][hidden]) { display: none; }
+:where([data-scope="listbox"]) {
+  display: grid; gap: 1px; padding: 4px; margin: 0; list-style: none; outline: none;
+  max-block-size: 260px; overflow: auto; overscroll-behavior: contain;
+}
+:where(div[data-scope="listbox"]) {
+  position: relative; border-radius: var(--veneer-radius-control); background: var(--veneer-color-field);
+  box-shadow: inset 0 0 0 var(--veneer-border-hairline) var(--veneer-color-border-control);
+}
+:where(div[data-scope="listbox"]:focus-visible) { box-shadow: inset 0 0 0 calc(var(--veneer-sweep-width) + 1px) var(--veneer-color-sweep); }
+:where([data-scope="popup"] [data-scope="listbox"]) { padding: 0; max-block-size: none; overflow: visible; background: none; box-shadow: none; }
+:where([role="option"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2px var(--veneer-space-related);
+  min-block-size: max(calc(var(--veneer-control-sm) + 4px), var(--veneer-hit-min)); padding: 4px var(--veneer-space-related);
+  border-radius: max(2px, calc(var(--veneer-radius-control) - 2px)); cursor: pointer; color: var(--veneer-color-text);
+  font-size: var(--veneer-text-body-size); user-select: none; isolation: isolate;
+}
+/* the highlight is a fill that sweeps in L→R (the field's sweep, in miniature) */
+:where([role="option"])::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--veneer-color-accent-soft);
+  clip-path: inset(0 100% 0 0); transition: clip-path calc(var(--veneer-sweep-duration) * 0.5) var(--veneer-sweep-ease);
+}
+:where([role="option"][data-highlighted])::before { clip-path: inset(0); }
+:where([role="option"][data-highlighted])::after { content: ""; position: absolute; inset-block: 6px; inset-inline-start: 0; inline-size: 2px; border-radius: 2px; background: var(--veneer-color-sweep); }
+:where([role="option"] [data-part="item-icon"]) { display: inline-flex; color: var(--veneer-color-text-subtle); }
+:where([role="option"] [data-part="item-icon"] svg) { inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); }
+:where([role="option"]:not(:has([data-part="item-icon"]))) { grid-template-columns: minmax(0, 1fr) auto; }
+:where([role="option"] [data-part="item-hint"]:not([role="option"] [data-scope="select"] *:not([role="option"] [data-scope="select"] [role="option"] *))) { grid-column: -2 / -3; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([role="option"] [data-part="item-check"]) { grid-column: -1; grid-row: 1; color: var(--veneer-color-accent-text); visibility: hidden; display: inline-flex; }
+:where([role="option"] [data-part="item-check"] svg) { inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); }
+:where([role="option"][aria-selected="true"] [data-part="item-check"]) { visibility: visible; }
+:where([role="option"][aria-selected="true"]) { font-weight: 500; }
+:where([role="option"][aria-disabled="true"]) { opacity: var(--veneer-opacity-disabled); cursor: not-allowed; }
+:where([role="option"] mark) { background: none; color: var(--veneer-color-accent-text); font-weight: 600; }
+:where([role="option"][data-kind="create"]) { color: var(--veneer-color-accent-text); }
+:where([data-scope="listbox"] [data-part="group-label"]:not([data-scope="listbox"] :is([data-scope="menu"],[data-scope="navlist"],[data-scope="palette"],[data-scope="popup"],[data-scope="select"],[data-scope="sidenav"]) *:not([data-scope="listbox"] :is([data-scope="menu"],[data-scope="navlist"],[data-scope="palette"],[data-scope="popup"],[data-scope="select"],[data-scope="sidenav"]) [data-scope="listbox"] *))),
+:where([data-scope="popup"] [data-part="group-label"]:not([data-scope="popup"] :is([data-scope="menu"],[data-scope="navlist"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"]) *:not([data-scope="popup"] :is([data-scope="menu"],[data-scope="navlist"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"]) [data-scope="popup"] *))) {
+  padding: 8px var(--veneer-space-related) 4px; font-family: var(--veneer-label-font); font-size: var(--veneer-label-float-size);
+  letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase; color: var(--veneer-color-label-rest); font-weight: var(--veneer-label-float-weight);
+}
+:where([data-scope="popup"] [data-part="empty"]:not([data-scope="popup"] :is([data-scope="palette"],[data-scope="select"],[data-scope="shortcuts"],[data-scope="sidenav"],[data-scope="signature"]) *:not([data-scope="popup"] :is([data-scope="palette"],[data-scope="select"],[data-scope="shortcuts"],[data-scope="sidenav"],[data-scope="signature"]) [data-scope="popup"] *))) { padding: 10px var(--veneer-space-related); color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
+:where([data-scope="popup"][data-stale] [data-scope="listbox"]) { opacity: 0.55; transition: opacity var(--veneer-duration-fast); }
+:where([data-scope="listbox"][aria-multiselectable="true"] [role="option"] [data-part="item-check"]) {
+  visibility: visible; inline-size: 16px; block-size: 16px; border: 1px solid var(--veneer-color-sweep-base); border-radius: var(--veneer-radius-mark); color: transparent;
+}
+:where([data-scope="listbox"][aria-multiselectable="true"] [role="option"][aria-selected="true"] [data-part="item-check"]) { border-color: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-solid); }
+:where([data-scope="listbox"][aria-multiselectable="true"] [role="option"] [data-part="item-check"] svg) { inline-size: 12px; block-size: 12px; margin: auto; stroke-width: 2.6; }
+
+/* transfer list */
+:where([data-scope="transfer"]) { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--veneer-space-related); align-items: center; }
+:where([data-scope="transfer"] [data-part="pane"]:not([data-scope="transfer"] [data-scope="split-pane"] *:not([data-scope="transfer"] [data-scope="split-pane"] [data-scope="transfer"] *))) { display: grid; gap: var(--veneer-space-tight); min-inline-size: 0; }
+:where([data-scope="transfer"] [data-part="pane-head"]) { display: flex; justify-content: space-between; font: 600 10px/1.4 var(--veneer-label-font); letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase; color: var(--veneer-color-label-rest); }
+:where([data-scope="transfer"] [data-part="moves"]:not([data-scope="transfer"] [data-scope="sortable"] *:not([data-scope="transfer"] [data-scope="sortable"] [data-scope="transfer"] *))) { display: grid; gap: var(--veneer-space-tight); }
+:where([data-scope="transfer"] [data-scope="listbox"]) { block-size: 188px; align-content: start; }
+/* narrow (phone): stack the panes, the move buttons turn to point down and up */
+@media (max-width: 520px) {
+  :where([data-scope="transfer"]) { grid-template-columns: minmax(0, 1fr); }
+  :where([data-scope="transfer"] [data-part="moves"]:not([data-scope="transfer"] [data-scope="sortable"] *:not([data-scope="transfer"] [data-scope="sortable"] [data-scope="transfer"] *))) { grid-auto-flow: column; justify-content: center; }
+  :where([data-scope="transfer"] [data-part="moves"]:not([data-scope="transfer"] [data-scope="sortable"] *:not([data-scope="transfer"] [data-scope="sortable"] [data-scope="transfer"] *)) svg) { rotate: 90deg; }
+  :where([data-scope="transfer"] [data-scope="listbox"]) { block-size: auto; max-block-size: 188px; }
+}
+}

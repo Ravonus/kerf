@@ -1,4 +1,4 @@
-import { MonthPicker } from '@weft-js/warp'
+import { MonthPicker } from '@kerf-js/veneer'
 
 import { TODAY } from './shared-event'
 

@@ -1,4 +1,4 @@
-/** @jsxImportSource @weft-js/core */
+/** @jsxImportSource @kerf-js/core */
 // Type tests for React prop names (`npx tsc --noEmit -p test/react-types.tsconfig.json`). The @ts-expect-error lines
 // are the negative control: these checks can fail.
 

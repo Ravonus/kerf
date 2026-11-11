@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Input, Modal } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Input, Modal } from '@kerf-js/veneer'
 
 export function ModalTile() {
   const open = state(true)

@@ -1,4 +1,4 @@
-import { DurationField } from '@weft-js/warp'
+import { DurationField } from '@kerf-js/veneer'
 
 import { TODAY as _Shared0 } from './shared-event'
 

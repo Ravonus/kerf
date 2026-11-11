@@ -2,20 +2,20 @@
 // invalidation on one reaches them all, and sign-in attempts count once however many servers there are.
 
 import { Redis } from 'ioredis'
-import type { Store, Stored } from '@weft-js/start/cache'
-import { StartError } from '@weft-js/start/data'
+import type { Store, Stored } from '@kerf-js/start/cache'
+import { StartError } from '@kerf-js/start/data'
 
 /** Options of `redisStore()` and `redisRateLimit()`. */
 export interface RedisStoreOptions {
   /** `redis://…` or `rediss://…`. Default `REDIS_URL`. */
   url?: string
-  /** Prefix of every key. Default `weft:`: several apps can share a server. */
+  /** Prefix of every key. Default `kerf:`: several apps can share a server. */
   prefix?: string
 }
 
 export function connect(options: RedisStoreOptions, what: string) {
   let url = options.url ?? process.env.REDIS_URL ?? ''
-  if (!url && process.env.WEFT_BUILD) url = 'redis://localhost' // a build loads this module and never connects
+  if (!url && process.env.KERF_BUILD) url = 'redis://localhost' // a build loads this module and never connects
   if (!/^rediss?:\/\//.test(url))
     throw new StartError(
       'Q013',
@@ -77,7 +77,7 @@ async function count(client: Redis, key: string, rule: { window: number; max: nu
  * already sends), kept until their `life` runs out; tags are versioned in Redis, so every instance sees a bump.
  */
 export function redisStore(options: RedisStoreOptions = {}): Store {
-  const prefix = options.prefix ?? 'weft:'
+  const prefix = options.prefix ?? 'kerf:'
   const client = connect(options, 'redisStore')
   const value = (k: string) => `${prefix}c:${k}`
   const tag = (t: string) => `${prefix}t:${t}`
@@ -107,7 +107,7 @@ export function redisStore(options: RedisStoreOptions = {}): Store {
  * `createAuth({ options: { rateLimit: { customStorage: redisRateLimit() } } })`. A fixed window per key.
  */
 export function redisRateLimit(options: RedisStoreOptions = {}) {
-  const prefix = options.prefix ?? 'weft:'
+  const prefix = options.prefix ?? 'kerf:'
   const client = connect(options, 'redisRateLimit')
   return {
     consume: (key: string, rule: { window: number; max: number }) =>

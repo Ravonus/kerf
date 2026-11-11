@@ -1,4 +1,4 @@
-import type { Site } from '@weft-js/core/ssr'
+import type { Site } from '@kerf-js/core/ssr'
 
 /** One diagnostic as the server reports it: what `onDiagnostic` receives. */
 export interface Diagnostic {
@@ -29,7 +29,7 @@ export function serverLog(site: Site | undefined): (d: Diagnostic) => void {
       )
   return (d) =>
     console.warn(
-      `[weft] ${d.code} ${d.severity}${d.route ? ` (${d.route})` : ''}${d.requestId ? ` [${d.requestId}]` : ''}: ${d.message.replace(/^[A-Z]{1,3}\d{3}:? /, '')}`,
+      `[kerf] ${d.code} ${d.severity}${d.route ? ` (${d.route})` : ''}${d.requestId ? ` [${d.requestId}]` : ''}: ${d.message.replace(/^[A-Z]{1,3}\d{3}:? /, '')}`,
     )
 }
 

@@ -5,12 +5,12 @@ import { driver } from '../driver'
 import { createNative, type Driver, type Row } from './index'
 
 const { createConnection, createPool } = await driver(
-  '@weft-js/db/plugin-native/mysql',
+  '@kerf-js/db/plugin-native/mysql',
   'mysql2',
   () => import('mysql2/promise'),
 )
 
-const LOCK = 'weft_migrations'
+const LOCK = 'kerf_migrations'
 type ExecuteValues = Parameters<Awaited<ReturnType<typeof createConnection>>['execute']>[1]
 
 /** A client on a mysql2 pool. */
@@ -24,7 +24,7 @@ export function createDb({
   max?: number
 }) {
   const uri = url || 'mysql://localhost/build'
-  // No `maxIdle` below the limit: that starts mysql2's reaper, a timer that keeps a finished `weft build` alive forever.
+  // No `maxIdle` below the limit: that starts mysql2's reaper, a timer that keeps a finished `kerf build` alive forever.
   const pool = createPool({ uri, connectionLimit: max })
   const rows = async (run: Promise<[unknown, unknown]>) => (await run)[0] as Row[]
   const engine: Driver<typeof pool> = {

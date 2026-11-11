@@ -1,4 +1,4 @@
-// weft-allow T005: the task spec names data-testid values as the contract for every framework
+// kerf-allow T005: the task spec names data-testid values as the contract for every framework
 import { screen } from '@testing-library/dom'
 import {
   cost,

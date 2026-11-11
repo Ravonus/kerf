@@ -1,6 +1,6 @@
 // Research 19 step 2 constructs: conditionals over JSX, element spreads, refs, <select value> over a list, SVG
-// and namespaced attributes. Only weft's back end compiles some of these (Solid's has no `spread` here).
-import { state } from '@weft-js/core'
+// and namespaced attributes. Only kerf's back end compiles some of these (Solid's has no `spread` here).
+import { state } from '@kerf-js/core'
 
 export function Toggle() {
   const n = state(0)

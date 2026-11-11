@@ -2,7 +2,7 @@ export const PEOPLE = [
   {
     id: 'mara',
     name: 'Mara Lindqvist',
-    email: 'mara@weft.dev',
+    email: 'mara@kerf.dev',
     role: 'Owner',
     team: 'Platform',
     initials: 'ML',
@@ -10,7 +10,7 @@ export const PEOPLE = [
   {
     id: 'jun',
     name: 'Jun Tanaka',
-    email: 'jun@weft.dev',
+    email: 'jun@kerf.dev',
     role: 'Admin',
     team: 'Platform',
     initials: 'JT',
@@ -18,7 +18,7 @@ export const PEOPLE = [
   {
     id: 'priya',
     name: 'Priya Raman',
-    email: 'priya@weft.dev',
+    email: 'priya@kerf.dev',
     role: 'Member',
     team: 'Web',
     initials: 'PR',
@@ -26,7 +26,7 @@ export const PEOPLE = [
   {
     id: 'tomas',
     name: 'Tomás Oliveira',
-    email: 'tomas@weft.dev',
+    email: 'tomas@kerf.dev',
     role: 'Member',
     team: 'Web',
     initials: 'TO',
@@ -34,7 +34,7 @@ export const PEOPLE = [
   {
     id: 'lena',
     name: 'Lena Fischer',
-    email: 'lena@weft.dev',
+    email: 'lena@kerf.dev',
     role: 'Member',
     team: 'Data',
     initials: 'LF',
@@ -42,7 +42,7 @@ export const PEOPLE = [
   {
     id: 'noor',
     name: 'Noor Haddad',
-    email: 'noor@weft.dev',
+    email: 'noor@kerf.dev',
     role: 'Viewer',
     team: 'Data',
     initials: 'NH',
@@ -50,7 +50,7 @@ export const PEOPLE = [
   {
     id: 'sam',
     name: 'Sam Okafor',
-    email: 'sam@weft.dev',
+    email: 'sam@kerf.dev',
     role: 'Member',
     team: 'Mobile',
     initials: 'SO',
@@ -58,7 +58,7 @@ export const PEOPLE = [
   {
     id: 'ines',
     name: 'Inés Vidal',
-    email: 'ines@weft.dev',
+    email: 'ines@kerf.dev',
     role: 'Viewer',
     team: 'Mobile',
     initials: 'IV',

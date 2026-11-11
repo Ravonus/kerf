@@ -1,4 +1,4 @@
-// The WASM build of crates/weft-compiler (src/wasm.rs), behind the same `transform(source, optionsJson)` as the addon.
+// The WASM build of crates/kerf-compiler (src/wasm.rs), behind the same `transform(source, optionsJson)` as the addon.
 // It has no imports, so plain `WebAssembly` runs it on Node, Bun and Deno. Instantiated at the first compile.
 const { readFileSync } = require('node:fs')
 
@@ -9,7 +9,7 @@ const posixKeys = (map) =>
 /** The build has no filesystem to ask, and only ever sees `/`: the working directory, and Windows paths written its way. */
 exports.wasmOptions = (options = {}) => {
   const cwd = posix(process.cwd())
-  const off = process.env.WEFT_OFF // WASM has no environment of its own
+  const off = process.env.KERF_OFF // WASM has no environment of its own
   if (process.platform !== 'win32') return { cwd, off, ...options }
   return {
     cwd,

@@ -49,7 +49,7 @@ test('a layout over a catch-all gets the catch-all under its name, in its props 
   const html = await (await get('/docs/guide/install')).text()
   expect(html).toMatch(/<nav[^>]* data-current="guide\/install"/)
   expect(seen).toEqual([{ slug: 'guide/install' }])
-  const body = (await (await get('/_weft/data/docs/guide/install')).json()) as {
+  const body = (await (await get('/_kerf/data/docs/guide/install')).json()) as {
     m: { id: string; params: Record<string, string> }[]
   }
   expect(body.m.map((m) => [m.id, m.params])).toEqual([
@@ -59,7 +59,7 @@ test('a layout over a catch-all gets the catch-all under its name, in its props 
 })
 
 test('a layout over a named param gets it, as before', async () => {
-  const body = (await (await get('/_weft/data/docs/v/7')).json()) as {
+  const body = (await (await get('/_kerf/data/docs/v/7')).json()) as {
     m: { id: string; params: Record<string, string> }[]
   }
   expect(body.m.map((m) => [m.id, m.params])).toEqual([
@@ -86,6 +86,6 @@ test("a load reads the page's own URL on a full load and on a client navigation"
     assets: { entry: '/entry.js' },
   })
   await h(new Request('http://localhost/docs/v/7?tab=a'))
-  await h(new Request('http://localhost/_weft/data/docs/v/7?tab=a'))
+  await h(new Request('http://localhost/_kerf/data/docs/v/7?tab=a'))
   expect(urls).toEqual(['/docs/v/7?tab=a', '/docs/v/7?tab=a'])
 })

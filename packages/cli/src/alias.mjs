@@ -1,5 +1,5 @@
 // An app's import aliases are its own: tsconfig `paths` (which Vite follows too), plus package.json `imports` if it has
-// them. `#/*` is only what create-weft writes. `local` is how the checks follow a project import, so an aliased file
+// them. `#/*` is only what create-kerf writes. `local` is how the checks follow a project import, so an aliased file
 // gets the same analysis as a relative one.
 
 import { existsSync, readFileSync } from 'node:fs'

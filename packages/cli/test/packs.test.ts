@@ -12,16 +12,16 @@ const packages = fileURLToPath(new URL('../../', import.meta.url))
 const realtime = readdirSync(packages).filter((d) => d.startsWith('realtime-'))
 /** Plugin name, its package's directory, and the entry that defines it. A package can hold several. */
 const packs = [
-  ...realtime.map((d) => [`@weft-js/${d}`, d, 'plugin.mjs']),
+  ...realtime.map((d) => [`@kerf-js/${d}`, d, 'plugin.mjs']),
   ...['sql', 'kysely', 'prisma', 'mongo', 'dynamodb', 'firestore'].map((d) => [
-    `@weft-js/db/${d}`,
+    `@kerf-js/db/${d}`,
     'db',
     `plugins/${d}.mjs`,
   ]),
-  ['@weft-js/agent', 'agent', 'plugin.mjs'],
-  ['@weft-js/pay', 'pay', 'plugin.mjs'],
-  ['@weft-js/pay/stripe', 'pay', 'stripe-plugin.mjs'],
-  ['@weft-js/pay/square', 'pay', 'square-plugin.mjs'],
+  ['@kerf-js/agent', 'agent', 'plugin.mjs'],
+  ['@kerf-js/pay', 'pay', 'plugin.mjs'],
+  ['@kerf-js/pay/stripe', 'pay', 'stripe-plugin.mjs'],
+  ['@kerf-js/pay/square', 'pay', 'square-plugin.mjs'],
 ]
 
 const load = async (name: string) => {
@@ -47,7 +47,7 @@ describe.each(packs)('%s', (name, dir) => {
   test('declares what it reaches, and the audit finds nothing undeclared', async () => {
     const { plugin, manifest } = await load(name)
     expect(plugin.name).toBe(name)
-    if (name !== '@weft-js/pay') expect(grants(plugin.permissions).length).toBeGreaterThan(0) // pay reaches nothing itself: its rail does
+    if (name !== '@kerf-js/pay') expect(grants(plugin.permissions).length).toBeGreaterThan(0) // pay reaches nothing itself: its rail does
     const found = audit(packages, join(packages, dir), {
       name,
       manifest,
@@ -63,13 +63,13 @@ describe.each(packs)('%s', (name, dir) => {
   })
 })
 
-test('pay is built only from public parts: nothing in weft, start or the CLI names it', () => {
+test('pay is built only from public parts: nothing in kerf, start or the CLI names it', () => {
   const stray = execFileSync(
     'git',
     [
       'grep',
       '-lE',
-      '@weft-js/pay|PayRail|entitlementTag|definePay\\b|fakePay',
+      '@kerf-js/pay|PayRail|entitlementTag|definePay\\b|fakePay',
       '--',
       'core/src',
       'core/vite.mjs',
@@ -80,30 +80,30 @@ test('pay is built only from public parts: nothing in weft, start or the CLI nam
   )
     .trim()
     .split('\n')
-    .filter((f) => f && !['cli/src/add.mjs', 'cli/src/docs.mjs'].includes(f)) // an alias in `weft add`, and a line pointing at the walkthrough
+    .filter((f) => f && !['cli/src/add.mjs', 'cli/src/docs.mjs'].includes(f)) // an alias in `kerf add`, and a line pointing at the walkthrough
   expect(stray).toEqual([])
 })
 
 test('a rail provides `pay.rail`, keyed, and only on the server', async () => {
-  const stripe = await load('@weft-js/pay/stripe')
+  const stripe = await load('@kerf-js/pay/stripe')
   expect(stripe.plugin.provides).toEqual([{ slot: 'pay.rail', key: 'stripe' }])
   expect(Object.keys(stripe.manifest.provides[0].sides)).toEqual(['server'])
   expect(
     bindSlots({ plugins: [stripe.plugin] }, (code, why) => {
       throw new Error(`${code} ${why}`)
     })['pay.rail'],
-  ).toEqual({ stripe: '@weft-js/pay/stripe' })
+  ).toEqual({ stripe: '@kerf-js/pay/stripe' })
 })
 
 test('a bus provides `realtime.bus`, a list source `db.adapter`, keyed', async () => {
-  const redis = await load('@weft-js/realtime-redis'),
-    mongo = await load('@weft-js/db/mongo'),
-    sql = await load('@weft-js/db/sql')
+  const redis = await load('@kerf-js/realtime-redis'),
+    mongo = await load('@kerf-js/db/mongo'),
+    sql = await load('@kerf-js/db/sql')
   expect(redis.plugin.provides).toEqual(['realtime.bus'])
   expect(mongo.plugin.provides).toEqual([{ slot: 'db.adapter', key: 'mongo' }])
   const slots = bindSlots({ plugins: [redis.plugin, mongo.plugin, sql.plugin] }, (code, why) => {
     throw new Error(`${code} ${why}`)
   })
-  expect(slots['realtime.bus']).toBe('@weft-js/realtime-redis')
-  expect(slots['db.adapter']).toMatchObject({ mongo: '@weft-js/db/mongo', sql: '@weft-js/db/sql' })
+  expect(slots['realtime.bus']).toBe('@kerf-js/realtime-redis')
+  expect(slots['db.adapter']).toMatchObject({ mongo: '@kerf-js/db/mongo', sql: '@kerf-js/db/sql' })
 })

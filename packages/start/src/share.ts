@@ -1,5 +1,5 @@
 // `interaction({ share })` past this page (research 45 §4, §5). The only layer that knows tabs and the network, and only
-// an app that shares loads it: the `weft()` plugin imports it where `share:` is used.
+// an app that shares loads it: the `kerf()` plugin imports it where `share:` is used.
 //
 //   tabs    every tab posts its bits to one BroadcastChannel and keeps every sibling's, so there's no relay to run.
 //   leader  one tab holds a Web Lock and the `$share` join, on the same socket and lifecycle as this tab's `channel`s.
@@ -17,8 +17,8 @@ import { tabQueue } from './share/tab-queue'
 import { network, upstream as upstreamOf, wanted as wantedKeys } from './share/network'
 import { receiver } from './share/receive'
 import { render, renderAll, hear, dropClients } from './share/display'
-import { createRoot, effect, untrack } from '@weft-js/core'
-import { seams, type ShareLine } from '@weft-js/core/interaction'
+import { createRoot, effect, untrack } from '@kerf-js/core'
+import { seams, type ShareLine } from '@kerf-js/core/interaction'
 import { connectBuiltIn, keepOpen, wakeSocket } from './channel'
 import {
   lines,
@@ -49,7 +49,7 @@ export const IDLE = 5000
 
 /** Bump when a message below changes shape: tabs of two shapes then share nothing, and each is its own client. */
 const WIRE = 1
-const CHANNEL = `weft:ui:${WIRE}`
+const CHANNEL = `kerf:ui:${WIRE}`
 
 /** What a test reads: `role`, and how much went where. */
 export const shareStats = {

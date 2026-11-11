@@ -1,6 +1,6 @@
 // The client side of the exit check. It is never edited: the swap from a TS `run` to `native()` leaves this file, and
 // every byte built from it, as they were.
-import { Boundary, state } from '@weft-js/core'
+import { Boundary, state } from '@kerf-js/core'
 import { guarded, thumbnail } from '../server/thumb'
 
 function Result(props: { seed: number }) {

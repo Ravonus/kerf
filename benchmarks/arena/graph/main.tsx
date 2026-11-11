@@ -1,6 +1,6 @@
-import { derived, onCleanup, state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
-import { graph } from '@weft-js/core/devtools'
+import { derived, onCleanup, state } from '@kerf-js/core'
+import { render } from '@kerf-js/core/dom'
+import { graph } from '@kerf-js/core/devtools'
 
 function Todos() {
   const todos = state(['Buy beans', 'Brew'])
@@ -31,7 +31,7 @@ function Todos() {
   )
 }
 
-// An agent here or through `weft mcp` reads each
+// An agent here or through `kerf mcp` reads each
 // named value, what it reads and what reads it.
 function Graph() {
   const lines = state<string[]>([])

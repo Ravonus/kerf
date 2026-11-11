@@ -1,4 +1,4 @@
-import { notFound, redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
+import { notFound, redirect, type LoadArgs, type RouteProps } from '@kerf-js/start'
 import { Moved } from '../../components/Moved'
 import pages from '../../generated/toolkit.json'
 

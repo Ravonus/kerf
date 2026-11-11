@@ -1,5 +1,5 @@
-// The js-framework-benchmark entry (~/work/jfb/frameworks/keyed/weft/src/main.tsx) without its render call.
-import { state, type State } from '@weft-js/core'
+// The js-framework-benchmark entry (~/work/jfb/frameworks/keyed/kerf/src/main.tsx) without its render call.
+import { state, type State } from '@kerf-js/core'
 
 const adjectives = ["pretty", "large", "big", "small", "tall", "short", "long", "handsome", "plain", "quaint", "clean", "elegant", "easy", "angry", "crazy", "helpful", "mushy", "odd", "unsightly", "adorable", "important", "inexpensive", "cheap", "expensive", "fancy"] // prettier-ignore
 const colors = ["red", "yellow", "blue", "green", "pink", "brown", "purple", "brown", "white", "black", "orange"] // prettier-ignore
@@ -59,7 +59,7 @@ export function Main() {
       <div class="jumbotron">
         <div class="row">
           <div class="col-md-6">
-            <h1>weft</h1>
+            <h1>kerf</h1>
           </div>
           <div class="col-md-6">
             <div class="row">

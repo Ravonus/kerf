@@ -14,14 +14,14 @@ export async function sidecar(context) {
       const addr = /search: listening on (\S+)/.exec(s.output())?.[1]
       ok(addr, `no sidecar address in: ${s.output()}`)
       await check('a forged or unsigned call to the sidecar is refused', async () => {
-        const unsigned = await fetch(`http://${addr}/_weft/fn/${ID.search}`, {
+        const unsigned = await fetch(`http://${addr}/_kerf/fn/${ID.search}`, {
           method: 'POST',
           body: '{"input":{"q":"x","limit":1}}',
         })
         eq(unsigned.status, 401, 'no signature')
-        const forged = await fetch(`http://${addr}/_weft/fn/${ID.search}`, {
+        const forged = await fetch(`http://${addr}/_kerf/fn/${ID.search}`, {
           method: 'POST',
-          headers: { 'weft-ctx': 'e30', 'weft-sig': randomBytes(32).toString('hex') },
+          headers: { 'kerf-ctx': 'e30', 'kerf-sig': randomBytes(32).toString('hex') },
           body: '{"input":{"q":"x","limit":1}}',
         })
         eq(forged.status, 401, 'a made-up signature')
@@ -29,7 +29,7 @@ export async function sidecar(context) {
       await check(
         'a killed sidecar costs that function, not the server, and comes back',
         async () => {
-          const { pid } = await (await fetch(`http://${addr}/_weft/health`)).json()
+          const { pid } = await (await fetch(`http://${addr}/_kerf/health`)).json()
           process.kill(pid, 'SIGKILL')
           const down = await until(
             'the failure',
@@ -53,13 +53,13 @@ export async function sidecar(context) {
     } finally {
       await s.stop()
     }
-    await check('stopping `weft start` stops the sidecar', async () => {
+    await check('stopping `kerf start` stops the sidecar', async () => {
       const addr = /search: listening on (\S+)/.exec(s.output())?.[1]
       await until(
         'the port to close',
         async () => {
           try {
-            await fetch(`http://${addr}/_weft/health`)
+            await fetch(`http://${addr}/_kerf/health`)
             return false
           } catch {
             return true

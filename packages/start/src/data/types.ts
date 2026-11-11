@@ -1,4 +1,4 @@
-import type { Derived, Resource } from '@weft-js/core'
+import type { Derived, Resource } from '@kerf-js/core'
 import type { Context, FnOptions, Skip } from '../data'
 import type { ServerExtension } from '../extension'
 
@@ -14,9 +14,9 @@ export interface VerifyOptions {
   input?: unknown
   /** Columns of the test row: whose it is, so the signed-in test user can see it. The rest are made up. */
   row?: Record<string, unknown>
-  /** Name of the env var with a cookie for a user who can see the row. Default `WEFT_STAGING_COOKIE`. */
+  /** Name of the env var with a cookie for a user who can see the row. Default `KERF_STAGING_COOKIE`. */
   cookie?: string
-  /** Name of the env var with a cookie for a user who can't. Default `WEFT_STAGING_OTHER_COOKIE`; without it, a signed-out client. */
+  /** Name of the env var with a cookie for a user who can't. Default `KERF_STAGING_OTHER_COOKIE`; without it, a signed-out client. */
   otherCookie?: string
   /** Ms each link may take. Default 5000. */
   timeout?: number
@@ -88,7 +88,7 @@ export interface ImplCall {
   request: Request
 }
 
-/** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@weft-js/start/rust` (research 36, 37). */
+/** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@kerf-js/start/rust` (research 36, 37). */
 export interface Impl {
   readonly kind: string
   readonly target: string
@@ -112,10 +112,10 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
   shape?: O extends (infer R)[] ? DeepPartial<R>[] : DeepPartial<O>
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
   tags?: QueryTags<Out<S>, A>
-  /** `required: true`: `weft check` and `weft build` fail on a target with no real change feed, and the server won't start without one (R013, R015). */
+  /** `required: true`: `kerf check` and `kerf build` fail on a target with no real change feed, and the server won't start without one (R013, R015). */
   live?: {
     required?: boolean
-    /** A real round trip against a target that isn't production, in `weft check` and `weft build`. `true` finds `WEFT_STAGING_URL` or `STAGING_DATABASE_URL`; a string names a target in `live.targets`. */
+    /** A real round trip against a target that isn't production, in `kerf check` and `kerf build`. `true` finds `KERF_STAGING_URL` or `STAGING_DATABASE_URL`; a string names a target in `live.targets`. */
     verify?: true | string | VerifyOptions
   }
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
@@ -130,7 +130,7 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
   errors?: Errors
   run: (args: { input: Out<S>; ctx: Ctx<A> }) => O | Promise<O>
   impl?: undefined
-  /** Set by the `weft:start` plugin: `<export>.<file hash>`. */
+  /** Set by the `kerf:start` plugin: `<export>.<file hash>`. */
   $id?: string
 }
 
@@ -209,7 +209,7 @@ export type LiveMode = 'app' | 'feed' | 'external' | 'poll' | 'off'
 /** `.live()`: how long it's kept, and whether it refuses to run without a real feed. */
 export interface LiveOptions {
   keep?: string | number
-  /** Fail `weft check`, `weft build` and server startup rather than run without a real change feed (R013, R015). */
+  /** Fail `kerf check`, `kerf build` and server startup rather than run without a real change feed (R013, R015). */
   required?: boolean
 }
 /** A resource that also says how live it is. */
@@ -280,7 +280,7 @@ export interface Transport {
   ): Promise<Answer>
 }
 
-/** @weft-js/core/test's fake-transport controls (research 27 §7). */
+/** @kerf-js/core/test's fake-transport controls (research 27 §7). */
 export interface NetControl {
   latency: number
   ctx?: object

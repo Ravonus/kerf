@@ -1,6 +1,6 @@
-import type { CanvasFrame } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf-js/veneer'
 import { TRAFFIC } from '../../world'
-import { Canvas } from '@weft-js/warp'
+import { Canvas } from '@kerf-js/veneer'
 import { token, STAGE } from './paint-primitives'
 
 // -- Canvas
@@ -14,7 +14,7 @@ export function drawRequests({
   const bar = width / TRAFFIC.length,
     grow = still ? 1 : Math.min(1, time / 0.8)
   ctx.clearRect(0, 0, width, height)
-  ctx.fillStyle = token(ctx, '--warp-color-accent-solid')
+  ctx.fillStyle = token(ctx, '--veneer-color-accent-solid')
   TRAFFIC.forEach((t, i) => {
     const h = (t.requests / 90) * height * grow
     ctx.fillRect(i * bar + 3, height - h, bar - 6, h)

@@ -1,0 +1,29 @@
+import type { Meta } from '@kerf-js/start'
+import { Center, Heading, Stack, Toaster } from '@kerf-js/veneer'
+import { Boundary } from '@kerf-js/core'
+import { CartLines, CartLoading } from '#/components/CartLines'
+import { Failed } from '#/components/Failed'
+
+export const meta: Meta = {
+  title: 'Your cart',
+  description: 'Review the Mendwell goods in your cart.',
+}
+
+export default function Cart() {
+  return (
+    <Center max="content" gutter>
+      <Stack gap="group" class="page">
+        <Heading level={1} role="title">
+          Your cart
+        </Heading>
+        <Boundary
+          pending={<CartLoading />}
+          error={(_, retry) => <Failed what="Your cart" retry={retry} />}
+        >
+          <CartLines />
+        </Boundary>
+      </Stack>
+      <Toaster />
+    </Center>
+  )
+}

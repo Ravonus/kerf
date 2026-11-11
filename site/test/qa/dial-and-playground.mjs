@@ -33,7 +33,7 @@ await check('flow: the icon grid fades in and out in its window', '/icons', asyn
     ],
     low: [+getComputedStyle(w.querySelector('[data-leaving]')).opacity],
   }))
-  same(r.names.join(), 'warp-in-icon+warp-out-icon', 'cell animations')
+  same(r.names.join(), 'veneer-in-icon+veneer-out-icon', 'cell animations')
   if (!r.low.length || Math.max(...r.low) > 0.9)
     throw new Error(`cells leaving the window's top read ${r.low.join(', ')}`)
 })
@@ -66,7 +66,7 @@ for (const [who, saved, want] of [
     await page.context().addInitScript((s) => {
       if (s)
         try {
-          localStorage.setItem('warp:dials', JSON.stringify({ expression: s }))
+          localStorage.setItem('veneer:dials', JSON.stringify({ expression: s }))
         } catch {}
     }, saved)
     await page.context().addInitScript(dialFrames)

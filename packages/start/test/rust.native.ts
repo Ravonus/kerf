@@ -45,7 +45,7 @@ function nativeFixture({ scope, fnOf, nextId, seen }: NativeOptions) {
 
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'native-'))
-    process.env.WEFT_NATIVE_DIR = dir
+    process.env.KERF_NATIVE_DIR = dir
     addons = {}
     calls = []
     process.dlopen = (mod: { exports: unknown }, file: string) => {
@@ -62,7 +62,7 @@ function nativeFixture({ scope, fnOf, nextId, seen }: NativeOptions) {
   })
   afterEach(() => {
     process.dlopen = dlopen
-    delete process.env.WEFT_NATIVE_DIR
+    delete process.env.KERF_NATIVE_DIR
   })
 
   return {

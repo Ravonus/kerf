@@ -1,10 +1,10 @@
 // The compiler lowers a list over an array nothing re-reads to a plain `.map`. Server, hydration and updates stay the same.
-// weft-allow T005: framework test of hydration; node identity is the subject
-import { flush } from '@weft-js/core'
-import { hydrate } from '@weft-js/core/dom'
-import { renderToString } from '@weft-js/core/ssr'
-import { Grid as ServerGrid } from './fixtures/ssr/FixedList.tsx?weft-ssr'
-import { Grid, write } from './fixtures/ssr/FixedList.tsx?weft-hydrate'
+// kerf-allow T005: framework test of hydration; node identity is the subject
+import { flush } from '@kerf-js/core'
+import { hydrate } from '@kerf-js/core/dom'
+import { renderToString } from '@kerf-js/core/ssr'
+import { Grid as ServerGrid } from './fixtures/ssr/FixedList.tsx?kerf-ssr'
+import { Grid, write } from './fixtures/ssr/FixedList.tsx?kerf-hydrate'
 
 test('it renders, hydrates over the same nodes and stays live', () => {
   const html = renderToString(() => ServerGrid())

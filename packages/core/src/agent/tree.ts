@@ -98,7 +98,7 @@ export const clip = (s: string, n = 80) => (s.length > n ? `${s.slice(0, n)}…`
 export function tree(root: Element, onlyInteractive: boolean, ref: (el: Element) => string) {
   const lines: string[] = []
   const walk = (el: Element, depth: number) => {
-    if (el.hasAttribute('data-weft-devtools')) return
+    if (el.hasAttribute('data-kerf-devtools')) return
     if (
       el instanceof HTMLElement &&
       (el.hidden || el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'TEMPLATE')

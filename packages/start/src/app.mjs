@@ -1,15 +1,15 @@
-// `weft dev` and `weft build` for an app with src/routes (research 25 §6): Vite 8 with weft() (hydratable output),
-// weftStart() and Nitro's Vite plugin. A vite.config in the app is merged in. The CLI passes the config's `site`.
+// `kerf dev` and `kerf build` for an app with src/routes (research 25 §6): Vite 8 with kerf() (hydratable output),
+// kerfStart() and Nitro's Vite plugin. A vite.config in the app is merged in. The CLI passes the config's `site`.
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createBuilder, createServer } from 'vite'
 import { nitro } from 'nitro/vite'
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf-js/core/vite'
 import { devRunner, devSockets } from './dev-runtime.mjs'
 import { pageSockets } from './live-target.mjs'
-import weftStart, { startDir } from './vite.mjs'
+import kerfStart, { startDir } from './vite.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
 function usesSockets(root) {
@@ -46,13 +46,13 @@ function config({
     server: { port: port ?? 5173, strictPort: port !== undefined },
     // Streams and live queries go over SSE unless the server answers a socket; a channel says `unavailable` (R024)
     define: {
-      __WEFT_SOCKETS__: JSON.stringify(
+      __KERF_SOCKETS__: JSON.stringify(
         pageSockets({ sockets, build: command === 'build', preset }),
       ),
     },
     plugins: [
-      weft({ hydratable: true, csp: site?.csp }),
-      weftStart({ root, site, hydration }),
+      kerf({ hydratable: true, csp: site?.csp }),
+      kerfStart({ root, site, hydration }),
       runner && devSockets(),
       nitro({
         preset,
@@ -66,9 +66,9 @@ function config({
         ...(sockets && { features: { websocket: true } }),
         ...(runner && { devServer: { runner } }),
         // Build mode for share cards (research 20 §4.3): the server lists them and Nitro's prerender writes the PNGs.
-        prerender: { routes: ['/_weft/og-routes'], failOnError: true },
+        prerender: { routes: ['/_kerf/og-routes'], failOnError: true },
         // Prerendered cards are static files at content-addressed URLs: immutable. The rule names each file (a
-        // `/_weft/og/**` rule would also override the handler's no-cache for a stale `?v=` on demand). Prerender runs
+        // `/_kerf/og/**` rule would also override the handler's no-cache for a stale `?v=` on demand). Prerender runs
         // before Nitro bundles the server, so rules added when it is done are in the build. (Dev sends no-store.)
         ...(command === 'build' && {
           hooks: immutableCards(),
@@ -87,7 +87,7 @@ function config({
  */
 function traced(root) {
   const deps = [
-    ...(existsSync(join(root, '.weft/slots/media.server.ts'))
+    ...(existsSync(join(root, '.kerf/slots/media.server.ts'))
       ? ['css-tree*', 'csso*', 'sharp*']
       : []),
     ...(existsSync(join(root, 'node_modules/nodemailer')) ? ['nodemailer*'] : []),
@@ -109,7 +109,7 @@ function immutableCards() {
     'prerender:done'({ prerenderedRoutes }) {
       if (!built) return
       for (const r of prerenderedRoutes) {
-        if (r.route.startsWith('/_weft/og/') && r.route.endsWith('.png'))
+        if (r.route.startsWith('/_kerf/og/') && r.route.endsWith('.png'))
           built.options.routeRules[r.route] = {
             headers: { 'cache-control': 'public, max-age=31536000, immutable' },
           }
@@ -128,7 +128,7 @@ export async function dev(options) {
 
 /** Build client and server for `preset` (node by default; bun, deno_server…), into `.output/` unless the preset moves it. */
 export async function build(options) {
-  process.env.WEFT_START_DIR ??= startDir // for the share cards a build draws (og/native.mjs)
+  process.env.KERF_START_DIR ??= startDir // for the share cards a build draws (og/native.mjs)
   const builder = await createBuilder(config({ ...options, command: 'build' }))
   wrote = undefined
   await builder.buildApp()

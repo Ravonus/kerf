@@ -10,10 +10,10 @@ crate-type = ["cdylib"]
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-weft = { path = "WEFT_CRATE", default-features = false, features = ["native"] }
+kerf = { path = "KERF_CRATE", default-features = false, features = ["native"] }
 
 [build-dependencies]
-weft = { path = "WEFT_CRATE", default-features = false, features = ["build"] }
+kerf = { path = "KERF_CRATE", default-features = false, features = ["build"] }
 
 [profile.release]
 lto = "fat"

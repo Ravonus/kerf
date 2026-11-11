@@ -1,0 +1,28 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+/* shared: numerals, eyebrow, sweep host gates -------------------------------- */
+:where([data-scope="table"]),
+:where([data-scope="chart"]),
+:where([data-scope="stat"]),
+:where([data-scope="kanban"]),
+:where([data-scope="meter"]),
+:where([data-scope="ring"]),
+:where([data-scope="delta"]),
+:where([data-scope="list"]),
+:where([data-scope="desc"]),
+:where([data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="delta"]) {
+  display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;
+  font-size: var(--veneer-text-caption-size); font-weight: 500; line-height: 1;
+  color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="delta"])::before { font-size: 0.78em; content: "●"; transform: scale(0.7); }
+:where([data-scope="delta"][data-dir="up"])   { color: var(--veneer-color-data-up); }
+:where([data-scope="delta"][data-dir="down"]) { color: var(--veneer-color-data-down); }
+:where([data-scope="delta"][data-dir="up"])::before   { content: "▲"; transform: none; }
+:where([data-scope="delta"][data-dir="down"])::before { content: "▼"; transform: none; }
+/* inverted metrics (churn, latency): down is good — colour flips, the shape never does */
+:where([data-scope="delta"][data-good="down"][data-dir="down"]) { color: var(--veneer-color-data-up); }
+:where([data-scope="delta"][data-good="down"][data-dir="up"])   { color: var(--veneer-color-data-down); }
+:where([data-scope="delta"][data-variant="pill"]) { padding: 4px 7px; border-radius: var(--veneer-radius-round); background: color-mix(in oklab, currentColor 11%, transparent); }
+}

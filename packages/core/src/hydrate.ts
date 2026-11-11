@@ -1,11 +1,11 @@
-// Hydration (@weft-js/core/dom): adopt the DOM `renderToString` produced instead of building it. Each template root the
+// Hydration (@kerf-js/core/dom): adopt the DOM `renderToString` produced instead of building it. Each template root the
 // server wrote carries its key (` wk="0.1/0"`, research 19 §2.4); compiled hydratable output claims elements by
 // key (`tpl`), walks over the server's hole ranges (`first`/`next`) and adopts their nodes (`child`). A key with no
 // server element is a miss: dev builds warn, every build counts it in `hydration.misses`, and the client renders
 // that template fresh so the app still works.
 //
 // Hydration is one synchronous pass over the whole container. Events fired before it finishes are dropped, unless the
-// app has lazy islands: then `@weft-js/start`'s capture script holds them for `drain` (island.ts).
+// app has lazy islands: then `@kerf-js/start`'s capture script holds them for `drain` (island.ts).
 
 import { DEV, createRoot, type SsrData } from './index'
 import { rt, runMounts } from './index/graph'
@@ -28,7 +28,7 @@ export const hydration = {
 export function sweep() {
   if (hydration.misses > told)
     console.warn(
-      `weft: ${(told = hydration.misses)} hydration miss(es), first wk=${hydration.first}`,
+      `kerf: ${(told = hydration.misses)} hydration miss(es), first wk=${hydration.first}`,
     )
   const list = hydration.trash
   hydration.trash = []
@@ -45,7 +45,7 @@ export function sweep() {
 
 /**
  * Hydrate `container`'s server HTML with `code` (the same `() => <App />` the server rendered). The page data is the
- * container's trailing `<script data-weft>`, or `options.data` when the page sends it elsewhere (a stream, research 25).
+ * container's trailing `<script data-kerf>`, or `options.data` when the page sends it elsewhere (a stream, research 25).
  */
 export function hydrate(
   code: () => unknown,
@@ -56,7 +56,7 @@ export function hydrate(
   for (const el of container.querySelectorAll('[wk]')) registry.set(el.getAttribute('wk')!, el)
   hydration.misses = told = 0
   // The server's data (resources, boundary states) stays where it is: the app hydrates the nodes before it.
-  const script = container.querySelector(':scope > script[data-weft]')
+  const script = container.querySelector(':scope > script[data-kerf]')
   rt.data = options.data ?? (script ? JSON.parse(script.textContent) : undefined)
   rt.state = rt.data?.s
   let dispose!: () => void
@@ -69,13 +69,13 @@ export function hydrate(
   } finally {
     if (hydration.misses)
       console.warn(
-        'weft: rendered fresh, a key differs between server and client (see `weft docs W044`)',
+        'kerf: rendered fresh, a key differs between server and client (see `kerf docs W044`)',
       )
     Object.assign(keys, { on: false, hydrating: false, miss: false, p: '', n: 0 })
     rt.data = undefined
     if (DEV && registry.size)
       console.warn(
-        `weft: ${registry.size} server element(s) were never claimed (first: wk=${registry.keys().next().value})`,
+        `kerf: ${registry.size} server element(s) were never claimed (first: wk=${registry.keys().next().value})`,
       )
     registry.clear()
     sweep()

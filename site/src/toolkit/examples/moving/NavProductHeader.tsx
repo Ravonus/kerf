@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Heading, Nav, Row } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Heading, Nav, Row } from '@kerf-js/veneer'
 import { PAGES } from './shared'
 
 export function NavProductHeader() {
@@ -14,7 +14,7 @@ export function NavProductHeader() {
       gap="section"
     >
       <Row gap="section">
-        <Heading level={3}>weft</Heading>
+        <Heading level={3}>kerf</Heading>
         <Nav label="Main">
           {PAGES.map((name) => (
             <a

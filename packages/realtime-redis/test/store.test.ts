@@ -1,9 +1,9 @@
-// redisStore and redisRateLimit on a real server (`WEFT_TEST_REDIS` names a `redis-server` binary; without it they skip).
+// redisStore and redisRateLimit on a real server (`KERF_TEST_REDIS` names a `redis-server` binary; without it they skip).
 import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { redisQueue, redisRateLimit, redisStore } from '../src/index'
 
-const binary = process.env.WEFT_TEST_REDIS
+const binary = process.env.KERF_TEST_REDIS
 let proc: ChildProcess | undefined
 let url = ''
 
@@ -20,7 +20,7 @@ beforeAll(async () => {
 })
 afterAll(() => proc?.kill('SIGKILL'))
 
-// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`.
+// Needs a `redis-server` binary, named by `KERF_TEST_REDIS`.
 test.skipIf(!binary)('two instances share values and see each other’s tag bumps', async () => {
   const a = redisStore({ url, prefix: 'one:' })
   const b = redisStore({ url, prefix: 'one:' })
@@ -34,7 +34,7 @@ test.skipIf(!binary)('two instances share values and see each other’s tag bump
   expect(await redisStore({ url, prefix: 'other:' }).get('k')).toBeUndefined()
 })
 
-// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`.
+// Needs a `redis-server` binary, named by `KERF_TEST_REDIS`.
 test.skipIf(!binary)('a value past its life is gone', async () => {
   const s = redisStore({ url, prefix: 'two:' })
   await s.set('k', { v: 1, tags: [], versions: [], expires: Date.now() + 50 })
@@ -44,7 +44,7 @@ test.skipIf(!binary)('a value past its life is gone', async () => {
   expect(await s.get('k')).toBeUndefined()
 })
 
-// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`.
+// Needs a `redis-server` binary, named by `KERF_TEST_REDIS`.
 test.skipIf(!binary)(
   'the rate limit counts across instances and says how long to wait',
   async () => {
@@ -60,7 +60,7 @@ test.skipIf(!binary)(
   },
 )
 
-// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`.
+// Needs a `redis-server` binary, named by `KERF_TEST_REDIS`.
 test.skipIf(!binary)(
   "redisStore's consume is the server-function limit, shared by every instance",
   async () => {
@@ -77,7 +77,7 @@ test('no URL is Q013, except in a build', () => {
   delete process.env.REDIS_URL
   try {
     expect(() => redisStore()).toThrow(/Q013/)
-    vi.stubEnv('WEFT_BUILD', '1')
+    vi.stubEnv('KERF_BUILD', '1')
     expect(() => redisStore()).not.toThrow()
   } finally {
     vi.unstubAllEnvs()
@@ -85,7 +85,7 @@ test('no URL is Q013, except in a build', () => {
   }
 })
 
-// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`.
+// Needs a `redis-server` binary, named by `KERF_TEST_REDIS`.
 test.skipIf(!binary)(
   'the job queue: keys, one claim per lease across instances, retry, dead',
   async () => {

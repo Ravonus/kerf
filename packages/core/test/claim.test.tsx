@@ -1,12 +1,12 @@
 // What claiming leaves behind and what it does when it can't claim: markers, keys, and a key that isn't there.
-// weft-allow T004, T005: framework test of hydration; server markup and node identity are the subject
+// kerf-allow T004, T005: framework test of hydration; server markup and node identity are the subject
 import { sleep as settle } from '../../../scripts/lib/sleep.mjs'
-import { hydrate } from '@weft-js/core/dom'
-import { renderToString } from '@weft-js/core/ssr'
-import { createRoot, derived, effect, flush, state, view } from '@weft-js/core'
-import { rt } from '@weft-js/core/internal'
+import { hydrate } from '@kerf-js/core/dom'
+import { renderToString } from '@kerf-js/core/ssr'
+import { createRoot, derived, effect, flush, state, view } from '@kerf-js/core'
+import { rt } from '@kerf-js/core/internal'
 import { hydration } from '../src/hydrate'
-import * as Server from './fixtures/ssr/Claims.tsx?weft-ssr'
+import * as Server from './fixtures/ssr/Claims.tsx?kerf-ssr'
 import * as Client from './fixtures/ssr/Claims-hydrate'
 
 afterEach(() => {

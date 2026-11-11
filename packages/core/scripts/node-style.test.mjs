@@ -34,7 +34,7 @@ await test('generates and checks every tracked style input and helper', () => {
     .sort()
   assert.deepEqual(inputs, tracked)
 
-  const tmp = mkdtempSync(join(tmpdir(), 'weft-node-style-'))
+  const tmp = mkdtempSync(join(tmpdir(), 'kerf-node-style-'))
   try {
     cpSync(join(core, 'scripts/node-style.mjs'), join(tmp, 'scripts/node-style.mjs'), {
       recursive: true,

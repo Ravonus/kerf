@@ -1,12 +1,12 @@
-import type { Meta } from '@weft-js/start'
-import { WarpIndex } from '../../components/WarpIndex'
+import type { Meta } from '@kerf-js/start'
+import { VeneerIndex } from '../../components/VeneerIndex'
 
 export const prerender = true
-export const meta: Meta = { title: 'Charts', description: 'Warp charts, for Weft.' }
+export const meta: Meta = { title: 'Charts', description: 'Veneer charts, for Kerf.' }
 
 export default function Index() {
   return (
-    <WarpIndex
+    <VeneerIndex
       area="charts"
       title="Charts"
       lede={'Bars, lines, maps and flows, in your theme, with a table view and keyboard support.'}

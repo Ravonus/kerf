@@ -1,6 +1,6 @@
 // Is a wasm verifier worth shipping? Runs on Node, Bun and Deno: `node bench/verify.mjs`, after
 //   cargo build --release --target wasm32-unknown-unknown --manifest-path bench/verify/Cargo.toml
-//   wasm-opt -O3 bench/verify/target/wasm32-unknown-unknown/release/weft_pay_verify.wasm -o bench/verify.wasm
+//   wasm-opt -O3 bench/verify/target/wasm32-unknown-unknown/release/kerf_pay_verify.wasm -o bench/verify.wasm
 // Measures three ways to check one Stripe-shaped signature: what the rail did first (WebCrypto `sign`, then a loop over hex),
 // WebCrypto `verify`, and HMAC-SHA256 with `subtle` in wasm. Each gets a fresh key import, as a request would.
 import { readFileSync } from 'node:fs'

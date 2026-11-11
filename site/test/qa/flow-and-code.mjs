@@ -149,7 +149,7 @@ await check(
   { permissions: ['clipboard-read', 'clipboard-write'] },
 )
 
-// Component pages flow like the hubs: their headings and notes are in warp.flow, and one left at the top edge fades.
+// Component pages flow like the hubs: their headings and notes are in veneer.flow, and one left at the top edge fades.
 for (const path of [
   '/components/button',
   '/components/table',
@@ -183,7 +183,7 @@ for (const path of [
 // Everything that fades in as the page scrolls fades out again as it passes under the header: cards, the frames and
 // their code, headings, notes, a heading at the top of a tall example. Fields (a form being filled) stay whole. The
 // page is walked in 25px steps and each flowed element is watched while its bottom edge crosses the header line: it
-// must read below 0.9 there, its own fade times its hosts'. Then by name: no family is entry only (warp-out-none).
+// must read below 0.9 there, its own fade times its hosts'. Then by name: no family is entry only (veneer-out-none).
 const flowSweep = (page) =>
   page.evaluate(async () => {
     const frame = () =>
@@ -199,12 +199,12 @@ const flowSweep = (page) =>
         .filter(
           (a) =>
             a.timeline?.constructor.name === 'ViewTimeline' &&
-            /^warp-(in|out)-/.test(a.animationName ?? '') &&
-            !/^warp-in-(scan|value)$/.test(a.animationName),
+            /^veneer-(in|out)-/.test(a.animationName ?? '') &&
+            !/^veneer-in-(scan|value)$/.test(a.animationName),
         )
     const all = [...document.querySelectorAll('main *')].filter(
       (e) =>
-        flows(e).some((a) => a.animationName.startsWith('warp-in-')) &&
+        flows(e).some((a) => a.animationName.startsWith('veneer-in-')) &&
         !field(e) &&
         e.checkVisibility() &&
         e.getBoundingClientRect().height > 0,
@@ -212,11 +212,11 @@ const flowSweep = (page) =>
     const entryOnly = all.filter(
       (e) =>
         !flows(e).some(
-          (a) => a.animationName.startsWith('warp-out-') && a.animationName !== 'warp-out-none',
+          (a) => a.animationName.startsWith('veneer-out-') && a.animationName !== 'veneer-out-none',
         ),
     )
     const line =
-      parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--warp-flow-top')) ||
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--veneer-flow-top')) ||
       57
     const seen = new Map()
     const seeing = (e) => {
@@ -285,7 +285,7 @@ await check(
                 e
                   .getAnimations()
                   .map((a) => a.animationName)
-                  .filter((n) => /^warp-(in|out)-/.test(n))
+                  .filter((n) => /^veneer-(in|out)-/.test(n))
                   .join('+'),
             ),
           ),

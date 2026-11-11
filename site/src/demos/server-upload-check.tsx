@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Alert, Card } from '@weft-js/warp'
+import { derived, state } from '@kerf-js/core'
+import { Alert, Card } from '@kerf-js/veneer'
 
 // The server enforces these in `media`'s `maxBytes`
 // and the mutation's `z.file()`.

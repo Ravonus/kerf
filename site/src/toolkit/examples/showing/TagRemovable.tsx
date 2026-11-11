@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Tag, Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Tag, Button } from '@kerf-js/veneer'
 
 export function TagRemovable() {
   const tags = state([

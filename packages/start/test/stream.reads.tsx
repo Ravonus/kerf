@@ -1,5 +1,5 @@
-import { Boundary, resource } from '@weft-js/core'
-import { renderToStringAsync } from '@weft-js/core/ssr'
+import { Boundary, resource } from '@kerf-js/core'
+import { renderToStringAsync } from '@kerf-js/core/ssr'
 import { query, type StandardSchemaV1 } from '../src/data'
 import { body, serve } from './stream.fixture'
 

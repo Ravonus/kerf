@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   RadioGroup,
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { DIGESTS } from './shared'
 
 /** In a form, `name` is what the choice posts under.

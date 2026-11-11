@@ -5,7 +5,7 @@
 //
 // Reachable only from routes that import it, so an app without forms doesn't pay.
 
-import { derived, flush, state, untrack, type Derived, type State } from '@weft-js/core'
+import { derived, flush, state, untrack, type Derived, type State } from '@kerf-js/core'
 import {
   currentScope,
   decodeForm,
@@ -74,13 +74,13 @@ export interface FormProps<I, O> {
 
 let page: FormFailure | null | undefined
 
-/** The failure this form came back with: the request's on the server, `#weft-form` in the hydrating page. */
+/** The failure this form came back with: the request's on the server, `#kerf-form` in the hydrating page. */
 function failure(id: string, key?: string): FormFailure | undefined {
   const scope = currentScope()
   let f: FormFailure | undefined | null = scope?.form
   if (!scope && typeof document === 'object') {
     if (page === undefined) {
-      const el = document.getElementById('weft-form')
+      const el = document.getElementById('kerf-form')
       page = el && JSON.parse(el.textContent)
       el?.remove()
     }

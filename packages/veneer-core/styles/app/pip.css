@@ -1,0 +1,12 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* PiP self-view: draggable, snaps to the nearest corner */
+:where([data-scope="pip"]) {
+  position: absolute; z-index: var(--veneer-z-dock); inline-size: clamp(120px, 22cqi, 200px); aspect-ratio: 16 / 10;
+  inset-inline-end: 16px; inset-block-end: 80px; border-radius: var(--veneer-radius-surface); overflow: clip;
+  box-shadow: var(--veneer-elevation-3), 0 0 0 1px var(--veneer-color-border-strong); cursor: grab; touch-action: none;
+  translate: var(--_px, 0) var(--_py, 0); transition: translate var(--veneer-duration-slow) var(--veneer-ease-out);
+}
+:where([data-scope="pip"][data-dragging]) { transition: none; cursor: grabbing; }
+:where([data-scope="pip"] [data-scope="tile"]) { block-size: 100%; border-radius: 0; }
+}

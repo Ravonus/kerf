@@ -10,13 +10,13 @@ export function parseStop(text) {
   if (at) return { section: key(at[1] ?? ''), at: Number(at[2]) }
   const px = /^(.+?)([+-]\d+(?:\.\d+)?)$/.exec(t)
   if (px) return { section: key(px[1] ?? ''), px: Number(px[2]) }
-  throw new Error(`weft capture: a stop is <px>, <section>@<0..1> or <section>+<px>, not "${t}"`)
+  throw new Error(`kerf capture: a stop is <px>, <section>@<0..1> or <section>+<px>, not "${t}"`)
 }
 
 function find(map, section) {
   const found =
     typeof section === 'number' ? map.sections[section] : map.sections.find((s) => s.id === section)
-  if (!found) throw new Error(`weft capture: the page has no section ${JSON.stringify(section)}`)
+  if (!found) throw new Error(`kerf capture: the page has no section ${JSON.stringify(section)}`)
   return found
 }
 

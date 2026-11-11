@@ -1,4 +1,4 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { Canvas, type CanvasFrame as Frame } from '@kerf-js/veneer'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './pluck.tsx?raw'
 
@@ -17,9 +17,9 @@ const STRINGS = 60,
   WAVE = 0.3,
   DAMP = 0.996
 const colours = inks({
-  line: '--warp-color-border-control',
-  hot: '--warp-color-accent-text',
-  spark: '--warp-color-sweep',
+  line: '--veneer-color-border-control',
+  hot: '--veneer-color-accent-text',
+  spark: '--veneer-color-sweep',
 })
 
 export default function Pluck(_: ArtProps) {

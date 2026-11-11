@@ -1,4 +1,4 @@
-import { flush } from '@weft-js/core'
+import { flush } from '@kerf-js/core'
 import { level, type Component } from '../router'
 import type { ClientRoutes, RouteShape } from '../run'
 import { acquireShapeStyles } from './shape-styles'

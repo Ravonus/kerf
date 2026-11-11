@@ -1,0 +1,10 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* trace spans: nested bars on a shared time axis */
+:where([data-scope="trace"]) { display: grid; gap: 3px; font: 500 11.5px/1 var(--veneer-font-mono); }
+:where([data-scope="trace"] div) { display: grid; grid-template-columns: 120px 1fr 48px; align-items: center; gap: 8px; }
+:where([data-scope="trace"] span:first-child) { padding-inline-start: calc(var(--_d, 0) * 10px); overflow: clip; text-overflow: ellipsis; white-space: nowrap; color: var(--veneer-color-text); }
+:where([data-scope="trace"] i) { position: relative; block-size: 10px; }
+:where([data-scope="trace"] i)::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: calc(var(--_x) * 100%); inline-size: max(2px, calc(var(--_w) * 100%)); border-radius: 2px; background: var(--_c, var(--veneer-color-data-1)); }
+:where([data-scope="trace"] em) { font-style: normal; color: var(--veneer-color-text-subtle); text-align: end; }
+}

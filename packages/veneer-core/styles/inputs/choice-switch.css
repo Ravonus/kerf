@@ -1,0 +1,212 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs {
+/* ===========================================================================
+   3 · CHOICE FAMILY
+   ======================================================================== */
+:where([data-scope="checkbox"]),
+:where([data-scope="radio"]),
+:where([data-scope="switch"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--veneer-space-related);
+  align-items: center; min-block-size: var(--veneer-hit-min); cursor: pointer; font-size: var(--veneer-text-body-size);
+  -webkit-tap-highlight-color: transparent; justify-self: start;
+}
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > input {
+  /* over the control's grid cell and no further: the real input is what a click, a screen reader's touch and a test all
+     reach, and a link in the label or hint stays clickable */
+  position: absolute; grid-area: 1 / 1 / 2 / 2; inset: 0; z-index: 5; opacity: 0; inline-size: 100%; block-size: 100%; margin: 0; cursor: inherit;
+}
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > [data-part="hint"] {
+  grid-column: 2; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); line-height: var(--veneer-text-caption-leading); margin-block-start: -2px;
+}
+
+
+:where([data-scope="checkbox"]):has(input:disabled),
+:where([data-scope="radio"]):has(input:disabled),
+:where([data-scope="switch"]):has(input:disabled) { cursor: not-allowed; opacity: var(--veneer-opacity-disabled); }
+
+/* checkbox / radio box: two stacked borders (base = ink, sweep = accent), never filled;
+   the accent check draws itself (stroke 2.6, 420ms); radio: an accent dot grows */
+
+
+
+
+
+
+
+/* the mark: the check's stroke runs left to right, so a wipe that way draws it */
+
+
+
+
+
+
+
+
+
+
+/* switch (SIGNATURE §1c): the accent fill moves THROUGH the rail as the knob slides.
+   Off + hover/focus: the ring sweeps. On + hover/focus: accent-hover sweeps inside the rail. */
+:where([data-scope="switch"]) > [data-part="track"] {
+  position: relative; flex: none; inline-size: 44px; block-size: 24px; border-radius: var(--veneer-radius-round);
+  --veneer-sweep-radius: var(--veneer-radius-round); --_base: var(--veneer-color-border) /* the knob carries off; the ring stays quieter than ink, sweep-vs-base ≥ 3:1 (review 01 M7) */; background: var(--veneer-color-surface-active);
+}
+:where([data-scope="switch"]) > [data-part="track"] > [data-part="rail-fill"] { overflow: clip; }
+:where([data-scope="switch"]) > input:checked + [data-part="track"] { --_base: var(--veneer-color-accent-solid); }
+:where([data-scope="switch"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *))) {
+  position: absolute; z-index: 3; inset-block-start: 3px; inset-inline-start: 3px; inline-size: 18px; block-size: 18px;
+  border-radius: var(--veneer-radius-round); background: var(--veneer-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);   /* the knob's corners follow the track's */
+}
+:where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *)) { transform: translateX(20px); background: var(--veneer-color-accent-on-solid); }
+:where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--veneer-sweep-width) + 1px); }
+:where([data-scope="switch"][data-size="sm"]) > [data-part="track"] { inline-size: 36px; block-size: 20px; }
+:where([data-scope="switch"][data-size="sm"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *))) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *)) { transform: translateX(16px); }
+:where([data-scope="switch"][data-placement="end"]) { grid-template-columns: minmax(0, 1fr) auto; justify-self: stretch; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="track"] { grid-column: 2; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > input { grid-area: 1 / 2 / 2 / 3; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="label"] { grid-column: 1; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="hint"] { grid-column: 1; }
+
+/* group (fieldset): radio group, checkbox group, chips. The legend follows the field switch:
+   floating = the 10px caps label colour; classic = the plain label above. */
+
+
+
+
+
+
+
+
+/* choice cards (radio/checkbox as a card): swept border; selected pins the sweep */
+
+
+
+
+
+
+
+
+
+
+
+/* segmented (original Segmented.tsx; review 01 M8): the group rests as a filled track on the hairline, takes ink
+   only for focus, and does not sweep; hovering or focusing an UNSELECTED option sweeps a ring around that option only.
+   The indicator is a rail (§1c): an accent fill that slides to the selection. */
+
+
+
+
+
+
+
+
+
+
+/* an option with a count (a price, a tally) stacks it under the name, whole: side by side they fought for the width */
+
+
+/* a grid item's minimum is its content's: without this, a long option widened the group past its container */
+
+/* data-fill: the group spans its container, each option an equal share */
+   /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
+
+/* the ink turns with the shuttle: the arriving item as its head lands, the leaving one as its tail goes */
+
+/* in rows ([data-wrap]) every item is a cell of an even grid, and the face still travels to it */
+
+
+
+/* until the shuttle places the indicator (it writes the inline style), the selection paints its own fill: before the
+   island loads, without JS, or in a reader that skips the indicator, the light ink never sits on the bare track */
+
+/* while the indicator is placed instantly (first placement, hydration, resize), the ink snaps with it: a fade would
+   leave the old ink over the new fill for 420ms */
+
+
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom.
+   A group laid out over several rows ([data-wrap], e.g. as an even grid) is not one row: its items sit apart in their
+   cells, so each strokes its whole box. */
+
+
+
+/* chips (toggle group): pill, swept border; pressed pins the sweep on accent-soft */
+
+
+
+
+
+
+
+
+
+   /* full ink: 0.7 opacity fell to 3.2:1 (review 03 m12) */
+
+/* tag (inside tags input / multi-combobox) */
+
+
+/* the 2px end is room for the remove button: a tag without one is padded evenly, so its label sits in the middle */
+
+
+
+
+
+
+
+
+
+/* select trigger + value + chevron (Select, Combobox, MultiCombobox) */
+
+
+
+
+
+
+
+
+
+/* Select (redesign §5): a button trigger, and a real <select> behind it as the form's value. The trigger fills the control
+   under the chevron, so the whole box is one press. */
+
+
+/* the room the trigger reaches under the chevron (its gap and glyph) is the value's own end padding, so the value's text
+   never runs under the chevron. It can't be the button's padding: field.css's [data-part="input"] { padding-inline: 0 }
+   may load after this file and win, which left a narrow select (a sort bar, a pager's size) 24px short. */
+
+
+
+
+:where([data-part="carrier"]) { position: absolute; inset-block-end: 0; inset-inline-start: var(--_lead, 0); inline-size: 1px; block-size: 1px; margin: 0; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+/* a table row, a pager, a toolbar: as wide as its value */
+
+
+/* with scripting off the real select is the control */
+
+/* NumberField's steppers: two half-height buttons at the end of the control */
+
+
+
+
+
+
+
+/* its panel, a <dialog>: a popover by the control, or the sheet on a phone. The list scrolls and carries the shuttle, so the
+   search stays put above it. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 16px at least: iOS zooms the page on focus below that */
+}

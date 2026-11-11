@@ -1,0 +1,6 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* LiveSection: which section each peer is in (avatars beside a heading) */
+:where([data-scope="section-peers"]) { display: inline-flex; vertical-align: middle; margin-inline-start: 8px; }
+:where([data-scope="section-peers"] [data-scope="avatar"]) { --_s: 18px; font-size: 8px; box-shadow: 0 0 0 1.5px var(--_pc); }
+}

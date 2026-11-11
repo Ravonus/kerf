@@ -1,0 +1,8 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+:where([data-scope="gate-badge"]) { --_t: var(--veneer-color-caution-text); --_s: var(--veneer-color-caution-soft); }
+:where([data-scope="gate-badge"][data-state="signed"]) { --_t: var(--veneer-color-positive-text); --_s: var(--veneer-color-positive-soft); }
+:where([data-scope="gate-badge"]:is([data-state="expired"])),
+:where([data-scope="gate-badge"]:is([data-state="declined"])),
+:where([data-scope="gate-badge"]:is([data-state="error"])) { --_t: var(--veneer-color-critical-text); --_s: var(--veneer-color-critical-soft); }
+}

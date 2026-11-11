@@ -1,14 +1,14 @@
 # Performance and bundle size
 
 :::learn
-- Why a Weft app does little work on each change, and what the compiler does to get there
+- Why a Kerf app does little work on each change, and what the compiler does to get there
 - The few habits that keep lists fast: keys, stable items and one entry per row
 - How islands, server-only code and lazy slots keep JavaScript off the page
 - How to measure what you ship and what a change costs
-- How Weft compares with other stacks, with the numbers and their limits
+- How Kerf compares with other stacks, with the numbers and their limits
 :::
 
-Most of Weft's speed is something you get by writing ordinary components. There's no memo to remember and no dependency
+Most of Kerf's speed is something you get by writing ordinary components. There's no memo to remember and no dependency
 list to keep right. But there are a few patterns that undo it, mostly around lists, and the compiler can only warn about
 them. This page explains where the speed comes from, so those patterns make sense, then shows how to measure.
 
@@ -18,7 +18,7 @@ In React, a state change runs the component again, builds a new tree of elements
 find what to change in the DOM. That's a lot of work to find out that one number moved, which is why React has
 `memo`, `useMemo` and `useCallback`.
 
-A Weft component runs once. The compiler reads its JSX and wires each reactive read straight to the DOM node that shows
+A Kerf component runs once. The compiler reads its JSX and wires each reactive read straight to the DOM node that shows
 it. When a box changes, the bindings that read it run, and nothing else:
 
 :::demo getting-started
@@ -27,7 +27,7 @@ Pressing the button writes `inCart.value`. One text node changes. `Product` does
 again, and there's no tree to compare.
 
 :::deepdive What the compiler turns JSX into
-Weft's compiler is written in Rust on top of the Oxc parser ([Rust, in depth](/learn/rust) covers it). For the browser,
+Kerf's compiler is written in Rust on top of the Oxc parser ([Rust, in depth](/learn/rust) covers it). For the browser,
 each element tree becomes a template, parsed once by the browser and cloned for each use, plus one small binding for
 each dynamic part. Roughly:
 
@@ -51,7 +51,7 @@ this; it's here so the habits below make sense.
 Several writes in one handler update the page once, after the handler. You don't need to ask for that:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Checkout() {
   const step = state(1)
@@ -88,7 +88,7 @@ checks each of them.
 ### Give every row a key
 
 `items.map(item => <Row key={item.id} … />)` is a keyed list: each key keeps its row, its DOM nodes and its state. Without
-a key over objects, Weft can't tell a moved row from a new one. That's W010, with an autofix to `key={item.id}` when items
+a key over objects, Kerf can't tell a moved row from a new one. That's W010, with an autofix to `key={item.id}` when items
 have an `id`. Over strings and numbers, the value is the key.
 
 ### Change only what changed
@@ -96,7 +96,7 @@ have an `id`. Over strings and numbers, the value is the key.
 When you update one item, keep the others as they were:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 const START = [
   { id: 'beans', name: 'Beans', price: 12 },
@@ -127,12 +127,12 @@ export function PriceList() {
 ```
 
 The line that matters is the `map`: the product that changed gets a new object, and every other product is the same
-object as before. Weft's list sees that only one row's item changed and updates that row.
+object as before. Kerf's list sees that only one row's item changed and updates that row.
 
 :::pitfall New objects for every item
 `products.value = products.value.map(p => ({ ...p, price: p.price * 0.9 }))` gives every item a new identity, even if
 you only meant to change one, so every row runs again. The DOM might change in one place while every row re-ran to find
-that out. The compiler reports it as W014 inside one file, and `weft check` follows the box through props into other
+that out. The compiler reports it as W014 inside one file, and `kerf check` follows the box through props into other
 files.
 :::
 
@@ -152,7 +152,7 @@ compiler reports that as W017. When a row is its own component, pass it the box 
 `cart.get(id)` inside, rather than passing `qty={cart.value[id]}`:
 
 ```tsx
-import { state, type State } from '@weft-js/core'
+import { state, type State } from '@kerf-js/core'
 
 function Row(
   props: { id: string; cart: State<Record<string, number>> },
@@ -184,7 +184,7 @@ Work out a value from state with `derived`. It runs when something reads it, cac
 again after something it read has changed:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 export function Orders(
   props: {
@@ -221,7 +221,7 @@ export function Orders(
 }
 ```
 
-Two readers of `sum` share one computation. In React you'd reach for `useMemo` here; in Weft this is the normal way to
+Two readers of `sum` share one computation. In React you'd reach for `useMemo` here; in Kerf this is the normal way to
 write it.
 
 `untrack(() => …)` reads without subscribing: the value is read once and the result never updates. It's for the rare case
@@ -230,7 +230,7 @@ JSX read inside `untrack` freezes that part of the page, which the compiler repo
 
 ## Shipping less JavaScript
 
-The fastest code is code the browser never downloads. With `@weft-js/start`, a few things keep it off the page without
+The fastest code is code the browser never downloads. With `@kerf-js/start`, a few things keep it off the page without
 you doing anything.
 
 - **Islands.** Pages are rendered on the server. A component with nothing to do in the browser ships no JavaScript. One
@@ -243,19 +243,19 @@ you doing anything.
   doesn't use a plugin carries none of its bytes.
 
 The compiler tells you when an island has to load with the page for a reason the code could avoid, such as a box at
-module level or work that reaches past the island. That's H010, an info diagnostic, and `.weft/hydration.json`, written by
-`weft dev` and `weft build`, says when each island loads and why. When a component's work only matters once it's on
-screen and the compiler can't prove it, put `/* @weft visible */` above it.
+module level or work that reaches past the island. That's H010, an info diagnostic, and `.kerf/hydration.json`, written by
+`kerf dev` and `kerf build`, says when each island loads and why. When a component's work only matters once it's on
+screen and the compiler can't prove it, put `/* @kerf visible */` above it.
 
 ### Images and fonts
 
-On most pages, the largest thing to arrive isn't JavaScript. Two parts of weft help:
+On most pages, the largest thing to arrive isn't JavaScript. Two parts of kerf help:
 
-- **`<Media>`** from `@weft-js/core/media` renders an image imported with `?media` with its width and height, a
+- **`<Media>`** from `@kerf-js/core/media` renders an image imported with `?media` with its width and height, a
   placeholder, `srcset` and `sizes`, so nothing shifts as it loads. Mark the one hero image `priority`. The M-codes catch
   the rest: an `<img>` with no size (M001), a file far wider than it's shown (M003), a lazy hero (M008), or more than two
   `priority` images competing for the first bytes (M009).
-- **`@weft-js/text`** declares the app's fonts. The build subsets each face, preloads the ones the first paint needs,
+- **`@kerf-js/text`** declares the app's fonts. The build subsets each face, preloads the ones the first paint needs,
   matches a fallback face to the font's metrics so the swap doesn't move the layout, and trims axes and characters the
   source never uses. [Fonts](/learn/fonts) has the details.
 
@@ -273,26 +273,26 @@ On most pages, the largest thing to arrive isn't JavaScript. Two parts of weft h
 
 Measure before you change anything for speed, and measure the thing a user feels.
 
-**In a test,** `toTouchAtMost(mutations, { runs })` from `@weft-js/core/test` turns "this click stays cheap" into an
+**In a test,** `toTouchAtMost(mutations, { runs })` from `@kerf-js/core/test` turns "this click stays cheap" into an
 assertion that fails when someone breaks it. It counts the DOM mutations one interaction causes and the reactive re-runs,
 so it catches the W014 kind of bug, where the DOM barely changes but every row ran. [Testing](/learn/testing) shows it on a
 list.
 
-**In the running app,** `weft browser snapshot` prints the reactive graph with real names (which box feeds which binding,
+**In the running app,** `kerf browser snapshot` prints the reactive graph with real names (which box feeds which binding,
 in which component and line), and your browser's own performance panel shows the rest. The [verify
 reference](/reference/verify) has the commands.
 
-**What ships:** `weft build` writes the production output to `.output/`, and the client files there are what a browser
-downloads. Compress them the way your host does (brotli, usually) before you compare sizes. `.weft/hydration.json` says
+**What ships:** `kerf build` writes the production output to `.output/`, and the client files there are what a browser
+downloads. Compress them the way your host does (brotli, usually) before you compare sizes. `.kerf/hydration.json` says
 which islands load when.
 
-:::note Inside the Weft repository
+:::note Inside the Kerf repository
 The framework holds itself to size budgets with `node packages/core/scripts/size.mjs`, which builds a set of fixture apps
-and reports their brotli sizes, and to speed with the benchmarks in `evals/`. These are for working on Weft itself, not
+and reports their brotli sizes, and to speed with the benchmarks in `evals/`. These are for working on Kerf itself, not
 commands for your app. `CONTRIBUTING.md` says when to run them.
 :::
 
-## How Weft compares
+## How Kerf compares
 
 The repository builds the same dashboard in six stacks: a shell with a sidebar and menus, and a 200-row table with
 sorting, filtering, selection, paging and a live cell. Each uses the latest stable versions and a plain `vite build`.
@@ -300,8 +300,8 @@ These are the numbers from the run on 6 November 2026, as the home page shows th
 
 | Stack | JS (brotli) | CSS (brotli) | First paint |
 |---|---|---|---|
-| Weft, no Warp | 7.1 KB | 1.4 KB | 100 ms |
-| Weft + Warp | 28.9 KB | 22.1 KB | 208 ms |
+| Kerf, no Veneer | 7.1 KB | 1.4 KB | 100 ms |
+| Kerf + Veneer | 28.9 KB | 22.1 KB | 208 ms |
 | Solid + Kobalte | 47.4 KB | 1.4 KB | 152 ms |
 | React + Radix | 98.3 KB | 1.4 KB | 216 ms |
 | React + Zustand | 98.4 KB | 1.4 KB | 212 ms |
@@ -309,17 +309,17 @@ These are the numbers from the run on 6 November 2026, as the home page shows th
 
 Read them with their limits:
 
-- **Compare like with like.** "weft, no warp", Solid, and the two Radix rows share one hand-written stylesheet, so they're
-  the fair framework comparison. Warp and MUI each bring a design system, so compare those two as kits. Warp ships more
+- **Compare like with like.** "kerf, no veneer", Solid, and the two Radix rows share one hand-written stylesheet, so they're
+  the fair framework comparison. Veneer and MUI each bring a design system, so compare those two as kits. Veneer ships more
   CSS than the rest because it's a whole design system, where the others share one small sheet (MUI keeps its styles in
   its JavaScript).
-- **Smaller isn't always faster to paint.** Weft + Warp is under a third of the JavaScript of React + Radix, but Solid +
+- **Smaller isn't always faster to paint.** Kerf + Veneer is under a third of the JavaScript of React + Radix, but Solid +
   Kobalte paints its first frame sooner. The table has both columns for that reason.
-- **Kits differ in what they do.** Radix and Kobalte add menu keyboard handling and focus traps that the no-warp Weft page
-  doesn't have, and Warp keeps some closed menus mounted. `benchmarks/compare/README.md` lists every difference.
+- **Kits differ in what they do.** Radix and Kobalte add menu keyboard handling and focus traps that the no-veneer Kerf page
+  doesn't have, and Veneer keeps some closed menus mounted. `benchmarks/compare/README.md` lists every difference.
 
 The home page also has a speed table against Solid and React on the usual benchmark operations (create, update, swap and
-remove rows). Weft wins some rows and loses others, and rows where the rounds overlap are marked as too close to call.
+remove rows). Kerf wins some rows and loses others, and rows where the rounds overlap are marked as too close to call.
 Those losses are on the page on purpose.
 
 ## Recap
@@ -327,9 +327,9 @@ Those losses are on the page on purpose.
 - A component runs once; each reactive read is its own binding, so a change does work in proportion to what it changes.
 - Key every list, replace only the items that changed (W014), and read one entry per row with `.get` (W017).
 - `derived` caches computed values. Writes are always batched; `batch` only says so, and `flush()` applies them now.
-- Islands, server-only modules and lazy plugin slots keep JavaScript off the page. `.weft/hydration.json` and H010 say
+- Islands, server-only modules and lazy plugin slots keep JavaScript off the page. `.kerf/hydration.json` and H010 say
   why an island loads when it does.
-- Measure with `toTouchAtMost` in tests and the real output of `weft build`, and compare stacks only like with like.
+- Measure with `toTouchAtMost` in tests and the real output of `kerf build`, and compare stacks only like with like.
 
 ## Try it
 

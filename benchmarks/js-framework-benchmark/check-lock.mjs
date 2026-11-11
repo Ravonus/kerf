@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const base = join(dirname(fileURLToPath(import.meta.url)), 'keyed/weft')
+const base = join(dirname(fileURLToPath(import.meta.url)), 'keyed/kerf')
 const manifest = JSON.parse(readFileSync(join(base, 'package.json'), 'utf8'))
 const lock = JSON.parse(readFileSync(process.argv[2] ?? join(base, 'package-lock.json'), 'utf8'))
 const pnpm = readFileSync(join(base, 'pnpm-lock.yaml'), 'utf8')

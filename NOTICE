@@ -6,4 +6,4 @@ Figtree: Copyright 2022 The Figtree Project Authors (https://github.com/erikdken
 
 alien-signals 3.2.1 is a comparison dependency in benchmarks/speed/package.json. The tracked repository does not contain an upstream license or provenance notice for an incorporated alien-signals algorithm; this entry does not assert that code was copied into the runtime.
 
-keel/lit, in packages/plugin-keel/vendor/lit.mjs, ports shading, geometry and maths from Three.js r180. Copyright © 2010-2025 three.js authors. Its MIT license is in packages/plugin-keel/vendor/NOTICE. KEEL's own code there is MIT: packages/plugin-keel/vendor/LICENSE and LICENSE-modules.
+keel/lit, in packages/keel/vendor/lit.mjs, ports shading, geometry and maths from Three.js r180. Copyright © 2010-2025 three.js authors. Its MIT license is in packages/keel/vendor/NOTICE. KEEL's own code there is MIT: packages/keel/vendor/LICENSE and LICENSE-modules.

@@ -7,7 +7,7 @@ import { createServer } from 'vite'
 import { resolveImportedOverride, shapeOverride } from '../../src/vite/shape-override.mjs'
 
 async function project(t) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-override-functions-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-override-functions-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
   const write = (name, text) => writeFileSync(file(name), text)

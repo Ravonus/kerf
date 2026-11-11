@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Badge,
   Button,
@@ -7,7 +7,7 @@ import {
   Row,
   Segmented,
   Stack,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 type Theme = 'light' | 'dark'
 type Expression = 'quiet' | 'balanced' | 'vivid'

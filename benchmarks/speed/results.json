@@ -1,6 +1,6 @@
 {
   "spread": {
-    "weft": {
+    "kerf": {
       "create 1000": {
         "script": {
           "runs": 9,
@@ -1356,7 +1356,7 @@
     }
   },
   "compared": {
-    "weft": {
+    "kerf": {
       "create 1000": {
         "script": {
           "ratio": 0.8301,
@@ -2123,7 +2123,7 @@
   "maxLoad": 10.84,
   "valid": true,
   "grid": {
-    "weft": {
+    "kerf": {
       "create 1000": {
         "script": 1.955,
         "total": 10.33,
@@ -2387,8 +2387,8 @@
     }
   },
   "reactive": {
-    "weft": {
-      "lib": "weft",
+    "kerf": {
+      "lib": "kerf",
       "ms": {
         "avoidable": 0.0998417920133113,
         "broad": 0.19980858402662197,

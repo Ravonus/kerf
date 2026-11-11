@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Chip, Popover, Row, Text } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Chip, Popover, Row, Text } from '@kerf-js/veneer'
 import { STATUSES } from './shared'
 
 export function PopoverFilter() {

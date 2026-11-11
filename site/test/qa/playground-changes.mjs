@@ -106,7 +106,7 @@ await check('every playground renders', '/components', async (page) => {
     const why = [
       !ok && 'never mounted',
       !r.kids && 'empty stage',
-      !/from '@weft-js\/warp'/.test(r.code) && 'no code',
+      !/from '@kerf-js\/veneer'/.test(r.code) && 'no code',
       r.failed && 'failed to load',
       r.over > 0 && `overflows ${r.over}px`,
       ...errors,

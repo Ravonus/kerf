@@ -1,3 +1,3 @@
 fn main() {
-    weft::build::generate("search");
+    kerf::build::generate("search");
 }

@@ -1,4 +1,4 @@
-import { Stack, Row, Text, Badge } from '@weft-js/warp'
+import { Stack, Row, Text, Badge } from '@kerf-js/veneer'
 import { PROJECTS, TONE_OF } from '../../world'
 
 export const BadgeProjectList = () => (

@@ -45,7 +45,7 @@ export interface Product<G extends string = string, P extends string = string> e
 const INTERVALS: readonly string[] = ['day', 'week', 'month', 'year']
 const META = new Set(['trialDays', 'interval'])
 
-/** Thrown with a stable `code`. `answer` is the shape @weft-js/start sends any plugin's error to the client in. */
+/** Thrown with a stable `code`. `answer` is the shape @kerf-js/start sends any plugin's error to the client in. */
 export class PayError extends Error {
   override name = 'PayError'
   constructor(

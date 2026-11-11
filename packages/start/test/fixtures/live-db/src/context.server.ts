@@ -5,7 +5,7 @@ export default ({ request }: { request: Request }) => ({
     : null,
 })
 
-declare module '@weft-js/start' {
+declare module '@kerf-js/start' {
   interface Context {
     user: { id: string } | null
   }

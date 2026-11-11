@@ -1,4 +1,4 @@
-import type { OgProps } from '@weft-js/start'
+import type { OgProps } from '@kerf-js/start'
 import type { load } from './[id]'
 
 export const fonts = ['Inter:400,700']

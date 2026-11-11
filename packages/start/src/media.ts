@@ -3,7 +3,7 @@
 // `z` is Zod's API plus `media()`.
 
 import { z as zod } from 'zod'
-import type { MediaAsset } from '@weft-js/core/media'
+import type { MediaAsset } from '@kerf-js/core/media'
 
 const record = () =>
   zod.object({

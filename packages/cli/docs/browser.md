@@ -1,7 +1,7 @@
-# Browser values (`@weft-js/core/browser`)
+# Browser values (`@kerf-js/core/browser`)
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   online,
   visible,
@@ -9,7 +9,7 @@ import {
   media,
   on,
   interval,
-} from '@weft-js/core/browser'
+} from '@kerf-js/core/browser'
 
 export function Toolbar() {
   const isOnline = online() // Derived<boolean>; server: true
@@ -47,7 +47,7 @@ export function Toolbar() {
   `state(init, { persist: 'local', sync: 'tabs' })` in a `defineState` keeps a box the same in every tab (S008 without
   `persist`, or with `session`).
 
-In tests (`@weft-js/core/test`): `await net.offline()`, `net.online()`, `page.hide()`, `page.show()`, `page.blur()`,
+In tests (`@kerf-js/core/test`): `await net.offline()`, `net.online()`, `page.hide()`, `page.show()`, `page.blur()`,
 `page.focus()`, `page.freeze()`, `page.resume()`, `page.leave({ persisted })`, `page.restore()`,
 `page.media(query, true)`, `tabs.post(name, msg)`, `tabs.posted(name)`. Each test starts online, visible and focused with every query false. After each test
-@weft-js/core/test fails if anything is still open (**T012**); `leaks()` lists it.
+@kerf-js/core/test fails if anything is still open (**T012**); `leaks()` lists it.

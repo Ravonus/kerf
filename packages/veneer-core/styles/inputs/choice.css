@@ -1,0 +1,339 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs {
+/* ===========================================================================
+   3 · CHOICE FAMILY
+   ======================================================================== */
+:where([data-scope="checkbox"]),
+:where([data-scope="radio"]),
+:where([data-scope="switch"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--veneer-space-related);
+  align-items: center; min-block-size: var(--veneer-hit-min); cursor: pointer; font-size: var(--veneer-text-body-size);
+  -webkit-tap-highlight-color: transparent; justify-self: start;
+}
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > input {
+  /* over the control's grid cell and no further: the real input is what a click, a screen reader's touch and a test all
+     reach, and a link in the label or hint stays clickable */
+  position: absolute; grid-area: 1 / 1 / 2 / 2; inset: 0; z-index: 5; opacity: 0; inline-size: 100%; block-size: 100%; margin: 0; cursor: inherit;
+}
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > [data-part="hint"] {
+  grid-column: 2; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); line-height: var(--veneer-text-caption-leading); margin-block-start: -2px;
+}
+:where([data-scope="checkbox"]):has([data-part="hint"]),
+:where([data-scope="radio"]):has([data-part="hint"]) { align-items: start; }
+:where([data-scope="checkbox"], [data-scope="radio"]):has([data-part="hint"]) > [data-part="control"] { margin-block-start: 1px; }
+:where([data-scope="checkbox"]):has(input:disabled),
+:where([data-scope="radio"]):has(input:disabled),
+:where([data-scope="switch"]):has(input:disabled) { cursor: not-allowed; opacity: var(--veneer-opacity-disabled); }
+
+/* checkbox / radio box: two stacked borders (base = ink, sweep = accent), never filled;
+   the accent check draws itself (stroke 2.6, 420ms); radio: an accent dot grows */
+:where([data-scope="checkbox"], [data-scope="radio"]) > [data-part="control"] {
+  display: grid; place-items: center; inline-size: 20px; block-size: 20px; flex: none;
+  border-radius: var(--veneer-radius-mark); --veneer-sweep-radius: var(--veneer-radius-mark);
+}
+:where([data-scope="radio"]) > [data-part="control"] { border-radius: 50%; --veneer-sweep-radius: 50%; }
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before,
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
+  /* the sweep's two parts (veneer.signature §1), as the control's own: a list of 200 boxes is 400 elements fewer */
+  content: ""; position: absolute; inset: 0; box-sizing: border-box; pointer-events: none; border-radius: inherit;
+  --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
+  transition: --_sl calc((1 - var(--_a, 0)) * var(--veneer-sweep-duration)) var(--veneer-sweep-ease),
+              --_sr calc(var(--_a, 0) * var(--veneer-sweep-duration)) var(--veneer-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--veneer-sweep-duration)),
+              --_a 0s linear var(--_latch, 0s);
+}
+@media (hover: none) {
+  :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before,
+  :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after { --_latch: calc((1 - var(--_a, 0)) * 1.25 * var(--veneer-sweep-duration)); }
+}
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before {
+  z-index: 1; color: var(--veneer-color-sweep-base); border: var(--veneer-sweep-base-width) solid currentColor;
+  clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)));   /* square: the box is rounded already, and a rounded seam left a gap */
+}
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
+  z-index: 2; color: var(--veneer-color-sweep); opacity: var(--_on); border: var(--veneer-sweep-width) solid currentColor;
+  clip-path: inset(0 var(--_sr) 0 var(--_sl));
+}
+:where([data-scope="checkbox"][data-invalid]) > [data-part="control"][data-sweep]::after { color: var(--veneer-color-sweep-critical); opacity: 1; }
+/* the mark: the check's stroke runs left to right, so a wipe that way draws it */
+:where([data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) {
+  --_check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 L9.5 17 L19 7'/%3E%3C/svg%3E");
+  --_dash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+  position: relative; z-index: 3; inline-size: 70%; block-size: 70%; background: var(--veneer-color-accent-solid);
+  mask: var(--_check) center / 100% 100% no-repeat; clip-path: inset(-20% 120% -20% -20%);
+  transition: clip-path calc(420ms * var(--veneer-motion-scale)) var(--veneer-sweep-ease);
+}
+:where([data-expression="vivid"] [data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) {
+  --_check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpath d='M5 12.5 L9.5 17 L19 7'/%3E%3C/svg%3E");
+  --_dash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='square'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+}
+:where([data-scope="checkbox"]) > input:checked + [data-part="control"] > [data-part="mark"],
+:where([data-scope="checkbox"]) > input:indeterminate + [data-part="control"] > [data-part="mark"] { clip-path: inset(-20%); }
+:where([data-scope="checkbox"]) > input:indeterminate + [data-part="control"] > [data-part="mark"] { mask-image: var(--_dash); }
+@media (forced-colors: active) {
+  :where([data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) { forced-color-adjust: none; background: CanvasText; }
+}
+:where([data-scope="radio"]) > [data-part="control"]::after {
+  content: ""; position: relative; z-index: 3; inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--veneer-color-accent-solid);
+  transform: scale(0); transition: transform calc(420ms * var(--veneer-motion-scale)) var(--veneer-sweep-ease);
+}
+:where([data-scope="radio"]) > input:checked + [data-part="control"]::after { transform: scale(1); }
+:where([data-scope="checkbox"][data-invalid], [data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] { --_a: 1; }
+:where([data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] > [data-part="sweep"] { color: var(--veneer-color-sweep-critical); }
+
+/* switch (SIGNATURE §1c): the accent fill moves THROUGH the rail as the knob slides.
+   Off + hover/focus: the ring sweeps. On + hover/focus: accent-hover sweeps inside the rail. */
+:where([data-scope="switch"]) > [data-part="track"] {
+  position: relative; flex: none; inline-size: 44px; block-size: 24px; border-radius: var(--veneer-radius-round);
+  --veneer-sweep-radius: var(--veneer-radius-round); --_base: var(--veneer-color-border) /* the knob carries off; the ring stays quieter than ink, sweep-vs-base ≥ 3:1 (review 01 M7) */; background: var(--veneer-color-surface-active);
+}
+:where([data-scope="switch"]) > [data-part="track"] > [data-part="rail-fill"] { overflow: clip; }
+:where([data-scope="switch"]) > input:checked + [data-part="track"] { --_base: var(--veneer-color-accent-solid); }
+:where([data-scope="switch"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *))) {
+  position: absolute; z-index: 3; inset-block-start: 3px; inset-inline-start: 3px; inline-size: 18px; block-size: 18px;
+  border-radius: var(--veneer-radius-round); background: var(--veneer-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);   /* the knob's corners follow the track's */
+}
+:where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *)) { transform: translateX(20px); background: var(--veneer-color-accent-on-solid); }
+:where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--veneer-sweep-width) + 1px); }
+:where([data-scope="switch"][data-size="sm"]) > [data-part="track"] { inline-size: 36px; block-size: 20px; }
+:where([data-scope="switch"][data-size="sm"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *))) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *)) { transform: translateX(16px); }
+:where([data-scope="switch"][data-placement="end"]) { grid-template-columns: minmax(0, 1fr) auto; justify-self: stretch; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="track"] { grid-column: 2; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > input { grid-area: 1 / 2 / 2 / 3; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="label"] { grid-column: 1; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="hint"] { grid-column: 1; }
+
+/* group (fieldset): radio group, checkbox group, chips. The legend follows the field switch:
+   floating = the 10px caps label colour; classic = the plain label above. */
+:where([data-scope="group"]) { border: 0; margin: 0; padding: 0; min-inline-size: 0; display: grid; gap: var(--veneer-space-tight); }
+:where([data-scope="group"] > legend) {
+  padding: 0; margin-block-end: var(--veneer-space-tight);
+  font-family: var(--veneer-label-font); font-size: var(--veneer-label-float-size); font-weight: var(--veneer-label-float-weight);
+  letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase; color: var(--veneer-color-label-rest);
+}
+:where([data-fields="classic"] [data-scope="group"]:not([data-variant="floating"]), [data-scope="group"][data-variant="classic"]) > legend {
+  font-family: var(--veneer-text-label-font); font-size: var(--veneer-text-label-size); font-weight: var(--veneer-text-label-weight); letter-spacing: 0; text-transform: none; color: var(--veneer-color-text);
+}
+:where([data-scope="group"] [data-part="items"]) { display: grid; gap: 0; }
+:where([data-scope="group"][data-orientation="horizontal"] [data-part="items"]) { display: flex; flex-wrap: wrap; column-gap: var(--veneer-space-group); }
+:where([data-scope="group"] > [data-part="message"]) { font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="group"][data-invalid] > [data-part="message"]) { color: var(--veneer-color-critical-text); }
+
+/* choice cards (radio/checkbox as a card): swept border; selected pins the sweep */
+:where([data-scope="choice-card"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--veneer-space-related);
+  padding: calc(var(--veneer-pad-control) + 2px); cursor: pointer;
+  border-radius: var(--veneer-radius-control); --veneer-sweep-radius: var(--veneer-radius-control); --_base: var(--veneer-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  background: var(--veneer-color-surface-raised); transition: background-color var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="choice-card"]) > input { position: absolute; opacity: 0; pointer-events: none; }
+:where([data-scope="choice-card"]) > :not([data-part^="sweep"], input) { position: relative; z-index: 3; }
+:where([data-scope="choice-card"] [data-part="label"]:not([data-scope="choice-card"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="field"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="choice-card"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="field"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="choice-card"] *))) { font-weight: 500; }
+:where([data-scope="choice-card"] [data-part="hint"]:not([data-scope="choice-card"] :is([data-scope="checkbox"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="field"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="choice-card"] :is([data-scope="checkbox"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="field"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="choice-card"] *))) { grid-column: 1; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="choice-card"] [data-part="meta"]:not([data-scope="choice-card"] :is([data-scope="notification"],[data-scope="page-header"],[data-scope="system-page"],[data-scope="uploads"]) *:not([data-scope="choice-card"] :is([data-scope="notification"],[data-scope="page-header"],[data-scope="system-page"],[data-scope="uploads"]) [data-scope="choice-card"] *))) { grid-row: 1; grid-column: 2; font-variant-numeric: tabular-nums; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
+:where([data-scope="choice-card"]:has(input:checked)) { background: var(--veneer-color-accent-soft); }
+:where([data-scope="choice-card"]:has(input:checked)) { --_a: 1; }
+:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { border-width: calc(var(--veneer-sweep-width) + 0.5px); }
+:where([data-scope="choice-card"]:has(input:checked) [data-part="meta"]:not([data-scope="choice-card"] :is([data-scope="notification"],[data-scope="page-header"],[data-scope="system-page"],[data-scope="uploads"]) *:not([data-scope="choice-card"] :is([data-scope="notification"],[data-scope="page-header"],[data-scope="system-page"],[data-scope="uploads"]) [data-scope="choice-card"] *))) { color: var(--veneer-color-accent-text); }
+
+/* segmented (original Segmented.tsx; review 01 M8): the group rests as a filled track on the hairline, takes ink
+   only for focus, and does not sweep; hovering or focusing an UNSELECTED option sweeps a ring around that option only.
+   The indicator is a rail (§1c): an accent fill that slides to the selection. */
+:where([data-scope="segmented"]) {
+  position: relative;   /* the indicator's containing block: the group is no longer a [data-sweep] host */
+  display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; padding: 3px;
+  border-radius: calc(var(--veneer-radius-control) + 2px);
+  box-shadow: inset 0 0 0 var(--veneer-sweep-base-width) var(--veneer-color-border);
+  background: var(--veneer-color-surface-sunken); isolation: isolate; max-inline-size: 100%;
+  align-self: start; justify-self: start;   /* a control keeps its height in a grid */
+}
+:where([data-scope="segmented"]:has(input:focus-visible)) { box-shadow: inset 0 0 0 var(--veneer-sweep-base-width) var(--veneer-color-sweep-base); }
+:where([data-scope="segmented"] > label[data-sweep]) { --veneer-sweep-radius: var(--veneer-radius-control); border-radius: var(--veneer-radius-control); }
+:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--veneer-sweep-width); }
+:where([data-scope="segmented"] > label:has(input:checked)) > :where([data-part="sweep"]) { visibility: hidden; }
+:where([data-scope="segmented"] label) { position: relative; z-index: 3; display: flex; }
+:where([data-scope="segmented"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+:where([data-scope="segmented"] [data-part="item"]:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *))) {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  /* a label longer than its share wraps between words, balanced and centred, and the row grows; a word never breaks */
+  min-inline-size: 0; min-block-size: calc(var(--veneer-control-md) - 8px); padding: 2px var(--veneer-pad-control);
+  font-weight: 500; font-size: var(--veneer-text-body-size); line-height: 1.2; color: var(--veneer-color-text-subtle);
+  text-align: center; text-wrap: balance;
+  border-radius: var(--veneer-radius-control); transition: color var(--veneer-shuttle-tail) var(--veneer-ease-out);
+}
+:where([data-scope="segmented"] [data-part="item"]:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *)) svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="segmented"] [data-part="count"]:not([data-scope="segmented"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="kanban"],[data-scope="pill"],[data-scope="tab-bar"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="segmented"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="kanban"],[data-scope="pill"],[data-scope="tab-bar"],[data-scope="table"],[data-scope="tour"]) [data-scope="segmented"] *))) { font: 500 11px/1.25 var(--veneer-font-mono); }
+/* an option with a count (a price, a tally) stacks it under the name, whole: side by side they fought for the width */
+:where([data-scope="segmented"] [data-part="item"]:has(> [data-part="count"]):not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *))) { flex-direction: column; gap: 1px; padding-block: 4px; }
+:where([data-scope="segmented"] [data-part="count"]:not([data-scope="segmented"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="kanban"],[data-scope="pill"],[data-scope="tab-bar"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="segmented"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="kanban"],[data-scope="pill"],[data-scope="tab-bar"],[data-scope="table"],[data-scope="tour"]) [data-scope="segmented"] *))) { white-space: nowrap; opacity: 0.85; }
+/* a grid item's minimum is its content's: without this, a long option widened the group past its container */
+:where([data-scope="segmented"] > label) { min-inline-size: 0; }
+/* data-fill: the group spans its container, each option an equal share */
+:where([data-scope="segmented"][data-fill]) { display: grid; inline-size: 100%; justify-self: stretch; }   /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
+:where([data-scope="segmented"] label:hover [data-part="item"]:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *))) { color: var(--veneer-color-text); }
+/* the ink turns with the shuttle: the arriving item as its head lands, the leaving one as its tail goes */
+:where([data-scope="segmented"] input:checked + [data-part="item"]:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *))) { color: var(--veneer-color-accent-on-solid); transition-duration: var(--veneer-shuttle-head); }
+/* in rows ([data-wrap]) every item is a cell of an even grid, and the face still travels to it */
+:where([data-scope="segmented"][data-wrap]) { grid-auto-flow: row; grid-template-columns: repeat(var(--seg-cols, 2), minmax(0, 1fr)); }
+:where([data-scope="segmented"] input:focus-visible + [data-part="item"]:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *))) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 1px; }
+:where([data-scope="segmented"] [data-part="indicator"]:not([data-scope="segmented"] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-scope="segmented"] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-scope="segmented"] *))) {
+  position: absolute; z-index: 2; inset-block-start: 0; inset-inline-start: 0; pointer-events: none;
+  border-radius: var(--veneer-radius-control); --veneer-sweep-radius: var(--veneer-radius-control); background: var(--veneer-color-accent-solid);
+}
+/* until the shuttle places the indicator (it writes the inline style), the selection paints its own fill: before the
+   island loads, without JS, or in a reader that skips the indicator, the light ink never sits on the bare track */
+:where([data-scope="segmented"] > [data-part="indicator"]:not([style]) ~ label input:checked + [data-part="item"]:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *))) { background: var(--veneer-color-accent-solid); }
+/* while the indicator is placed instantly (first placement, hydration, resize), the ink snaps with it: a fade would
+   leave the old ink over the new fill for 420ms */
+:where([data-scope="segmented"] > [data-part="indicator"][data-instant] ~ label [data-part="item"]:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *))) { transition: none; }
+:where([data-scope="segmented"][data-size="sm"] [data-part="item"]:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="segmented"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="segmented"] *))) { block-size: calc(var(--veneer-control-sm) - 8px); font-size: var(--veneer-text-caption-size); }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom.
+   A group laid out over several rows ([data-wrap], e.g. as an even grid) is not one row: its items sit apart in their
+   cells, so each strokes its whole box. */
+:where([data-scope="segmented"]:not([data-wrap]) > label[data-sweep]:not(:nth-child(1 of label))) > :where([data-part="sweep"]),
+:where([data-scope="segmented"]:not([data-wrap]) > label[data-sweep]:not(:nth-child(1 of label))) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="segmented"]:not([data-wrap]) > label[data-sweep]:not(:nth-last-child(1 of label))) > :where([data-part="sweep"]),
+:where([data-scope="segmented"]:not([data-wrap]) > label[data-sweep]:not(:nth-last-child(1 of label))) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+
+/* chips (toggle group): pill, swept border; pressed pins the sweep on accent-soft */
+:where([data-scope="chip"][data-sweep]) {
+  isolation: isolate; display: inline-flex; align-items: center; gap: 6px;
+  block-size: var(--veneer-control-sm); padding-inline: calc(var(--veneer-pad-control) - 1px);
+  border: 0; border-radius: var(--veneer-radius-round); --veneer-sweep-radius: var(--veneer-radius-round); --_base: var(--veneer-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  background: var(--veneer-color-surface-raised); color: var(--veneer-color-text);
+  font: 500 var(--veneer-text-caption-size) / 1 var(--veneer-text-body-font); cursor: pointer;
+  transition: background-color var(--veneer-duration-base) var(--veneer-ease-out), color var(--veneer-duration-base);
+}
+:where([data-scope="chip"][data-sweep]) > :not([data-part^="sweep"]) { position: relative; z-index: 3; }
+:where([data-scope="chip"][data-sweep]) > svg { inline-size: 13px; block-size: 13px; fill: none; stroke: currentColor; stroke-width: 2; }
+:where([data-scope="chip"][data-sweep]) > svg[data-part="check"] { display: none; margin-inline-start: -2px; }
+:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"])),
+:where([data-scope="chip"][data-sweep]:is([aria-checked="true"])) { background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); }
+:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) > svg[data-part="check"] { display: block; }
+:where([data-scope="chip"][data-sweep][aria-checked="true"]) { --_a: 1; }
+:where([data-scope="chip"][data-sweep]:focus-visible) { outline: none; }
+:where([data-scope="chip"][data-sweep]:disabled) { opacity: var(--veneer-opacity-disabled); cursor: not-allowed; }
+:where([data-scope="chip"] [data-part="count"]:not([data-scope="chip"] :is([data-scope="checklist"],[data-scope="kanban"],[data-scope="pill"],[data-scope="segmented"],[data-scope="tab-bar"],[data-scope="tour"]) *:not([data-scope="chip"] :is([data-scope="checklist"],[data-scope="kanban"],[data-scope="pill"],[data-scope="segmented"],[data-scope="tab-bar"],[data-scope="tour"]) [data-scope="chip"] *))) { font-variant-numeric: tabular-nums; }   /* full ink: 0.7 opacity fell to 3.2:1 (review 03 m12) */
+
+/* tag (inside tags input / multi-combobox) */
+:where([data-scope="tag"]) {
+  display: inline-flex; align-items: center; gap: 2px; max-inline-size: 100%;
+  block-size: 24px; padding-inline: 8px 2px; margin-block: 2px;
+  border-radius: max(2px, calc(var(--veneer-radius-control) - 2px));
+  background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text);
+  font-size: var(--veneer-text-caption-size); font-weight: 500; white-space: nowrap;
+  animation: veneer-field-pop var(--veneer-duration-base) var(--veneer-ease-pop);
+}
+:where([data-scope="tag"] > span) { overflow: clip; text-overflow: ellipsis; }
+/* the 2px end is room for the remove button: a tag without one is padded evenly, so its label sits in the middle */
+:where([data-scope="tag"]:not(:has(button))) { padding-inline-end: 8px; }
+:where([data-scope="tag"] button) {
+  position: relative; display: grid; place-items: center; inline-size: 18px; block-size: 18px; padding: 0; border: 0; border-radius: 2px;
+  background: transparent; color: inherit; opacity: 0.75; cursor: pointer;
+}
+:where([data-scope="tag"] button)::before { content: ""; position: absolute; inset: min(0px, calc((18px - var(--veneer-hit-min)) / 2)); }
+:where([data-scope="tag"] button:hover) { opacity: 1; background: color-mix(in oklab, currentColor 14%, transparent); }
+:where([data-scope="tag"] svg) { inline-size: 12px; block-size: 12px; }
+:where([data-scope="tag"][data-highlighted]) { box-shadow: inset 0 0 0 1.5px var(--veneer-color-sweep); }
+:where([data-scope="field"] > [data-part="control"][data-wrap]) { flex-wrap: wrap; row-gap: 2px; column-gap: 4px; padding-block: 7px; }
+:where([data-scope="field"] > [data-part="control"][data-wrap] [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { min-inline-size: 8ch; min-block-size: 28px; align-self: center; }
+
+/* select trigger + value + chevron (Select, Combobox, MultiCombobox) */
+:where([data-scope="field"] [data-part="trigger"]:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) *:not([data-scope="field"] :is([data-scope="accordion"],[data-scope="tabs"]) [data-scope="field"] *))) {
+  all: unset; box-sizing: border-box; flex: 1; min-inline-size: 0; align-self: stretch; display: flex; align-items: center; gap: var(--veneer-space-related);
+  min-block-size: calc(var(--veneer-field-height) - 2px); cursor: pointer; font-size: var(--veneer-text-control-size); color: var(--veneer-color-text); position: relative; z-index: 3;
+}
+:where([data-scope="field"] > [data-part="control"]:has([data-part="trigger"])) { cursor: pointer; }
+:where([data-scope="field"] [data-part="value"]:not([data-scope="field"] :is([data-scope="countdown"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stat"],[data-scope="stopwatch"],[data-scope="surface"]) *:not([data-scope="field"] :is([data-scope="countdown"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stat"],[data-scope="stopwatch"],[data-scope="surface"]) [data-scope="field"] *))) { flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="field"] [data-part="value"]:empty)::before { content: attr(data-placeholder); color: transparent; transition: color var(--veneer-duration-fast); }
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="value"]:empty)::before,
+:where([data-scope="field"]:is([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="value"]:empty)::before { color: var(--veneer-color-text-subtle); }
+:where([data-scope="field"] [data-part="indicator"]:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-scope="field"] *))) { flex: none; display: inline-flex; color: var(--veneer-color-text-subtle); transition: rotate calc(420ms * var(--veneer-motion-scale)) var(--veneer-sweep-ease), color var(--veneer-duration-fast); }
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="indicator"]:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-scope="field"] *))) { color: var(--veneer-color-sweep); }
+:where([data-scope="field"] > [data-part="control"]:has([aria-expanded="true"]) [data-part="indicator"]:not([data-part="item"] > *):not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-scope="field"] *))) { rotate: 180deg; }
+:where([data-scope="field"] > [data-part="control"][data-wrap] > [data-part="indicator"]) { align-self: center; margin-inline-start: auto; }
+/* Select (redesign §5): a button trigger, and a real <select> behind it as the form's value. The trigger fills the control
+   under the chevron, so the whole box is one press. */
+:where([data-scope="field"] > [data-part="control"]:has(> button[data-part="input"])) { cursor: pointer; }
+:where([data-scope="field"] button[data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
+  appearance: none; display: flex; align-items: center; border: 0; background: none; color: inherit; font: inherit; font-size: var(--veneer-text-control-size); text-align: start;
+  cursor: inherit; outline: none; margin-inline-end: -24px; min-block-size: calc(var(--veneer-field-height) - 2px); box-shadow: none;
+}
+/* the room the trigger reaches under the chevron (its gap and glyph) is the value's own end padding, so the value's text
+   never runs under the chevron. It can't be the button's padding: field.css's [data-part="input"] { padding-inline: 0 }
+   may load after this file and win, which left a narrow select (a sort bar, a pager's size) 24px short. */
+:where([data-scope="field"] button[data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *)) > [data-part="value"]) { padding-inline-end: 24px; }
+:where([data-scope="field"] button[data-part="input"]:disabled:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { cursor: not-allowed; }
+:where([data-scope="field"] button[data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *)) ~ [data-part="indicator"]) { pointer-events: none; }
+:where([data-scope="field"] button[data-part="input"] > [data-part="value"]:empty)::before { color: var(--veneer-color-text-subtle); }
+:where([data-part="carrier"]) { position: absolute; inset-block-end: 0; inset-inline-start: var(--_lead, 0); inline-size: 1px; block-size: 1px; margin: 0; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+/* a table row, a pager, a toolbar: as wide as its value */
+:where([data-scope="field"][data-compact]) { --veneer-field-height: max(var(--veneer-control-sm), var(--veneer-target-min)); display: inline-grid; min-inline-size: 0; margin: 0; padding: 0; gap: 0; vertical-align: middle; }
+:where([data-scope="field"][data-compact] > [data-part="control"]) { padding-inline: var(--veneer-space-related); }
+/* with scripting off the real select is the control */
+@media (scripting: none) {
+  :where([data-scope="field"] button[data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { display: none; }
+  :where([data-part="carrier"]) {
+    position: relative; inset: auto; flex: 1; min-inline-size: 0; inline-size: auto; opacity: 1; pointer-events: auto; appearance: none; background: none; color: inherit; font: inherit; cursor: pointer;
+    align-self: stretch; block-size: auto; min-block-size: 0; line-height: 1.5; padding-inline-end: 24px; margin-inline-end: -24px; padding-block: calc((var(--veneer-field-height) - 2px - 1.5em) / 2);
+  }
+}
+/* NumberField's steppers: two half-height buttons at the end of the control */
+:where([data-scope="field"] [data-part="steps"]) { flex: none; display: grid; grid-template-rows: 1fr 1fr; align-self: stretch; margin-block: 2px; margin-inline-end: calc(var(--veneer-space-tight) * -1); }
+:where([data-scope="field"] [data-part="step"]:not([data-scope="field"] [data-scope="flow"] *:not([data-scope="field"] [data-scope="flow"] [data-scope="field"] *))) {
+  appearance: none; display: grid; place-items: center; inline-size: 24px; min-block-size: 0; padding: 0; border: 0; border-radius: var(--veneer-radius-mark); background: none; color: var(--veneer-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="field"] [data-part="step"]:not([data-scope="field"] [data-scope="flow"] *:not([data-scope="field"] [data-scope="flow"] [data-scope="field"] *)) svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="field"] [data-part="step"]:first-child:not([data-scope="field"] [data-scope="flow"] *:not([data-scope="field"] [data-scope="flow"] [data-scope="field"] *)) svg) { rotate: 180deg; }
+:where([data-scope="field"] [data-part="step"]:hover:not(:disabled):not([data-scope="field"] [data-scope="flow"] *:not([data-scope="field"] [data-scope="flow"] [data-scope="field"] *))) { background: var(--veneer-color-surface-hover); color: var(--veneer-color-text); }
+:where([data-scope="field"] [data-part="step"]:disabled:not([data-scope="field"] [data-scope="flow"] *:not([data-scope="field"] [data-scope="flow"] [data-scope="field"] *))) { opacity: var(--veneer-opacity-disabled); cursor: default; }
+@media (pointer: coarse) { :where([data-scope="field"] [data-part="steps"]) { grid-template-rows: none; grid-template-columns: 1fr 1fr; } :where([data-scope="field"] [data-part="step"]:not([data-scope="field"] [data-scope="flow"] *:not([data-scope="field"] [data-scope="flow"] [data-scope="field"] *))) { inline-size: var(--veneer-hit-min); } }
+/* its panel, a <dialog>: a popover by the control, or the sheet on a phone. The list scrolls and carries the shuttle, so the
+   search stays put above it. */
+:where([data-scope="select"][data-part="content"]) { font-size: var(--veneer-text-body-size); max-block-size: min(var(--_avail, 320px), calc(100dvh - 16px)); overflow: clip; }
+:where([data-scope="select"][data-part="content"]:is(:popover-open)),
+:where([data-scope="select"][data-part="content"]:is(:modal)) { display: flex; flex-direction: column; }
+:where([data-scope="select"][data-part="content"])::backdrop { background: transparent; }
+:where([data-scope="select"] [data-part="handle"]:not([data-scope="select"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="sheet"],[data-scope="sortable"]) *:not([data-scope="select"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="sheet"],[data-scope="sortable"]) [data-scope="select"] *))),
+:where([data-scope="select"] [data-part="sheet-head"]:not([data-scope="select"] [data-scope="popover"] *:not([data-scope="select"] [data-scope="popover"] [data-scope="select"] *))) { display: none; }
+:where([data-scope="select"] [data-part="list"]:not([data-scope="select"] :is([data-scope="inbox"],[data-scope="master-detail"],[data-scope="palette"],[data-scope="tabs"]) *:not([data-scope="select"] :is([data-scope="inbox"],[data-scope="master-detail"],[data-scope="palette"],[data-scope="tabs"]) [data-scope="select"] *))) { position: relative; isolation: isolate; flex: 1; min-block-size: 0; overflow: auto; overscroll-behavior: contain; outline: none; }
+:where([data-scope="select"] [data-part="list"]:not([data-scope="select"] :is([data-scope="inbox"],[data-scope="master-detail"],[data-scope="palette"],[data-scope="tabs"]) *:not([data-scope="select"] :is([data-scope="inbox"],[data-scope="master-detail"],[data-scope="palette"],[data-scope="tabs"]) [data-scope="select"] *)) > [data-part="shuttle"]) { background: color-mix(in oklab, currentColor calc(var(--veneer-state-hover) * 130%), transparent); }
+:where([data-scope="select"] [data-part="list"]:has(> [data-part="shuttle"]):not([data-scope="select"] :is([data-scope="inbox"],[data-scope="master-detail"],[data-scope="palette"],[data-scope="tabs"]) *:not([data-scope="select"] :is([data-scope="inbox"],[data-scope="master-detail"],[data-scope="palette"],[data-scope="tabs"]) [data-scope="select"] *)) [data-part="item"][data-highlighted]:not([data-keyboard]):not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="select"] *))) { background: none; }
+:where([data-scope="select"] [data-part="item"]:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="select"] *))) { outline: none; }
+:where([data-scope="select"] [data-part="item"]:focus-visible:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="select"] *))) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: -2px; }
+:where([data-scope="select"] [data-part="item"][hidden]:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="select"] *))),
+:where([data-scope="select"] [role="group"][hidden]) { display: none; }
+:where([data-scope="select"] [data-part="item-hint"]) { color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); font-weight: 400; }
+:where([data-scope="select"] [data-part="empty"]:not([data-scope="select"] :is([data-scope="palette"],[data-scope="popup"],[data-scope="shortcuts"],[data-scope="sidenav"],[data-scope="signature"]) *:not([data-scope="select"] :is([data-scope="palette"],[data-scope="popup"],[data-scope="shortcuts"],[data-scope="sidenav"],[data-scope="signature"]) [data-scope="select"] *))) { margin: 0; padding: var(--veneer-space-related); color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
+:where([data-scope="select"] label[data-part="search"]:not([data-scope="select"] :is([data-scope="log"],[data-scope="popover"],[data-scope="system-page"]) *:not([data-scope="select"] :is([data-scope="log"],[data-scope="popover"],[data-scope="system-page"]) [data-scope="select"] *))) {
+  flex: none; display: flex; align-items: center; gap: var(--veneer-space-related); block-size: var(--veneer-control-md); padding-inline: var(--veneer-space-related); margin-block-end: var(--veneer-space-tight);
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); box-shadow: inset 0 0 0 var(--veneer-border-hairline) var(--veneer-color-border-control);
+}
+:where([data-scope="select"] label[data-part="search"]:focus-within:not([data-scope="select"] :is([data-scope="log"],[data-scope="popover"],[data-scope="system-page"]) *:not([data-scope="select"] :is([data-scope="log"],[data-scope="popover"],[data-scope="system-page"]) [data-scope="select"] *))) { box-shadow: inset 0 0 0 2px var(--veneer-color-focus); }
+:where([data-scope="select"] label[data-part="search"]:not([data-scope="select"] :is([data-scope="log"],[data-scope="popover"],[data-scope="system-page"]) *:not([data-scope="select"] :is([data-scope="log"],[data-scope="popover"],[data-scope="system-page"]) [data-scope="select"] *)) svg) { flex: none; inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); color: var(--veneer-color-text-subtle); }
+/* 16px at least: iOS zooms the page on focus below that */
+:where([data-scope="select"] label[data-part="search"]:not([data-scope="select"] :is([data-scope="log"],[data-scope="popover"],[data-scope="system-page"]) *:not([data-scope="select"] :is([data-scope="log"],[data-scope="popover"],[data-scope="system-page"]) [data-scope="select"] *)) input) {
+  appearance: none; flex: 1; min-inline-size: 0; border: 0; padding: 0; outline: none; background: none; color: inherit; font: inherit; font-size: max(16px, var(--veneer-text-control-size));
+}
+:where([data-scope="select"] label[data-part="search"] input)::-webkit-search-cancel-button { display: none; }
+:where([data-scope="select"][data-presentation="sheet"]) {
+  inset: auto 0 0 0; inline-size: 100%; min-inline-size: 0; max-inline-size: none; max-block-size: 86dvh; padding: var(--veneer-space-related) var(--veneer-space-group) calc(var(--veneer-space-group) + env(safe-area-inset-bottom));
+  border-radius: var(--veneer-radius-surface) var(--veneer-radius-surface) 0 0; border-block-end: 0; box-shadow: var(--veneer-elevation-3); transform-origin: bottom center; translate: 0 100%; scale: 1;
+}
+:where([data-scope="select"][data-presentation="sheet"]:modal) { opacity: 1; translate: 0 0; transition: translate var(--veneer-duration-slow) var(--veneer-ease-out), overlay var(--veneer-duration-base) allow-discrete, display var(--veneer-duration-base) allow-discrete; }
+@starting-style { :where([data-scope="select"][data-presentation="sheet"]:modal) { translate: 0 100%; } }
+:where([data-scope="select"][data-presentation="sheet"])::backdrop { background: var(--veneer-color-scrim); }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="handle"]:not([data-scope="select"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="sheet"],[data-scope="sortable"]) *:not([data-scope="select"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="sheet"],[data-scope="sortable"]) [data-scope="select"] *))) { flex: none; display: block; inline-size: 36px; block-size: 4px; margin: 2px auto 10px; border-radius: 999px; background: var(--veneer-color-border-strong); }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="sheet-head"]:not([data-scope="select"] [data-scope="popover"] *:not([data-scope="select"] [data-scope="popover"] [data-scope="select"] *))) { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--veneer-space-related); margin-block-end: var(--veneer-space-related); font-size: var(--veneer-text-heading-size); font-weight: 600; }
+:where([data-scope="select"] [data-part="done"]:not([data-scope="select"] [data-scope="checklist"] *:not([data-scope="select"] [data-scope="checklist"] [data-scope="select"] *))) {
+  appearance: none; min-block-size: max(var(--veneer-control-sm), var(--veneer-target-min)); padding-inline: var(--veneer-pad-control); border: 0; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); font: inherit; font-size: var(--veneer-text-control-size); font-weight: 500; cursor: pointer;
+}
+:where([data-scope="select"] [data-part="done"]:focus-visible:not([data-scope="select"] [data-scope="checklist"] *:not([data-scope="select"] [data-scope="checklist"] [data-scope="select"] *))) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 2px; }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="item"]:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="select"] *))) { min-block-size: max(44px, var(--veneer-target-min)); }
+@media (forced-colors: active) {
+  :where([data-scope="select"] [data-part="item"][data-highlighted]:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="select"] *))) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
+}

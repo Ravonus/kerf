@@ -1,4 +1,4 @@
-import { ScatterChart } from '@weft-js/warp'
+import { ScatterChart } from '@kerf-js/veneer'
 
 import { PROJECT_POINTS } from '../../world'
 

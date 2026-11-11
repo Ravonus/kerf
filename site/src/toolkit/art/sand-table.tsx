@@ -1,5 +1,5 @@
-import { DitherField } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { DitherField } from '@kerf-js/veneer'
+import { state } from '@kerf-js/core'
 import { clamp, type ArtProps, type Meta } from './shared'
 import code from './sand-table.tsx?raw'
 

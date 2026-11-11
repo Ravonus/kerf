@@ -1,0 +1,22 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+/* SignGate (the original's flow / blocker / badge, rebuilt) */
+:where([data-scope="gate"]) { position: relative; isolation: isolate; border-radius: var(--veneer-radius-surface); overflow: clip; }
+:where([data-scope="gate"]:not([data-state="signed"]) > [data-part="content"]) { filter: blur(calc(2px + 4px * (1 - var(--veneer-x)))); opacity: 0.5; pointer-events: none; user-select: none; }
+:where([data-scope="gate"] > [data-part="blocker"]) {
+  position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: var(--veneer-space-group);
+  background: color-mix(in oklab, var(--veneer-color-surface) 78%, transparent);
+  backdrop-filter: blur(var(--veneer-blur-overlay)); -webkit-backdrop-filter: blur(var(--veneer-blur-overlay));
+}
+:where([data-scope="gate"][data-state="signed"] > [data-part="blocker"]) { display: none; }
+/* the gate's page stays visible but inert under the blocker (09 §2.4); give it room for the card */
+:where([data-scope="gate"] > [data-part="content"]) { min-block-size: 200px; }
+:where([data-scope="gate"] [data-part="blocker"] :is(h4)),
+:where([data-scope="gate"] [data-part="blocker"] :is(h5)) { margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.25 var(--veneer-text-heading-font); }
+@media (prefers-reduced-transparency: reduce) {
+:where([data-scope="gate"] > [data-part="blocker"]) { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--veneer-color-surface); }
+}
+@media (forced-colors: active) {
+:where([data-scope="gate"] > [data-part="blocker"]) { background: Canvas; forced-color-adjust: none; color: CanvasText; }
+}
+}

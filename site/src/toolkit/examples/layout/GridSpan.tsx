@@ -1,4 +1,4 @@
-import { Grid } from '@weft-js/warp'
+import { Grid } from '@kerf-js/veneer'
 import { Box, FOUR } from './shared'
 
 export const GridSpan = () => (

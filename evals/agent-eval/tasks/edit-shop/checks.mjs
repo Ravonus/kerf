@@ -6,7 +6,7 @@ const update = (page, id, price) =>
   page.evaluate(
     async (detail) => {
       const at = performance.now()
-      window.dispatchEvent(new CustomEvent('weft-price-update', { detail }))
+      window.dispatchEvent(new CustomEvent('kerf-price-update', { detail }))
       await new Promise((resolve) => {
         requestAnimationFrame(() => requestAnimationFrame(resolve))
       })
@@ -31,7 +31,7 @@ export function checkFlashTiming(sample, overlap = false) {
 function sampleFlash(apple, overlap) {
   return apple.evaluate(async (node, isOverlap) => {
     const send = (price) =>
-      window.dispatchEvent(new CustomEvent('weft-price-update', { detail: { id: 'apple', price } }))
+      window.dispatchEvent(new CustomEvent('kerf-price-update', { detail: { id: 'apple', price } }))
     const wait = (ms) =>
       new Promise((resolve) => {
         window.setTimeout(resolve, ms)

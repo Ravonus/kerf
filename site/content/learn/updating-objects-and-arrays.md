@@ -11,7 +11,7 @@
 A box can hold any value: a number, a string, an object, an array. Numbers and strings can't be changed in place, only
 replaced, so a write is always a new value. Objects and arrays *can* be changed in place, and that's where it goes wrong:
 a box only knows about writes to `.value`, and a change made inside the object it already holds never goes through
-`.value`. This page shows how to update objects and arrays so the page follows, with Weft's `set` to save the copying.
+`.value`. This page shows how to update objects and arrays so the page follows, with Kerf's `set` to save the copying.
 
 ## What counts as a change
 
@@ -37,8 +37,8 @@ the box sees no change either.
 
 So treat any object or array in a box as read-only. To change it, make a new one and write that.
 
-:::deepdive Why Weft doesn't watch inside objects
-Some libraries wrap your objects in a proxy that notices `obj.x = 5`. Weft doesn't, on purpose. A box compares with one
+:::deepdive Why Kerf doesn't watch inside objects
+Some libraries wrap your objects in a proxy that notices `obj.x = 5`. Kerf doesn't, on purpose. A box compares with one
 `Object.is`, which is as cheap as a check can be, and a whole set of features rests on "a new value means a change":
 
 - A keyed list keeps a row when its item is the same object, and updates it when the item is a new one.
@@ -70,8 +70,8 @@ The first two fields use spread. The third uses `set`, covered next. Both give t
 With several fields, a handler per field gets repetitive. A computed key, `[field]`, lets one handler update any of them:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Input } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Input } from '@kerf-js/veneer'
 
 type Person = { first: string; last: string; email: string }
 
@@ -148,7 +148,7 @@ now changed, so a keyed list row showing that item keeps it, a `.get(0)` reader 
 value. Replace anything below the first level you change, as in the second line.
 :::
 
-React developers may know Immer, which tracks changes at any depth with a proxy. Weft's `set` is deliberately smaller: a
+React developers may know Immer, which tracks changes at any depth with a proxy. Kerf's `set` is deliberately smaller: a
 one-level copy, with no proxy and nothing to install. For the deeper levels, copy what you change.
 
 ## Updating a nested object
@@ -315,8 +315,8 @@ This scoreboard doesn't update when you press the buttons. Find the two bugs and
 
 <!-- example: skip deliberately broken: the challenge is to find the mutations -->
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 export function Scoreboard() {
   const player = state({ name: 'Taylor', score: 10 })
@@ -342,8 +342,8 @@ export function Scoreboard() {
 so `Object.is` sees no change. Both need a new object:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 export function Scoreboard() {
   const player = state({ name: 'Taylor', score: 10 })
@@ -369,8 +369,8 @@ Add three things to this cart: `+` raises a product's count, `−` lowers it, an
 removed from the cart. Don't mutate the array.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 type Line = { id: number; name: string; count: number }
 
@@ -395,8 +395,8 @@ export function Cart() {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 type Line = { id: number; name: string; count: number }
 
@@ -441,8 +441,8 @@ Pressing "Finish first" changes the count at the bottom to 1, but the first chec
 fix it?
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Checkbox } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Checkbox } from '@kerf-js/veneer'
 
 type Task = { id: number; title: string; done: boolean }
 
@@ -473,8 +473,8 @@ array holds the *same* task. The count reads the whole array, which is new, so i
 the same item object as before, so it has nothing to do. Replace the task instead:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Checkbox } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Checkbox } from '@kerf-js/veneer'
 
 type Task = { id: number; title: string; done: boolean }
 

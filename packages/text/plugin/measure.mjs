@@ -1,5 +1,5 @@
 // text.measure@1 (research 33 §6). The slot's generated module calls this through `import()`, so nothing here is in an
-// app until something measures. `slim` is @weft-js/text/engine, which already has the slot's shape.
+// app until something measures. `slim` is @kerf-js/text/engine, which already has the slot's shape.
 
 /** Pretext's own lines carry their text, so `lineText` only has to hand it back. */
 function pretext(P) {

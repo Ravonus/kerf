@@ -1,11 +1,11 @@
-import { Input, Stack } from '@weft-js/warp'
+import { Input, Stack } from '@kerf-js/veneer'
 
 export const InputAffixes = () => (
   <Stack gap="group">
     <Input
       label="Domain"
       prefix="https://"
-      suffix=".weft.dev"
+      suffix=".kerf.dev"
       defaultValue="storefront"
     />
     <Input

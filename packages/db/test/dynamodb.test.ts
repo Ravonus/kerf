@@ -1,4 +1,4 @@
-// The `db.adapter` suite on DynamoDB Local: `WEFT_TEST_DYNAMO` is its endpoint. A scan, then a query through an index.
+// The `db.adapter` suite on DynamoDB Local: `KERF_TEST_DYNAMO` is its endpoint. A scan, then a query through an index.
 import { CreateTableCommand, DeleteTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import {
   DeleteCommand,
@@ -6,11 +6,11 @@ import {
   PutCommand,
   ScanCommand,
 } from '@aws-sdk/lib-dynamodb'
-import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
-import { decodeCursor } from '@weft-js/start/list'
+import { LIST_ROWS, listSuite } from '@kerf-js/core/test/plugins'
+import { decodeCursor } from '@kerf-js/start/list'
 import { dynamoSource } from '../src/dynamodb'
 
-const endpoint = process.env.WEFT_TEST_DYNAMO
+const endpoint = process.env.KERF_TEST_DYNAMO
 const columns = { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }
 
 test('page mode is refused, not faked', async () => {

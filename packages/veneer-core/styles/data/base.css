@@ -1,0 +1,45 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+:where([data-part="eyebrow"]) {
+  font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size);
+  font-weight: var(--veneer-text-eyebrow-weight); letter-spacing: var(--veneer-text-eyebrow-tracking);
+  text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle); line-height: 1.25;
+}
+/* states: loading rows shimmer, empty + error keep the frame (no layout jump) */
+/* one skeleton for every data placeholder: table cells, chart loading bars, list rows.
+   The shimmer is the only idle loop data allows (00 §8), and it stops under reduced motion:
+   a static sunken block, no animation at all (see the reduced-motion block at the end of §2). */
+:where([data-part="skeleton"]) {
+  display: block; border-radius: var(--veneer-radius-mark);
+  background: linear-gradient(90deg, var(--veneer-color-surface-sunken) 30%, var(--veneer-color-surface-active) 50%, var(--veneer-color-surface-sunken) 70%) 0 0 / 300% 100%;
+  animation: veneer-shimmer 1400ms linear infinite;
+}
+/* sparkline (also inline in tables): single series, no axes, end dot + min/max ticks */
+:where([data-part="spark"] .ln) { fill: none; stroke: var(--_dc, var(--veneer-color-data-1)); stroke-width: var(--veneer-data-line); stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+:where([data-part="spark"] .ar) { fill: var(--_dc, var(--veneer-color-data-1)); opacity: calc(var(--veneer-data-area) * 0.8 + 0.05); }
+:where([data-part="spark"] .dot) { fill: var(--_dc, var(--veneer-color-data-1)); stroke: var(--veneer-color-surface-raised); stroke-width: 2; }
+:where([data-part="spark"] .base) { stroke: var(--veneer-color-data-grid); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+/* view toggle (chart | table) */
+:where([data-part="view-toggle"]) { display: inline-flex; padding: 2px; gap: 2px; border-radius: calc(var(--veneer-radius-control) + 2px); background: var(--veneer-color-surface-sunken); border: 1px solid var(--veneer-color-border); }
+:where([data-part="view-toggle"] button) {
+  all: unset; box-sizing: border-box; display: inline-grid; place-items: center; cursor: pointer;
+  inline-size: max(28px, var(--veneer-hit-min)); block-size: max(24px, calc(var(--veneer-hit-min) - 6px));
+  border-radius: var(--veneer-radius-control); color: var(--veneer-color-text-subtle);
+}
+:where([data-part="view-toggle"] button[aria-pressed="true"]) { background: var(--veneer-color-surface-raised); color: var(--veneer-color-text); box-shadow: 0 0 0 1px var(--veneer-color-border), var(--veneer-elevation-1); }
+:where([data-part="view-toggle"] button:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); }
+:where([data-part="view-toggle"] svg) { inline-size: 15px; block-size: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+/* reduced motion (OS setting unless the app says data-motion="full", or data-motion="reduce"):
+   - one-shot enters collapse to a single 120ms fade-to-end-state, played once;
+   - nothing loops: skeletons are a static block, live flow edges are a static dash;
+   - point radius snaps instead of growing.
+   The two selectors are kept identical so an app-level "reduce" behaves like the OS. */
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"])) :is([data-part="skeleton"], [data-scope="flow"] .edge[data-live]) { animation: none !important; }
+}
+:where([data-motion="reduce"]) :is([data-part="skeleton"], [data-scope="flow"] .edge[data-live]) { animation: none !important; }
+:where(mark[data-part="hit"]) { background: color-mix(in oklab, var(--veneer-color-caution-solid) 28%, transparent); color: inherit; border-radius: 2px; padding-inline: 1px; }
+/* chart | table toggle: 38px faces inside a 2px-padded, 1px-bordered rail */
+:where([data-part="view-toggle"] button) { position: relative; }
+:where([data-part="view-toggle"] button)::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+}

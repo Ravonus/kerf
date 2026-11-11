@@ -1,10 +1,10 @@
-import { state, untrack } from '@weft-js/core'
+import { state, untrack } from '@kerf-js/core'
 import { doc, title } from '../server/doc'
-import { cursors, presence, relay, type PeerTransport } from '@weft-js/multiplayer'
-import { Cursors } from '@weft-js/multiplayer/ui'
-import { webrtc } from '@weft-js/realtime-webrtc'
-import { socketio } from '@weft-js/realtime-socketio'
-import { livekit } from '@weft-js/realtime-livekit'
+import { cursors, presence, relay, type PeerTransport } from '@kerf-js/multiplayer'
+import { Cursors } from '@kerf-js/multiplayer/ui'
+import { webrtc } from '@kerf-js/realtime-webrtc'
+import { socketio } from '@kerf-js/realtime-socketio'
+import { livekit } from '@kerf-js/realtime-livekit'
 
 function chosen(
   urls: { socketio: string; livekit: string } | undefined,
@@ -17,7 +17,7 @@ function chosen(
 }
 
 export const load = () => ({
-  socketio: process.env.WEFT_E2E_SOCKETIO_URL ?? '',
+  socketio: process.env.KERF_E2E_SOCKETIO_URL ?? '',
   livekit: process.env.LIVEKIT_URL ?? '',
 })
 

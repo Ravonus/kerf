@@ -48,15 +48,15 @@ function compare(lab) {
   const m = Object.fromEntries(
     Object.keys(g).map((s) => [s, metrics(g[s], r[s.replace('-batch', '')])]),
   )
-  const on = m.weft,
+  const on = m.kerf,
     solid = m['solid-batch'],
-    base = m['weft-base'],
+    base = m['kerf-base'],
     off = m['off-all']
   const keys = Object.keys(on).filter((k) => !k.startsWith('core:') || solid?.[k] != null)
-  return `<table><thead><tr><th>Lower is better</th>${base ? '<th>before (original)</th>' : ''}${off ? '<th>every path off</th>' : ''}<th>weft now</th><th>Solid 1.9</th><th>weft vs Solid</th></tr></thead><tbody>${keys
+  return `<table><thead><tr><th>Lower is better</th>${base ? '<th>before (original)</th>' : ''}${off ? '<th>every path off</th>' : ''}<th>kerf now</th><th>Solid 1.9</th><th>kerf vs Solid</th></tr></thead><tbody>${keys
     .map((k) => {
       const pct = solid?.[k] ? ((on[k] - solid[k]) / solid[k]) * 100 : null
-      const held = lab.timed.compared?.weft && held_(lab.timed.compared.weft, k)
+      const held = lab.timed.compared?.kerf && held_(lab.timed.compared.kerf, k)
       // With an interval, a win or a loss is one that held across runs; without one, the noise line decides.
       const verdict = held
         ? held.hi < 1
@@ -92,7 +92,7 @@ function ablation(lab) {
     const cost = BUNDLES.map((b) => on[b] - (sizes[v.id]?.[b] ?? on[b]))
     const gains = m?.[v.id]
       ? Object.entries(m[v.id])
-          .map(([k, off]) => [k, ((off - m.weft[k]) / m.weft[k]) * 100])
+          .map(([k, off]) => [k, ((off - m.kerf[k]) / m.kerf[k]) * 100])
           .filter(([k, p]) => isFinite(p) && Math.abs(p) >= NOISE)
           .sort((a, b) => b[1] - a[1])
       : []
@@ -110,7 +110,7 @@ function ablation(lab) {
 
 export function render(lab) {
   const t = lab.timed
-  return `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Weft speed lab</title>
+  return `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Kerf speed lab</title>
 <style>
 :root{color-scheme:light dark;--bg:#fff;--fg:#1c1c1e;--dim:#6b6b70;--line:#e3e3e6;--win:#0a7a3b;--loss:#b3261e;--tie:#6b6b70}
 @media (prefers-color-scheme:dark){:root{--bg:#161618;--fg:#ececee;--dim:#9a9aa0;--line:#303034;--win:#58c98a;--loss:#ff8a80;--tie:#9a9aa0}}
@@ -121,7 +121,7 @@ th,td{border-bottom:1px solid var(--line);padding:5px 10px 5px 0;text-align:left
 thead th{color:var(--dim);font-size:13px}tbody th{white-space:nowrap}.n{text-align:right;white-space:nowrap}small{display:block;color:var(--dim);font-size:12px;white-space:normal;max-width:30ch}
 .win{color:var(--win)}.loss{color:var(--loss)}.tie{color:var(--tie)}.flags span{display:inline-block;margin-right:10px;font-size:13px}code{font:13px ui-monospace,monospace}
 </style>
-<h1>Weft speed lab</h1>
+<h1>Kerf speed lab</h1>
 <p>${esc(lab.when.slice(0, 16).replace('T', ' '))} UTC${t ? ` · ${esc(t.machine)} · load ${t.loads ? Math.min(...t.loads) : ''} to ${t.maxLoad} ${t.valid ? '' : '(<b>too high to count</b>)'}` : ' · sizes only'}. ${t?.compared ? 'The last column is the median gap with its 95% interval across runs: coloured only when the whole interval is on one side.' : `Differences under ${NOISE}% are noise here and are not coloured.`} Run it again with <code>node benchmarks/speed/lab.mjs</code>.</p>
 ${t ? `<h2>Before and after, against Solid</h2><p>Milliseconds unless the row says otherwise. Green beats Solid, red loses to it.</p><div class=wrap>${compare(lab)}</div>` : ''}
 <h2>Each speed path</h2><p>Bundle columns are what the path adds, in brotli bytes. Each row is everything on except that path.</p><div class=wrap>${ablation(lab)}</div>`

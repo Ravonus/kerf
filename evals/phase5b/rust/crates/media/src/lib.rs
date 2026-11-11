@@ -1,4 +1,4 @@
-weft::contract!();
+kerf::contract!();
 use contract::*;
 
 struct Media;
@@ -94,9 +94,9 @@ fn shrink(src: &[u8], width: usize, height: usize, factor: usize) -> Vec<u8> {
 impl Service for Media {
     async fn thumbnail(
         &self,
-        _ctx: weft::Ctx,
+        _ctx: kerf::Ctx,
         input: ThumbnailInput,
-    ) -> Result<ThumbnailOutput, weft::Error> {
+    ) -> Result<ThumbnailOutput, kerf::Error> {
         let (width, height) = (input.width as usize, input.height as usize);
         let mut a = photo(input.seed as u32, width, height);
         let mut b = vec![0u8; a.len()];
@@ -121,7 +121,7 @@ impl Service for Media {
 
     async fn guarded(
         &self,
-        _ctx: weft::Ctx,
+        _ctx: kerf::Ctx,
         input: GuardedInput,
     ) -> Result<GuardedOutput, GuardedError> {
         let pixels = input.width.get() as i64 * input.height.get() as i64;
@@ -131,17 +131,17 @@ impl Service for Media {
         Ok(GuardedOutput { pixels })
     }
 
-    async fn stats(&self, ctx: weft::SharedCtx) -> Result<StatsOutput, weft::Error> {
+    async fn stats(&self, ctx: kerf::SharedCtx) -> Result<StatsOutput, kerf::Error> {
         ctx.touch("images");
         ctx.tag("images:all");
         Ok(StatsOutput { images: 3 })
     }
 
-    async fn boom(&self, _ctx: weft::Ctx) -> Result<BoomOutput, weft::Error> {
+    async fn boom(&self, _ctx: kerf::Ctx) -> Result<BoomOutput, kerf::Error> {
         panic!("the eval asked for this")
     }
 
-    async fn spin(&self, ctx: weft::Ctx) -> Result<SpinOutput, weft::Error> {
+    async fn spin(&self, ctx: kerf::Ctx) -> Result<SpinOutput, kerf::Error> {
         while !ctx.cancelled() {
             std::hint::spin_loop();
         }
@@ -152,4 +152,4 @@ impl Service for Media {
     }
 }
 
-weft::native!(contract::functions(Media));
+kerf::native!(contract::functions(Media));

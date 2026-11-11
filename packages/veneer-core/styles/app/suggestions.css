@@ -1,0 +1,16 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* starter prompts / follow-up suggestions: sweep cards */
+:where([data-scope="suggestions"]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+:where([data-scope="suggestions"] button) {
+  all: unset; position: relative; box-sizing: border-box; display: grid; gap: 2px; padding: 10px 12px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-surface-raised); cursor: pointer; font-size: 13px; line-height: 1.4;
+}
+:where([data-scope="suggestions"] button small) { color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="suggestions"] button:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 2px; }
+:where([data-scope="suggestions"][data-variant="chips"]) { display: flex; flex-wrap: wrap; }
+:where([data-scope="suggestions"][data-variant="chips"] button) { padding: 6px 12px; border-radius: var(--veneer-radius-round); }
+:where([data-scope="suggestions"] button),
+:where([data-scope="thread-replies"]) { min-block-size: var(--veneer-hit-min); }
+:where([data-scope="suggestions"][data-variant="chips"] button) { display: inline-flex; align-items: center; }
+}

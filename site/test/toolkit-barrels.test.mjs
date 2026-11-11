@@ -8,7 +8,7 @@ import { readExamples, showExample } from '../scripts/toolkit.mjs'
 
 const ts = createRequire(new URL('../../packages/cli/package.json', import.meta.url))('typescript')
 const fixture = (run) => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-forward-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-forward-'))
   try {
     mkdirSync(join(dir, 'examples'))
     writeFileSync(join(dir, 'world.ts'), "export const WORLD = 'world'\n")

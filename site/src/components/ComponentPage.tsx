@@ -1,5 +1,5 @@
-import { Link } from '@weft-js/start'
-import { Kbd } from '@weft-js/warp'
+import { Link } from '@kerf-js/start'
+import { Kbd } from '@kerf-js/veneer'
 import { ExampleFrame, type ShownExample } from './ExampleFrame'
 import { Install } from './Install'
 import { Playground, type ShownPlayground } from './Playground'
@@ -60,7 +60,7 @@ export type Page = {
     rows: { name: string; type: string; required: boolean; default?: string; doc: string }[]
   }[]
   parts: string[]
-  /** The `warp({ parts })` keys that style it, from Warp's parts table; `example` is highlighted HTML. */
+  /** The `veneer({ parts })` keys that style it, from Veneer's parts table; `example` is highlighted HTML. */
   theming?: { rows: { path: string; own: string[]; states: string[] }[]; example: string }
   scope?: string
   states: string[]
@@ -89,7 +89,7 @@ function Example(props: { file: string; example: ShownExample; alone: boolean; f
         <p
           data-part="note"
           data-flow="item"
-          // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+          // oxlint-disable-next-line kerf/no-html-sink -- rendered at build time from veneer's own docs
           innerHTML={ex.note}
         ></p>
       )}
@@ -106,7 +106,7 @@ function DocSection(props: { file: string; section: Section; flow: string }) {
       {s.html && (
         <div
           data-scope="prose"
-          // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+          // oxlint-disable-next-line kerf/no-html-sink -- rendered at build time from veneer's own docs
           innerHTML={s.html}
         ></div>
       )}
@@ -114,7 +114,7 @@ function DocSection(props: { file: string; section: Section; flow: string }) {
         <p
           data-part="note"
           data-flow="item"
-          // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+          // oxlint-disable-next-line kerf/no-html-sink -- rendered at build time from veneer's own docs
           innerHTML={s.intro}
         ></p>
       )}
@@ -145,7 +145,7 @@ export function ComponentPage(props: { data: Page }) {
               Source
             </Link>
             <span>
-              Package <code data-scope="code">@weft-js/warp</code>
+              Package <code data-scope="code">@kerf-js/veneer</code>
             </span>
             {d.playground && <a href="#playground">Try it</a>}
           </p>
@@ -159,7 +159,7 @@ export function ComponentPage(props: { data: Page }) {
         <section id="usage" data-site="tk-section">
           <h2 data-flow="heading">Usage</h2>
           <div
-            // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+            // oxlint-disable-next-line kerf/no-html-sink -- rendered at build time from veneer's own docs
             innerHTML={d.usage}
           ></div>
         </section>
@@ -276,7 +276,7 @@ function AccessibilityContent(props: { data: Page }) {
           {d.a11yNotes.map((n) => (
             <li
               key={n}
-              // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+              // oxlint-disable-next-line kerf/no-html-sink -- rendered at build time from veneer's own docs
               innerHTML={n}
             ></li>
           ))}
@@ -292,7 +292,7 @@ function ThemingContent(props: { theming: NonNullable<Page['theming']> }) {
     <section id="theming" data-site="tk-section">
       <h2 data-flow="heading">Theming</h2>
       <p data-part="note" data-flow="item">
-        Restyle it app-wide from <code data-scope="code">warp()</code> in your weft config. Every
+        Restyle it app-wide from <code data-scope="code">veneer()</code> in your kerf config. Every
         key takes colour, spacing, size, radius, shadow, type and motion; its own keys are listed. A
         state nests inside: <code data-scope="code">{"hover: { bg: 'ink' }"}</code>. Text on a fill
         you set is contrast-checked at build. <Link href="/learn/theming">How theming works</Link>
@@ -328,7 +328,7 @@ function ThemingContent(props: { theming: NonNullable<Page['theming']> }) {
       </div>
       <div
         data-flow="item"
-        // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from warp's parts table
+        // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from veneer's parts table
         innerHTML={t.example}
       ></div>
     </section>

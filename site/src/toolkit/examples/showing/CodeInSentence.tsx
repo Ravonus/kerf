@@ -1,8 +1,8 @@
-import { Text, Code } from '@weft-js/warp'
+import { Text, Code } from '@kerf-js/veneer'
 
 export const CodeInSentence = () => (
   <Text>
-    Set <Code>WEFT_TOKEN</Code> before you run{' '}
-    <Code>weft deploy</Code>.
+    Set <Code>KERF_TOKEN</Code> before you run{' '}
+    <Code>kerf deploy</Code>.
   </Text>
 )

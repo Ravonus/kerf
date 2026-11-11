@@ -46,7 +46,7 @@ export function makePage(deps: PageDeps) {
       assets,
       lang: deps.site.locale ? ` lang="${esc(deps.site.locale.replace('_', '-'))}"` : '',
       dev: deps.options.dev
-        ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n'
+        ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@kerf-agent.js"></script>\n'
         : '',
       status: r.status === 200 && scope.form ? scope.form.status : r.status,
       enc: new TextEncoder(),

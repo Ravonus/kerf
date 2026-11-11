@@ -1,4 +1,4 @@
-import { render } from '@weft-js/core/test'
+import { render } from '@kerf-js/core/test'
 
 const Hello = () => <p>hello</p>
 

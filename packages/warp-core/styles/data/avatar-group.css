@@ -1,7 +1,0 @@
-/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
-@layer warp.data {
-:where([data-scope="avatar-group"]) { display: inline-flex; align-items: center; }
-:where([data-scope="avatar-group"] > *) { box-shadow: 0 0 0 2px var(--warp-color-surface-raised), inset 0 0 0 1px color-mix(in oklab, var(--_dc, var(--warp-color-data-1)) 40%, transparent); }
-:where([data-scope="avatar-group"] > * + *) { margin-inline-start: calc(var(--_s, 32px) * -0.28); }
-:where([data-scope="avatar-group"] [data-part="more"]:not([data-scope="avatar-group"] :is([data-scope="avatar-stack"],[data-scope="calendar"],[data-scope="feedback"]) *:not([data-scope="avatar-group"] :is([data-scope="avatar-stack"],[data-scope="calendar"],[data-scope="feedback"]) [data-scope="avatar-group"] *))) { --_dc: var(--warp-color-text-faint); font-size: 11px; }
-}

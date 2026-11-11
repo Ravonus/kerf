@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   AuthDone,
   AuthScreen,
@@ -7,8 +7,8 @@ import {
   Input,
   SignIn,
   Stack,
-} from '@weft-js/warp'
-import type { SignInValues } from '@weft-js/warp'
+} from '@kerf-js/veneer'
+import type { SignInValues } from '@kerf-js/veneer'
 
 const testimonial =
   'We moved forty services in a quarter' +
@@ -39,7 +39,7 @@ export const SSO = [
 
 // -- signing in --
 
-export function SignInWeft() {
+export function SignInKerf() {
   const pending = state(false)
   const who = state('')
   const submit = async (values: SignInValues) => {
@@ -61,8 +61,8 @@ export function SignInWeft() {
       ) : (
         <SignIn
           heading="h3"
-          name="weft"
-          title="Sign in to weft"
+          name="kerf"
+          title="Sign in to kerf"
           lede="Any email and password work here."
           providers={PROVIDERS}
           pending={pending.value}
@@ -83,10 +83,10 @@ export const SignInTile = () => (
     gap="related"
     style="inline-size:260px"
   >
-    <Heading level={3}>Sign in to weft</Heading>
+    <Heading level={3}>Sign in to kerf</Heading>
     <Input
       label="Work email"
-      placeholder="you@weft.dev"
+      placeholder="you@kerf.dev"
     />
     <Button full>Sign in</Button>
   </Stack>
@@ -95,7 +95,7 @@ export const SignInTile = () => (
 export const SignInFailed = () => (
   <SignIn
     heading="h3"
-    title="Sign in to weft"
+    title="Sign in to kerf"
     error="That email and password don't match."
     onForgot={() => {}}
   />
@@ -104,9 +104,9 @@ export const SignInFailed = () => (
 export function AuthScreenSplit() {
   return (
     <AuthScreen
-      name="weft"
+      name="kerf"
       quote={testimonial}
-      cite="Mara Lindqvist · weft"
+      cite="Mara Lindqvist · kerf"
     >
       <SignIn
         heading="h3"

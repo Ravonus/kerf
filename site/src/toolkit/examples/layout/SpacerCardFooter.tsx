@@ -5,7 +5,7 @@ import {
   Spacer,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 export const SpacerCardFooter = () => (
   <Grid

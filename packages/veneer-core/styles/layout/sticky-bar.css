@@ -1,0 +1,33 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* StickyBar — a bar pinned to the top or bottom of its scroller: save docks,
+   bulk-action bars, checkout totals. Inside a shell it clears the bottom bar,
+   the safe area and the keyboard (Shell.Dock is this with edge="bottom"). */
+:where([data-scope="sticky-bar"]) {
+  position: sticky; z-index: calc(var(--veneer-z-sticky) - 1); inset-block-end: var(--_dock, 0px);
+  display: flex; align-items: center; gap: var(--veneer-space-related); flex-wrap: wrap;
+  padding: var(--veneer-space-related) max(var(--veneer-space-page), var(--veneer-safe-right)) max(var(--veneer-space-related), calc(var(--veneer-safe-bottom) * var(--_safe, 0))) max(var(--veneer-space-page), var(--veneer-safe-left));
+  background: color-mix(in oklab, var(--veneer-color-surface) calc(84% + 16% * var(--veneer-x)), transparent);
+  backdrop-filter: blur(var(--veneer-blur-overlay)); -webkit-backdrop-filter: blur(var(--veneer-blur-overlay));
+  border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  animation: veneer-sheet-in var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="sticky-bar"][data-edge="top"]) {
+  inset-block: var(--_barh, 0px) auto; border-block-start: 0; border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  animation-name: veneer-route-in;
+}
+:where([data-scope="sticky-bar"][hidden]) { display: none; }
+:where([data-scope="sticky-bar"][data-variant="floating"]) {           /* selection pill: centred, lifted, rounded */
+  inline-size: max-content; max-inline-size: calc(100% - 2 * var(--veneer-space-group)); margin-inline: auto;
+  margin-block-end: var(--veneer-space-group); padding: 6px 6px 6px var(--veneer-space-group);
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border); border-radius: 999px; box-shadow: var(--veneer-elevation-3);
+  inset-block-end: calc(var(--_dock, 0px) + var(--veneer-space-group));
+}
+:where([data-scope="sticky-bar"][data-tone="accent"]) { background: var(--veneer-color-surface-inverse); color: var(--veneer-color-on-inverse); border-color: transparent; }
+@keyframes veneer-route-in {
+  from { opacity: 0; transform: translateY(calc(var(--veneer-motion-distance) * 0.75)); }
+}
+@keyframes veneer-sheet-in {
+  from { transform: translateY(calc(100% * var(--veneer-motion-scale))); opacity: calc(1 - var(--veneer-motion-scale)); }
+}
+}

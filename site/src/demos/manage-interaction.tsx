@@ -1,6 +1,6 @@
-import { derived } from '@weft-js/core'
-import { interaction } from '@weft-js/core/interaction'
-import { Button, Card } from '@weft-js/warp'
+import { derived } from '@kerf-js/core'
+import { interaction } from '@kerf-js/core/interaction'
+import { Button, Card } from '@kerf-js/veneer'
 
 export default function Pointer() {
   // No `share`: this row is private to this one button.

@@ -1,6 +1,6 @@
 import type { Doc } from '../../types.ts'
 
-/** Side navigation and main navigation: two different menus (Warp 02 §5). */
+/** Side navigation and main navigation: two different menus (Veneer 02 §5). */
 export const menus: Doc[] = [
   {
     component: 'SideNav',
@@ -28,7 +28,7 @@ export const menus: Doc[] = [
           {
             id: 'SideNavGuide',
             title: 'Sections that fold',
-            note: "The section holding `current` starts open and the others folded. What a reader opens or closes is kept in localStorage under `remember`. The bar at the panel's edge folds it to a slim strip and back, and that is kept too. Under 900px only the bar shows, down the left edge, and pressing it brings the panel over the page. Docked, it is `--warp-sidenav-width` wide (240px) and folds to `--warp-sidenav-bar` (28px), so give it an `auto` column; on a phone, start the page that far in.",
+            note: "The section holding `current` starts open and the others folded. What a reader opens or closes is kept in localStorage under `remember`. The bar at the panel's edge folds it to a slim strip and back, and that is kept too. Under 900px only the bar shows, down the left edge, and pressing it brings the panel over the page. Docked, it is `--veneer-sidenav-width` wide (240px) and folds to `--veneer-sidenav-bar` (28px), so give it an `auto` column; on a phone, start the page that far in.",
             stage: 'fill',
             height: 420,
           },
@@ -73,9 +73,9 @@ export const menus: Doc[] = [
       multiple:
         'Lets any number of sections stay open. By default one is open at a time: opening a section folds the others, and arriving on a page opens its own.',
       overlay:
-        "On a phone, where the open panel sits. `cover` (default) lays it over everything, header included. `under` opens it below the header (`--warp-sidenav-top`) with no title of its own: put a `SideNavTitle` around the brand's word in the header, and that word gives way to the panel's title while it is open.",
+        "On a phone, where the open panel sits. `cover` (default) lays it over everything, header included. `under` opens it below the header (`--veneer-sidenav-top`) with no title of its own: put a `SideNavTitle` around the brand's word in the header, and that word gives way to the panel's title while it is open.",
       remember:
-        "The localStorage key for a reader's folds, and `<key>:collapsed` for whether they folded the sidebar. `false` keeps nothing. Default `warp:sidenav:<label>`.",
+        "The localStorage key for a reader's folds, and `<key>:collapsed` for whether they folded the sidebar. `false` keeps nothing. Default `veneer:sidenav:<label>`.",
     },
     related: ['Nav', 'Shell', 'Drawer', 'HamburgerMenu'],
   },

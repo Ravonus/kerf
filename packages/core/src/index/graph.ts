@@ -22,7 +22,7 @@ let nextId = 0
 /** How many of `listener.s` this run has read again, in order. Those links stay as they are. */
 let at = 0
 let queue: Computation[] = []
-/** @weft-js/core/keyed: tells a box's entry readers about a write. */
+/** @kerf-js/core/keyed: tells a box's entry readers about a write. */
 export let keyed: ((box: Box<unknown>, prev: unknown, v: unknown) => void) | undefined
 /** Hands the core its entry-reader update, so an app that never calls `get` doesn't ship it. */
 export const setKeyed = (f: typeof keyed) => {
@@ -36,12 +36,12 @@ let scheduled = false
 /** `onMount` callbacks waiting for their nodes to be placed: run after `render` and at the end of each `flush`. */
 export let mounts: (() => void)[] = []
 
-/** SSR and hydration switches: `server` skips effects (@weft-js/core/ssr); `data` is the page's server data (@weft-js/core/dom hydrate). */
+/** SSR and hydration switches: `server` skips effects (@kerf-js/core/ssr); `data` is the page's server data (@kerf-js/core/dom hydrate). */
 export const rt: {
   server: boolean
   /** The render's data: resolved resources and boundary states by key, written by the server, read by hydrate. */
   data?: SsrData | undefined
-  /** Server only: fetches the current render started, and a hole resolver (@weft-js/core/ssr). */
+  /** Server only: fetches the current render started, and a hole resolver (@kerf-js/core/ssr). */
   wait?: Promise<unknown>[]
   /** Server only: the resources this pass has values for. Client: a tick's cancelled hydrate runs, false once a real one is among them. */
   got?: number
@@ -55,13 +55,13 @@ export const rt: {
   stream?: Map<string, string>
   /** The state payload of the page being hydrated: each scope takes its entry once, as it's created (research 29 §2). */
   state?: Record<string, Record<string, unknown>> | undefined
-  /** A server process (@weft-js/start): a scope reached outside a render throws S002 instead of sharing one app. */
+  /** A server process (@kerf-js/start): a scope reached outside a render throws S002 instead of sharing one app. */
   isolated?: boolean
-  /** @weft-js/core/test: slot overrides for this render (`render(App, {}, { slots })`), so a slot needs no generated module. */
+  /** @kerf-js/core/test: slot overrides for this render (`render(App, {}, { slots })`), so a slot needs no generated module. */
   slots?: Record<string, unknown> | undefined
 } = { server: false }
 
-/** Reactive work counter, read by `@weft-js/core/test` (`toTouchAtMost(n, { runs })`). */
+/** Reactive work counter, read by `@kerf-js/core/test` (`toTouchAtMost(n, { runs })`). */
 export const stats = { runs: 0 }
 
 /** The empty list every graph list starts as (never written: `add` replaces it). */
@@ -224,8 +224,8 @@ function run(node: Computation) {
       for (let i = 0; i < o.length; i++) o[i]!.state = DIRTY
     }
   } catch (e) {
-    if (DEV && node.n && e && typeof e === 'object' && !(e as { weft?: string }).weft)
-      (e as { weft?: string }).weft = node.n // where it threw
+    if (DEV && node.n && e && typeof e === 'object' && !(e as { kerf?: string }).kerf)
+      (e as { kerf?: string }).kerf = node.n // where it threw
     throw e
   } finally {
     if (at < node.s.length + (INLINE && node.p ? 1 : 0)) unlink(node, at) // what this run didn't read
@@ -280,7 +280,7 @@ function parts(v: unknown[], node: Computation) {
 const live = (v: unknown): boolean =>
   typeof v === 'function' || (Array.isArray(v) && v !== flat && v.some(live))
 
-/** The last row list made of single elements (@weft-js/core/dom `For`): nothing in it is live, and `place` can take it as it is. */
+/** The last row list made of single elements (@kerf-js/core/dom `For`): nothing in it is live, and `place` can take it as it is. */
 export let flat: unknown = NONE
 /** Records the list `place` may take whole: see `flat`. */
 export const setFlat = (list: unknown) => {
@@ -342,7 +342,7 @@ export function flush() {
   } while (queue.length)
 }
 
-/** Run pending `onMount` callbacks (in creation order). @weft-js/core/dom calls it once `render`/`hydrate` placed the app. */
+/** Run pending `onMount` callbacks (in creation order). @kerf-js/core/dom calls it once `render`/`hydrate` placed the app. */
 export function runMounts() {
   while (mounts.length) {
     const due = mounts

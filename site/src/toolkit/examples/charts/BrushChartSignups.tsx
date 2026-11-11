@@ -1,4 +1,4 @@
-import { BrushChart } from '@weft-js/warp'
+import { BrushChart } from '@kerf-js/veneer'
 
 import { SIGNUPS_DAILY } from '../../world'
 

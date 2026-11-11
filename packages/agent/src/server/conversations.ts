@@ -1,7 +1,7 @@
 // A person's conversations: listed, opened, started, renamed, pinned, archived, deleted, and the two things that move
 // one on, saying something and answering a held call.
 import { randomUUID } from 'node:crypto'
-import type { Context } from '@weft-js/start'
+import type { Context } from '@kerf-js/start'
 import { allows, type Conversation, type TurnEvent } from '../index'
 import { allTools } from '../tools'
 import { AgentError, userOf, type Core } from './core'

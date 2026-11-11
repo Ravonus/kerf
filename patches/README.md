@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
@@ -18,7 +18,7 @@
 </p>
 
 > [!NOTE]
-> These patches apply only inside this workspace. They are not shipped in any `@weft-js/*` package and do not affect apps.
+> These patches apply only inside this workspace. They are not shipped in any `@kerf-js/*` package and do not affect apps.
 
 ## How patches are applied
 
@@ -48,7 +48,7 @@ One line in `lib/coreBundle.js`, in WebKit's page setup (`init_wkPage`). The `Pu
 `.catch(() => {})`, so if WebKit rejects that one setting, page creation carries on:
 
 ```js
-// weft: the frozen macOS 14 WebKit build predates this setting and rejects it, which fails every new page.
+// kerf: the frozen macOS 14 WebKit build predates this setting and rejects it, which fails every new page.
 promises2.push(session.send("Page.overrideSetting", { setting: "PushAPIEnabled", value: !contextOptions.isMobile }).catch(() => {}));
 ```
 
@@ -57,7 +57,7 @@ Every other setting in that block is unchanged, and on a WebKit that accepts the
 ### History
 
 It came in with commit `b739ea14` ("Release gate runs WebKit on macOS 14", 2026-11-07). The commit message says that,
-with the patch, WebKit passes the warp overlay suite on the release machine (76 tests). The same commit changed
+with the patch, WebKit passes the veneer overlay suite on the release machine (76 tests). The same commit changed
 `check --release` so it no longer skips WebKit when WebKit can't open a page. It now fails at once with the reason
 instead.
 
@@ -75,7 +75,7 @@ pnpm patch <package>@<version>          # opens an editable copy
 pnpm patch-commit <the path it printed>  # writes patches/<package>@<version>.patch and the workspace entry
 ```
 
-Keep each patch as small as the fix, mark changed lines with a `// weft:` comment saying why, and add a comment above the
+Keep each patch as small as the fix, mark changed lines with a `// kerf:` comment saying why, and add a comment above the
 entry in `pnpm-workspace.yaml` as the existing one has. Then update this README.
 
 ## License

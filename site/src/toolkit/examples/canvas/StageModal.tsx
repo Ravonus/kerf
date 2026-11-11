@@ -1,4 +1,4 @@
-import { DitherStage, Stack, Row } from '@weft-js/warp'
+import { DitherStage, Stack, Row } from '@kerf-js/veneer'
 
 // A modal is a native <dialog> with a stage of its own:
 // the veil dithers over the page and the panel dissolves

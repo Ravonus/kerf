@@ -1,4 +1,4 @@
-// @weft-js/core/dom: `render`, `hydrate`, the keyed list, and the helpers weft's back end emits (most live in dom-next.ts;
+// @kerf-js/core/dom: `render`, `hydrate`, the keyed list, and the helpers kerf's back end emits (most live in dom-next.ts;
 // these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
 // code imports `render` (or `hydrate`) and nothing else from here.
 
@@ -60,7 +60,7 @@ export function createComponent<P>(
   const prev = devComponent.label,
     prevId = devComponent.id
   devComponent.label = `<${name}> (${loc})`
-  devComponent.id = ++instances // tells instances apart in the dev graph (@weft-js/core/devtools)
+  devComponent.id = ++instances // tells instances apart in the dev graph (@kerf-js/core/devtools)
   try {
     return untrack(() => Comp(props))
   } finally {
@@ -199,7 +199,7 @@ export function place(parent: Node, value: unknown, current: Node[], marker: Nod
 export function insert(parent: Mountable, value: unknown, marker?: Node | null) {
   const current = EMPTY
   const at = marker ?? null
-  // Dev: hot-swappable components (@weft-js/core/hmr) are accessors, so a static array of them (`<><A /><B /></>`) is live.
+  // Dev: hot-swappable components (@kerf-js/core/hmr) are accessors, so a static array of them (`<><A /><B /></>`) is live.
   if (DEV && Array.isArray(value) && value.some((v) => typeof v === 'function')) {
     const list = value
     value = () => list

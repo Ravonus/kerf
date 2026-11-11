@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Input,
   IntegrationsGrid,
   Toaster,
-} from '@weft-js/warp'
-import type { Integration } from '@weft-js/warp'
+} from '@kerf-js/veneer'
+import type { Integration } from '@kerf-js/veneer'
 import { INTEGRATIONS } from '../../world'
 import { wait } from './shared'
 
@@ -20,7 +20,7 @@ export function IntegrationsGridWorkspace() {
     await wait(1200)
     mark(item.id, {
       state: 'connected',
-      detail: 'weft-dev',
+      detail: 'kerf-dev',
       failure: undefined,
     })
   }

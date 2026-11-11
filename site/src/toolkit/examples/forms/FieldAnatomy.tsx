@@ -1,4 +1,4 @@
-import { Input, Stack } from '@weft-js/warp'
+import { Input, Stack } from '@kerf-js/veneer'
 
 export const FieldAnatomy = () => (
   <Stack gap="group">
@@ -6,7 +6,7 @@ export const FieldAnatomy = () => (
       label="Domain"
       icon="globe"
       prefix="https://"
-      suffix=".weft.dev"
+      suffix=".kerf.dev"
       hint="You can add your own later."
       defaultValue="storefront"
       clearable

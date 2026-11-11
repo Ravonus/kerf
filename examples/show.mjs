@@ -1,4 +1,4 @@
-// The weft build of every app here, running, to click through: the last builds bench.mjs left in its work area, each on
+// The kerf build of every app here, running, to click through: the last builds bench.mjs left in its work area, each on
 // its own port from 5501, on a fresh copy of the bench's seeded database. Ctrl-C stops them; the databases stay until the
 // next bench run resets them. Sign in with shared/pg/bench-user.json.
 //   node show.mjs [--port 5501]
@@ -8,14 +8,14 @@ import { homedir, userInfo } from 'node:os'
 import { join } from 'node:path'
 import { clone, dbName, ensureSeed, benchUser } from './shared/pg/env.mjs'
 
-const work = join(process.env.BENCH_WORK ?? join(homedir(), '.cache/weft-app-bench'), 'apps')
+const work = join(process.env.BENCH_WORK ?? join(homedir(), '.cache/kerf-app-bench'), 'apps')
 const i = process.argv.indexOf('--port')
 let port = i > 0 ? Number(process.argv[i + 1]) : 5501
 const kids = []
 
 await ensureSeed()
 for (const app of ['admin', 'catalog', 'landing', 'todo', 'lemonstand']) {
-  const root = join(work, app, 'weft')
+  const root = join(work, app, 'kerf')
   if (!existsSync(join(root, '.output/server/index.mjs'))) {
     console.log(`${app.padEnd(11)} not built: node bench.mjs ${app}`)
     continue

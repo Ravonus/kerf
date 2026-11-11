@@ -1,5 +1,5 @@
-import { onCleanup, onMount, state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { onCleanup, onMount, state } from '@kerf-js/core'
+import { Button, Card } from '@kerf-js/veneer'
 
 // Each node reports when it is made and when its owner
 // cleans it up.

@@ -1,4 +1,4 @@
-/** warp's spacing scale at the default density, px → token (warp.css). */
+/** veneer's spacing scale at the default density, px → token (veneer.css). */
 const SPACE = new Map([
   [2, 'hair'],
   [4, 'tight'],
@@ -6,14 +6,14 @@ const SPACE = new Map([
   [16, 'group'],
 ])
 const SPACE_NAMES = 'hair tight related group section page'.split(' ')
-/** warp's radii at the quiet stop, where a raw radius is most likely to have been copied from. */
+/** veneer's radii at the quiet stop, where a raw radius is most likely to have been copied from. */
 const RADIUS = new Map([
   [4, 'mark'],
   [8, 'control'],
   [12, 'surface'],
 ])
-export const WARP = '@weft-js/warp'
-/** The role each heading level takes by default: the same table as warp's `Heading` (packages/warp/src/Type.tsx). */
+export const VENEER = '@kerf-js/veneer'
+/** The role each heading level takes by default: the same table as veneer's `Heading` (packages/veneer/src/Type.tsx). */
 export const HEADING_ROLE = {
   1: 'title',
   2: 'heading',
@@ -24,7 +24,7 @@ export const HEADING_ROLE = {
 }
 
 const COLOR_EXPECTED =
-  'var(--warp-color-text), -text-subtle, -surface, -surface-raised, -accent-solid, -border, or a `tone` on the component'
+  'var(--veneer-color-text), -text-subtle, -surface, -surface-raised, -accent-solid, -border, or a `tone` on the component'
 const COLOR =
   /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb)\(|(?<![-\w])(?:white|black|red|green|blue|gray|grey|orange|yellow|purple|pink|indigo|teal)(?![-\w])/i
 const COLOR_PROPS =
@@ -46,7 +46,7 @@ function scaled(value) {
     const m = /^(\d+(?:\.\d+)?)(px|rem)?$/.exec(p)
     if (!m) return null
     const px = m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1])
-    return SPACE.has(px) ? `var(--warp-space-${SPACE.get(px)})` : null
+    return SPACE.has(px) ? `var(--veneer-space-${SPACE.get(px)})` : null
   })
   return out.every(Boolean) ? out.join(' ') : null
 }
@@ -96,7 +96,7 @@ export function declaration({ prop, value, numeric, start, end, quote }, report)
       'D001',
       start,
       end,
-      `Raw colour \`${prop}: ${css}\`: it won't follow the theme, the dials or dark mode. Use ${COLOR_EXPECTED}, or promote it to a token in \`warp({ tokens })\`.`,
+      `Raw colour \`${prop}: ${css}\`: it won't follow the theme, the dials or dark mode. Use ${COLOR_EXPECTED}, or promote it to a token in \`veneer({ tokens })\`.`,
     )
   if (SPACE_PROPS.test(prop)) {
     if (/^(0(px)?|auto)$/.test(css.trim()) || FLUID.test(css)) return
@@ -121,7 +121,7 @@ export function declaration({ prop, value, numeric, start, end, quote }, report)
     if (/^(0(px)?|\d+%)$/.test(css.trim())) return
     const m = /^(\d+)(?:px)?$/.exec(css.trim())
     const name = m && RADIUS.get(Number(m[1]))
-    const text = name && `var(--warp-radius-${name})`
+    const text = name && `var(--veneer-radius-${name})`
     return report(
       'D003',
       start,
@@ -141,11 +141,11 @@ export function declaration({ prop, value, numeric, start, end, quote }, report)
       'D003',
       start,
       end,
-      'A raw shadow: elevation comes from `--warp-elevation-0…3`, which follow the dials and the theme.',
+      'A raw shadow: elevation comes from `--veneer-elevation-0…3`, which follow the dials and the theme.',
     )
 }
 
-// -- Tailwind classes, for an app that has warp's tokens too --
+// -- Tailwind classes, for an app that has veneer's tokens too --
 
 const TW_SPACE = new Map([
   ['0.5', 'hair'],

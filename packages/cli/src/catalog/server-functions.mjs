@@ -1,6 +1,6 @@
 /** serverFunctions diagnostic entries in catalog order. */
 export const serverFunctions = [
-  // Server functions and the query cache (research 27 §6; Q for query). `start`: reported by @weft-js/start while serving
+  // Server functions and the query cache (research 27 §6; Q for query). `start`: reported by @kerf-js/start while serving
   // (the server log, and the error the call rejects with); `runtime`: thrown or warned by the client runtime.
   {
     code: 'Q001',
@@ -70,7 +70,7 @@ export const serverFunctions = [
     severity: 'error',
     by: 'start',
     catches:
-      "`/_weft/fn/<id>` names no function: the page is older than the server, or the module isn't a server module",
+      "`/_kerf/fn/<id>` names no function: the page is older than the server, or the module isn't a server module",
     fix: 'Reload; keep `query`/`mutation` exports in server modules',
   },
   {
@@ -78,7 +78,7 @@ export const serverFunctions = [
     severity: 'error',
     by: 'start',
     catches:
-      'A mutation request without the CSRF proof (POST, JSON, `x-weft: 1`, same origin): 403',
+      'A mutation request without the CSRF proof (POST, JSON, `x-kerf: 1`, same origin): 403',
     fix: 'Call mutations through their stub, not a hand-made `fetch` or form',
   },
   {

@@ -1,4 +1,4 @@
-// `<Form>` without JS, over HTTP on the fixture under `weft dev` (research 29 §5): the markup, the CSRF proof, 303 on
+// `<Form>` without JS, over HTTP on the fixture under `kerf dev` (research 29 §5): the markup, the CSRF proof, 303 on
 // success, the page again with the errors and what was typed, coercion of a form's strings, redirects, and no secrets.
 import { inject } from 'vitest'
 import { fnId } from '../src/vite.mjs'
@@ -17,7 +17,7 @@ const post = (
     body: new URLSearchParams({ $fn: id, ...fields }),
   })
 const form = (html: string) =>
-  JSON.parse(/id="weft-form">(.*?)<\/script>/.exec(html)?.[1] ?? 'null')
+  JSON.parse(/id="kerf-form">(.*?)<\/script>/.exec(html)?.[1] ?? 'null')
 
 test('the markup is a real form: method, hidden id, the attributes it was given', async () => {
   const html = await (await fetch(`${url}/notes`)).text()
@@ -28,7 +28,7 @@ test('the markup is a real form: method, hidden id, the attributes it was given'
   expect(html).toContain(`name="$fn"`)
   expect(html).toContain(`value="${id}"`)
   expect(html).toMatch(/<input[^>]* name="title"/)
-  expect(html).not.toContain('weft-form')
+  expect(html).not.toContain('kerf-form')
 })
 
 test("success is a 303 back to the page, with the mutation's cookies, and the coerced input arrived", async () => {

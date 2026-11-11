@@ -1,0 +1,9 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* conflict banner (inline in the editing surface; comp's alert with diff actions) */
+:where([data-scope="conflict"]) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-block-start: 8px; }
+:where([data-scope="conflict"] > div) { padding: 8px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); font-size: 12.5px; box-shadow: inset 0 0 0 1px var(--veneer-color-border); }
+:where([data-scope="conflict"] > div small) { display: block; font: 500 10.5px/1.6 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--veneer-color-text-subtle); }
+:where([data-scope="conflict"] del) { color: var(--veneer-color-critical-text); }
+:where([data-scope="conflict"] ins) { color: var(--veneer-color-positive-text); text-decoration: none; background: var(--veneer-color-positive-soft); }
+}

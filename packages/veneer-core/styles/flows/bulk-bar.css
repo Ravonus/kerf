@@ -1,0 +1,13 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+:where([data-scope="bulk-bar"]) {
+  display: flex; align-items: center; gap: 8px var(--veneer-space-related); flex-wrap: wrap; padding: 6px 8px 6px 14px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text);
+  font-size: var(--veneer-text-label-size); animation: veneer-conn-in var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="bulk-bar"] > b) { font-weight: 500; margin-inline-end: auto; font-variant-numeric: tabular-nums; }
+@media (forced-colors: active) {
+:where([data-scope="bulk-bar"]) { border: 1px solid CanvasText; }
+}
+@keyframes veneer-conn-in { from { opacity: 0; transform: translateY(calc(-6px * var(--veneer-motion-scale))); } }
+}

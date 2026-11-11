@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Card, Checkbox, Stack } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Card, Checkbox, Stack } from '@kerf-js/veneer'
 
 function Item({
   name,

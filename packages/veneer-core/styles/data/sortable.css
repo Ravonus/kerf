@@ -1,0 +1,21 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+/* sortable list + layers ---------------------------------------------------------- */
+:where([data-scope="sortable"]) { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+:where([data-scope="sortable"] > li) {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; min-block-size: max(40px, var(--veneer-target-min)); padding-inline: 4px 12px;
+  border: 1px solid var(--veneer-color-border); border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised);
+  transition: translate var(--veneer-duration-base) var(--veneer-ease-out), box-shadow var(--veneer-duration-fast);
+}
+:where([data-scope="sortable"] > li[data-grabbed]) { box-shadow: 0 0 0 2px var(--veneer-color-accent-solid), var(--veneer-elevation-2); position: relative; z-index: 2; transition: none; }
+:where([data-scope="sortable"] [data-part="handle"]:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) *:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) [data-scope="sortable"] *))) {
+  all: unset; display: grid; place-items: center; inline-size: 28px; block-size: max(32px, var(--veneer-hit-min)); cursor: grab; touch-action: none; color: var(--veneer-color-text-subtle); border-radius: 4px;
+}
+:where([data-scope="sortable"] [data-part="handle"]:focus-visible:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) *:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) [data-scope="sortable"] *))) { outline: 2px solid var(--veneer-color-focus); }
+:where([data-scope="sortable"] [data-part="handle"][aria-pressed="true"]:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) *:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) [data-scope="sortable"] *))) { color: var(--veneer-color-accent-text); background: var(--veneer-color-accent-soft); }
+:where([data-scope="sortable"] [data-part="rank"]) { font: 500 11px/1.25 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+/* drag handles in sortable lists and layers: 28px wide, hit-min tall; the expander adds the inline axis
+   (the neighbours are the rank and the name, which aren't targets) */
+:where([data-scope="sortable"] [data-part="handle"]:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) *:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) [data-scope="sortable"] *))) { position: relative; }
+:where([data-scope="sortable"] [data-part="handle"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+}

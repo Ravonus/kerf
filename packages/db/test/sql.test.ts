@@ -1,7 +1,7 @@
-// The `db.adapter` suite on SQLite (node:sqlite), and on Postgres when `WEFT_TEST_POSTGRES` names a throwaway database.
+// The `db.adapter` suite on SQLite (node:sqlite), and on Postgres when `KERF_TEST_POSTGRES` names a throwaway database.
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite'
-import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
-import { decodeCursor } from '@weft-js/start/list'
+import { LIST_ROWS, listSuite } from '@kerf-js/core/test/plugins'
+import { decodeCursor } from '@kerf-js/start/list'
 import { postgresTrigger, sqlSource, type SqlSpec } from '../src/sql'
 
 const spec: SqlSpec = {
@@ -82,7 +82,7 @@ test('a spec with no id column is refused, not keyed on `undefined`', () => {
   ).toThrow('Q002')
 })
 
-const url = process.env.WEFT_TEST_POSTGRES
+const url = process.env.KERF_TEST_POSTGRES
 // Needs a throwaway Postgres.
 describe.skipIf(!url)('on Postgres', () => {
   test('the suite, and a trigger pokes tags without the row', async () => {
@@ -116,7 +116,7 @@ describe.skipIf(!url)('on Postgres', () => {
       expect(checks.filter((c) => !c.ok)).toEqual([])
 
       const got: string[] = []
-      await sql.listen('weft_bus', (m) => got.push(m))
+      await sql.listen('kerf_bus', (m) => got.push(m))
       await sql.unsafe(postgresTrigger({ table, tag: 'tasks' }))
       await sql.unsafe(`update ${table} set title = 'top secret' where id = 't01'`)
       for (let i = 0; i < 100 && !got.length; i++)
@@ -124,7 +124,7 @@ describe.skipIf(!url)('on Postgres', () => {
           setTimeout(ok, 20)
         })
       expect(got[0]).toBe(
-        `=weft:poke\n${JSON.stringify({ t: ['tasks', 'tasks:t01'] })}`.replace(
+        `=kerf:poke\n${JSON.stringify({ t: ['tasks', 'tasks:t01'] })}`.replace(
           '{"t":["tasks","tasks:t01"]}',
           '{"t" : ["tasks", "tasks:t01"]}',
         ),

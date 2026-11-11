@@ -1,5 +1,5 @@
-import { Boundary, onMount, resource, state } from '@weft-js/core'
-import type { RouteProps } from '@weft-js/start'
+import { Boundary, onMount, resource, state } from '@kerf-js/core'
+import type { RouteProps } from '@kerf-js/start'
 import { later } from '../db'
 
 // `?ms=`: how long the Boundaries stay out, so a client can be running when their chunks land. `?ok`: from now on `bad` works.

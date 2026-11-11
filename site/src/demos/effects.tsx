@@ -1,5 +1,5 @@
-import { derived, state, watch } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { derived, state, watch } from '@kerf-js/core'
+import { Button, Card } from '@kerf-js/veneer'
 
 export default function Stopwatch() {
   const running = state(false)

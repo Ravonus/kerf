@@ -50,7 +50,7 @@ async function hears(direct: string, client: Sql): Promise<boolean | string> {
 
 async function triggers(client: Sql, tables: string[]): Promise<string[]> {
   const rows =
-    await client`select c.relname from pg_trigger t join pg_class c on c.oid = t.tgrelid where t.tgname = 'weft_changes_upd' and c.relname = any(${tables})`
+    await client`select c.relname from pg_trigger t join pg_class c on c.oid = t.tgrelid where t.tgname = 'kerf_changes_upd' and c.relname = any(${tables})`
   return rows.map((r) => r.relname as string)
 }
 
@@ -110,8 +110,8 @@ async function probe(
       interval,
       `no trigger on ${missing.map((t) => `\`${t}\``).join(', ')}`,
       allowed
-        ? 'run `weft db live`, then apply the migration'
-        : `run \`weft db live\`, and apply the migration as a role that may create triggers: this one has no TRIGGER on \`${missing[0]}\``,
+        ? 'run `kerf db live`, then apply the migration'
+        : `run \`kerf db live\`, and apply the migration as a role that may create triggers: this one has no TRIGGER on \`${missing[0]}\``,
     )
   }
   const ok = await hears(direct, client)

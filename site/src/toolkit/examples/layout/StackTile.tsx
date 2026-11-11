@@ -1,4 +1,4 @@
-import { Stack } from '@weft-js/warp'
+import { Stack } from '@kerf-js/veneer'
 import { Box } from './shared'
 
 export const StackTile = () => (

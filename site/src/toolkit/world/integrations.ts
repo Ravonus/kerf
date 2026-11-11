@@ -1,4 +1,4 @@
-import type { Integration } from '@weft-js/warp'
+import type { Integration } from '@kerf-js/veneer'
 
 export const INTEGRATIONS: Integration[] = [
   {
@@ -7,7 +7,7 @@ export const INTEGRATIONS: Integration[] = [
     summary:
       'Deploy on push, status checks on pull requests.',
     state: 'connected',
-    detail: 'weft-dev · 10 repositories',
+    detail: 'kerf-dev · 10 repositories',
     can: [
       'Read your repositories',
       'Post commit statuses',
@@ -50,7 +50,7 @@ export const INTEGRATIONS: Integration[] = [
     summary:
       'Tie new errors to the deploy that caused them.',
     state: 'connected',
-    detail: 'Weft · 4 projects',
+    detail: 'Kerf · 4 projects',
     can: ['Read releases'],
   },
 ]

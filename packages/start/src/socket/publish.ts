@@ -3,7 +3,7 @@ import { stable, StartError, type Fn } from '../data'
 import { hub } from '../hub'
 import { check } from './check'
 
-const roomName = (id: string, params: unknown) => `weft:c:${id}:${stable(params)}`
+const roomName = (id: string, params: unknown) => `kerf:c:${id}:${stable(params)}`
 
 /** `room.publish` and `room.in(params).publish`. */
 export async function publish(

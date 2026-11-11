@@ -1,0 +1,17 @@
+{
+  "requires": { "db": "postgres", "auth": false },
+  "pages": ["/", "/pricing", "/privacy", "/joined"],
+  "dependencies": { "@kerf-js/veneer-icons": "0.0.0", "@kerf-js/media": "0.0.0", "@kerf-js/text": "0.0.0" },
+  "veneer": {
+    "seed": { "accent": "#c2410c" },
+    "dials": { "expression": "vivid" },
+    "radius": "round",
+    "fonts": { "display": "\"Figtree\", \"Figtree Fallback\", ui-sans-serif, system-ui, sans-serif", "body": "\"Figtree\", \"Figtree Fallback\", ui-sans-serif, system-ui, sans-serif" },
+    "tokens": {
+      "--veneer-color-page": "light-dark(#f8f1e4, #1d1613)",
+      "--veneer-color-surface": "light-dark(#fdf8ee, #261d19)",
+      "--veneer-color-surface-raised": "light-dark(#fffcf5, #281e1a)",
+      "--veneer-color-surface-sunken": "light-dark(#f5eee0, #171110)"
+    }
+  }
+}

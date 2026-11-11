@@ -1,0 +1,30 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Breadcrumbs ----------------------------------------------------------------- */
+:where([data-scope="breadcrumbs"] ol) { display: flex; align-items: center; flex-wrap: nowrap; gap: 2px; margin: 0; padding: 0; list-style: none; min-inline-size: 0; }
+:where([data-scope="breadcrumbs"] li) { display: inline-flex; align-items: center; gap: 2px; min-inline-size: 0; }
+:where([data-scope="breadcrumbs"] li + li)::before {
+  content: ""; inline-size: 14px; block-size: 14px; flex: none; background: var(--veneer-color-text-faint);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M10 7l5 5-5 5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+:where([data-scope="breadcrumbs"] a),
+:where([data-scope="breadcrumbs"] [data-part="ellipsis"]:not([data-scope="breadcrumbs"] [data-scope="breadcrumb"] *:not([data-scope="breadcrumbs"] [data-scope="breadcrumb"] [data-scope="breadcrumbs"] *))) {
+  display: inline-flex; align-items: center; min-block-size: var(--veneer-hit-min); padding-inline: 4px; border-radius: var(--veneer-radius-mark);
+  color: var(--veneer-color-text-subtle); text-decoration: none; white-space: nowrap; overflow: clip; text-overflow: ellipsis; max-inline-size: 18ch;
+  transition: color var(--veneer-duration-fast);
+}
+:where([data-scope="breadcrumbs"] a:hover) { color: var(--veneer-color-text); text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+:where([data-scope="breadcrumbs"] [aria-current="page"]) { color: var(--veneer-color-text); font-weight: 500; padding-inline: 4px; white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
+:where([data-scope="breadcrumbs"] [data-part="ellipsis"]:not([data-scope="breadcrumbs"] [data-scope="breadcrumb"] *:not([data-scope="breadcrumbs"] [data-scope="breadcrumb"] [data-scope="breadcrumbs"] *))) { border: 0; background: transparent; cursor: pointer; font: inherit; letter-spacing: 0.1em; }
+:where([data-scope="breadcrumbs"] [data-part="back"]:not([data-scope="breadcrumbs"] [data-scope="shell"] *:not([data-scope="breadcrumbs"] [data-scope="shell"] [data-scope="breadcrumbs"] *))) { display: none; }
+:where([data-scope="breadcrumbs"]) { container: crumbs / inline-size; min-inline-size: 0; }
+@container crumbs (max-width: 420px) {
+  :where([data-scope="breadcrumbs"] li[data-collapsible]) { display: none; }
+  :where([data-scope="breadcrumbs"] li[data-part="ellipsis-item"]) { display: inline-flex; }
+}
+:where([data-scope="breadcrumbs"] li[data-part="ellipsis-item"]) { display: none; }
+@container crumbs (max-width: 260px) {
+  :where([data-scope="breadcrumbs"] ol) { display: none; }
+  :where([data-scope="breadcrumbs"] [data-part="back"]:not([data-scope="breadcrumbs"] [data-scope="shell"] *:not([data-scope="breadcrumbs"] [data-scope="shell"] [data-scope="breadcrumbs"] *))) { display: inline-flex; align-items: center; gap: 4px; min-block-size: var(--veneer-hit-min); color: var(--veneer-color-text-subtle); text-decoration: none; font-weight: 500; }
+}
+}

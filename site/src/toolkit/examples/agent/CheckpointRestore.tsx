@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Checkpoint, Stack, Text } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Checkpoint, Stack, Text } from '@kerf-js/veneer'
 
 export function CheckpointRestore() {
   const restored = state(false)

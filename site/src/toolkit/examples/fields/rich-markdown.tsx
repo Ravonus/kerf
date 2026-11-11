@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Grid,
   MarkdownEditor,
@@ -6,8 +6,8 @@ import {
   SignaturePad,
   Stack,
   Text,
-} from '@weft-js/warp'
-import type { SignatureValue } from '@weft-js/warp'
+} from '@kerf-js/veneer'
+import type { SignatureValue } from '@kerf-js/veneer'
 import { Cell } from '../../world'
 import { people } from './mentions-rich-text'
 
@@ -60,7 +60,7 @@ The public shop, served from the **edge**.
 - \`npm install\`
 - \`npm run dev\`
 
-See [the deploy guide](https://weft.dev/docs) for more.
+See [the deploy guide](https://kerf.dev/docs) for more.
 `
 
 export const MarkdownEditorBasic = () => (

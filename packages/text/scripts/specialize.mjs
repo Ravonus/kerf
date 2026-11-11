@@ -80,7 +80,7 @@ const MOVES = {
   // WebKit only: the generic families a language names, computed on the first font string that holds a
   // generic keyword (patched below). Provider gate: font string has a generic keyword and a language is set.
   families: { 'measurement.ts': ['getWebKitGenericFamilies'] },
-  // rich-inline paragraphs only (paragraph !== null). weft does not use rich-inline (research 11 §2.2), so
+  // rich-inline paragraphs only (paragraph !== null). kerf does not use rich-inline (research 11 §2.2), so
   // this pack is never built into a chunk; the stubs throw.
   rich: {
     'analysis.ts': [
@@ -183,7 +183,7 @@ export async function specialize(engine, { useCoverage = true } = {}) {
         if (!foundMoves.has(mf + ':' + fn))
           throw new Error(`${engine}: ${pack} move ${mf}:${fn} not found upstream`)
       }
-  // rich-inline.ts is not built (weft doesn't use it); fields only it reads are fine
+  // rich-inline.ts is not built (kerf doesn't use it); fields only it reads are fine
   const rich = fs.readFileSync(path.join(vendor, 'rich-inline.ts'), 'utf8')
   const unfolded = Object.keys(profile).filter(
     (k) => !foldedKeys.has(k) && !new RegExp(`\\.${k}\\b`).test(rich),

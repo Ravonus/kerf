@@ -2,7 +2,7 @@ import type {
   GridColumn,
   GridTree,
   GridView,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 import { PROJECTS } from '../../world'
 

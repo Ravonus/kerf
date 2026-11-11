@@ -1,6 +1,6 @@
 /** text diagnostic entries in catalog order. */
 export const text = [
-  // Text, type and skeletons (research 11 §8.5; research 26 §7; research 31 §7). `cli`: weft check (text-checks.mjs).
+  // Text, type and skeletons (research 11 §8.5; research 26 §7; research 31 §7). `cli`: kerf check (text-checks.mjs).
   {
     code: 'X001',
     severity: 'warning',
@@ -78,7 +78,7 @@ export const text = [
     by: 'cli',
     catches:
       'A surface text mirror hidden from assistive tech: `aria-hidden` on `<Surface>` or `s.el`, or `display: none`/`visibility: hidden` on `[data-surface-text]` (also checked in dev)',
-    fix: 'Leave the mirror to weft; use `decorative` for a surface with nothing to read',
+    fix: 'Leave the mirror to kerf; use `decorative` for a surface with nothing to read',
   },
   {
     code: 'X012',
@@ -94,7 +94,7 @@ export const text = [
     by: 'cli',
     catches:
       'A hand-written `@font-face` for a local file with no `"<Family> Fallback"` face: the font swap shifts layout',
-    fix: 'Declare the font in `text({ fonts })` (@weft-js/text), which generates a metric-matched fallback',
+    fix: 'Declare the font in `text({ fonts })` (@kerf-js/text), which generates a metric-matched fallback',
   },
   {
     code: 'X021',
@@ -132,7 +132,7 @@ export const text = [
     by: 'runtime',
     catches:
       "A `pending` fallback whose box differs from the content's by more than 1 px at the swap (measured by `<Boundary>` in dev)",
-    fix: "Size the fallback like the content: warp's `<Shape>` with the content's counts",
+    fix: "Size the fallback like the content: veneer's `<Shape>` with the content's counts",
   },
   {
     code: 'X032',
@@ -173,14 +173,14 @@ export const text = [
       'Per-character spans without `aria-hidden`, or a parent with no accessible name: a screen reader spells the word out',
     fix: '`aria-hidden` on each span and `aria-label` with the whole text on the parent',
   },
-  // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @weft-js/plugin-media's check hook.
+  // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @kerf-js/media's check hook.
   {
     code: 'X035',
     severity: 'warning',
     by: 'cli',
     catches:
       'Streamed text written straight into a scroll container: a reflowing tail moves the lines above it',
-    fix: 'Render it with `<Text stream>` from @weft-js/core/text: the height only grows',
+    fix: 'Render it with `<Text stream>` from @kerf-js/core/text: the height only grows',
   },
   {
     code: 'X036',

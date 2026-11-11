@@ -121,13 +121,13 @@ function withBoxProps(host, createFallback) {
       const list = host.diagnostics(file)
       if (!list.some((diagnostic) => canMap(file, diagnostic))) return list
       fallback ??= createFallback()
-      const mapped = fallback.diagnostics(file).filter((diagnostic) => diagnostic.weft)
+      const mapped = fallback.diagnostics(file).filter((diagnostic) => diagnostic.kerf)
       return list.map((diagnostic) => {
         if (!canMap(file, diagnostic)) return diagnostic
         const match = mapped.find(
           (candidate) => candidate.start === diagnostic.start && candidate.code === diagnostic.code,
         )
-        return match ? { ...diagnostic, weft: match.weft } : diagnostic
+        return match ? { ...diagnostic, kerf: match.kerf } : diagnostic
       })
     },
     close() {

@@ -1,4 +1,4 @@
-// `weft capture <command>`. A target is a URL, or a built folder served on 127.0.0.1 while the command runs.
+// `kerf capture <command>`. A target is a URL, or a built folder served on 127.0.0.1 while the command runs.
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { parseArgs } from 'node:util'
@@ -12,7 +12,7 @@ import { capture } from './stills.mjs'
 import { parseStop, stopName } from './stops.mjs'
 
 /** The command's help. */
-export const USAGE = `weft capture <command> <url | built folder> [options]
+export const USAGE = `kerf capture <command> <url | built folder> [options]
 
   stills <target>   a PNG at each stop     --stops 0,hero@0.5,2+300 --out dir --sheet
   frames <target>   frame times as JSON    --seconds 5 --speed 600 --cpu 4 --driver scroll|wheel --out file
@@ -46,7 +46,7 @@ const num = (v, fallback) => (v === undefined ? fallback : Number(v))
 
 /** The page options shared by every command, and the URL: a folder is served first. */
 async function page(target, v) {
-  if (!target) throw new Error('weft capture: name a URL or a built folder')
+  if (!target) throw new Error('kerf capture: name a URL or a built folder')
   const local = existsSync(target) && statSync(target).isDirectory() ? await serve(target) : null
   const url = (local?.url ?? target) + (typeof v.path === 'string' ? v.path : '')
   const size = {

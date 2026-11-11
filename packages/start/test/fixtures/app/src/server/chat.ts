@@ -1,5 +1,5 @@
 // Channels in the fixture (research 32): a room with `authorize`, a shared value, and a way to change who may join.
-import { channel, mutation, sharedState } from '@weft-js/start'
+import { channel, mutation, sharedState } from '@kerf-js/start'
 import { object } from '../schema'
 
 let banned = new Set<string>()

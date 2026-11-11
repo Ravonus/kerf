@@ -1,6 +1,6 @@
-// The Native layer: bound values, migrations once, transactions. MySQL and Postgres repeat it when WEFT_TEST_MYSQL or
-// WEFT_TEST_POSTGRES names a private instance.
-import { runtime } from '@weft-js/start/data'
+// The Native layer: bound values, migrations once, transactions. MySQL and Postgres repeat it when KERF_TEST_MYSQL or
+// KERF_TEST_POSTGRES names a private instance.
+import { runtime } from '@kerf-js/start/data'
 import { Kysely } from 'kysely'
 import { nativeAuth } from '../src/native/auth'
 import { createNative, type Driver } from '../src/native/index'
@@ -54,18 +54,18 @@ describe.each([
   ['sqlite', true, () => sqlite({ url: ':memory:', migrate: false })],
   [
     'mysql',
-    !!process.env.WEFT_TEST_MYSQL,
-    () => mysql({ url: process.env.WEFT_TEST_MYSQL!, migrate: false }),
+    !!process.env.KERF_TEST_MYSQL,
+    () => mysql({ url: process.env.KERF_TEST_MYSQL!, migrate: false }),
   ],
   [
     'postgres',
-    !!process.env.WEFT_TEST_POSTGRES,
-    () => postgres({ url: process.env.WEFT_TEST_POSTGRES!, migrate: false }),
+    !!process.env.KERF_TEST_POSTGRES,
+    () => postgres({ url: process.env.KERF_TEST_POSTGRES!, migrate: false }),
   ],
 ])('%s', (_, on, make) => {
   const ready = async () => {
     const db = make()
-    await db.$weft.migrate([
+    await db.$kerf.migrate([
       { tag: `0_${Math.random()}`, sql: `drop table if exists native_todos;\n${init}` },
     ])
     return db
@@ -86,8 +86,8 @@ describe.each([
         sql: `insert into native_todos (id, title) values ('a', 'x');`,
       },
     ]
-    await db.$weft.migrate(list)
-    await db.$weft.migrate(list)
+    await db.$kerf.migrate(list)
+    await db.$kerf.migrate(list)
     expect(await db.sql`select id from native_todos`).toEqual([{ id: 'a' }])
   })
 
@@ -133,20 +133,20 @@ describe.each([
   ['sqlite', true, () => sqlite({ url: ':memory:', migrate: false })],
   [
     'mysql',
-    !!process.env.WEFT_TEST_MYSQL,
-    () => mysql({ url: process.env.WEFT_TEST_MYSQL!, migrate: false }),
+    !!process.env.KERF_TEST_MYSQL,
+    () => mysql({ url: process.env.KERF_TEST_MYSQL!, migrate: false }),
   ],
   [
     'postgres',
-    !!process.env.WEFT_TEST_POSTGRES,
-    () => postgres({ url: process.env.WEFT_TEST_POSTGRES!, migrate: false }),
+    !!process.env.KERF_TEST_POSTGRES,
+    () => postgres({ url: process.env.KERF_TEST_POSTGRES!, migrate: false }),
   ],
 ])('Better Auth on %s', (_, on, make) => {
   test.runIf(on)(
     'nativeAuth gives Kysely rows and affected counts over the same connection',
     async () => {
       const db = make()
-      await db.$weft.migrate([
+      await db.$kerf.migrate([
         {
           tag: `0_${Math.random()}`,
           sql: `drop table if exists native_auth;\ncreate table native_auth (id varchar(36) primary key, title varchar(200) not null);`,
@@ -161,7 +161,7 @@ describe.each([
         .set({ title: 'y' })
         .where('id', '=', 'a')
         .executeTakeFirst()
-      if (db.$weft.dialect === 'mysql') expect(changed.numUpdatedRows).toBe(1n)
+      if (db.$kerf.dialect === 'mysql') expect(changed.numUpdatedRows).toBe(1n)
       expect(await kysely.selectFrom('native_auth').selectAll().execute()).toEqual([
         { id: 'a', title: 'y' },
       ])

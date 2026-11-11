@@ -1,5 +1,5 @@
 import type { AsyncLocalStorage } from 'node:async_hooks'
-import { region } from '@weft-js/core/ssr'
+import { region } from '@kerf-js/core/ssr'
 import { createRouteState, type Component, type RoutePayload } from '../router'
 import { ErrorPage, NotFoundPage } from '../builtin'
 import { deployUrl } from '../derive.mjs'
@@ -49,7 +49,7 @@ export function makeCore(options: HandlerOptions, als: AsyncLocalStorage<Scope>)
         code: 'H001',
         severity: 'warning',
         message:
-          "H001 `site.url` is not set, so canonical, og:url and og:image use the request's Host header. Set `site.url`, or `WEFT_SITE_URL` in the deploy environment.",
+          "H001 `site.url` is not set, so canonical, og:url and og:image use the request's Host header. Set `site.url`, or `KERF_SITE_URL` in the deploy environment.",
       })
     }
     return new URL(request.url).origin

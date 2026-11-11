@@ -1,4 +1,4 @@
-import { ScrollView } from '@weft-js/warp'
+import { ScrollView } from '@kerf-js/veneer'
 
 const rows = Array.from({ length: 400 }, (_, i) => i)
 

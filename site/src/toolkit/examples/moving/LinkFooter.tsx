@@ -1,4 +1,4 @@
-import { Link, Row } from '@weft-js/warp'
+import { Link, Row } from '@kerf-js/veneer'
 
 export const LinkFooter = () => (
   <Row

@@ -1,17 +1,17 @@
 // React prop names on native elements: the same DOM from a literal, a dynamic value and a spread, in a client render,
 // a server render and hydration. Docs: docs/react-props.md.
-// weft-allow T005, T008: framework test of attribute names; markup is the subject, and each loop walks a fixed list of props
+// kerf-allow T005, T008: framework test of attribute names; markup is the subject, and each loop walks a fixed list of props
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fireEvent } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { renderToString } from '@weft-js/core/ssr'
-import { flush } from '@weft-js/core/test'
-import { attrName, hydrate, render } from '@weft-js/core/dom'
+import { renderToString } from '@kerf-js/core/ssr'
+import { flush } from '@kerf-js/core/test'
+import { attrName, hydrate, render } from '@kerf-js/core/dom'
 import { hydration } from '../src/hydrate'
 import * as Dom from './fixtures/react-props/Props.tsx'
-import * as Server from './fixtures/react-props/Props.tsx?weft-ssr'
-import * as Client from './fixtures/react-props/Props.tsx?weft-hydrate'
+import * as Server from './fixtures/react-props/Props.tsx?kerf-ssr'
+import * as Client from './fixtures/react-props/Props.tsx?kerf-hydrate'
 import {
   Control,
   Defaults,
@@ -271,7 +271,7 @@ describe('negative control', () => {
 
 describe('the runtime table agrees with the compiler table', () => {
   const rust = readFileSync(
-    join(import.meta.dirname, '../../../crates/weft-compiler/src/react.rs'),
+    join(import.meta.dirname, '../../../crates/kerf-compiler/src/react.rs'),
     'utf8',
   )
   const list = (name: string) =>

@@ -1,5 +1,5 @@
-// Plugin trust (PLAN §7c, research 13 §2.9): `.weft/plugins.lock.json` records what each plugin may do and hashes its
-// code, so a change is visible and blocked until `weft plugins approve`. It is a diff, not a sandbox: `contribute()` has
+// Plugin trust (PLAN §7c, research 13 §2.9): `.kerf/plugins.lock.json` records what each plugin may do and hashes its
+// code, so a change is visible and blocked until `kerf plugins approve`. It is a diff, not a sandbox: `contribute()` has
 // already run by the time any of this looks at a plugin, and the audit reads source, which code can hide from.
 
 import { createHash } from 'node:crypto'
@@ -15,7 +15,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { diagnostic, locate } from './diag.mjs'
 import { scanFile } from './trust/scan.mjs'
 
-export const lockFile = '.weft/plugins.lock.json'
+export const lockFile = '.kerf/plugins.lock.json'
 
 const refused = (message) => Object.assign(new Error(message), { code: 'E_TRUST' })
 const posix = (p) => p.split(sep).join('/')
@@ -49,7 +49,7 @@ function readLock(root) {
   }
 }
 
-/** The package a plugin name is in: `@weft-js/db/mongo` is a subpath of `@weft-js/db`. */
+/** The package a plugin name is in: `@kerf-js/db/mongo` is a subpath of `@kerf-js/db`. */
 export const packageOf = (name) =>
   name
     .split('/')
@@ -246,7 +246,7 @@ export function trustStatus(root, loaded, { full = false } = {}) {
 /** P109 and P110 for what the lock doesn't cover. `trust: 'warn'` in the config makes them warnings. */
 export function trustDiagnostics(root, loaded, status = trustStatus(root, loaded)) {
   const severity = loaded.config.trust === 'warn' ? 'warning' : 'error'
-  const rel = loaded.file ? posix(relative(root, loaded.file)) : 'weft.config.ts'
+  const rel = loaded.file ? posix(relative(root, loaded.file)) : 'kerf.config.ts'
   const text = loaded.file ? readFileSync(loaded.file, 'utf8') : ''
   const out = []
   const report = (code, name, why, help) =>
@@ -264,7 +264,7 @@ export function trustDiagnostics(root, loaded, status = trustStatus(root, loaded
       }),
     )
   for (const p of status.plugins) {
-    const approve = `Review it, then run \`weft plugins approve ${p.name}\`.`
+    const approve = `Review it, then run \`kerf plugins approve ${p.name}\`.`
     if (p.added.length)
       report(
         'P109',
@@ -276,21 +276,21 @@ export function trustDiagnostics(root, loaded, status = trustStatus(root, loaded
       report(
         'P109',
         p.name,
-        `\`${p.name}\` uses ${p.hidden.join(', ')} without declaring it (${p.uses.find((u) => p.hidden.includes(u.need))?.file ?? 'see `weft plugins audit`'}).`,
-        `Have it declared, or review it and run \`weft plugins approve ${p.name}\`.`,
+        `\`${p.name}\` uses ${p.hidden.join(', ')} without declaring it (${p.uses.find((u) => p.hidden.includes(u.need))?.file ?? 'see `kerf plugins audit`'}).`,
+        `Have it declared, or review it and run \`kerf plugins approve ${p.name}\`.`,
       )
     if (p.integrityChanged)
       report(
         'P110',
         p.name,
         `\`${p.name}\`${p.lockedVersion && p.lockedVersion !== p.version ? ` went from ${p.lockedVersion} to ${p.version} and its` : `'s installed`} code isn't what the lock recorded.`,
-        `Reinstall the locked version, or review the update and run \`weft plugins approve ${p.name}\`.`,
+        `Reinstall the locked version, or review the update and run \`kerf plugins approve ${p.name}\`.`,
       )
   }
   return out
 }
 
-/** Stops `weft dev` and `weft build` before a blocked plugin's build hooks run. */
+/** Stops `kerf dev` and `kerf build` before a blocked plugin's build hooks run. */
 export function requireTrust(root, loaded) {
   if (loaded.diagnostics.some((d) => d.code === 'P007')) return
   const blocked = trustDiagnostics(root, loaded).filter((d) => d.severity === 'error')
@@ -298,7 +298,7 @@ export function requireTrust(root, loaded) {
     throw refused(blocked.map((d) => `${d.code} ${d.why} ${d.fix.text}`).join('\n'))
 }
 
-/** `weft plugins audit --json`. */
+/** `kerf plugins audit --json`. */
 export function auditCommand(root, loaded) {
   const status = trustStatus(root, loaded, { full: true })
   const diagnostics = trustDiagnostics(root, loaded, status)
@@ -309,19 +309,19 @@ export function auditCommand(root, loaded) {
   }
 }
 
-/** `.weft/` in a .gitignore hides the lock, and a lock nobody commits protects nobody. */
+/** `.kerf/` in a .gitignore hides the lock, and a lock nobody commits protects nobody. */
 function unignoreLock(root) {
   const file = join(root, '.gitignore')
   if (!existsSync(file)) return false
   const text = readFileSync(file, 'utf8')
-  const next = text.replace(/^\/?\.weft\/?$/m, `.weft/*\n!${lockFile}`)
+  const next = text.replace(/^\/?\.kerf\/?$/m, `.kerf/*\n!${lockFile}`)
   if (next === text) return false
   writeFileSync(file, next)
   return true
 }
 
 /**
- * `weft plugins approve`: names, or `all`. With neither it only shows what's waiting, so approving is always something
+ * `kerf plugins approve`: names, or `all`. With neither it only shows what's waiting, so approving is always something
  * said out loud, one plugin at a time or all at once.
  */
 export function approveCommand(root, loaded, { names = [], all = false } = {}) {
@@ -362,7 +362,7 @@ export function approveCommand(root, loaded, { names = [], all = false } = {}) {
       .sort()
       .map((name) => [name, entries[name]]),
   )
-  mkdirSync(join(root, '.weft'), { recursive: true })
+  mkdirSync(join(root, '.kerf'), { recursive: true })
   writeFileSync(
     join(root, lockFile),
     `${JSON.stringify({ version: 1, plugins: ordered }, null, 2)}\n`,

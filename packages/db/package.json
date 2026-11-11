@@ -1,16 +1,16 @@
 {
-  "name": "@weft-js/db",
-  "version": "0.1.4",
-  "description": "weft's data layers and list sources in one package: each driver is an optional peer, and a subpath loads only its own",
+  "name": "@kerf-js/db",
+  "version": "0.1.0",
+  "description": "kerf's data layers and list sources in one package: each driver is an optional peer, and a subpath loads only its own",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/db"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/db#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/db#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "type": "module",
   "exports": {
@@ -42,14 +42,14 @@
     "@aws-sdk/client-dynamodb": "^3.0.0",
     "@aws-sdk/lib-dynamodb": "^3.0.0",
     "@prisma/client": ">=6",
-    "@weft-js/start": "*",
+    "@kerf-js/start": "*",
     "better-auth": "^1.7.0",
     "firebase-admin": ">=12",
     "kysely": "^0.29.0",
     "mongodb": ">=6",
     "mysql2": "^3.24.0",
     "postgres": ">=3",
-    "@weft-js/core": "*"
+    "@kerf-js/core": "*"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-dynamodb": {
@@ -85,7 +85,7 @@
     "@aws-sdk/lib-dynamodb": "3.1161.0",
     "@prisma/adapter-libsql": "7.10.1",
     "@prisma/client": "7.10.1",
-    "@weft-js/start": "workspace:*",
+    "@kerf-js/start": "workspace:*",
     "firebase-admin": "14.5.0",
     "kysely": "0.29.7",
     "mongodb": "7.8.0",
@@ -93,7 +93,7 @@
     "postgres": "4.0.0",
     "prisma": "7.10.1",
     "vitest": "5.0.5",
-    "@weft-js/core": "workspace:*"
+    "@kerf-js/core": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
@@ -102,7 +102,7 @@
     "node": ">=24"
   },
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "files": [
     "src",

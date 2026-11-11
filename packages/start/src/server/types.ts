@@ -1,4 +1,4 @@
-import type { Site, Merged, Meta as MetaObject } from '@weft-js/core/ssr'
+import type { Site, Merged, Meta as MetaObject } from '@kerf-js/core/ssr'
 import type { AssetReceipt, Component, Match } from '../router'
 import type { AuthProvider } from '../auth'
 import type { ExtensionEntry } from '../extension'
@@ -29,7 +29,7 @@ export interface LayoutEntry {
   dir: string
   parent?: string
 }
-/** The routes and layouts `weft build` found. */
+/** The routes and layouts `kerf build` found. */
 export interface Manifest {
   dir: string
   routes: RouteEntry[]
@@ -74,8 +74,8 @@ export interface HandlerOptions {
   modules: Record<string, RouteModule>
   site?: Site
   /**
-   * The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`weft:fonts/preloads`).
-   * `pieces`: the build's first-paint table. Without it, `inline` and Weft's purge (`critical`) are what `pageStyles` uses.
+   * The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`kerf:fonts/preloads`).
+   * `pieces`: the build's first-paint table. Without it, `inline` and Kerf's purge (`critical`) are what `pageStyles` uses.
    */
   assets?: {
     entry?: string
@@ -113,12 +113,12 @@ export interface HandlerOptions {
   /** The shared cache for `cache: { life }` queries (memory by default). */
   store?: Store
   /** `src/auth.server.ts`'s default export, any provider: mounted at its base path, checked on the first request. */
-  auth?: Pick<AuthProvider, 'handler' | 'basePath' | '$weft'>
-  /** `server.extension` providers with an app file (`virtual:weft/extensions`), loaded on the first request. */
+  auth?: Pick<AuthProvider, 'handler' | 'basePath' | '$kerf'>
+  /** `server.extension` providers with an app file (`virtual:kerf/extensions`), loaded on the first request. */
   extensions?: ExtensionEntry[]
-  /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
+  /** The app's migrations (`drizzle/`); dev reads them each request, so `kerf db generate` needs no restart. */
   migrations?: () => { tag: string; sql: string }[]
-  /** The `media.server` provider (`virtual:weft/media`), loaded on first use. */
+  /** The `media.server` provider (`virtual:kerf/media`), loaded on first use. */
   media?: () => Promise<MediaServer>
   /** `src/cron.server.ts`'s default export: jobs on a schedule, run by a server preset (not in a build). */
   cron?: CronJobs
@@ -128,7 +128,7 @@ export interface HandlerOptions {
   jobs?: Jobs
   /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
   realtime?: RealtimeOptions
-  /** `false`: never build URLs on the request's origin (`weft routes --meta`, whose requests aren't real). */
+  /** `false`: never build URLs on the request's origin (`kerf routes --meta`, whose requests aren't real). */
   requestOrigin?: false
   /** Queries marked `live: { required: true }` (`scanRequired`, at build). */
   liveRequired?: string[]
@@ -142,7 +142,7 @@ export interface Level extends Match {
   raw: unknown
 }
 
-/** Where the words on a page came from, and its image: what `weft routes --meta` and `weft check` report. */
+/** Where the words on a page came from, and its image: what `kerf routes --meta` and `kerf check` report. */
 export interface MetaSource {
   title: 'route' | 'layout' | 'auto' | 'config' | 'none'
   description: 'route' | 'layout' | 'auto' | 'config' | 'none'

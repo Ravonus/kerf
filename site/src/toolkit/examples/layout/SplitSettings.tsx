@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   Heading,
@@ -8,7 +8,7 @@ import {
   Split,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { SECTIONS } from './shared'
 
 export function SplitSettings() {

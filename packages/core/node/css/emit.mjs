@@ -42,18 +42,18 @@ const reads = (v        ) => v.includes('var(--_')
 
 /**
  * A group's tone is local: where it sets a tone and reads the channels on the same element, the reads become the
- * tone's tokens and the channels go (`background-color: var(--_soft)` under caution → `var(--warp-color-caution-soft)`).
+ * tone's tokens and the channels go (`background-color: var(--_soft)` under caution → `var(--veneer-color-caution-soft)`).
  * Two shapes fold, per element (the root or one part):
  * - one unconditional tone (the base or the part's block): every read on that element takes its values;
  * - tones only under conditions (axis values, compounds), reads only unconditional: each conditional tone rule
  *   gets the reads with its values, and an unconditional read becomes what it was with no tone: its fallback
- *   (`var(--_text, var(--warp-color-text-subtle))` → the subtle token), or nothing when it has none (it was unset).
+ *   (`var(--_text, var(--veneer-color-text-subtle))` → the subtle token), or nothing when it has none (it was unset).
  * Any other shape (a tone read by another element, reads under conditions next to conditional tones) keeps channels.
  * A group with no tone at all reads its fallbacks. So a group never takes a tone from what it's nested in; context
- * tone stays Warp's `data-tone`.
+ * tone stays Veneer's `data-tone`.
  */
 function foldTones(rules        ) {
-  // A group with no tone anywhere reads its fallbacks: `var(--_text, var(--warp-color-text))` → the text token.
+  // A group with no tone anywhere reads its fallbacks: `var(--_text, var(--veneer-color-text))` → the text token.
   if (!rules.some((r) => Object.keys(r.decls).some(isChannel))) {
     for (const r of rules)
       for (const [p, v] of Object.entries(r.decls))
@@ -347,7 +347,7 @@ export function emitGroups(
     dev && shared.size ? '  /* the same base or part in several groups, written once */\n' : ''
   const sharedBlocks = [...shared.values()].map((m) => block(m.sels, m.decls, '  '))
   if (!blocks.length && !sharedBlocks.length) return ''
-  return `@layer warp, app, theme, base, components, utilities;\n@layer app.groups {\n${head}${[...sharedBlocks, ...blocks].join('\n')}\n}\n`
+  return `@layer veneer, app, theme, base, components, utilities;\n@layer app.groups {\n${head}${[...sharedBlocks, ...blocks].join('\n')}\n}\n`
 }
 
 /**

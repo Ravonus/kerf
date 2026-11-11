@@ -1,11 +1,11 @@
 # Styling: style groups
 
-Style with **groups** from `@weft-js/core/style`, not class lists. A group is a named thing (`order-card`), its variations
+Style with **groups** from `@kerf-js/core/style`, not class lists. A group is a named thing (`order-card`), its variations
 (axes), its pieces (parts) and its states, all written in tokens. The markup says what an element is and which
 variation it's in: `<article data-g="order-card" data-status="late">`.
 
 ```tsx
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf-js/core/style'
 
 /** A summary card for one order in a list. */
 export const orderCard = group('order-card', {
@@ -53,7 +53,7 @@ export function OrderCard(props: {
 
 ## Rules
 
-1. **Find before you write.** `weft style find card` (MCP `style_find`) lists the groups that fit. Reuse one, or
+1. **Find before you write.** `kerf style find card` (MCP `style_find`) lists the groups that fit. Reuse one, or
    add an axis value to it. A second group for the same thing is D021.
 2. **Values are tokens.** Each key is an intent (`surface pad gap radius tone emphasis text ink layout align justify
    ring …`) and each value one of its tokens. `pad: '13px'` is a type error and D025. Raw CSS goes in
@@ -69,12 +69,12 @@ export function OrderCard(props: {
 
 ## Tools
 
-- `weft style find <query>`: groups that fit, best first, with axes, parts, states and how often each is used.
-- `weft style explain order-card --status late` (or `order-card[status=late]`, `order-card.title`, or a DOM selector
+- `kerf style find <query>`: groups that fit, best first, with axes, parts, states and how often each is used.
+- `kerf style explain order-card --status late` (or `order-card[status=late]`, `order-card.title`, or a DOM selector
   copied from devtools): every declaration on the root and parts, in cascade order, with the token, axis, state,
   compound or accent it came from, and the CSS that variation emits. MCP `style_explain`.
-- `.weft/styles.json`: the generated matrix (every group's axes, values, parts, accents, resolved CSS, uses and
-  `similar` groups). `weft dev`/`build` and `weft check` keep it current; `weft style matrix` writes it. Read it;
+- `.kerf/styles.json`: the generated matrix (every group's axes, values, parts, accents, resolved CSS, uses and
+  `similar` groups). `kerf dev`/`build` and `kerf check` keep it current; `kerf style matrix` writes it. Read it;
   never edit it.
 
 Codes: D020 class soup, D021 near-duplicate groups, D022 a repeated accent, D023 the `css` escape, D024 styles that

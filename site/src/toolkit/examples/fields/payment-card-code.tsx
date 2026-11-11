@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   CardNumberText,
@@ -8,11 +8,11 @@ import {
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import type {
   ProviderAppearance,
   ProviderField,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { testProvider } from './place-payment'
 
 /**

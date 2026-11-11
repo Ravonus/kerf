@@ -4,7 +4,7 @@ import {
   Progress,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { REGIONS } from '../../world'
 import { STATS } from './shared'
 

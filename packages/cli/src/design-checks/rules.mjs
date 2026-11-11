@@ -1,7 +1,7 @@
-import { WARP, HEADING_ROLE } from './values.mjs'
+import { VENEER, HEADING_ROLE } from './values.mjs'
 
 export const NATIVE = { button: 'Button', select: 'Select', textarea: 'Textarea' }
-// the input types a browser paints, and the warp control for each; `Input` passes `type` through, so it counts too
+// the input types a browser paints, and the veneer control for each; `Input` passes `type` through, so it counts too
 export const NATIVE_TYPES = {
   date: 'DateField',
   'datetime-local': 'DateTimeField',
@@ -129,11 +129,11 @@ export const ratio = (a, b) => {
   return (x + 0.05) / (y + 0.05)
 }
 
-/** Lines an allow comment covers: `// weft-allow D001: reason` (or `{/* … *\/}`) on the line above or at the line's end. */
+/** Lines an allow comment covers: `// kerf-allow D001: reason` (or `{/* … *\/}`) on the line above or at the line's end. */
 export function allowed(text) {
   const out = new Map()
   text.split('\n').forEach((line, i) => {
-    const m = /weft-allow\s+((?:D\d{3}[\s,]*)+):\s*\S/.exec(line)
+    const m = /kerf-allow\s+((?:D\d{3}[\s,]*)+):\s*\S/.exec(line)
     if (!m) return
     for (const code of m[1].match(/D\d{3}/g))
       for (const n of [i + 1, i + 2]) out.set(`${code}:${n}`, true)
@@ -141,10 +141,10 @@ export function allowed(text) {
   return out
 }
 
-/** The edit that imports `names` from warp: into the file's existing import, or a new first line. */
+/** The edit that imports `names` from veneer: into the file's existing import, or a new first line. */
 export function addImport(text, names) {
-  const m = new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*['"]${WARP}['"]`).exec(text)
-  if (!m) return [{ start: 0, end: 0, text: `import { ${names.join(', ')} } from '${WARP}'\n` }]
+  const m = new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*['"]${VENEER}['"]`).exec(text)
+  if (!m) return [{ start: 0, end: 0, text: `import { ${names.join(', ')} } from '${VENEER}'\n` }]
   const have = m[1]
     .split(',')
     .map((s) => s.trim())
@@ -155,7 +155,7 @@ export function addImport(text, names) {
   return [{ start: at, end: at, text: `, ${missing.join(', ')}` }]
 }
 
-/** Does the app have warp's tokens? */
+/** Does the app have veneer's tokens? */
 /** Where a host keeps response headers, outside the source. */
 export const HOST_HEADERS = ['public/_headers', '_headers', 'netlify.toml', 'vercel.json']
 const CSP_DIRECTIVE = /\b((?:default|style|script)-src(?:-attr|-elem)?)\b([^;\n"`]*)/gi
@@ -181,7 +181,7 @@ export function scriptsRun(policy) {
   const lists = policy.get(
     ['script-src-elem', 'script-src', 'default-src'].find((n) => policy.has(n)),
   )
-  // Past `strict-dynamic` a browser ignores hosts, 'self' and 'unsafe-inline', and weft's scripts carry no nonce.
+  // Past `strict-dynamic` a browser ignores hosts, 'self' and 'unsafe-inline', and kerf's scripts carry no nonce.
   return (
     !lists ||
     lists.every(
@@ -258,7 +258,7 @@ export function roleDrift(level, sites) {
       'D006',
       el.start,
       el.tagEnd,
-      `h${level} renders at two roles in this app (${all}): a level is one size everywhere. This one is \`${has}\`, the rest \`${role}\`. \`// weft-allow D006: <reason>\` keeps a real exception.`,
+      `h${level} renders at two roles in this app (${all}): a level is one size everywhere. This one is \`${has}\`, the rest \`${role}\`. \`// kerf-allow D006: <reason>\` keeps a real exception.`,
       fix,
     )
   }

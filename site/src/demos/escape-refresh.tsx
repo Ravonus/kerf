@@ -1,5 +1,5 @@
-import { Boundary, resource, state } from '@weft-js/core'
-import { Badge, Button, Card, Row } from '@weft-js/warp'
+import { Boundary, resource, state } from '@kerf-js/core'
+import { Badge, Button, Card, Row } from '@kerf-js/veneer'
 
 const CITIES = ['Lisbon', 'Oslo', 'Nairobi', 'Lima']
 // A request returns a temperature after 800 ms,

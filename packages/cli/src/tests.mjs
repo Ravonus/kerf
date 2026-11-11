@@ -2,13 +2,13 @@
 //
 //   T001 no assertion          T004 sleeps / real timers     T007 unapproved snapshot
 //   T002 tautology             T005 implementation queries   T008 conditional or looped `expect`
-//   T003 asserts what it set   T006 mocks weft or the unit   T009 `.only` / `.skip`
+//   T003 asserts what it set   T006 mocks kerf or the unit   T009 `.only` / `.skip`
 //   T013 a real socket
 //
-// Syntax only (TypeScript's parser, no type checker), like the project view. `@weft-js/core/test` adds a runtime T001 for
+// Syntax only (TypeScript's parser, no type checker), like the project view. `@kerf-js/core/test` adds a runtime T001 for
 // assertions this pass can't see. A finding a test needs on purpose is kept with a written reason:
 //
-//   // weft-allow T004, T005: hydration tests read the server DOM and wait for real timers
+//   // kerf-allow T004, T005: hydration tests read the server DOM and wait for real timers
 //
 // in the file's leading comments covers the whole file; anywhere else it covers its own line and the next one.
 // Without a reason it is ignored.
@@ -26,14 +26,14 @@ export { isSubject, matcherOf, norm, parse, resolveImport, testCall } from './te
 
 export const testGlobs = ['**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}']
 
-/** Comment directives: `// weft-allow T004, T005: reason`. */
+/** Comment directives: `// kerf-allow T004, T005: reason`. */
 export function allowances(text, sf) {
   const firstCode = sf.statements[0]?.getStart(sf) ?? text.length
   const file = new Set()
   const lines = new Map()
   const pos = positions(text)
   for (const m of text.matchAll(
-    /\/\/[ \t]*weft-allow[ \t]+((?:T\d{3}[ \t,]*)+)(?::[ \t]*(\S.*))?$/gm,
+    /\/\/[ \t]*kerf-allow[ \t]+((?:T\d{3}[ \t,]*)+)(?::[ \t]*(\S.*))?$/gm,
   )) {
     if (!m[2]?.trim()) continue
     const codes = m[1].match(/T\d{3}/g)
@@ -107,7 +107,7 @@ export const isTestFile = (rel) => /\.(test|spec)\.[cm]?[jt]sx?$/.test(rel)
 export function probeTests(catalog) {
   const out = {}
   for (const e of catalog) {
-    if (!/^T\d{3}$/.test(e.code) || e.by !== 'cli') continue // T012 is @weft-js/core/test's runtime check
+    if (!/^T\d{3}$/.test(e.code) || e.by !== 'cli') continue // T012 is @kerf-js/core/test's runtime check
     const hit =
       e.example && checkTestFile(e.example, 'probe.test.tsx').find((d) => d.code === e.code)
     out[e.code] = {

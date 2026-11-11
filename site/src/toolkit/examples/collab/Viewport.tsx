@@ -1,4 +1,4 @@
-import { ViewportRail } from '@weft-js/warp'
+import { ViewportRail } from '@kerf-js/veneer'
 
 import { VIEWPORT_PEERS } from '../../world'
 

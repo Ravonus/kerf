@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Icon, Modal } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button, Icon, Modal } from '@kerf-js/veneer'
 
 export function ModalResult() {
   const open = state(false)

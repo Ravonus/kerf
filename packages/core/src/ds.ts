@@ -1,6 +1,6 @@
-// @weft-js/core/ds: the design language's closed vocabulary (PLAN §6, research 37), the names every primitive, style group and
-// D-code agrees on. Names only: the values are warp's tokens (./style/vocab.ts maps these to them), the primitives are
-// `@weft-js/warp`, and the checks are `weft check`'s D-codes. `weft tokens` exports the resolved values as DTCG.
+// @kerf-js/core/ds: the design language's closed vocabulary (PLAN §6, research 37), the names every primitive, style group and
+// D-code agrees on. Names only: the values are veneer's tokens (./style/vocab.ts maps these to them), the primitives are
+// `@kerf-js/veneer`, and the checks are `kerf check`'s D-codes. `kerf tokens` exports the resolved values as DTCG.
 
 /** The steps of space, from none to a page's margin. */
 export const SPACE = ['none', 'hair', 'tight', 'related', 'group', 'section', 'page'] as const

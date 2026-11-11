@@ -18,21 +18,21 @@ const answer = async (res: Response): Promise<Answer> => {
   return body
 }
 
-/** The browser's: GET for queries, POST + JSON + `x-weft` for mutations (research 27 §3). */
+/** The browser's: GET for queries, POST + JSON + `x-kerf` for mutations (research 27 §3). */
 export const http: Transport = {
   query: (id, input) =>
-    fetch(`/_weft/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, {
+    fetch(`/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, {
       headers: { accept: 'application/json' },
     }).then(answer),
   mutate(id, input, f, form) {
     const headers: Record<string, string> = {
       accept: 'application/json',
-      'x-weft': '1',
-      ...(runtime.conn && { 'x-weft-conn': runtime.conn }),
+      'x-kerf': '1',
+      ...(runtime.conn && { 'x-kerf-conn': runtime.conn }),
     }
     if (form instanceof FormData) form.set('$r', JSON.stringify(f))
     else headers['content-type'] = 'application/json'
-    return fetch(`/_weft/fn/${id}`, {
+    return fetch(`/_kerf/fn/${id}`, {
       method: 'POST',
       headers,
       body:
@@ -42,7 +42,7 @@ export const http: Transport = {
 }
 
 /**
- * @weft-js/core/test's fake transport: the server's executor in process, with the controls @weft-js/core/test's `net` sets (latency,
+ * @kerf-js/core/test's fake transport: the server's executor in process, with the controls @kerf-js/core/test's `net` sets (latency,
  * failures, replaced functions, offline), and a JSON round trip both ways so values arrive as they would over HTTP.
  */
 export const fakeScope = (exec: typeof Exec, n: NetControl, request: Request) =>
@@ -52,7 +52,7 @@ export const fakeScope = (exec: typeof Exec, n: NetControl, request: Request) =>
     dev: true,
     extensions: n.extensions,
     onDiagnostic: (d) =>
-      console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`),
+      console.warn(`kerf: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`),
   })
 
 type Call = (exec: typeof Exec, scope: Scope, fn: Fn) => Promise<Answer>
@@ -102,9 +102,9 @@ async function fakeCall(
   const scope = fakeScope(
     exec,
     n,
-    new Request(`http://localhost/_weft/fn/${id}`, {
+    new Request(`http://localhost/_kerf/fn/${id}`, {
       method: kind === 'query' ? 'GET' : 'POST',
-      headers: runtime.conn ? { 'x-weft-conn': runtime.conn } : {},
+      headers: runtime.conn ? { 'x-kerf-conn': runtime.conn } : {},
     }),
   )
   try {

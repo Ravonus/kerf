@@ -16,7 +16,7 @@ export const codeDocs: Doc[] = [
       code: '<Code>{children}</Code>',
       stage: 'narrow',
       knobs: [
-        { prop: 'children', control: 'text', label: 'Code', initial: 'weft deploy', default: '' },
+        { prop: 'children', control: 'text', label: 'Code', initial: 'kerf deploy', default: '' },
       ],
     },
     sections: [
@@ -63,7 +63,7 @@ export const codeDocs: Doc[] = [
       stage: 'fill',
       height: 300,
       knobs: [
-        { prop: 'filename', control: 'text', initial: 'weft.config.ts', default: '' },
+        { prop: 'filename', control: 'text', initial: 'kerf.config.ts', default: '' },
         {
           prop: 'language',
           control: 'select',
@@ -128,7 +128,7 @@ export const codeDocs: Doc[] = [
     keyboard: [['Tab', 'Focuses the code, so arrow keys can scroll it']],
     a11yNotes: [
       'Long lines scroll, so the block takes focus for keyboard users.',
-      'It is coloured on the server and needs no script. `copyButtons()` from `@weft-js/warp-core`, called once, runs every copy button.',
+      'It is coloured on the server and needs no script. `copyButtons()` from `@kerf-js/veneer-core`, called once, runs every copy button.',
     ],
     related: ['Snippet', 'Code', 'CodeInput', 'Markdown'],
   },
@@ -147,7 +147,7 @@ export const codeDocs: Doc[] = [
       code: '<Snippet{props} />',
       stage: 'narrow',
       knobs: [
-        { prop: 'code', control: 'text', initial: 'npm install -g Weft', default: '' },
+        { prop: 'code', control: 'text', initial: 'npm install -g Kerf', default: '' },
         { prop: 'prompt', control: 'text', initial: '$', default: '$' },
       ],
     },

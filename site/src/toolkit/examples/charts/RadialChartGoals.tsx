@@ -1,4 +1,4 @@
-import { RadialChart } from '@weft-js/warp'
+import { RadialChart } from '@kerf-js/veneer'
 
 import { GOALS } from '../../world'
 

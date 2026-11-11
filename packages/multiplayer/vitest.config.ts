@@ -1,9 +1,9 @@
 import { defineConfig } from 'vitest/config'
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf-js/core/vite'
 
-// `@weft-js/start` is linked from outside this package's root, and jsdom's environment reads through Vite's file allowlist.
+// `@kerf-js/start` is linked from outside this package's root, and jsdom's environment reads through Vite's file allowlist.
 export default defineConfig({
-  plugins: [weft()],
+  plugins: [kerf()],
   server: { fs: { allow: ['..'] } },
   test: { environment: 'node', globals: true },
 })

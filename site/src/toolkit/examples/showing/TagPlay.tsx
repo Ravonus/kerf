@@ -1,4 +1,4 @@
-import { Tag } from '@weft-js/warp'
+import { Tag } from '@kerf-js/veneer'
 
 export const TagPlay = (p: {
   children: string

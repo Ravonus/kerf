@@ -1,12 +1,12 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 import {
   Alert,
   Card,
   Input,
   Textarea,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
-// In weft.config.ts, a page's title fills `%s`
+// In kerf.config.ts, a page's title fills `%s`
 // in `site.title`.
 const TEMPLATE = '%s · Acme'
 
@@ -19,7 +19,7 @@ export default function MetaPreview() {
   const full = derived(() =>
     TEMPLATE.replace('%s', title.value),
   )
-  // What `weft check` reports for this page:
+  // What `kerf check` reports for this page:
   // H003 and H004.
   const problems = derived(() => [
     ...(description.value.trim()

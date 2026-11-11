@@ -1,4 +1,4 @@
-Add a keyed weft implementation using the published weft runtime and compiler.
+Add a keyed kerf implementation using the published kerf runtime and compiler.
 The entry implements the reference operations with keyed rows and the reference
 markup. Dependencies are pinned.
 

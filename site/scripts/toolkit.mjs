@@ -1,4 +1,4 @@
-// The toolkit's facts, read from warp's source so they can't drift: its exports, each one's props from the type checker,
+// The toolkit's facts, read from veneer's source so they can't drift: its exports, each one's props from the type checker,
 // and the parts it draws. The words and examples are written by hand in src/toolkit; `readExamples` reads those examples'
 // own source, so the code on a page is the code running on it.
 import { createRequire } from 'node:module'

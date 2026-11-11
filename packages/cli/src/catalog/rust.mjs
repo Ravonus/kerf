@@ -5,7 +5,7 @@ export const rust = [
     severity: 'error',
     by: 'cli',
     catches:
-      "A function with `impl` has no `output`, a type JSON can't carry (`z.date()`, `z.bigint()`, `z.void()`, `z.custom()`), or a one-way `.transform()` on its input (`weft build`, `weft check`, `weft dev`)",
+      "A function with `impl` has no `output`, a type JSON can't carry (`z.date()`, `z.bigint()`, `z.void()`, `z.custom()`), or a one-way `.transform()` on its input (`kerf build`, `kerf check`, `kerf dev`)",
     fix: 'Use a codec: `z.codec(z.iso.datetime(), z.date(), { decode, encode })`. `z.null()` says a function returns nothing',
   },
   {
@@ -22,7 +22,7 @@ export const rust = [
     by: 'cli',
     catches:
       "A sidecar doesn't match the contract: cargo stops where a generated type or method no longer fits (with the function's id), a binary built from another contract, an output the `output` schema rejects, or input serde refuses",
-    fix: "Fix the Rust to fit the TS declaration, which is the source of truth; `.weft/rust/<service>.rs` shows what's generated",
+    fix: "Fix the Rust to fit the TS declaration, which is the source of truth; `.kerf/rust/<service>.rs` shows what's generated",
   },
   {
     code: 'R104',
@@ -30,14 +30,14 @@ export const rust = [
     by: 'cli',
     catches:
       "`native()` on a preset that can't run it (no file system for an addon or a `.wasm`), on a preset with no WASM when `wasm: false` is set, or a `.wasm` that won't build (a warning on a preset the addon runs on). At run time, a build with neither for this platform (503)",
-    fix: "Use `remote('rust://<name>')`, the same crate behind `weft::router`. `rustup target add wasm32-unknown-unknown`, or `rust.services.<name>.wasm: false` if nothing needs a fallback",
+    fix: "Use `remote('rust://<name>')`, the same crate behind `kerf::router`. `rustup target add wasm32-unknown-unknown`, or `rust.services.<name>.wasm: false` if nothing needs a fallback",
   },
   {
     code: 'R105',
     severity: 'warning',
     by: 'cli',
     catches:
-      "A cached Rust query with `tags` that reports no table (`weft check` reads the method; `weft dev` sees the call): Q011 can't see into Rust, so nothing checks that the tags cover what it reads",
+      "A cached Rust query with `tags` that reports no table (`kerf check` reads the method; `kerf dev` sees the call): Q011 can't see into Rust, so nothing checks that the tags cover what it reads",
     fix: 'Call `ctx.touch("table")` in the Rust, or drop `tags` from a query that reads no table',
   },
   {
@@ -45,8 +45,8 @@ export const rust = [
     severity: 'error',
     by: 'start',
     catches:
-      "A `remote()` call can't be made: no address, no `WEFT_RUST_SECRET`, or the sidecar refused the signature (503)",
-    fix: 'Set `WEFT_RUST_<NAME>_URL` and the same `WEFT_RUST_SECRET` on both sides. `weft dev` and `weft start` do it for what they supervise',
+      "A `remote()` call can't be made: no address, no `KERF_RUST_SECRET`, or the sidecar refused the signature (503)",
+    fix: 'Set `KERF_RUST_<NAME>_URL` and the same `KERF_RUST_SECRET` on both sides. `kerf dev` and `kerf start` do it for what they supervise',
   },
   {
     code: 'R107',

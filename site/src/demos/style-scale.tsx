@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import type { Space } from '@weft-js/core/ds'
+import { state } from '@kerf-js/core'
+import type { Space } from '@kerf-js/core/ds'
 import {
   Card,
   Heading,
@@ -8,7 +8,7 @@ import {
   Stack,
   Tag,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 const GAPS: { value: Space; label: string }[] = [
   { value: 'tight', label: 'tight' },

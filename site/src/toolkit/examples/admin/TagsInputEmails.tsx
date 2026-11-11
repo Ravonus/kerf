@@ -1,8 +1,8 @@
-import { state } from '@weft-js/core'
-import { TagsInput } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { TagsInput } from '@kerf-js/veneer'
 
 export function TagsInputEmails() {
-  const emails = state(['dara@weft.dev', 'kai@weft'])
+  const emails = state(['dara@kerf.dev', 'kai@kerf'])
   return (
     <TagsInput
       label="Email addresses"
@@ -13,7 +13,7 @@ export function TagsInputEmails() {
       }
       error={
         emails.value.some((e) => !e.includes('.'))
-          ? 'kai@weft is not a full address.'
+          ? 'kai@kerf is not a full address.'
           : undefined
       }
     />

@@ -1,11 +1,11 @@
-# Surfaces (`@weft-js/core/surface`)
+# Surfaces (`@kerf-js/core/surface`)
 
 A canvas or WebGL view that sits in layout like any other child. `setup` runs once on the client, props are live, and
 nothing around it re-renders. Never write a raw `<canvas>`.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { defineSurface, Surface } from '@weft-js/core/surface'
+import { state } from '@kerf-js/core'
+import { defineSurface, Surface } from '@kerf-js/core/surface'
 import { z } from 'zod'
 
 export const Bars = defineSurface({
@@ -43,8 +43,8 @@ export function Page() {
 A control beside the surface needs only a box and a live prop. Nothing re-renders when it moves:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { defineSurface, Surface } from '@weft-js/core/surface'
+import { state } from '@kerf-js/core'
+import { defineSurface, Surface } from '@kerf-js/core/surface'
 
 // Name the kind too, so s.ctx is typed.
 export const Stars = defineSurface<{ density: number }, 'canvas2d'>({
@@ -93,7 +93,7 @@ The server renders a sized placeholder, so nothing shifts when the canvas mounts
 **`s`:**
 - `s.ctx` (`canvas2d`), `s.gl` (`webgl2`), `s.canvas`, `s.el`
 - `s.size`, `s.dpr`, `s.scale`: boxes. `canvas2d` draws in CSS px; `webgl2` has its viewport set for you
-- `s.tokens.accent`: `--accent`, else `--warp-accent`, as `{ css, linear }`
+- `s.tokens.accent`: `--accent`, else `--veneer-accent`, as `{ css, linear }`
 - `s.draw(fn)`: paint when a box it read changes
 - `s.frame(t => ...)`: animate: `t.frame`, `t.seconds`, `t.delta`. Also repaints on a box change while paused
 - `s.invalidate()`: book a paint by hand
@@ -104,7 +104,7 @@ The server renders a sized placeholder, so nothing shifts when the canvas mounts
 and `pixel: { width, height }` for a fixed target with integer scale and nearest sampling. `maxDpr` may be a `State`:
 a page that governs its frame rate writes it, and the canvas refits without waiting for a resize.
 
-**The clock** is shared: `import { clock } from '@weft-js/core/surface'`, then `clock.pause()`, `clock.play()`, `clock.seek(seconds)`.
+**The clock** is shared: `import { clock } from '@kerf-js/core/surface'`, then `clock.pause()`, `clock.play()`, `clock.seek(seconds)`.
 `seek` paints every animated surface now, so a capture is deterministic. Under `prefers-reduced-motion: reduce` it
 starts paused on the first frame. Off-screen surfaces skip their paints.
 
@@ -124,13 +124,13 @@ const score = s.text(() => `Score ${props.score}`, {
 - `font` and `lineHeight` default to the CSS on the mirror. `color` defaults to the surface's. `align` is `left`,
   `center` or `right`. Name a family (X002).
 - It returns `{ el, lineCount, height }`; the last two are boxes.
-- Canvas `s.text()` needs the `text.measure` slot, so add `text()` from `@weft-js/text` to `plugins` in
-  weft.config.ts (P101). Its engine loads lazily. On `webgl2` the mirror is the visible text, and no plugin is needed.
+- Canvas `s.text()` needs the `text.measure` slot, so add `text()` from `@kerf-js/text` to `plugins` in
+  kerf.config.ts (P101). Its engine loads lazily. On `webgl2` the mirror is the visible text, and no plugin is needed.
 - `s.decorative(() => ctx.fillText(...))` is for text that is truly decoration.
 
 ## Testing
 
-jsdom has no canvas, so `@weft-js/core/test` gives it a recording one:
+jsdom has no canvas, so `@kerf-js/core/test` gives it a recording one:
 
 <!-- example: skip imports the Page above from its own file -->
 ```tsx
@@ -140,7 +140,7 @@ import {
   fakeMeasure,
   flush,
   render,
-} from '@weft-js/core/test'
+} from '@kerf-js/core/test'
 import { expect, test } from 'vitest'
 import { Page } from './Page'   // the Bars page above
 
@@ -155,4 +155,4 @@ test('draws a bar per value', async () => {
 })
 ```
 
-`weft surfaces --json` (MCP `surfaces`) lists what the project already has.
+`kerf surfaces --json` (MCP `surfaces`) lists what the project already has.

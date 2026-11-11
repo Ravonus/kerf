@@ -1,4 +1,4 @@
-// Drops the CSS a build can't reach, as Tailwind does: warp's rules are keyed on data-* values, so a rule whose
+// Drops the CSS a build can't reach, as Tailwind does: veneer's rules are keyed on data-* values, so a rule whose
 // `[data-scope="knob"]` appears nowhere in the built JS or HTML can never match. Then the custom properties and
 // keyframes nothing refers to any more go too. It only ever looks for a value as a word in the output, so a name the
 // app builds at run time from parts, or a dial a server sets from a cookie with no list of values, needs `keep`.
@@ -12,7 +12,7 @@ import { makePieces } from './purge/pieces.mjs'
 // for goes with its keyframes.
 const KEYED =
   /\[data-(?:scope|part|variant|tone|emphasis|size|appearance|flow|expression|fields|density|flair|form)=["']?([^\]"']+)["']?\]/g
-const OWNED_PROP = /^--(?:warp-|_)/
+const OWNED_PROP = /^--(?:veneer-|_)/
 // Any other data-* attribute has to be named in the build as well, as itself or as its dataset key: `[data-lift]` is
 // written in markup or set with `el.dataset.lift`, so a build with neither can't reach it. `data-` in a build (a name
 // put together at run time) keeps them all. The dials the OS or a stored choice set on the root stay.
@@ -208,7 +208,7 @@ function dropKeyframes(css, rest, has) {
 
 /**
  * `:where(A B)` to `:where(A) :where(B)`: the same selector at the same specificity, but a browser files a rule by its last
- * compound and can't see into a complex `:where()`, so every element on the page is tested against it. warp wraps all of
+ * compound and can't see into a complex `:where()`, so every element on the page is tested against it. veneer wraps all of
  * its rules, and that was most of its style time. Each piece stays wrapped: `:where()` forgives an unknown pseudo-class
  * and a plain selector list doesn't.
  */
@@ -265,7 +265,7 @@ function flatten(css) {
 }
 
 const ANIMATED = /^@(?:-\w+-)?keyframes\b/
-/** A sheet without its keyframes at any depth (warp's sit in its layers): what's left is what can run one. */
+/** A sheet without its keyframes at any depth (veneer's sit in its layers): what's left is what can run one. */
 const unanimated = (nodes) =>
   nodes
     .filter((n) => !ANIMATED.test(n.head))

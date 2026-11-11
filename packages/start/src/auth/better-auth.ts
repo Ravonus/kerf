@@ -1,4 +1,4 @@
-// Better Auth as weft's default auth provider (research 28 §3, 34 §5). `src/auth.server.ts` default-exports `createAuth(…)`.
+// Better Auth as kerf's default auth provider (research 28 §3, 34 §5). `src/auth.server.ts` default-exports `createAuth(…)`.
 // No client code: sign-in is a mutation, so nothing of Better Auth ships to the browser.
 
 import { betterAuth, type BetterAuthOptions, type BetterAuthPlugin } from 'better-auth'
@@ -13,8 +13,8 @@ const SESSION = /(?:^|;\s*)(?:__Secure-)?[\w.-]*session_token=/
 const BEARER = /^Bearer\s+(\S+)$/i
 const CHUNK = /^(?:__Secure-)?[\w.-]*session_data\.\d+=/
 /** A socket or stream keeps its `ctx` past this request, and an extension's route is its own, so they never read the cache. */
-const HELD = /^\/_weft\/(rt|ws|x\/)/
-const FN = '/_weft/fn/'
+const HELD = /^\/_kerf\/(rt|ws|x\/)/
+const FN = '/_kerf/fn/'
 const ANONYMOUS = { user: null, session: null }
 const TABLES = ['user', 'session', 'account', 'verification', 'jwks']
 const ROTATE = 60 * 60 * 24 * 30
@@ -25,7 +25,7 @@ const oversized = (line: string) =>
 
 /** Better Auth's own routes follow the rule `session()` does: only reading who you are can answer from the cache. */
 const cacheRules: BetterAuthPlugin = {
-  id: 'weft-session-cache',
+  id: 'kerf-session-cache',
   hooks: {
     // `/token` above all: a revoked session mustn't mint a 15-minute token from a cookie it still holds.
     before: [
@@ -99,7 +99,7 @@ const buildSecret = () =>
 
 /** `createAuth`: the database, the secret, and any Better Auth option on top. */
 export interface AuthOptions<S extends Record<string, unknown>, O extends BetterAuthOptions> {
-  db: { $weft: DbHandle }
+  db: { $kerf: DbHandle }
   /** The tables, Better Auth's included, for a data layer that needs them. */
   schema?: S
   /** 32+ characters (A001 in production). */
@@ -168,14 +168,14 @@ function sessionReader(
   }
 }
 
-function requireStore(db: { $weft: DbHandle }, options: BetterAuthOptions | undefined) {
-  const handle = db.$weft
+function requireStore(db: { $kerf: DbHandle }, options: BetterAuthOptions | undefined) {
+  const handle = db.$kerf
   if (options?.database) for (const name of TABLES) handle.exempt.add(name)
   else
     throw new StartError(
       'A005',
       'Better Auth has no store',
-      "pass `options.database`: `drizzleAuth(db, schema)` from @weft-js/start/auth/drizzle, or your data layer's adapter",
+      "pass `options.database`: `drizzleAuth(db, schema)` from @kerf-js/start/auth/drizzle, or your data layer's adapter",
     )
 }
 
@@ -208,7 +208,7 @@ function checkServer(secret: string | undefined, origin: unknown) {
     )
 }
 
-/** A Better Auth instance with Weft's defaults, on the store `options.database` names. */
+/** A Better Auth instance with Kerf's defaults, on the store `options.database` names. */
 export function createAuth<
   S extends Record<string, unknown>,
   const O extends BetterAuthOptions = {},
@@ -231,9 +231,9 @@ export function createAuth<
   const auth = betterAuth({
     // A build loads this module with no environment, and in production Better Auth refuses to start without a secret: the
     // build gets one of its own, since nothing it makes is signed. A server still needs the real one (A001).
-    secret: secret ?? (process.env.WEFT_BUILD ? buildSecret() : undefined),
+    secret: secret ?? (process.env.KERF_BUILD ? buildSecret() : undefined),
     // A build's prerender holds no environment; a server takes `BETTER_AUTH_URL`, or the request's origin.
-    ...(process.env.WEFT_BUILD && { baseURL: 'http://localhost' }),
+    ...(process.env.KERF_BUILD && { baseURL: 'http://localhost' }),
     telemetry: { enabled: false },
     ...options,
     ...mailed(options),
@@ -255,7 +255,7 @@ export function createAuth<
     ],
     // The server stamps this header from the socket (server.tsx), so rate limits aren't one bucket for everyone.
     // Its schema check runs when this module loads. On Kysely that connects, in a build, and before a fresh database has
-    // had weft's migrations. Q014 covers a schema that doesn't match, so it's off unless you turn it on.
+    // had kerf's migrations. Q014 covers a schema that doesn't match, so it's off unless you turn it on.
     advanced: {
       ...options?.advanced,
       database: { validateSchema: false, ...options?.advanced?.database },
@@ -272,7 +272,7 @@ export function createAuth<
      * revoked session may be shown a page for the cache's window but can't write.
      */
     session: sessionReader(auth, methods, claims, functions, api),
-    $weft: {
+    $kerf: {
       /** On the first request (never in a build, which holds no secrets). */
       check: () => checkServer(secret, origin ?? options?.baseURL),
     },

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Tabs, Text } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Tabs, Text } from '@kerf-js/veneer'
 import { PLANNED } from './shared'
 
 export function TabsDisabled() {
@@ -15,7 +15,7 @@ export function TabsDisabled() {
         <Text>
           {v === 'general'
             ? 'Name, region and owner.'
-            : 'storefront.weft.app and two more.'}
+            : 'storefront.kerf.app and two more.'}
         </Text>
       )}
     </Tabs>

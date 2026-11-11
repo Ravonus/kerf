@@ -1,4 +1,4 @@
-import { Button, Tooltip } from '@weft-js/warp'
+import { Button, Tooltip } from '@kerf-js/veneer'
 
 export const TooltipTile = () => (
   <div style="display:grid;justify-items:center">

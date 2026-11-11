@@ -1,0 +1,8 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* diff / commit card (P2) */
+:where([data-scope="commit"]) { display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); box-shadow: inset 0 0 0 1px var(--veneer-color-border); font-size: 12.5px; }
+:where([data-scope="commit"] div) { display: flex; gap: 8px; font-family: var(--veneer-font-mono); font-size: 12px; }
+:where([data-scope="commit"] ins) { text-decoration: none; color: var(--veneer-color-positive-text); }
+:where([data-scope="commit"] del) { text-decoration: none; color: var(--veneer-color-critical-text); }
+}

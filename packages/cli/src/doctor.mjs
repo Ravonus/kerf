@@ -1,12 +1,12 @@
-// `weft doctor`: what this install compiles with, and whether Rust is around. Everything here is information: Rust is
+// `kerf doctor`: what this install compiles with, and whether Rust is around. Everything here is information: Rust is
 // optional, the WASM compiler is a full compiler, and the addon only adds speed. Nothing it reports fails the command.
 
 import { spawnSync } from 'node:child_process'
-import { loadCompiler, resolveWeft } from './weft.mjs'
+import { loadCompiler, resolveKerf } from './kerf.mjs'
 
-/** One line for `weft check --verbose` and `weft doctor`. */
+/** One line for `kerf check --verbose` and `kerf doctor`. */
 export function compilerLine(backend) {
-  if (!backend) return 'compiler: this weft does not say which build it uses'
+  if (!backend) return 'compiler: this kerf does not say which build it uses'
   if (backend.kind === 'native')
     return `compiler: native addon${backend.package ? ` (${backend.package})` : ` (${backend.file})`}`
   const offer = backend.wanted?.length
@@ -16,8 +16,8 @@ export function compilerLine(backend) {
 }
 
 export function doctor(root) {
-  const weft = resolveWeft(root)
-  const { backend } = loadCompiler(weft)
+  const kerf = resolveKerf(root)
+  const { backend } = loadCompiler(kerf)
   const cargo = spawnSync('cargo', ['--version'], { encoding: 'utf8' })
   const version = cargo.status === 0 ? cargo.stdout.trim() : null
   const runtime = globalThis.Deno
@@ -27,7 +27,7 @@ export function doctor(root) {
       : `Node ${process.version}`
   return {
     ok: true,
-    weft: weft.version,
+    kerf: kerf.version,
     runtime,
     compiler: backend ?? null,
     rust: { cargo: version, required: false },
@@ -36,7 +36,7 @@ export function doctor(root) {
 
 export const formatDoctor = (r) =>
   [
-    `weft ${r.weft} on ${r.runtime}`,
+    `kerf ${r.kerf} on ${r.runtime}`,
     compilerLine(r.compiler),
-    `rust: ${r.rust.cargo ?? 'no cargo on PATH'}. Not needed for weft; only \`weft add rust\` sidecars and native() use it`,
+    `rust: ${r.rust.cargo ?? 'no cargo on PATH'}. Not needed for kerf; only \`kerf add rust\` sidecars and native() use it`,
   ].join('\n')

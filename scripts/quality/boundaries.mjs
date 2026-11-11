@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = repoRoot
 const FRAMEWORK =
-  /^(?:@weft-js\/|react(?:-dom)?(?:\/|$)|solid-js(?:\/|$)|vue(?:\/|$)|svelte(?:\/|$)|preact(?:\/|$))/
+  /^(?:@kerf-js\/|react(?:-dom)?(?:\/|$)|solid-js(?:\/|$)|vue(?:\/|$)|svelte(?:\/|$)|preact(?:\/|$))/
 const NODE = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`)])
 
 /** Entries that end up in a browser bundle, by package directory. Everything else a package exports runs on a server or in a build. */
@@ -37,9 +37,9 @@ export const BROWSER = {
     './devtools',
     './agent',
   ],
-  'warp-core': ['.', './weft', './motion', './charts', './canvas', './dither', './search'],
-  warp: ['.', './skeleton', './ui'],
-  'warp-icons': ['.', './all', './quiet', './balanced', './vivid', './names', './icon', './late'],
+  'veneer-core': ['.', './kerf', './motion', './charts', './canvas', './dither', './search'],
+  veneer: ['.', './skeleton', './ui'],
+  'veneer-icons': ['.', './all', './quiet', './balanced', './vivid', './names', './icon', './late'],
   text: ['./measure'],
   scroll: ['.', './canvas'],
   multiplayer: ['.', './ui'],
@@ -183,17 +183,17 @@ export function findProblems() {
       })
     }
   }
-  const core = join(root, 'packages/warp-core/src')
+  const core = join(root, 'packages/veneer-core/src')
   for (const name of readdirSync(core, { recursive: true })
     .map(String)
     .filter((f) => /\.[cm]?[jt]sx?$/.test(f))) {
     for (const { spec } of imports(join(core, name)))
-      if (FRAMEWORK.test(spec) && !(spec === '@weft-js/core/markup' && pureMarkup))
+      if (FRAMEWORK.test(spec) && !(spec === '@kerf-js/core/markup' && pureMarkup))
         problems.push({
-          rule: 'warp-core-framework',
-          file: `packages/warp-core/src/${name}`,
+          rule: 'veneer-core-framework',
+          file: `packages/veneer-core/src/${name}`,
           detail: `imports ${spec}`,
-          fix: 'warp-core stays framework-agnostic: put this in bindings/.',
+          fix: 'veneer-core stays framework-agnostic: put this in bindings/.',
         })
   }
   const seen = new Set()

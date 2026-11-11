@@ -1,4 +1,4 @@
-// U001–U005 in `weft check` (research 45 §10): `interaction({ share })` and `ui`. TypeScript's parser only, no type
+// U001–U005 in `kerf check` (research 45 §10): `interaction({ share })` and `ui`. TypeScript's parser only, no type
 // checking: what's read is the call's own text, and a name counts as an interaction row only if this file made it.
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -8,7 +8,7 @@ import { diagnostic, positions } from './diag.mjs'
 
 const UNSTABLE = /\b(?:Math\.random|Date\.now|crypto\.randomUUID|performance\.now)\b/
 const USER_TYPED = /\b(?:location\.|URLSearchParams|useSearchParams|searchParams|params\.get)\b/
-/** warp components that take `ui`. Anything else would write `ui="[object Object]"` on its element. */
+/** veneer components that take `ui`. Anything else would write `ui="[object Object]"` on its element. */
 const TAKES_UI = new Set(['Button', 'Checkbox', 'Switch', 'Radio', 'Toggle', 'Chip', 'Card'])
 
 const rowsOf = (sf) => {
@@ -28,12 +28,12 @@ const rowsOf = (sf) => {
   return rows
 }
 
-const warpNames = (sf) => {
+const veneerNames = (sf) => {
   const names = new Map()
   for (const n of sf.statements) {
     if (
       !ts.isImportDeclaration(n) ||
-      !n.moduleSpecifier.text.startsWith('@weft-js/warp') ||
+      !n.moduleSpecifier.text.startsWith('@kerf-js/veneer') ||
       !n.importClause?.namedBindings ||
       !ts.isNamedImports(n.importClause.namedBindings)
     )
@@ -70,7 +70,7 @@ export function shareChecks(root, { files }) {
 }
 
 function checkFile(rel, text, out, sharesIn) {
-  const usesRow = text.includes('@weft-js/core/interaction')
+  const usesRow = text.includes('@kerf-js/core/interaction')
   if (!usesRow && !/\bui=\{/.test(text)) return sharesIn
   const sf = ts.createSourceFile(
     rel,
@@ -91,16 +91,16 @@ function checkFile(rel, text, out, sharesIn) {
       }),
     )
   const rows = rowsOf(sf),
-    warp = warpNames(sf)
+    veneer = veneerNames(sf)
   const markShare = () => {
     sharesIn ??= rel
   }
-  const visit = makeVisitor({ sf, usesRow, rows, warp, report, markShare })
+  const visit = makeVisitor({ sf, usesRow, rows, veneer, report, markShare })
   visit(sf)
   return sharesIn
 }
 
-function makeVisitor({ sf, usesRow, rows, warp, report, markShare }) {
+function makeVisitor({ sf, usesRow, rows, veneer, report, markShare }) {
   const visit = (n) => {
     if (
       ts.isCallExpression(n) &&
@@ -145,11 +145,11 @@ function makeVisitor({ sf, usesRow, rows, warp, report, markShare }) {
         ui = n.attributes.properties.find(
           (a) => ts.isJsxAttribute(a) && a.name.getText(sf) === 'ui',
         )
-      if (ui && warp.has(tag) && !TAKES_UI.has(warp.get(tag)))
+      if (ui && veneer.has(tag) && !TAKES_UI.has(veneer.get(tag)))
         report(
           'U005',
           ui,
-          `\`${warp.get(tag)}\` doesn't take \`ui\` yet, so this writes an attribute and draws nothing.`,
+          `\`${veneer.get(tag)}\` doesn't take \`ui\` yet, so this writes an attribute and draws nothing.`,
         )
     }
     ts.forEachChild(n, visit)

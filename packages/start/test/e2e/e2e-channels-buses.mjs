@@ -85,15 +85,15 @@ start(values.nats, ['-p', String(natsPort)])
 await sleep(500)
 try {
   for (const runtime of values.runtimes.split(',')) {
-    const built = spawnSync(join(app, 'node_modules/.bin/weft'), ['build', '--runtime', runtime], {
+    const built = spawnSync(join(app, 'node_modules/.bin/kerf'), ['build', '--runtime', runtime], {
       cwd: app,
       encoding: 'utf8',
       env: { ...process.env, NODE_ENV: 'production' },
     })
     if (built.status !== 0) throw new Error(`${runtime} build:\n${built.stdout}${built.stderr}`)
     for (const { bus, env } of [
-      { bus: 'redis', env: { WEFT_RT_REDIS: `redis://127.0.0.1:${redisPort}` } },
-      { bus: 'nats', env: { WEFT_RT_NATS: `127.0.0.1:${natsPort}` } },
+      { bus: 'redis', env: { KERF_RT_REDIS: `redis://127.0.0.1:${redisPort}` } },
+      { bus: 'nats', env: { KERF_RT_NATS: `127.0.0.1:${natsPort}` } },
     ]) {
       const live = new Set(kids)
       try {

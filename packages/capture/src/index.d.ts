@@ -1,5 +1,5 @@
 import type { Browser, LaunchOptions as ChromeLaunch, Page } from 'playwright-core'
-import type { ScenePoster } from '@weft-js/warp/scenes'
+import type { ScenePoster } from '@kerf-js/veneer/scenes'
 
 /** Pixels from the top, a section (index or id) at a share of its pass, or pixels past a section's top. */
 export type Stop =

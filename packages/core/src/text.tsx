@@ -1,8 +1,8 @@
-// @weft-js/core/text: <Text> (research 31 §6). `reserve` holds the text's place while it isn't here yet, with placeholder text
+// @kerf-js/core/text: <Text> (research 31 §6). `reserve` holds the text's place while it isn't here yet, with placeholder text
 // in the real element, so the browser gives it the real font, width and wrapping and there's nothing to measure. It
-// marks the placeholder for warp's SkeletonScope (05 §5) and has no CSS of its own. `stream` is X035's fix.
+// marks the placeholder for veneer's SkeletonScope (05 §5) and has no CSS of its own. `stream` is X035's fix.
 
-import { derived, effect, flush, onCleanup, onMount, state, untrack } from '@weft-js/core'
+import { derived, effect, flush, onCleanup, onMount, state, untrack } from '@kerf-js/core'
 import { placeholder } from './shape'
 
 /** `<Text>`'s props: its tag, whether it reserves room, and how a stream's blocks are rendered. */

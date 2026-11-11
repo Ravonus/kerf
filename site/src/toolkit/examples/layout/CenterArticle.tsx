@@ -3,7 +3,7 @@ import {
   Heading,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 export const CenterArticle = () => (
   <Center max="measure">

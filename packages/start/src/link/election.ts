@@ -1,6 +1,6 @@
 /** Bump when a message here changes shape: tabs of two shapes share nothing, and each is its own client. */
 const WIRE = 1
-export const NAME = `weft:link:${WIRE}`
+export const NAME = `kerf:link:${WIRE}`
 export const BEAT = 5000
 const PONG = 1500
 // getRandomValues, not randomUUID: a page on plain http (a LAN address) has no randomUUID, and this runs on import.

@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   CommandPalette,
   Stack,
   Text,
-} from '@weft-js/warp'
-import type { Command } from '@weft-js/warp'
+} from '@kerf-js/veneer'
+import type { Command } from '@kerf-js/veneer'
 import { REGIONS } from '../../world'
 
 /** A row with `children` opens a second list in place.

@@ -1,0 +1,11 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* model menu rows: name, capabilities, context, cost */
+:where([data-scope="model-menu"] [role="option"]) { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 10px; border-radius: var(--veneer-radius-control); cursor: pointer; }
+:where([data-scope="model-menu"] [role="option"]:hover),
+:where([data-scope="model-menu"] [role="option"][aria-selected="true"]) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="model-menu"] [role="option"] b) { font-weight: 500; }
+:where([data-scope="model-menu"] [role="option"] small) { grid-column: 1; color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="model-menu"] [role="option"] code) { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-size: 11px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="model-menu"] [role="option"][aria-selected="true"] b)::after { content: " ✓"; color: var(--veneer-color-accent-text); }
+}

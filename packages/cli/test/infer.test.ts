@@ -28,7 +28,7 @@ afterAll(() => {
   for (const d of made) rmSync(d, { recursive: true, force: true })
 })
 
-/** The fixture with TypeScript 7 (or `typescript`'s own 6, when `version` says so), weft and the CLI linked in. */
+/** The fixture with TypeScript 7 (or `typescript`'s own 6, when `version` says so), kerf and the CLI linked in. */
 function app(
   files: Record<string, string | null> = {},
   { version = 7, plugin }: { version?: number; plugin?: boolean } = {},
@@ -37,15 +37,15 @@ function app(
   const dir = mkdtempSync(join(tmp, 'infer-'))
   made.push(dir)
   cpSync(join(here, 'fixtures/infer'), dir, { recursive: true })
-  mkdirSync(join(dir, 'node_modules/@weft-js'), { recursive: true })
-  symlinkSync(join(cli, '../weft'), join(dir, 'node_modules/@weft-js/core'))
-  symlinkSync(cli, join(dir, 'node_modules/@weft-js/cli'))
-  symlinkSync(join(cli, '../start'), join(dir, 'node_modules/@weft-js/start'))
+  mkdirSync(join(dir, 'node_modules/@kerf-js'), { recursive: true })
+  symlinkSync(join(cli, '../kerf'), join(dir, 'node_modules/@kerf-js/core'))
+  symlinkSync(cli, join(dir, 'node_modules/@kerf-js/cli'))
+  symlinkSync(join(cli, '../start'), join(dir, 'node_modules/@kerf-js/start'))
   if (version === 7)
     symlinkSync(join(cli, '../core/node_modules/typescript'), join(dir, 'node_modules/typescript'))
   if (plugin) {
     const config = JSON.parse(readFileSync(join(dir, 'tsconfig.json'), 'utf8'))
-    config.compilerOptions.plugins = [{ name: '@weft-js/cli/ts-plugin' }]
+    config.compilerOptions.plugins = [{ name: '@kerf-js/cli/ts-plugin' }]
     writeFileSync(join(dir, 'tsconfig.json'), JSON.stringify(config))
   }
   for (const [f, text] of Object.entries(files)) {
@@ -129,7 +129,7 @@ describe.each([
 
   it('bind: satisfies a required prop, and a box of the wrong type is an error', async () => {
     const page = (box: string) =>
-      `import { state } from '@weft-js/core'\nfunction Card(props: { n: number }) { return <b>{props.n}</b> }\nexport default function P() { const box = state(${box}); return <Card bind:n={box} /> }\n`
+      `import { state } from '@kerf-js/core'\nfunction Card(props: { n: number }) { return <b>{props.n}</b> }\nexport default function P() { const box = state(${box}); return <Card bind:n={box} /> }\n`
     expect((await run(app({ ...goalOnly, 'src/goal.tsx': page('1') }, { version }))).list).toEqual(
       [],
     )
@@ -254,7 +254,7 @@ describe('after the checker rests', () => {
       app({
         ...goalOnly,
         'src/goal.tsx':
-          "import { bind, state } from '@weft-js/core'\nfunction Inc(props) { return <b onClick={() => props.n++}>+</b> }\nexport default function P() { const box = state(0); return <Inc n={bind(box)} /> }\n",
+          "import { bind, state } from '@kerf-js/core'\nfunction Inc(props) { return <b onClick={() => props.n++}>+</b> }\nexport default function P() { const box = state(0); return <Inc n={bind(box)} /> }\n",
       }),
     )
     expect(r.types.Inc).toBe('{ n: number }')
@@ -284,35 +284,35 @@ describe('agents', () => {
       severity: 'error',
       file: 'src/goal.tsx',
       span: [1, 10, 1, 13],
-      docs: 'weft docs W080',
+      docs: 'kerf docs W080',
     })
     expect(d.fix.text).toContain('annotate the parameter: function Row(props: { ... })')
   }, 60_000)
 })
 
 describe('the CLI', () => {
-  const weft = (...args: string[]) => {
+  const kerf = (...args: string[]) => {
     const r = spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
     return { code: r.status, stdout: r.stdout, stderr: r.stderr }
   }
 
-  it('weft tsc reports with source positions, agent-style in --json', () => {
+  it('kerf tsc reports with source positions, agent-style in --json', () => {
     const dir = app({
       ...goalOnly,
       'src/goal.tsx':
         'function Inc(props) { return <b onClick={() => props.n++}>+</b> }\nexport default function P() { return <div><Inc n={1} /><Inc n="x" /></div> }\n',
       'src/routes/index.tsx': null,
     })
-    const r = weft('tsc', '--json', '--root', dir)
+    const r = kerf('tsc', '--json', '--root', dir)
     const out = JSON.parse(r.stdout)
     expect(r.code).toBe(1)
     expect(out.diagnostics).toMatchObject([
-      { code: 'W084', file: 'src/goal.tsx', span: [2, 61, 2, 66], docs: 'weft docs W084' },
+      { code: 'W084', file: 'src/goal.tsx', span: [2, 61, 2, 66], docs: 'kerf docs W084' },
     ])
     expect(out.diagnostics[0].fix.text).toMatch(/Pass number here/)
   }, 60_000)
 
-  it('weft fix writes exported types, and a plain tsc then accepts the export', () => {
+  it('kerf fix writes exported types, and a plain tsc then accepts the export', () => {
     const dir = app({
       ...goalOnly,
       'src/goal.tsx':
@@ -320,8 +320,8 @@ describe('the CLI', () => {
       'src/card.tsx': 'export function Card(props) { return <h2>{props.title}</h2> }\n',
       'src/routes/index.tsx': null,
     })
-    writeFileSync(join(dir, 'weft.config.json'), '{}')
-    expect(weft('fix', '--json', '--root', dir).code).toBe(0)
+    writeFileSync(join(dir, 'kerf.config.json'), '{}')
+    expect(kerf('fix', '--json', '--root', dir).code).toBe(0)
     expect(readFileSync(join(dir, 'src/card.tsx'), 'utf8')).toContain(
       'Card(props: /*inferred*/ { title: string })',
     )
@@ -416,7 +416,7 @@ describe('the dev listener', () => {
     const bad = await next('done')
     expect(bad.diagnostics).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 7 }])
     expect(
-      JSON.parse(readFileSync(join(dir, '.weft/props.json'), 'utf8')).diagnostics,
+      JSON.parse(readFileSync(join(dir, '.kerf/props.json'), 'utf8')).diagnostics,
     ).toHaveLength(1)
     await new Promise((ok) => {
       setTimeout(ok, 5)
@@ -533,7 +533,7 @@ async function editorHoverAndDiagnostics() {
   }
 }
 
-describe('an editor on TypeScript 7, through weft lsp', () => {
+describe('an editor on TypeScript 7, through kerf lsp', () => {
   it('hover and diagnostics at source positions, over tsc --lsp', editorHoverAndDiagnostics, 60_000)
 })
 

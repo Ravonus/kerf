@@ -1,16 +1,16 @@
 {
-  "name": "@weft-js/realtime-livekit",
-  "version": "0.1.4",
-  "description": "@weft-js/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
+  "name": "@kerf-js/realtime-livekit",
+  "version": "0.1.0",
+  "description": "@kerf-js/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/realtime-livekit"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/realtime-livekit#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/realtime-livekit#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "type": "module",
   "exports": {
@@ -25,21 +25,21 @@
     "livekit-client": "2.23.0"
   },
   "peerDependencies": {
-    "@weft-js/start": "*",
-    "@weft-js/core": "*",
-    "@weft-js/multiplayer": "*"
+    "@kerf-js/start": "*",
+    "@kerf-js/core": "*",
+    "@kerf-js/multiplayer": "*"
   },
   "devDependencies": {
-    "@weft-js/start": "workspace:*",
+    "@kerf-js/start": "workspace:*",
     "vitest": "5.0.5",
-    "@weft-js/core": "workspace:*",
-    "@weft-js/multiplayer": "workspace:*"
+    "@kerf-js/core": "workspace:*",
+    "@kerf-js/multiplayer": "workspace:*"
   },
   "engines": {
     "node": ">=24"
   },
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "files": [
     "src",

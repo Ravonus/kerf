@@ -1,4 +1,4 @@
-import { CompactSelect } from '@weft-js/warp'
+import { CompactSelect } from '@kerf-js/veneer'
 import { REGION_OPTIONS } from './shared'
 import type { Knobs } from './shared'
 

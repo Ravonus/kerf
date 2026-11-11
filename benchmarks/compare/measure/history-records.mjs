@@ -2,8 +2,8 @@
 
 /** Every emitted-byte vector retains the six dashboard stacks, including missing entries. */
 export const STACKS = [
-  'weft-warp',
-  'weft-plain',
+  'kerf-veneer',
+  'kerf-plain',
   'solid-kobalte',
   'react-radix',
   'react-zustand',

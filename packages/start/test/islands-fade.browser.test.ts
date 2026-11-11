@@ -32,7 +32,7 @@ async function open(path: string, desktop = false) {
     m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
   )
   await page.goto(url + path)
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   return { page, errors }
 }
 
@@ -51,7 +51,7 @@ test('a route change on a phone-sized CPU does not ask for a fade at all', async
   })
   const page = await context.newPage()
   await page.goto(url + '/about')
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   await page.evaluate(() => {
     const a = Object.assign(document.createElement('a'), { href: '/islands' })
     document.body.append(a)

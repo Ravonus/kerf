@@ -1,0 +1,13 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Theme panel (preferences): rows of label + control */
+:where([data-scope="prefs"]) { display: grid; gap: 0; }
+:where([data-scope="prefs"] > div) { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-block: 10px; border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+:where([data-scope="prefs"] > div:first-child) { border: 0; }
+:where([data-scope="prefs"] [data-part="label"]:not([data-scope="prefs"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="field"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="prefs"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="field"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="prefs"] *))) { font-weight: 500; }
+:where([data-scope="prefs"] [data-part="hint"]:not([data-scope="prefs"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="field"],[data-scope="palette"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="prefs"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="field"],[data-scope="palette"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="prefs"] *))) { display: block; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); font-weight: 400; }
+:where([data-scope="swatches"]) { display: flex; gap: 6px; }
+:where([data-scope="swatches"] > button) { inline-size: 26px; block-size: 26px; border-radius: var(--veneer-radius-round); border: 0; background: var(--_c); cursor: pointer; position: relative; }
+:where([data-scope="swatches"] > button[aria-checked="true"]) { box-shadow: 0 0 0 2px var(--veneer-color-surface), 0 0 0 calc(2px + var(--veneer-border-emphasis)) var(--_c); }
+:where([data-scope="swatches"] > button)::after { content: ""; position: absolute; inset: -9px; }
+}

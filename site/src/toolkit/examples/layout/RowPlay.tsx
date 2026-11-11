@@ -1,4 +1,4 @@
-import { Inset, Row } from '@weft-js/warp'
+import { Inset, Row } from '@kerf-js/veneer'
 import { Box } from './shared'
 import type { Gap } from './shared'
 

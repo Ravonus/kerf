@@ -1,4 +1,4 @@
-import { Stack, UsageMeter } from '@weft-js/warp'
+import { Stack, UsageMeter } from '@kerf-js/veneer'
 
 export const UsageMeterLevels = () => (
   <Stack gap="group">

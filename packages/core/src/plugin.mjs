@@ -1,5 +1,5 @@
-// @weft-js/core/plugin: typed slots and declared contributions (PLAN §7c, research 13 §2.2–2.3).
-// Plain JS with no dependencies: weft.config.ts loads it in Node, so nothing here may need a bundler.
+// @kerf-js/core/plugin: typed slots and declared contributions (PLAN §7c, research 13 §2.2–2.3).
+// Plain JS with no dependencies: kerf.config.ts loads it in Node, so nothing here may need a bundler.
 
 const freeze = (value) => {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -9,7 +9,7 @@ const freeze = (value) => {
   return value
 }
 
-/** A slot definition. Consumers import the generated `weft:slot/<id>` module; providers reference this object. */
+/** A slot definition. Consumers import the generated `kerf:slot/<id>` module; providers reference this object. */
 export function defineSlot(slot) {
   if (!/^[a-z@][\w./@-]*\.[\w-]+$/.test(slot.id))
     throw new Error(`slot id \`${slot.id}\` must look like \`<domain>.<name>\``)
@@ -70,8 +70,8 @@ function parse(schema, input, name) {
 }
 
 /**
- * `definePlugin(def)` returns the factory users call in weft.config.ts. The instance is plain data
- * (`{ name, version, provides, options }`) that `weft check` can read without running anything, plus a non-enumerable
+ * `definePlugin(def)` returns the factory users call in kerf.config.ts. The instance is plain data
+ * (`{ name, version, provides, options }`) that `kerf check` can read without running anything, plus a non-enumerable
  * `contribute(env)` that runs the plugin's pure `contribute()` and returns its frozen manifest.
  */
 export function definePlugin(def) {
@@ -98,7 +98,7 @@ export function definePlugin(def) {
     }
     Object.defineProperties(instance, {
       contribute: { value: contribute },
-      weft: { value: def.weft ?? '*' },
+      kerf: { value: def.kerf ?? '*' },
       namespace: { value: namespace },
       permissions: { value: freeze({ ...def.permissions }) },
     })

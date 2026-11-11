@@ -1,4 +1,4 @@
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf-js/start'
 
 export const meta: Meta = { title: { absolute: 'Acme' } }
 

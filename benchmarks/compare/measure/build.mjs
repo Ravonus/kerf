@@ -40,7 +40,7 @@ const word = (i, k) =>
 const stats = (i) => [0, 1, 2].map((k) => ({ label: word(i, k), at: ((i * 13 + k * 29) % 90) + 5 }))
 const items = (i) => [3, 4, 5, 6, 7].map((k) => word(i, k))
 const SUMMARY = {
-  weft: (i) => `function Summary() {
+  kerf: (i) => `function Summary() {
   const open = state(false), note = state('${word(i, 8)}')
   const stats = ${JSON.stringify(stats(i))}
   return <section aria-label="${word(i, 9)}"><h2>${word(i, 10)}</h2><dl>{stats.map(s => <div key={s.label}><dt>{s.label}</dt><dd>{projects.filter(p => p.used > s.at).length}</dd></div>)}</dl>
@@ -78,7 +78,7 @@ SUMMARY.react = (i) => `function Summary() {
 }
 `
 const IMPORTS = {
-  weft: `import { projects } from '../../../shared/data'\n`,
+  kerf: `import { projects } from '../../../shared/data'\n`,
   solid: `import { createSignal, For, Show } from 'solid-js'\nimport { projects } from '../../../shared/data'\n`,
   react: `import { useState } from 'react'\nimport { projects } from '../../../shared/data'\n`,
 }
@@ -105,7 +105,7 @@ export function sweep(stack, dir, n, meta) {
       .replace(/projects, /, '')
       .replace(/import \{ money, projects, type Project \}/, 'import { money, type Project }')
     code =
-      flavor === 'weft'
+      flavor === 'kerf'
         ? code.replace('<h1>{LABEL}</h1>', '<h1>{LABEL}</h1><Summary />')
         : code.replace(/=> (<DataTable .*\/>)/, '=> <><Summary />$1</>')
     writeFileSync(join(src, `gen/S${i}.tsx`), IMPORTS[flavor] + code + SUMMARY[flavor](i))

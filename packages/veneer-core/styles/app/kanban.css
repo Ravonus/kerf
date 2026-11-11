@@ -1,0 +1,12 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* kanban (P1): columns + cards; drag uses the calendar's lift and ghost */
+:where([data-scope="kanban"]) { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 12px; overflow-x: auto; }
+:where([data-scope="kanban"] [data-part="column"]) { display: grid; align-content: start; gap: 6px; padding: 8px; border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-sunken); }
+:where([data-scope="kanban"] [data-part="column"] header) { display: flex; justify-content: space-between; font: 500 11px/1.6 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--veneer-color-text-subtle); padding: 2px 4px; }
+:where([data-scope="kanban"] [data-part="column"][data-over-limit] header em) { color: var(--veneer-color-caution-text); font-style: normal; }
+:where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { position: relative; padding: 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); box-shadow: 0 0 0 1px var(--veneer-color-border); font-size: 13px; cursor: grab; }
+/* touch: cards are ~40px tall, 6px apart: a block-axis expander (under the card's content) makes them hit-min */
+:where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { isolation: isolate; }
+:where([data-scope="kanban"] [data-part="card"])::after { content: ""; position: absolute; z-index: -1; inset-inline: 0; inset-block: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+}

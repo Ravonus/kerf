@@ -1,5 +1,5 @@
-import { derived, state, type State } from '@weft-js/core'
-import { Button, Card, Row } from '@weft-js/warp'
+import { derived, state, type State } from '@kerf-js/core'
+import { Button, Card, Row } from '@kerf-js/veneer'
 
 type Product = { id: string; name: string }
 const PRODUCTS: Product[] = [

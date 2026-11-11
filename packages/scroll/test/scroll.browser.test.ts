@@ -4,7 +4,7 @@
 import { createRequire } from 'node:module'
 import type * as Playwright from 'playwright-core'
 import type * as Scroll from '../src/index'
-import type * as Virtual from '../../warp-core/src/virtual'
+import type * as Virtual from '../../veneer-core/src/virtual'
 import { AREA, open as openArea, rows, run, settle, top, type Case } from './fixtures/browser'
 
 /** Every case here runs the engine's own input. */
@@ -264,7 +264,7 @@ const cases: Record<string, Case> = {
     expect(alpha[1]).toBe(0)
   },
 
-  "a 100,000-row virtual list on warp-core's virtualizer scrolls to the end and back": async (
+  "a 100,000-row virtual list on veneer-core's virtualizer scrolls to the end and back": async (
     page,
   ) => {
     await open(page, AREA('<div id="spacer" style="position:relative"></div>'))

@@ -1,4 +1,4 @@
-// `weft audit`: a clean headless Chrome over a build's pages, at a phone's width and a desktop's (axe-core and the
+// `kerf audit`: a clean headless Chrome over a build's pages, at a phone's width and a desktop's (axe-core and the
 // DevTools protocol). The page-reading half needs Chrome, which CI machines and containers may not have.
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { get } from 'node:http'
@@ -21,13 +21,13 @@ const pages = {
 }
 
 describe('which pages', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-audit-pages-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-audit-pages-'))
   for (const [rel, html] of Object.entries(pages)) {
     mkdirSync(join(dir, rel, '..'), { recursive: true })
     writeFileSync(join(dir, rel), html)
   }
-  mkdirSync(join(dir, '_weft'))
-  writeFileSync(join(dir, '_weft/x.html'), '')
+  mkdirSync(join(dir, '_kerf'))
+  writeFileSync(join(dir, '_kerf/x.html'), '')
   afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
   it('lists prerendered pages as paths, leaving out error pages and _-folders', () => {
@@ -61,7 +61,7 @@ describe('which pages', () => {
 
 describe('a build served as files', () => {
   it("knows the app's other pages are the server's to answer, not missing files", () => {
-    const root = mkdtempSync(join(tmpdir(), 'weft-routes-'))
+    const root = mkdtempSync(join(tmpdir(), 'kerf-routes-'))
     for (const f of [
       'index.tsx',
       'about.tsx',
@@ -115,7 +115,7 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
     diagnostics: { code: string; why: string; file: string; fix: { text: string } }[]
   }
   beforeAll(async () => {
-    root = mkdtempSync(join(tmpdir(), 'weft-audit-'))
+    root = mkdtempSync(join(tmpdir(), 'kerf-audit-'))
     for (const [rel, html] of Object.entries(pages)) {
       mkdirSync(join(root, 'dist', rel, '..'), { recursive: true })
       writeFileSync(join(root, 'dist', rel), html)
@@ -159,7 +159,7 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
   })
 
   it('audits each page in the foreground', async () => {
-    const foregroundRoot = mkdtempSync(join(tmpdir(), 'weft-audit-foreground-'))
+    const foregroundRoot = mkdtempSync(join(tmpdir(), 'kerf-audit-foreground-'))
     const html = `${head('Foreground')}
 <body><main><h1>Foreground</h1><p>Visible words read clearly.</p></main>
 <script>

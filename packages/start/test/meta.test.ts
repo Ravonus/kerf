@@ -39,7 +39,7 @@ describe('a page with no meta', () => {
     expect(text).toContain('content="Harvest when 5 &lt; 7 and the &quot;tonnes&quot; &amp; crates')
     expect(h.meta['og:title']).toBe('Harvest & storage notes · Acme')
     expect(h.meta['og:image']).toMatch(
-      /^https:\/\/acme\.dev\/_weft\/og\/meta\/plain\.png\?v=[a-z0-9]+$/,
+      /^https:\/\/acme\.dev\/_kerf\/og\/meta\/plain\.png\?v=[a-z0-9]+$/,
     )
     expect(h.meta['og:image:alt']).toBe('Harvest & storage notes · Acme')
     expect(h.meta['twitter:card']).toBe('summary_large_image')
@@ -56,7 +56,7 @@ describe('a page with no meta', () => {
   })
   test('the navigation payload carries the same finished head', async () => {
     const { text } = await page('/meta/plain')
-    const nav = await (await fetch(`${url}/_weft/data/meta/plain`)).json()
+    const nav = await (await fetch(`${url}/_kerf/data/meta/plain`)).json()
     const h = head(text)
     expect(nav.h.title).toBe(h.title)
     expect(nav.h.description).toBe(h.meta.description)
@@ -80,7 +80,7 @@ describe('hostile data in meta', () => {
     expect(h.meta.description).toBe('"><img src=x onerror=alert(1)> <b>"x"</b> & co')
     expect(h.extra).toEqual([])
     expect(h.bodyImages).toEqual([])
-    // Only weft's own scripts: nothing the data opened. The JSON-LD parses, and holds the text.
+    // Only kerf's own scripts: nothing the data opened. The JSON-LD parses, and holds the text.
     expect(h.scripts.filter((s) => s.text.includes('alert('))).toHaveLength(1)
     const ld = h.scripts.find((s) => s.type === 'application/ld+json')
     expect(JSON.parse(ld!.text).name).toContain('</script><script>alert(2)</script>')
@@ -94,7 +94,7 @@ test('a deferred field stays out of a page`s tags, and reading one is H007', asy
   expect(res.status).toBe(500)
 })
 
-describe('structured data only where weft is sure', () => {
+describe('structured data only where kerf is sure', () => {
   test('the home page is a WebSite', async () => {
     const h = head((await page('/')).text)
     const ld = JSON.parse(h.scripts.find((s) => s.type === 'application/ld+json')!.text)
@@ -130,7 +130,7 @@ describe('cards are safe to cache', () => {
     expect(a!.replace(/.*\?v=/, '')).not.toBe(b!.replace(/.*\?v=/, ''))
   })
   test('a card for a page that does not exist is a 404, whatever the path says', async () => {
-    expect((await fetch(`${url}/_weft/og/users/${encodeURIComponent('nobody')}.png`)).status).toBe(
+    expect((await fetch(`${url}/_kerf/og/users/${encodeURIComponent('nobody')}.png`)).status).toBe(
       404,
     )
   })

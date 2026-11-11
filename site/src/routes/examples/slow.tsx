@@ -1,10 +1,10 @@
-import { Boundary, resource } from '@weft-js/core'
-import { Card, Skeleton } from '@weft-js/warp'
+import { Boundary, resource } from '@kerf-js/core'
+import { Card, Skeleton } from '@kerf-js/veneer'
 import type {
   LoadArgs,
   Meta,
   RouteProps,
-} from '@weft-js/start'
+} from '@kerf-js/start'
 import './slow.css'
 
 const later = <T,>(ms: number, value: T) =>

@@ -29,7 +29,7 @@ export function startCron(jobs: CronJobs, deps: BackgroundDeps): () => void {
   }
   const run = async (name: string, job: CronJobs[string], at: Date) => {
     try {
-      await inScope(deps, `/_weft/cron/${encodeURIComponent(name)}`, (ctx) =>
+      await inScope(deps, `/_kerf/cron/${encodeURIComponent(name)}`, (ctx) =>
         job.run({ ctx, name, at }),
       )
     } catch (e) {

@@ -1,4 +1,4 @@
-import { RadarChart } from '@weft-js/warp'
+import { RadarChart } from '@kerf-js/veneer'
 
 import { SKILLS } from '../../world'
 

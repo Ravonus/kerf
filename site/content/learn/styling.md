@@ -1,18 +1,18 @@
 # Styling and style groups
 
 :::learn
-- How `class` and `style` work in Weft, and how they follow state
-- Where plain CSS files fit, and how cascade layers keep Warp out of your way
-- How to name a thing's look with a style group from `@weft-js/core/style`
-- What tokens and the spacing and type scales are, and why Weft asks for them
-- What the D-codes in `weft check` catch, and how to answer them
+- How `class` and `style` work in Kerf, and how they follow state
+- Where plain CSS files fit, and how cascade layers keep Veneer out of your way
+- How to name a thing's look with a style group from `@kerf-js/core/style`
+- What tokens and the spacing and type scales are, and why Kerf asks for them
+- What the D-codes in `kerf check` catch, and how to answer them
 :::
 
-In Weft, styling is attributes. `class` and `style` are attributes like `href` or `disabled`: they take expressions, and
+In Kerf, styling is attributes. `class` and `style` are attributes like `href` or `disabled`: they take expressions, and
 when an expression reads state, the compiler wires that one attribute to it. Nothing re-renders to change a colour.
 
-On top of that sits a design language. An app made with Warp (the default) has tokens for colour, space, type, radius
-and motion, and `weft check` tells you when a value leaves them. This page starts with the plain attributes and builds
+On top of that sits a design language. An app made with Veneer (the default) has tokens for colour, space, type, radius
+and motion, and `kerf check` tells you when a value leaves them. This page starts with the plain attributes and builds
 up to style groups, which are how you give your own components a named, token-only look.
 
 :::demo styled
@@ -22,8 +22,8 @@ up to style groups, which are how you give your own components a named, token-on
 `class` takes a string. `className` is the same attribute, there for React habits. Both can read state:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Switch } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Switch } from '@kerf-js/veneer'
 
 export function Banner() {
   const urgent = state(false)
@@ -45,7 +45,7 @@ export function Banner() {
 their own:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Row({ done }: { done: boolean }) {
   const hovered = state(false)
@@ -70,8 +70,8 @@ export function Row({ done }: { done: boolean }) {
 - An object is diffed: when one value changes, only that property is written.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Slider } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Slider } from '@kerf-js/veneer'
 
 export function Meter() {
   const level = state(40)
@@ -98,7 +98,7 @@ export function Meter() {
 :::note React developers
 This is the same `className` and `style` you know, with two differences. `class` is the preferred spelling, and the
 element is never rebuilt when it changes: the compiler emits one attribute write per change. There is no `styled()` or
-CSS-in-JS runtime. Plain CSS, style groups and Warp's components cover what those are used for.
+CSS-in-JS runtime. Plain CSS, style groups and Veneer's components cover what those are used for.
 :::
 
 ## Plain CSS files
@@ -115,27 +115,27 @@ export function Receipt(props: { total: string }) {
 ```
 
 The build bundles it, and a page loads it only when a component that imports it is on that page. The CSS is global, as
-it is anywhere: `.receipt-total` matches every element with that class. Weft's types declare `.css` imports as side
+it is anywhere: `.receipt-total` matches every element with that class. Kerf's types declare `.css` imports as side
 effects, so there is no CSS-modules object to import. When you want a name that can't collide, use a style group (below).
 
 ### Cascade layers
 
-Warp puts all of its CSS in cascade layers (`@layer warp.tokens`, `warp.base`, `warp.components` and so on), and its
+Veneer puts all of its CSS in cascade layers (`@layer veneer.tokens`, `veneer.base`, `veneer.components` and so on), and its
 component rules use `:where()`, which has no specificity. Style groups go in `@layer app.groups`. CSS you write without
 a layer comes after every layer, so it wins:
 
 ```css
-/* src/app.css: without @layer, this beats warp's rule. */
+/* src/app.css: without @layer, this beats veneer's rule. */
 [data-scope="button"] { letter-spacing: 0.02em; }
 ```
 
-You never need `!important` to change something Warp drew. If you use Tailwind, its layers are declared after Warp's,
+You never need `!important` to change something Veneer drew. If you use Tailwind, its layers are declared after Veneer's,
 so a utility wins in the same way.
 
 :::deepdive Why layers and not specificity
 A component library that styles with ordinary selectors forces you into a specificity contest: your `.card .title`
 loses to its `.lib-card > .lib-card__title`, so you add a class, then `!important`. Cascade layers settle the order up
-front. The browser compares layers before it compares specificity, and unlayered rules come last. Warp also wraps its
+front. The browser compares layers before it compares specificity, and unlayered rules come last. Veneer also wraps its
 selectors in `:where()`, so even inside a layer it never outranks a plain selector of yours. The practical rule is
 short: write normal CSS, and it wins.
 :::
@@ -147,12 +147,12 @@ config line.
 
 | `--ui` | You get |
 |---|---|
-| `warp` | Warp's components, tokens and themes, with `warp()` in `weft.config.ts`. The default. |
-| `headless` | warp-core: Warp's keyboard, focus and motion behaviour, and its token CSS, under your own markup |
-| `tailwind` | Tailwind v4, set up. `weft add tailwind` adds the same to an existing app. |
+| `veneer` | Veneer's components, tokens and themes, with `veneer()` in `kerf.config.ts`. The default. |
+| `headless` | veneer-core: Veneer's keyboard, focus and motion behaviour, and its token CSS, under your own markup |
+| `tailwind` | Tailwind v4, set up. `kerf add tailwind` adds the same to an existing app. |
 | `none` | Plain CSS in `src/app.css` |
 
-In an app with Warp, `weft add tailwind` also imports `@weft-js/warp/tailwind.css`, which turns Warp's tokens into
+In an app with Veneer, `kerf add tailwind` also imports `@kerf-js/veneer/tailwind.css`, which turns Veneer's tokens into
 Tailwind theme values: `bg-surface`, `text-accent`, `rounded-control`. Each utility stays a `var()`, so it follows the
 theme and the dials like a component does. [Theming](/learn/theming) covers those.
 
@@ -164,10 +164,10 @@ group** names the thing and its variations once, in tokens, and every use says w
 
 :::demo style-order
 
-A group comes from `group(name, definition)` in `@weft-js/core/style`:
+A group comes from `group(name, definition)` in `@kerf-js/core/style`:
 
 ```tsx
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf-js/core/style'
 
 /** A summary card for one order in a list. */
 export const orderCard = group('order-card', {
@@ -245,7 +245,7 @@ choose the value at the call site from state, which is where it can be dynamic.
 Sometimes one card needs a rounder corner and nothing else. That is an **accent**, tokens only, at the call site:
 
 ```tsx
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf-js/core/style'
 
 const promo = group('promo', {
   base: { surface: 'raised', pad: 'group', radius: 'surface' },
@@ -267,7 +267,7 @@ make it an axis value. An accent that sets what the site's axis value already se
 
 ### The escape hatch: `css`
 
-When no intent covers a property, a group can take raw CSS in `css: { … }`. It works, and `weft check` counts each one as
+When no intent covers a property, a group can take raw CSS in `css: { … }`. It works, and `kerf check` counts each one as
 D023 so the escapes stay visible. Reach for it for something like `aspectRatio` or a grid template, not for a colour or a
 padding the tokens already have.
 
@@ -277,12 +277,12 @@ Two groups that resolve to nearly the same CSS are D021. Before you make one, as
 
 ```bash
 # Groups that fit, with axes, parts and usage.
-weft style find card
+kerf style find card
 # Declarations on the root and parts, and their sources.
-weft style explain order-card[status=late]
+kerf style explain order-card[status=late]
 ```
 
-`weft dev`, `weft build` and `weft check` keep `.weft/styles.json` current: every group, its values and resolved CSS,
+`kerf dev`, `kerf build` and `kerf check` keep `.kerf/styles.json` current: every group, its values and resolved CSS,
 and which groups are similar. Agents read it through MCP (`style_find`, `style_explain`). Read it; don't edit it.
 
 :::deepdive Style groups compared with Tailwind and CSS-in-JS
@@ -290,20 +290,20 @@ Tailwind names properties at the call site; CSS-in-JS names a component's styles
 at runtime. A style group names the *thing* and its *variations*, and leaves the properties to tokens. The result is
 closer to a design system's component spec than to either: `orderCard({ status: 'late' })` reads like the design
 review said it. It also costs nothing at runtime: the call compiles away, and a reactive axis is the same single
-attribute write as any other binding. Tailwind is still a fine choice in Weft (`--ui tailwind`), and the D-codes apply
+attribute write as any other binding. Tailwind is still a fine choice in Kerf (`--ui tailwind`), and the D-codes apply
 to its classes too.
 :::
 
 ## Tokens and the scales
 
-Warp's look is a set of CSS custom properties, the **tokens**, all named `--warp-*`: `--warp-color-surface-raised`,
-`--warp-space-group`, `--warp-radius-control`, `--warp-text-heading-size`. Themes and dials change their values, so
+Veneer's look is a set of CSS custom properties, the **tokens**, all named `--veneer-*`: `--veneer-color-surface-raised`,
+`--veneer-space-group`, `--veneer-radius-control`, `--veneer-text-heading-size`. Themes and dials change their values, so
 anything drawn from them changes with the theme. A raw `#fff` or `16px` doesn't.
 
 The two scales you meet most are space and type.
 
 **Space** is seven steps, named by relationship, not size: `none`, `hair`, `tight`, `related`, `group`, `section`,
-`page`. `related` is the space inside one thing, `group` the space between things, `section` between sections. Warp's
+`page`. `related` is the space inside one thing, `group` the space between things, `section` between sections. Veneer's
 layout primitives take these as `gap`, and style groups take them as `pad` and `gap`. The density dial scales the whole
 set.
 
@@ -314,7 +314,7 @@ weight and leading together, and the expression dial changes the faces. `Heading
 :::demo style-scale
 
 ```tsx
-import { Card, Heading, Row, Stack, Tag, Text } from '@weft-js/warp'
+import { Card, Heading, Row, Stack, Tag, Text } from '@kerf-js/veneer'
 
 export function Roasts() {
   return (
@@ -333,58 +333,58 @@ export function Roasts() {
 }
 ```
 
-The names are also exported as constants and types from `@weft-js/core/ds` (`SPACE`, `TONE`, `EMPHASIS`, `TEXT_ROLE` and
+The names are also exported as constants and types from `@kerf-js/core/ds` (`SPACE`, `TONE`, `EMPHASIS`, `TEXT_ROLE` and
 their types `Space`, `Tone` …), so your own components can take a `gap: Space` prop and stay on the scale.
 
 :::note Your own CSS can use the tokens too
-`var(--warp-color-text-subtle)` in a stylesheet follows the theme like Warp does. That is the right way to write CSS by
-hand in a Warp app: the D-codes below look for raw values, not for CSS.
+`var(--veneer-color-text-subtle)` in a stylesheet follows the theme like Veneer does. That is the right way to write CSS by
+hand in a Veneer app: the D-codes below look for raw values, not for CSS.
 :::
 
 ## The D-codes
 
-In an app with Warp, `weft check` reads your markup, `style` objects, CSS and Tailwind classes, and reports values that
+In an app with Veneer, `kerf check` reads your markup, `style` objects, CSS and Tailwind classes, and reports values that
 leave the design language. Each code says what to use instead:
 
 | Code | Catches | Instead |
 |---|---|---|
 | D001 | A raw colour, or a palette class like `bg-red-500` | A token, or a component's `tone` |
-| D002 | Spacing off the scale, or a step written by hand (`padding: 16px`) | A space step; `weft fix` rewrites an exact step |
+| D002 | Spacing off the scale, or a step written by hand (`padding: 16px`) | A space step; `kerf fix` rewrites an exact step |
 | D003 | Raw type, radius or shadow (`font-size`, `rounded-[7px]`) | `Heading`, `Text`, radius and elevation tokens |
 | D004 | Layout spelled out (`display: flex`, `flex flex-col gap-4`) | `Stack`, `Row`, `Grid` |
-| D005 | A browser-painted control: `<button>`, `<select>`, `<textarea>`, a `date` or `range` input, a `title` tooltip | The Warp component |
+| D005 | A browser-painted control: `<button>`, `<select>`, `<textarea>`, a `date` or `range` input, a `title` tooltip | The Veneer component |
 | D006 | One heading level at two looks across the app | Match the level's main role |
 | D007 | A bare `<a href>` | `Link`, or `Shell`'s nav |
 
-Another group runs in every app, Warp or not, and catches accessibility mistakes: a field with no label (D030), a
+Another group runs in every app, Veneer or not, and catches accessibility mistakes: a field with no label (D030), a
 button with no name (D031), an image with no `alt` (D032), focus rings removed (D036) and more. They have their own
 section on [Accessibility](/learn/accessibility). D020–D025 are the style-group codes above.
 
 When a value really must stay, say why on the line above it:
 
 ```css
-/* weft-allow D001: the partner's brand colour, fixed by contract */
+/* kerf-allow D001: the partner's brand colour, fixed by contract */
 .partner-logo { color: #d40000; }
 ```
 
-The reason is required. `check: { design: false }` in `weft.config.ts` turns the D-codes off for an app that has its own
-system. `weft fix` applies the safe fixes (an exact space step, a positive `tabindex`); a fix that changes an element,
+The reason is required. `check: { design: false }` in `kerf.config.ts` turns the D-codes off for an app that has its own
+system. `kerf fix` applies the safe fixes (an exact space step, a positive `tabindex`); a fix that changes an element,
 like swapping a `<button>` for `Button`, comes back as a suggested edit for you or your agent to apply.
 
 :::pitfall A raw colour has no autofix
 A token follows the theme and the raw value didn't, so there is no exact replacement to apply. `#1a7f37` might mean
 "positive" or might mean "your brand". Pick the token that says what you mean: `tone="positive"` on a component, or
-`var(--warp-color-positive-text)` in CSS.
+`var(--veneer-color-positive-text)` in CSS.
 :::
 
 ## Recap
 
 - `class` takes a string or an object of class names; `style` takes a string or a React-shaped object. Both follow state,
   one attribute write per change.
-- Import plain CSS from a component. Warp sits in cascade layers with zero specificity, so your unlayered CSS wins.
+- Import plain CSS from a component. Veneer sits in cascade layers with zero specificity, so your unlayered CSS wins.
 - A style group names a thing, its axes, parts and states in tokens; call sites compile to `data-*` attributes.
-- Tokens are `--warp-*` custom properties. Space is a scale of relationships, type a set of roles.
-- `weft check` reports off-system values as D-codes. Answer with a token, or keep a value with a `weft-allow` reason.
+- Tokens are `--veneer-*` custom properties. Space is a scale of relationships, type a set of roles.
+- `kerf check` reports off-system values as D-codes. Answer with a token, or keep a value with a `kerf-allow` reason.
 
 ## Try it
 
@@ -392,7 +392,7 @@ A token follows the theme and the raw value didn't, so there is no exact replace
 This button row builds its class string by hand. Rewrite `class` as an object, so each class depends on one condition.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Chip(props: { label: string }) {
   const on = state(false)
@@ -412,7 +412,7 @@ export function Chip(props: { label: string }) {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Chip(props: { label: string }) {
   const on = state(false)
@@ -437,7 +437,7 @@ Here is a callout group with one look. Give it a `tone` axis with `info`, `cauti
 intent `tone`), default it to `info`, and make `Callout` take the tone as a prop.
 
 ```tsx
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf-js/core/style'
 
 const callout = group('callout', {
   base: {
@@ -452,7 +452,7 @@ export function Callout(props: { text: string }) {
 ```
 :::solution
 ```tsx
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf-js/core/style'
 
 const callout = group('callout', {
   base: {
@@ -483,7 +483,7 @@ call compiles to `data-tone={tone}`, one attribute that follows the prop.
 :::
 
 :::challenge Answer the D-codes
-`weft check` reports D002 twice and D001 on this component. Rewrite it with Warp's primitives and tokens so it
+`kerf check` reports D002 twice and D001 on this component. Rewrite it with Veneer's primitives and tokens so it
 reports none, and replace the hand-made flex row while you're there.
 
 <!-- example: skip the challenge's starting code, which has its D-codes on purpose -->
@@ -501,7 +501,7 @@ export function Total(props: { amount: string }) {
 ```
 :::solution
 ```tsx
-import { Row, Text } from '@weft-js/warp'
+import { Row, Text } from '@kerf-js/veneer'
 
 export function Total(props: { amount: string }) {
   return (

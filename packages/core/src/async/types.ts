@@ -15,7 +15,7 @@ export interface ResourceOptions<T> {
   initial?: T
   /**
    * `false`: the value isn't written into the page's data or read back from it, because the caller's own cache
-   * transfers it (@weft-js/start's query cache, research 27 §4). The fetcher is called on every server pass (return the
+   * transfers it (@kerf-js/start's query cache, research 27 §4). The fetcher is called on every server pass (return the
    * value synchronously once it's known) and during hydration (return the transferred value synchronously, so the
    * resource settles as it's created and hydration writes nothing).
    */

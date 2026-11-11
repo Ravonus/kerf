@@ -9,7 +9,7 @@ export const presence: Doc[] = [
     use: {
       when: [
         'A block of the page that comes and goes: details, a note, an extra field',
-        "Your own component that opens and closes and should move like Warp's do",
+        "Your own component that opens and closes and should move like Veneer's do",
       ],
       instead: [
         { name: 'Accordion', why: 'there is a heading to press for each section' },
@@ -31,7 +31,7 @@ export const presence: Doc[] = [
           {
             id: 'PresenceRise',
             title: 'Rise',
-            note: '`motion` keeps the size and arrives by `fade`, `rise`, `pop` or `slide-up`, `slide-down`, `slide-left`, `slide-right`; the exit runs back the way it came, faster. No component: `data-presence="rise"` and `hidden`. For an overlay of your own, put the exit on `[data-state="closed"]` and close it with `leave(el, done)` from `@weft-js/warp-core/motion`.',
+            note: '`motion` keeps the size and arrives by `fade`, `rise`, `pop` or `slide-up`, `slide-down`, `slide-left`, `slide-right`; the exit runs back the way it came, faster. No component: `data-presence="rise"` and `hidden`. For an overlay of your own, put the exit on `[data-state="closed"]` and close it with `leave(el, done)` from `@kerf-js/veneer-core/motion`.',
             height: 140,
           },
         ],

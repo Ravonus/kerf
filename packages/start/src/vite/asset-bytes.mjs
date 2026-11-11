@@ -37,11 +37,11 @@ export function assetBytes(bundle, read, manifest, abs) {
   const routes = Object.fromEntries(
     [...manifest.layouts, ...manifest.routes].map((route) => {
       const file = abs(route.file)
-      const root = chunkFor(bundle, [file, `${file}?weft-assets`])
+      const root = chunkFor(bundle, [file, `${file}?kerf-assets`])
       return [route.id, root ? closure(bundle, [root]) : null]
     }),
   )
-  const eagerRoot = chunkFor(bundle, ['\0virtual:weft/routes'])
+  const eagerRoot = chunkFor(bundle, ['\0virtual:kerf/routes'])
   const eager = eagerRoot ? closure(bundle, [eagerRoot]) : null
   const owners = new Map()
   for (const entry of [...Object.values(routes), eager]) {

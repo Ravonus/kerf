@@ -7,7 +7,7 @@ import {
   untrack,
   type Derived,
   type State,
-} from '@weft-js/core'
+} from '@kerf-js/core'
 import { hear, isServer, silent, type Conn } from './index/shared'
 import { listenPresence, openTransport } from './index/presence'
 
@@ -32,7 +32,7 @@ export interface CursorAt {
   style?: string
 }
 
-/** What a transport pack is handed to carry cursors around the server (`@weft-js/realtime-webrtc`, `-livekit`, `-socketio`). */
+/** What a transport pack is handed to carry cursors around the server (`@kerf-js/realtime-webrtc`, `-livekit`, `-socketio`). */
 export interface PeerRoom {
   /** This connection, as the server named it. */
   readonly self: string

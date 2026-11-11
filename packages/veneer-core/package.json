@@ -1,0 +1,68 @@
+{
+  "name": "@kerf-js/veneer-core",
+  "version": "0.1.0",
+  "description": "veneer core: tokens, CSS and framework-agnostic behaviour",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
+    "directory": "packages/veneer-core"
+  },
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/veneer-core#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/kerf/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "src",
+    "styles",
+    "bindings",
+    "scripts/contrast-check.mjs",
+    "scripts/contrast-check-colors.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./kerf": "./bindings/kerf.ts",
+    "./motion": "./src/motion.ts",
+    "./charts": "./src/charts/index.ts",
+    "./canvas": "./src/canvas.ts",
+    "./stage": "./src/stage.ts",
+    "./scenes": "./src/scenes.ts",
+    "./dither": "./src/dither/index.ts",
+    "./paint": "./src/paint/index.ts",
+    "./search": "./src/search.ts",
+    "./styles/*": "./styles/*"
+  },
+  "peerDependencies": {
+    "@kerf-js/core": "*"
+  },
+  "peerDependenciesMeta": {
+    "@kerf-js/core": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3",
+    "lightningcss": "1.33.0",
+    "vitest": "5.0.5",
+    "@kerf-js/core": "workspace:*"
+  },
+  "scripts": {
+    "build:css": "node scripts/split-css.mjs",
+    "test": "node scripts/split-css.mjs --check && vitest run"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "keywords": [
+    "kerf"
+  ]
+}

@@ -1,0 +1,23 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+/* filter panel + facets -------------------------------------------------------- */
+:where([data-scope="filter-panel"]) { display: grid; gap: 4px; align-content: start; }
+:where([data-scope="filter-panel"] > header) { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-block-end: 8px; border-block-end: 1px solid var(--veneer-color-border); }
+:where([data-scope="filter-panel"] > header h4) { margin: 0; font-size: var(--veneer-text-body-size); font-weight: 600; }
+:where([data-scope="filter-panel"] details) { border-block-end: 1px solid var(--veneer-color-border); }
+:where([data-scope="filter-panel"] summary) {
+  display: flex; align-items: center; justify-content: space-between; min-block-size: var(--veneer-target-min); cursor: pointer; list-style: none;
+  font: 500 var(--veneer-text-eyebrow-size)/var(--veneer-text-eyebrow-leading) var(--veneer-text-eyebrow-font); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="filter-panel"] summary)::-webkit-details-marker { display: none; }
+:where([data-scope="filter-panel"] summary)::after { content: "+"; font: 400 16px/1 var(--veneer-text-body-font); }
+:where([data-scope="filter-panel"] details[open] summary)::after { content: "−"; }
+:where([data-scope="filter-panel"] summary:focus-visible) { outline: 2px solid var(--veneer-color-focus); border-radius: 4px; }
+:where([data-scope="filter-panel"] [data-part="facet"]) {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-block-size: max(32px, var(--veneer-hit-min)); cursor: pointer; font-size: var(--veneer-text-caption-size);
+}
+:where([data-scope="filter-panel"] [data-part="facet"] small) { color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="filter-panel"] [data-part="facet"][data-empty]) { opacity: var(--veneer-opacity-disabled); }
+:where([data-scope="filter-panel"] [data-part="facet"] input) { accent-color: var(--veneer-color-accent-solid); inline-size: 16px; block-size: 16px; margin: 0; }
+:where([data-scope="filter-panel"] [data-part="body"]:not([data-scope="filter-panel"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="filter-panel"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="filter-panel"] *))) { display: grid; padding-block-end: 10px; }
+}

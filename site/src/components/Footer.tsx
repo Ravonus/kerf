@@ -1,4 +1,4 @@
-import { Link } from '@weft-js/start'
+import { Link } from '@kerf-js/start'
 import { Readout } from './Readout'
 
 export function Footer() {
@@ -14,7 +14,7 @@ export function Footer() {
         <Link href="/llms.txt" rel="external">
           llms.txt
         </Link>
-        <Link href="https://github.com/Ravonus/weft" rel="external">
+        <Link href="https://github.com/Ravonus/kerf" rel="external">
           GitHub
         </Link>
       </nav>

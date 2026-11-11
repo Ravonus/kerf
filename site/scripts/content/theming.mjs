@@ -1,6 +1,6 @@
-// The Theming section of a component page: which `warp({ parts })` keys style it, what each takes beyond the shared
-// properties, and in which states. Read from warp's own parts table, so the docs can't drift from the plugin.
-import { PARTS, statesOf } from '../../../packages/warp/src/plugin/theme-parts.mjs'
+// The Theming section of a component page: which `veneer({ parts })` keys style it, what each takes beyond the shared
+// properties, and in which states. Read from veneer's own parts table, so the docs can't drift from the plugin.
+import { PARTS, statesOf } from '../../../packages/veneer/src/plugin/theme-parts.mjs'
 
 // One config per part, as a reader would write it. A part without one gets the shape-only fallback.
 const EXAMPLES = {
@@ -42,6 +42,6 @@ export function themingOf(component) {
   const lines = parts.map((p) => `    ${EXAMPLES[p] ?? `${p}: { radius: 12, padding: 16 }`},`)
   return {
     rows,
-    example: `warp({\n  colors: { brand: '#e8590c', ink: '#1b1b1f' },\n  parts: {\n${lines.join('\n')}\n  },\n})`,
+    example: `veneer({\n  colors: { brand: '#e8590c', ink: '#1b1b1f' },\n  parts: {\n${lines.join('\n')}\n  },\n})`,
   }
 }

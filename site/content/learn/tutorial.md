@@ -12,7 +12,7 @@ total with shipping, a search box and a checkout. Then you move the products and
 shop becomes a full-stack app.
 
 You don't need to know anything beyond the [Quick start](/learn/quick-start), and you don't need to have read it
-closely. Each step explains what it adds and why. The techniques you'll practise are the ones nearly every Weft app
+closely. Each step explains what it adds and why. The techniques you'll practise are the ones nearly every Kerf app
 uses, so working through this page is the quickest way to get a feel for the framework.
 
 :::note What the steps look like
@@ -31,16 +31,16 @@ step before. That's enough to learn everything until the server part.
 **Build it in your own app.** Make one, as [Installation](/learn/installation) explains:
 
 ```bash
-npm create @weft-js -- my-shop --yes
+npm create kerf -- my-shop --yes
 cd my-shop
-npx weft dev
+npx kerf dev
 ```
 
-`--yes` takes the defaults: Warp for the UI and a SQLite database, which you won't need for this tutorial, though the
+`--yes` takes the defaults: Veneer for the UI and a SQLite database, which you won't need for this tutorial, though the
 server part uses `zod`, which comes with it.
 
 Then create `src/routes/shop.tsx`, paste each step's code into it, and open `/shop` in the browser. A file in
-`src/routes` is a page, and its default export is what the page shows. When you save, `weft dev` swaps the new code in
+`src/routes` is a page, and its default export is what the page shows. When you save, `kerf dev` swaps the new code in
 and keeps what you'd typed and clicked where it can.
 
 ## Overview
@@ -69,7 +69,7 @@ const PRODUCTS = [
 ]
 ```
 
-`PRODUCTS` is ordinary data in an ordinary constant, outside any component. Nothing about it is special to Weft. Later
+`PRODUCTS` is ordinary data in an ordinary constant, outside any component. Nothing about it is special to Kerf. Later
 in the tutorial it moves to the server, and the code that uses it hardly changes.
 
 ```tsx
@@ -88,7 +88,7 @@ Here there's one prop, `product`. Destructuring it in the parameter list, `({ pr
 `(props)` and then `props.product` everywhere.
 
 :::note Props stay live
-In Weft a component runs once. You might expect a destructured prop to be a snapshot, frozen at that first run. It
+In Kerf a component runs once. You might expect a destructured prop to be a snapshot, frozen at that first run. It
 isn't: the compiler turns each prop into a live read, so `product.name` in the markup always reads the prop as it is
 now. That matters from Step 5, when the parent starts changing what it passes. Destructure one level only:
 `({ product: { name } })` can't stay live, and the compiler reports it as **W006**.
@@ -101,10 +101,10 @@ now. That matters from Step 5, when the parent starts changing what it passes. D
 ```
 
 `Shop` turns each product into a `ProductRow` with `.map`, passing the product as the `product` prop. The `key` is how
-Weft tells rows apart: when the list changes, a row with the same key is kept and moved, not rebuilt. Use something that
+Kerf tells rows apart: when the list changes, a row with the same key is kept and moved, not rebuilt. Use something that
 belongs to the item, such as its id. On a list of objects, a missing `key` is **W010**.
 
-`Card` comes from Warp, Weft's UI toolkit. It draws a panel with a title.
+`Card` comes from Veneer, Kerf's UI toolkit. It draws a panel with a title.
 
 ## Step 2: add to cart
 
@@ -168,7 +168,7 @@ reach into its children to read their state.
 
 So the state goes in the closest component that needs all of it: `Shop`. This is called *lifting state up*, and you'll
 do it in every app. The rows get what they need through props. In React the same move means passing the value and a
-callback to every row. In Weft you can pass the box, because a box carries both the reading and the writing, and
+callback to every row. In Kerf you can pass the box, because a box carries both the reading and the writing, and
 `.get` keeps each row's reading narrow.
 :::
 
@@ -186,7 +186,7 @@ const qty = derived(() => cart.get(product.id) ?? 0)
 ```
 
 `derived` names a value worked out from other values. `qty` reads one entry of the cart, so it follows that entry. You
-don't list what it depends on; Weft sees what it read. The row reads `qty.value` twice, in the count and in the minus
+don't list what it depends on; Kerf sees what it read. The row reads `qty.value` twice, in the count and in the minus
 button's `disabled`, and naming it keeps the two the same.
 
 Why not `const qty = cart.get(product.id) ?? 0`? Because the component body runs once. That line would read the entry
@@ -231,7 +231,7 @@ const total = derived(() => subtotal.value + shipping.value)
 ```
 
 Each one says what the value *is*, once. Nowhere does the code say "when the cart changes, update the subtotal, then the
-shipping, then the total". Weft works that out: `total` reads `subtotal` and `shipping`, `shipping` reads `subtotal`,
+shipping, then the total". Kerf works that out: `total` reads `subtotal` and `shipping`, `shipping` reads `subtotal`,
 and `subtotal` reads the cart. A change to the cart reaches every one of them, in the right order, and the page is
 updated once.
 
@@ -244,7 +244,7 @@ No. A derived value is lazy and cached. It computes when something reads it, and
 changed. A click that changes the mug's count recomputes `items`, `subtotal`, `shipping` and `total` once each, and
 writes the text nodes that show them. Nothing else runs: not `Shop`, not the other rows.
 
-In React you might wrap these in `useMemo` to avoid recomputing them on every render. Weft has no renders to avoid, so
+In React you might wrap these in `useMemo` to avoid recomputing them on every render. Kerf has no renders to avoid, so
 `derived` isn't an optimisation. It's how you name a value that follows other values.
 :::
 
@@ -266,7 +266,7 @@ const search = state('')
 />
 ```
 
-`Input` is Warp's text field. `value={search.value}` shows the state, and `onInput` writes it on every key press. The two
+`Input` is Veneer's text field. `value={search.value}` shows the state, and `onInput` writes it on every key press. The two
 together make a *controlled* input: the state is the truth, and the field shows it.
 
 The list to show is derived from the text:
@@ -363,7 +363,7 @@ reasons:
 - **The browser can't be trusted with prices.** Anyone can open the developer tools and change `total` to a cent. The
   server has to work out what an order costs from its own prices.
 
-Weft's full-stack part, `@weft-js/start`, gives you two tools for this. A **query** reads data on the server, and a
+Kerf's full-stack part, `@kerf-js/start`, gives you two tools for this. A **query** reads data on the server, and a
 component calls it like a function. A **mutation** changes something on the server: here, it places the order. Both
 live in modules under `src/server/`. The browser never gets their code: it gets small stubs that call the server for
 you.
@@ -391,7 +391,7 @@ Move `PRODUCTS` into a server module, and export a query that returns it:
 
 ```ts
 // src/server/shop.ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf-js/start'
 
 export type Product = { id: string; name: string; price: number }
 
@@ -421,9 +421,9 @@ shipping comes from `shippingFor`:
 
 ```tsx
 // src/routes/shop.tsx
-import { derived, state, type State } from '@weft-js/core'
-import type { Meta } from '@weft-js/start'
-import { Button, Card, Input } from '@weft-js/warp'
+import { derived, state, type State } from '@kerf-js/core'
+import type { Meta } from '@kerf-js/start'
+import { Button, Card, Input } from '@kerf-js/veneer'
 import { listProducts, type Product } from '#/server/shop'
 import { shippingFor } from '#/shipping'
 
@@ -557,7 +557,7 @@ when it's ready. [Async and loading states](/learn/async-and-loading) shows how.
 :::
 
 ```tsx
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf-js/start'
 
 export const meta: Meta = {
   title: 'Shop',
@@ -573,12 +573,12 @@ page one: a title and a plain sentence about what's on it.
 
 :::pitfall Don't copy query results into state
 It's tempting to write `const all = state(products.value ?? [])`. That takes the value once, before the answer has
-even arrived, and never follows the query again. Read the query, or derive from it, as `all` does. `weft check` reports
+even arrived, and never follows the query again. Read the query, or derive from it, as `all` does. `kerf check` reports
 server data copied into `state` as **S001**.
 :::
 
 :::deepdive Where the code runs
-`src/server/shop.ts` is a server module. When the browser's bundle is built, Weft replaces each `query` and `mutation`
+`src/server/shop.ts` is a server module. When the browser's bundle is built, Kerf replaces each `query` and `mutation`
 in it with a stub that sends a request, so `PRODUCTS` and every `run` stay on the server. That is also why a server
 module can import a database client or read secrets from the environment.
 
@@ -594,7 +594,7 @@ from the server's own list, and returns a receipt:
 
 ```ts
 // src/server/shop.ts
-import { FnError, mutation, query } from '@weft-js/start'
+import { FnError, mutation, query } from '@kerf-js/start'
 import { z } from 'zod'
 import { shippingFor } from '#/shipping'
 
@@ -650,9 +650,9 @@ And the page: the handler calls the mutation, and two new lines show what's happ
 
 ```tsx
 // src/routes/shop.tsx
-import { derived, state, type State } from '@weft-js/core'
-import type { Meta } from '@weft-js/start'
-import { Button, Card, Input } from '@weft-js/warp'
+import { derived, state, type State } from '@kerf-js/core'
+import type { Meta } from '@kerf-js/start'
+import { Button, Card, Input } from '@kerf-js/veneer'
 import {
   listProducts,
   placeOrder,
@@ -814,7 +814,7 @@ paragraph with `role="alert"` shows it, so a screen reader announces it too.
 <Button type="submit" loading={placeOrder.pending.value} …>
 ```
 
-Every mutation has a `pending` value that's true while a call is in flight. Warp's `Button` takes it as `loading`: it
+Every mutation has a `pending` value that's true while a call is in flight. Veneer's `Button` takes it as `loading`: it
 shows that work is under way and ignores presses, so an impatient double click doesn't place two orders. There's also
 `placeOrder.error.value`, the last call's failure, if you'd rather read that than catch.
 
@@ -840,7 +840,7 @@ You've built a shop that:
 
 Look back at the code and notice what isn't there: no effects, no memoisation, no dependency arrays, no re-renders to
 think about, and no code that keeps one value in step with another. Every component ran once. After that, each click
-wrote a box, and Weft updated the few places on the page that read it.
+wrote a box, and Kerf updated the few places on the page that read it.
 
 ### What to build next
 
@@ -854,7 +854,7 @@ If you want to keep going with this shop, here are ideas, roughly from small to 
 - Take payment at checkout: [Payments](/learn/payments).
 - Give each product its own page at `src/routes/products/[id].tsx`: [Routing and layouts](/learn/routing-and-layouts).
 
-To understand how to plan an app like this from scratch, read [Thinking in Weft](/learn/thinking-in-weft) next.
+To understand how to plan an app like this from scratch, read [Thinking in Kerf](/learn/thinking-in-kerf) next.
 
 ## Recap
 
@@ -910,7 +910,7 @@ Keep the counts in the server module, return them with each product, and connect
 
 ```ts
 // src/server/shop.ts
-import { FnError, mutation, query } from '@weft-js/start'
+import { FnError, mutation, query } from '@kerf-js/start'
 import { z } from 'zod'
 import { shippingFor } from '#/shipping'
 

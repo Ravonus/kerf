@@ -1,0 +1,26 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Pill (and PillLink): rounded, selectable; sweeps while hovered or active -- */
+:where([data-scope="pill"]) {
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 6px; block-size: 30px; padding-inline: 12px;
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border); border-radius: var(--veneer-radius-round); --veneer-sweep-radius: var(--veneer-radius-round);
+  background: var(--veneer-color-surface-raised); color: var(--veneer-color-text-subtle); font: 500 var(--veneer-text-caption-size)/1 var(--veneer-text-body-font);
+  text-decoration: none; cursor: pointer;
+  transition: color var(--veneer-duration-fast), background-color var(--veneer-duration-fast), border-color var(--veneer-duration-fast);
+}
+:where([data-scope="pill"]:hover) { color: var(--veneer-color-text); }
+:where([data-scope="pill"][aria-current]),
+:where([data-scope="pill"][aria-selected="true"]),
+:where([data-scope="pill"][aria-pressed="true"]) {
+  background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); border-color: var(--veneer-color-accent-border);
+}
+:where([data-scope="pill"] [data-part="count"]:not([data-scope="pill"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="kanban"],[data-scope="segmented"],[data-scope="tab-bar"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="pill"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="kanban"],[data-scope="segmented"],[data-scope="tab-bar"],[data-scope="table"],[data-scope="tour"]) [data-scope="pill"] *))) { font: 500 11px/1 var(--veneer-font-mono); }   /* full ink: 0.75 opacity fell to 3.6:1 (review 03 m12) */
+
+
+
+/* pills and menubar items sit in a row with room above and below: block axis only */
+:where([data-scope="pill"])::after,
+:where([data-scope="menubar"] > [role="menuitem"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--veneer-hit-min)) / 2));
+}
+}

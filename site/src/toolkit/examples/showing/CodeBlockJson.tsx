@@ -1,4 +1,4 @@
-import { CodeBlock } from '@weft-js/warp'
+import { CodeBlock } from '@kerf-js/veneer'
 import { SAMPLE } from './code-data'
 
 export const CodeBlockJson = () => (

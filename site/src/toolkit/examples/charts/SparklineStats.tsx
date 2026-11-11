@@ -4,7 +4,7 @@ import {
   Sparkline,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 import { PULSES } from './shared-dollars'
 

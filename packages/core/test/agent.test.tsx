@@ -1,10 +1,10 @@
-// weft-allow T004, T005: the bridge's clock replaces the page's timers itself, and one test clicks the raw DOM the way another browser tool would
-// @weft-js/core/agent and @weft-js/core/devtools: what an agent sees and does in the running app (research 22). No @weft-js/core/test here: the
+// kerf-allow T004, T005: the bridge's clock replaces the page's timers itself, and one test clicks the raw DOM the way another browser tool would
+// @kerf-js/core/agent and @kerf-js/core/devtools: what an agent sees and does in the running app (research 22). No @kerf-js/core/test here: the
 // bridge brings its own page fakes (clock, network), and these tests check them.
-import { derived, onCleanup, state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
-import { act, assert, clock, net, record, run, snapshot } from '@weft-js/core/agent'
-import { graph, set } from '@weft-js/core/devtools'
+import { derived, onCleanup, state } from '@kerf-js/core'
+import { render } from '@kerf-js/core/dom'
+import { act, assert, clock, net, record, run, snapshot } from '@kerf-js/core/agent'
+import { graph, set } from '@kerf-js/core/devtools'
 
 function Stock(props: { stock: number }) {
   const qty = state(0)
@@ -99,7 +99,7 @@ test('set writes state by its graph name; derived values refuse', () => {
   expect(() => set('Nope.x', 1)).toThrow(/no state named Nope\.x/)
 })
 
-test('record turns acts and asserts into a @weft-js/core/test test', async () => {
+test('record turns acts and asserts into a @kerf-js/core/test test', async () => {
   mount(() => <Stock stock={2} />)
   record.start()
   await act({ role: 'button', name: 'Add' }, 'click')
@@ -113,7 +113,7 @@ test('record turns acts and asserts into a @weft-js/core/test test', async () =>
   })
   expect(asserts).toBe(2)
   expect(code).toBe(`import { expect, test } from 'vitest'
-import { render, screen, user } from '@weft-js/core/test'
+import { render, screen, user } from '@kerf-js/core/test'
 import { Stock } from "./Stock"
 
 test("recorded: /", async () => {
@@ -144,7 +144,7 @@ test('the network: offline fails fetch, fires the events, and drops open sockets
   const seen: string[] = []
   addEventListener('offline', () => seen.push('offline'))
   addEventListener('online', () => seen.push('online'))
-  // weft-allow T013: this tests the agent's own socket tracking, so it needs a real one
+  // kerf-allow T013: this tests the agent's own socket tracking, so it needs a real one
   const ws = new WebSocket('ws://127.0.0.1:9/never')
   ws.onerror = () => {}
   expect(net.status().sockets).toBe(1)

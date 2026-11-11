@@ -4,9 +4,9 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 export function buildRunner(ctx, runtime) {
-  const { must, weft, dir } = ctx
+  const { must, kerf, dir } = ctx
   const t = performance.now()
-  must(weft(), ['build', '--runtime', runtime], dir, { NODE_ENV: 'production' })
+  must(kerf(), ['build', '--runtime', runtime], dir, { NODE_ENV: 'production' })
   return Math.round(performance.now() - t)
 }
 
@@ -26,9 +26,9 @@ export function publicHashesRunner(ctx) {
 }
 
 export async function startRunner(ctx, runtime) {
-  const { freePort, weft, dir, until, sleep } = ctx
+  const { freePort, kerf, dir, until, sleep } = ctx
   const port = await freePort()
-  const child = spawn(weft(), ['start', '--runtime', runtime], {
+  const child = spawn(kerf(), ['start', '--runtime', runtime], {
     cwd: dir,
     env: { ...process.env, PORT: String(port), NODE_ENV: 'production' },
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -67,7 +67,7 @@ export async function startRunner(ctx, runtime) {
 
 export const callRunner = async (_ctx, url, id, input) => {
   const r = await fetch(
-    `${url}/_weft/fn/${id}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`,
+    `${url}/_kerf/fn/${id}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`,
   )
   return { status: r.status, body: await r.json() }
 }
@@ -108,7 +108,7 @@ export async function browserRunRunner(ctx, url) {
     const errors = []
     page.on('pageerror', (e) => errors.push(e.message))
     page.on('request', (r) => {
-      if (r.url().includes('/_weft/fn/')) seen.push(`${r.method()} ${new URL(r.url()).pathname}`)
+      if (r.url().includes('/_kerf/fn/')) seen.push(`${r.method()} ${new URL(r.url()).pathname}`)
     })
     await page.goto('/search')
     await page.waitForLoadState('networkidle')
@@ -131,7 +131,7 @@ export async function browserRunRunner(ctx, url) {
     const mark = seen.length
     await page.getByLabel('Title').fill('Zebra lantern')
     const posted = page.waitForResponse(
-      (r) => r.url().includes('/_weft/fn/') && r.request().method() === 'POST',
+      (r) => r.url().includes('/_kerf/fn/') && r.request().method() === 'POST',
     )
     await page.getByRole('button', { name: 'Add' }).click()
     await posted
@@ -171,7 +171,7 @@ export async function benchRunner(ctx, url) {
     'w1 w2 w3 w4 w5',
     'meadow',
   ].map(
-    (q) => `${url}/_weft/fn/${ID.search}?i=${encodeURIComponent(JSON.stringify({ q, limit: 20 }))}`,
+    (q) => `${url}/_kerf/fn/${ID.search}?i=${encodeURIComponent(JSON.stringify({ q, limit: 20 }))}`,
   )
   const one = (u) => fetch(u).then((r) => r.text())
   for (let i = 0; i < 300; i++) await one(queries[i % 5])

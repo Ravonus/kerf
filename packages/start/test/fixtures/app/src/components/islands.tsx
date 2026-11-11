@@ -1,6 +1,6 @@
-import { Boundary, resource, state, untrack } from '@weft-js/core'
+import { Boundary, resource, state, untrack } from '@kerf-js/core'
 
-/* @weft client */
+/* @kerf client */
 export function Counter(props: { start: number; label: string }) {
   const n = state(untrack(() => props.start))
   return (
@@ -18,7 +18,7 @@ export function Counter(props: { start: number; label: string }) {
 
 /**
  * Renders its children: the server's nodes come back when it reopens.
- * @weft client
+ * @kerf client
  */
 export function Fold(props: { title: string; children?: unknown }) {
   const open = state(true)
@@ -39,7 +39,7 @@ export function Fold(props: { title: string; children?: unknown }) {
 
 /**
  * Doesn't render its children at first: they wait in a template.
- * @weft client
+ * @kerf client
  */
 export function Reveal(props: { children?: unknown }) {
   const on = state(false)
@@ -63,7 +63,7 @@ function Stock(props: { n: number }) {
   return <p class="island-stock">In stock: {r.value}</p>
 }
 
-/* @weft client */
+/* @kerf client */
 export function Stocked(props: { n: number }) {
   return (
     <Boundary pending={<p class="island-pending">Loading</p>}>
@@ -74,7 +74,7 @@ export function Stocked(props: { n: number }) {
 
 /**
  * A fragment whose nodes come and go, at the top of a static route.
- * @weft client
+ * @kerf client
  */
 export function Many() {
   const on = state(true)
@@ -98,8 +98,8 @@ export function Label(props: { text: string }) {
   return <em class="label">{props.text}</em>
 }
 
-/** Shows its children twice, as warp's frame button shows its label and the sweep's copy. */
-/* @weft client */
+/** Shows its children twice, as veneer's frame button shows its label and the sweep's copy. */
+/* @kerf client */
 export function Twice(props: { children?: unknown }) {
   const n = state(0)
   return (

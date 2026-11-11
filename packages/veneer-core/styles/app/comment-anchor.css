@@ -1,0 +1,6 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* comments: margin rail of anchored threads */
+:where([data-scope="comment-anchor"]) { background: color-mix(in oklab, var(--veneer-color-highlight-solid) 32%, transparent); border-block-end: 2px solid var(--veneer-color-highlight-solid); cursor: pointer; }
+:where([data-scope="comment-anchor"][data-active]) { background: color-mix(in oklab, var(--veneer-color-highlight-solid) 60%, transparent); }
+}

@@ -1,4 +1,4 @@
-// Scratch copies of a project for the gate, and vitest runs in them. A copy lives in `<root>/.weft/gate/<id>`, so
+// Scratch copies of a project for the gate, and vitest runs in them. A copy lives in `<root>/.kerf/gate/<id>`, so
 // node_modules hoisted above the project still resolve; the project's own node_modules dirs are symlinked, not copied.
 
 import { spawn } from 'node:child_process'
@@ -17,7 +17,7 @@ import {
 import { createRequire } from 'node:module'
 import { dirname, join, relative } from 'node:path'
 
-const skipDirs = new Set(['.git', '.weft', 'dist', 'coverage', '.turbo', 'target'])
+const skipDirs = new Set(['.git', '.kerf', 'dist', 'coverage', '.turbo', 'target'])
 
 /**
  * Copy `root` into a new scratch dir. `exclude(rel)` leaves a path out (relative to root, posix).
@@ -27,7 +27,7 @@ export function copyProject(
   root,
   { exclude = () => false, id = Math.random().toString(36).slice(2, 8) } = {},
 ) {
-  const dest = join(root, '.weft', 'gate', `${process.pid}-${id}`)
+  const dest = join(root, '.kerf', 'gate', `${process.pid}-${id}`)
   rmSync(dest, { recursive: true, force: true })
   mkdirSync(dest, { recursive: true })
   const go = (from, to, rel) => {
@@ -69,7 +69,7 @@ export function writeFiles(dir, files) {
 
 export function removeCopy(dir) {
   rmSync(dir, { recursive: true, force: true })
-  // Leave `.weft/gate` behind only when something else is in it.
+  // Leave `.kerf/gate` behind only when something else is in it.
   const gateDir = dirname(dir)
   try {
     if (!readdirSync(gateDir).length) rmSync(gateDir, { recursive: true })
@@ -100,7 +100,7 @@ export function vitestBin(root) {
  *   `tests` is keyed `<file>::<suite > test>`; `loadErrors` by file, for files that failed before running a test.
  */
 export function runVitest(dir, files, { bin, timeoutMs = 120_000, config } = {}) {
-  const report = join(dir, `.weft-report-${Math.random().toString(36).slice(2, 8)}.json`)
+  const report = join(dir, `.kerf-report-${Math.random().toString(36).slice(2, 8)}.json`)
   const args = [
     bin,
     'run',

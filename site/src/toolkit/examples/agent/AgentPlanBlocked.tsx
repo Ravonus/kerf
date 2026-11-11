@@ -1,4 +1,4 @@
-import { AgentPlan } from '@weft-js/warp'
+import { AgentPlan } from '@kerf-js/veneer'
 
 export const AgentPlanBlocked = () => (
   <AgentPlan

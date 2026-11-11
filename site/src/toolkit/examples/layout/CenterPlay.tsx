@@ -1,4 +1,4 @@
-import { Center } from '@weft-js/warp'
+import { Center } from '@kerf-js/veneer'
 import { Box } from './shared'
 
 export const CenterPlay = (p: {

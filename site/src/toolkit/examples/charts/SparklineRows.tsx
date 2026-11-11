@@ -3,7 +3,7 @@ import {
   Sparkline,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 import { ms, SERVICES_WEEK } from './shared-dollars'
 
@@ -39,7 +39,7 @@ export const SparklineRows = () => (
             format={ms}
             color={
               trend.startsWith('rising')
-                ? 'var(--warp-color-caution-solid)'
+                ? 'var(--veneer-color-caution-solid)'
                 : undefined
             }
           />

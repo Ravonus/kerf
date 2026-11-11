@@ -1,4 +1,4 @@
-import { AuditLog } from '@weft-js/warp'
+import { AuditLog } from '@kerf-js/veneer'
 import { AUDIT, AUDIT_CATEGORIES, NOW } from '../../world'
 
 // -- audit and integrations --

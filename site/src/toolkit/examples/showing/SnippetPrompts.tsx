@@ -1,15 +1,15 @@
-import { Stack, Snippet } from '@weft-js/warp'
+import { Stack, Snippet } from '@kerf-js/veneer'
 
 export const SnippetPrompts = () => (
   <Stack gap="related">
-    <Snippet code="weft deploy" />
+    <Snippet code="kerf deploy" />
     <Snippet
       prompt="#"
-      code="systemctl restart weft-agent"
+      code="systemctl restart kerf-agent"
     />
     <Snippet
       prompt=""
-      code="https://storefront.weft.app"
+      code="https://storefront.kerf.app"
     />
   </Stack>
 )

@@ -1,6 +1,6 @@
 node_modules/
-.weft/*
-!.weft/plugins.lock.json
+.kerf/*
+!.kerf/plugins.lock.json
 .output/
 dist/
 src/generated/

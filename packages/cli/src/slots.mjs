@@ -98,7 +98,7 @@ export function slotDef(id) {
 /**
  * @param {{ plugins?: Array<{ name: string, provides?: Array<string | { slot: string, key: string }> }>, slots?: Record<string, unknown> }} config
  * @param {(code: string, why: string, near: string) => void} report
- * @returns {Record<string, unknown>} the `slots` block of `weft check --json`
+ * @returns {Record<string, unknown>} the `slots` block of `kerf check --json`
  */
 export function bindSlots(config, report) {
   const plugins = config.plugins ?? []
@@ -113,7 +113,7 @@ export function bindSlots(config, report) {
       if (!slotDef(slot) && !slot.startsWith(`${p.name}.`)) {
         report(
           'P008',
-          `\`${p.name}\` provides \`${slot}\`, which is not a slot weft defines.`,
+          `\`${p.name}\` provides \`${slot}\`, which is not a slot kerf defines.`,
           p.name,
         )
         continue
@@ -126,12 +126,12 @@ export function bindSlots(config, report) {
 
   for (const [id, pick] of Object.entries(chosen)) {
     if (!slotDef(id) && !offers.has(id)) {
-      report('P008', `\`slots\` names \`${id}\`, which is not a slot weft defines.`, id)
+      report('P008', `\`slots\` names \`${id}\`, which is not a slot kerf defines.`, id)
       continue
     }
     const picks = typeof pick === 'string' ? { '': pick } : pick
     for (const [key, name] of Object.entries(picks)) {
-      if (name.startsWith('weft:default')) continue
+      if (name.startsWith('kerf:default')) continue
       if (!names.has(name))
         report('P009', `\`slots['${id}']\` picks \`${name}\`, which is not in \`plugins\`.`, id)
       else if (!(offers.get(id)?.get(key) ?? []).includes(name))
@@ -150,7 +150,7 @@ export function bindSlots(config, report) {
     const resolve = (key, fallback) => {
       const providers = byKey.get(key) ?? []
       const named = typeof pick === 'string' ? (key === '' ? pick : undefined) : pick?.[key]
-      if (named && (named.startsWith('weft:default') || providers.includes(named))) return named
+      if (named && (named.startsWith('kerf:default') || providers.includes(named))) return named
       if (providers.length === 1) return providers[0]
       if (providers.length > 1) {
         const where = key ? `\`${id}\` key \`${key}\`` : `\`${id}\``
@@ -164,7 +164,7 @@ export function bindSlots(config, report) {
       return fallback
     }
     if (def.cardinality === 'one') {
-      out[id] = resolve('', typeof def.default === 'string' ? `weft:default:${def.default}` : null)
+      out[id] = resolve('', typeof def.default === 'string' ? `kerf:default:${def.default}` : null)
     } else {
       /** @type {Set<string>} */
       const keys = new Set([
@@ -173,7 +173,7 @@ export function bindSlots(config, report) {
       ])
       const block = {}
       for (const key of [...keys].sort())
-        block[key] = resolve(key, def.default?.includes(key) ? 'weft:default' : null)
+        block[key] = resolve(key, def.default?.includes(key) ? 'kerf:default' : null)
       out[id] = block
     }
   }

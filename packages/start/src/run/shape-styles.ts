@@ -34,7 +34,7 @@ export function acquireShapeStyles(
   }
   if (!entry) {
     const element = doc.createElement('style')
-    element.setAttribute('data-weft-shape-style', '')
+    element.setAttribute('data-kerf-shape-style', '')
     const nonce = doc.querySelector<HTMLMetaElement>('meta[property="csp-nonce"]')?.nonce
     if (nonce) element.nonce = nonce
     element.textContent = text.join('\n')

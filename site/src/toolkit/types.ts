@@ -1,5 +1,5 @@
 // The shape of a component page. Words and examples are written by hand in docs/ and examples/; names, props and types are
-// read from warp's source by scripts/toolkit.mjs, so those can't drift.
+// read from veneer's source by scripts/toolkit.mjs, so those can't drift.
 export type Stage = 'center' | 'narrow' | 'start' | 'fill'
 
 export type ExampleRef = {
@@ -62,7 +62,7 @@ export type Playground = {
 }
 
 export type Doc = {
-  /** Must be one of Warp's exports. */
+  /** Must be one of Veneer's exports. */
   component: string
   /** One plain sentence, at most 120 characters. The page's lede and its meta description. */
   summary: string

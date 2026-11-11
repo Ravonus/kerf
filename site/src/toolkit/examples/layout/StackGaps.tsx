@@ -1,4 +1,4 @@
-import { Grid, Stack, Text } from '@weft-js/warp'
+import { Grid, Stack, Text } from '@kerf-js/veneer'
 import { Box, STACK_GAPS } from './shared'
 
 export const StackGaps = () => (

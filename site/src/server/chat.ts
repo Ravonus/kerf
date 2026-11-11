@@ -1,4 +1,4 @@
-import { channel } from '@weft-js/start'
+import { channel } from '@kerf-js/start'
 import { z } from 'zod'
 
 const replies = ['Got it.', 'Still here.', 'That was the last one.']

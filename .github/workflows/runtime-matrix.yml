@@ -2,7 +2,7 @@
 name: runtime-matrix
 on:
   pull_request:
-    paths: ['packages/start/**', 'packages/create/**', 'packages/cli/**', 'packages/core/**', '.github/workflows/runtime-matrix.yml']
+    paths: ['packages/start/**', 'packages/create-kerf/**', 'packages/cli/**', 'packages/core/**', '.github/workflows/runtime-matrix.yml']
   push:
     branches: [main]
   workflow_dispatch:
@@ -28,20 +28,20 @@ jobs:
           (cd packages/start && pnpm exec playwright-core install --with-deps chromium)
       - name: Scaffold the todo + auth app
         run: |
-          node packages/create/bin/create-weft.mjs "$RUNNER_TEMP/app" --db sqlite --auth --ui warp
+          node packages/create-kerf/bin/create-kerf.mjs "$RUNNER_TEMP/app" --db sqlite --auth --ui veneer
           cd "$RUNNER_TEMP/app"
           node --input-type=module -e '
             import { readFileSync, writeFileSync } from "node:fs"
             const pkg = JSON.parse(readFileSync("package.json", "utf8"))
-            for (const p of ["start", "warp", "cli"]) pkg.dependencies[`@weft-js/${p}`] = `link:${process.env.GITHUB_WORKSPACE}/packages/${p}`
-            delete pkg.devDependencies["@weft-js/cli"]
-            pkg.dependencies["@weft-js/core"] = `link:${process.env.GITHUB_WORKSPACE}/packages/core`
+            for (const p of ["start", "veneer", "cli"]) pkg.dependencies[`@kerf-js/${p}`] = `link:${process.env.GITHUB_WORKSPACE}/packages/${p}`
+            delete pkg.devDependencies["@kerf-js/cli"]
+            pkg.dependencies["@kerf-js/core"] = `link:${process.env.GITHUB_WORKSPACE}/packages/core`
             writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")
           '
           # the repo's settings, less its patches: they're paths into the repo, and the app has no playwright to patch
           sed '/^patchedDependencies:/,/^$/d' "$GITHUB_WORKSPACE/pnpm-workspace.yaml" > pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
-          pnpm exec weft db generate
+          pnpm exec kerf db generate
       - run: node packages/start/scripts/runtime-matrix.mjs "$RUNNER_TEMP/app"
       # Apps may run on Node 24 LTS (the packages' engines say >=24), so build and serve the same app on it too.
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -52,4 +52,4 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-          node packages/create/scripts/packed.mjs "$RUNNER_TEMP/packed"
+          node packages/create-kerf/scripts/packed.mjs "$RUNNER_TEMP/packed"

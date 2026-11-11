@@ -1,7 +1,7 @@
 // The job queue on Redis: `defineJobs(jobs, { queue: redisQueue() })`. Jobs survive a restart, and every instance
 // works the same queue, each job claimed by one at a time.
 
-import type { DeadJob, Queue, QueuedJob } from '@weft-js/start/jobs'
+import type { DeadJob, Queue, QueuedJob } from '@kerf-js/start/jobs'
 import { connect, type RedisStoreOptions } from './store'
 
 // The job's JSON is stored as given and never decoded in Lua (cjson would turn an empty array into an object):
@@ -63,7 +63,7 @@ export interface RedisQueueOptions extends RedisStoreOptions {
 export function redisQueue(
   options: RedisQueueOptions = {},
 ): Queue & { dead(count?: number): Promise<DeadJob[]> } {
-  const prefix = `${options.prefix ?? 'weft:'}q:`
+  const prefix = `${options.prefix ?? 'kerf:'}q:`
   const client = connect(options, 'redisQueue')
   const keys = ['jobs', 'ready', 'attempts', 'keyOf', 'key:', 'dead'].map((k) => prefix + k)
   const deadLimit = options.deadLimit ?? 1000

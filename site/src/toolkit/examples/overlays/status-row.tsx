@@ -4,7 +4,7 @@ import {
   Row,
   Text,
   Tooltip,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 export const TooltipStatusRow = () => (
   <Row

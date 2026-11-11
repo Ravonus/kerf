@@ -1,5 +1,5 @@
 // Every copy button on a component page must hand over code that runs. Writes each example's copied text to a file of its
-// own, then has TypeScript check it against warp. An undefined name, a missing import or a stale prop fails here.
+// own, then has TypeScript check it against veneer. An undefined name, a missing import or a stale prop fails here.
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -32,7 +32,7 @@ writeFileSync(
   JSON.stringify({
     extends: '../tsconfig.json',
     compilerOptions: { noEmit: true, noUnusedLocals: false, strict: false, skipLibCheck: true },
-    include: ['*.tsx', '../src/weft-env.d.ts'],
+    include: ['*.tsx', '../src/kerf-env.d.ts'],
   }),
 )
 let out = ''

@@ -1,4 +1,4 @@
-import { DataGrid } from '@weft-js/warp'
+import { DataGrid } from '@kerf-js/veneer'
 
 import { PROJECTS } from '../../world'
 
@@ -16,6 +16,6 @@ export const DataGridBasic = () => (
     captionHidden
     rows={PROJECTS}
     columns={GRID}
-    exportName="weft-projects"
+    exportName="kerf-projects"
   />
 )

@@ -37,7 +37,7 @@ export function closest(word, names, n = 3) {
 }
 
 /**
- * `weft style find <query>`: the groups that fit, best first. Every word of the query must hit the group's name,
+ * `kerf style find <query>`: the groups that fit, best first. Every word of the query must hit the group's name,
  * doc, parts, axes, values, states or tokens (a name word one typo off counts); with no such group, groups that hit
  * any word.
  */
@@ -45,7 +45,7 @@ export function findGroups(matrix, query) {
   const terms = words(query ?? '')
   if (!terms.length)
     throw usageError(
-      'weft style find <query>: say what the thing is (`card`, `status badge`, `critical`)',
+      'kerf style find <query>: say what the thing is (`card`, `status badge`, `critical`)',
     )
   const score = (name, g) => {
     const fields = [

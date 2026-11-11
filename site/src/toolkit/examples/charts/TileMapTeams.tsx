@@ -1,4 +1,4 @@
-import { TileMap } from '@weft-js/warp'
+import { TileMap } from '@kerf-js/veneer'
 
 import { TEAMS_BY_STATE } from '../../world'
 

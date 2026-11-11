@@ -4,8 +4,8 @@ import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll } from 'vitest'
 
-export const fixture = fileURLToPath(new URL('../../../evals/reference-v3/weft/', import.meta.url))
-export const bin = fileURLToPath(new URL('../bin/weft.mjs', import.meta.url))
+export const fixture = fileURLToPath(new URL('../../../evals/reference-v3/kerf/', import.meta.url))
+export const bin = fileURLToPath(new URL('../bin/kerf.mjs', import.meta.url))
 const tmpRoot = fileURLToPath(new URL('./.tmp/', import.meta.url))
 
 const made = []
@@ -14,7 +14,7 @@ afterAll(() => {
 })
 
 /**
- * A copy of the v3 reference app inside this package (so `zod` and `@weft-js/core/config` resolve from it), with edits.
+ * A copy of the v3 reference app inside this package (so `zod` and `@kerf-js/core/config` resolve from it), with edits.
  * @param {Record<string, string>} files extra or replaced files
  * @param {(src: Record<string, string>) => void} [edit]
  */
@@ -34,15 +34,15 @@ const startFixture = fileURLToPath(new URL('../../start/test/fixtures/app/', imp
 const startTmp = fileURLToPath(new URL('../../start/test/.tmp/', import.meta.url))
 
 /**
- * A copy of start's fixture app, beside it in packages/start so `@weft-js/start` still resolves from the workspace.
- * `weft check` rewrites `.weft/slots`, and start's suite binds the media route there while its dev server runs: checking
+ * A copy of start's fixture app, beside it in packages/start so `@kerf-js/start` still resolves from the workspace.
+ * `kerf check` rewrites `.kerf/slots`, and start's suite binds the media route there while its dev server runs: checking
  * the original while both suites run at once unbinds that route, and start's upload tests get a 500.
  */
 export function startApp() {
   mkdirSync(startTmp, { recursive: true })
   const dir = mkdtempSync(join(startTmp, 'app-'))
   made.push(dir)
-  cpSync(startFixture, dir, { recursive: true, filter: (src) => basename(src) !== '.weft' })
+  cpSync(startFixture, dir, { recursive: true, filter: (src) => basename(src) !== '.kerf' })
   return dir
 }
 

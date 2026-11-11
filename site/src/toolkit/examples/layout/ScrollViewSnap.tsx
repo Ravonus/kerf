@@ -1,10 +1,10 @@
-import { ScrollView } from '@weft-js/warp'
+import { ScrollView } from '@kerf-js/veneer'
 
 const slides = ['One', 'Two', 'Three', 'Four', 'Five']
 const slide =
   'flex:0 0 240px;height:140px;display:grid;' +
   'place-items:center;border-radius:12px;' +
-  'background:var(--warp-color-surface-sunken)'
+  'background:var(--veneer-color-surface-sunken)'
 
 export const ScrollViewSnap = () => (
   <ScrollView

@@ -1,4 +1,4 @@
-import type { AgentEvent } from '@weft-js/warp'
+import type { AgentEvent } from '@kerf-js/veneer'
 import { DEPLOY_SOURCES } from './agent-sources'
 
 export const WHY_TEXT =

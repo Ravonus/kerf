@@ -1,5 +1,5 @@
 // Plugin `check` hooks (research 13 §2.3 `CheckHook`, research 26 §2.5): a plugin's manifest may carry
-// `check: { include: string[], run(ctx) }`. `weft check` runs it once over the matching files, never on HMR. The
+// `check: { include: string[], run(ctx) }`. `kerf check` runs it once over the matching files, never on HMR. The
 // hook reads through `ctx` (the files, a JSX view, other project files) and returns diagnostics in its namespace.
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -12,7 +12,7 @@ import { importOf, scanJsx } from './jsx-scan.mjs'
 /**
  * @param {string} root
  * @param {{ contributions: { name: string, namespace: string, manifest: any }[] }} loaded
- * @param {{ files: { rel: string, text: string }[], exclude?: string[] }} options the files `weft check` compiled
+ * @param {{ files: { rel: string, text: string }[], exclude?: string[] }} options the files `kerf check` compiled
  */
 export async function pluginChecks(root, loaded, { files, exclude = [] }) {
   const out = []
@@ -65,7 +65,7 @@ export async function pluginChecks(root, loaded, { files, exclude = [] }) {
         diagnostic({
           code: 'P119',
           owner: c.name,
-          file: 'weft.config.ts',
+          file: 'kerf.config.ts',
           why: `\`${c.name}\`'s check hook threw: ${String(error?.message ?? error).split('\n')[0]}`,
         }),
       )
@@ -82,7 +82,7 @@ function appendFindings({ found, c, out, declared, read }) {
       out.push(
         diagnostic({
           code: 'P111',
-          file: 'weft.config.ts',
+          file: 'kerf.config.ts',
           why: `\`${c.name}\`'s check reported \`${d.code}\`, outside its namespace \`${c.namespace}\`.`,
         }),
       )

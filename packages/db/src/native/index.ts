@@ -1,6 +1,6 @@
 // SQL template values always go to the driver as parameters.
 
-import { gate, register, touch, type DbHandle, type Migration } from '@weft-js/start/db/core'
+import { gate, register, touch, type DbHandle, type Migration } from '@kerf-js/start/db/core'
 
 /** One row, by column name. */
 export type Row = Record<string, unknown>
@@ -28,7 +28,7 @@ export interface NativeDb<D = unknown> {
   query: Driver['query']
   driver: D
   transaction<T>(fn: (tx: { sql: Sql }) => Promise<T>): Promise<T>
-  $weft: DbHandle
+  $kerf: DbHandle
 }
 
 const placeholder = (dialect: DbHandle['dialect'], i: number) =>
@@ -53,17 +53,17 @@ export function createNative<D>(
     migrate: (list: Migration[]) =>
       driver.locked(async () => {
         await driver.exec(
-          'create table if not exists __weft_migrations (tag varchar(255) primary key)',
+          'create table if not exists __kerf_migrations (tag varchar(255) primary key)',
         )
         const done = new Set(
-          (await driver.query('select tag from __weft_migrations', [])).map((r) => r.tag),
+          (await driver.query('select tag from __kerf_migrations', [])).map((r) => r.tag),
         )
         for (const m of list) {
           if (done.has(m.tag)) continue
           // A file with only comments is a migration still being written; some engines refuse an empty query.
           if (m.sql.replace(/--.*$/gm, '').trim()) await driver.exec(m.sql)
           await driver.query(
-            `insert into __weft_migrations (tag) values (${placeholder(driver.dialect, 0)})`,
+            `insert into __kerf_migrations (tag) values (${placeholder(driver.dialect, 0)})`,
             [m.tag],
           )
         }

@@ -17,7 +17,7 @@ export function escape(s: string, quoted?: boolean): string {
 
 /**
  * ` name="value"` for a dynamic attribute or property: `null`/`false` drop it, `true` writes the bare name. `WORDS`
- * attributes write booleans as the words (`aria-pressed="false"`), as @weft-js/core/dom does.
+ * attributes write booleans as the words (`aria-pressed="false"`), as @kerf-js/core/dom does.
  */
 export function attr(name: string, value: unknown): string {
   name = attribute(name)

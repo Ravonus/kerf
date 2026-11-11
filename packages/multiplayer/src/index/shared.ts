@@ -1,4 +1,4 @@
-import type { Connection } from '@weft-js/start'
+import type { Connection } from '@kerf-js/start'
 
 // What `presence` needs of a connection: the `mp.*` names are the fragment's, which a `doc.connect()`'s types don't say.
 export type Conn = Pick<Connection<unknown, unknown>, 'status' | 'room' | 'onReset'> & {

@@ -1,0 +1,19 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+:where([data-scope="flow"]) { display: grid; min-inline-size: 0; }
+:where([data-scope="flow"] > [data-part="step"]) { grid-area: 1 / 1; min-inline-size: 0; }
+:where([data-scope="flow"] > [data-part="step"]:not([data-state])) { display: none; }
+:where([data-scope="flow"] > [data-part="step"][data-state="active"]) {
+  animation: veneer-flow-in var(--veneer-flow-step) var(--veneer-ease-out) both;
+}
+:where([data-scope="flow"] > [data-part="step"][data-state="leaving"]) {
+  pointer-events: none; z-index: 0;
+  animation: veneer-flow-out calc(var(--veneer-flow-step) * var(--veneer-duration-exit-k, 0.7)) var(--veneer-ease-in) both;
+}
+:where([data-scope="flow"]) { --_dir: 1; }
+:where([data-scope="flow"][data-dir="back"]) { --_dir: -1; }
+/* entering waits for ~40% of the exit so the two steps never read on top of each other */
+:where([data-scope="flow"] > [data-part="step"][data-state="active"][data-after-exit]) { animation-delay: calc(var(--veneer-flow-step) * 0.4); }
+@keyframes veneer-flow-in  { from { opacity: 0; transform: translateX(calc(var(--_dir) * var(--veneer-flow-distance))); } }
+@keyframes veneer-flow-out { to   { opacity: 0; transform: translateX(calc(var(--_dir) * var(--veneer-flow-distance) * -0.5)); } }
+}

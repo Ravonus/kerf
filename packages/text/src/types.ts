@@ -1,4 +1,4 @@
-// weft's `measure` provider: the smallest pure surface @weft-js/core/text needs from a text engine. Another provider
+// kerf's `measure` provider: the smallest pure surface @kerf-js/core/text needs from a text engine. Another provider
 // (an SSR advance-table estimator, a test double) implements the same five calls.
 
 export type PrepareOptions = {

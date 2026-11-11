@@ -1,5 +1,5 @@
-// The server's realtime hub (research 30 §5). No runtime imports, so one hub runs behind `/_weft/rt` and behind
-// @weft-js/core/test's fake transport: both hand it a sink, and only the HTTP sink knows about bytes.
+// The server's realtime hub (research 30 §5). No runtime imports, so one hub runs behind `/_kerf/rt` and behind
+// @kerf-js/core/test's fake transport: both hand it a sink, and only the HTTP sink knows about bytes.
 //
 //   rings        one for pokes, always listening, so a rendered page's cursor can replay the gap before it connects;
 //                one per topic channel, alive while someone listens and one window longer. Cursors are
@@ -169,7 +169,7 @@ export function liveHealth(): LiveState & { ok: boolean; required: boolean } {
     ok: !required || ((s.mode === 'feed' || s.mode === 'external') && !s.down),
   }
 }
-/** @weft-js/core/test, after each test. */
+/** @kerf-js/core/test, after each test. */
 export const resetHub = () => {
   const old = current
   current = undefined
@@ -186,7 +186,7 @@ export function topic<
   return makeTopic(name, def, hub)
 }
 
-/** `/_weft/rt` opens a connection or changes one. */
+/** `/_kerf/rt` opens a connection or changes one. */
 export async function rtRoute(
   request: Request,
   scope: Scope,

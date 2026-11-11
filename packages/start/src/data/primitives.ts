@@ -1,6 +1,6 @@
 import type { SchemaIssue } from './types'
 
-/** A diagnostic thrown by @weft-js/start: `code` (Q001…) and a fix in the message, like Weft's StateError. */
+/** A diagnostic thrown by @kerf-js/start: `code` (Q001…) and a fix in the message, like Kerf's StateError. */
 export class StartError extends Error {
   /** The HTTP status, when `extra` sets one. */
   declare status?: number

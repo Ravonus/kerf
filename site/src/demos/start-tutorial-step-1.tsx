@@ -1,4 +1,4 @@
-import { Card } from '@weft-js/warp'
+import { Card } from '@kerf-js/veneer'
 
 const PRODUCTS = [
   { id: 'beans', name: 'House beans, 250 g', price: 12 },

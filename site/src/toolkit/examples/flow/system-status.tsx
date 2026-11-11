@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Button,
   ConnBanner,
@@ -7,8 +7,8 @@ import {
   Stack,
   SystemPage,
   Text,
-} from '@weft-js/warp'
-import { createShortcuts } from '@weft-js/warp-core'
+} from '@kerf-js/veneer'
+import { createShortcuts } from '@kerf-js/veneer-core'
 import { wait } from './sign-in'
 
 const firstDeployDescription =
@@ -83,7 +83,7 @@ export function ConnBannerNewVersion() {
     <Stack gap="related">
       <ConnBanner
         stale={stale.value}
-        name="weft"
+        name="kerf"
         onReload={() => (stale.value = false)}
         onLater={() => (stale.value = false)}
       />

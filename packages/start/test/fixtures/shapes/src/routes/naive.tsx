@@ -1,4 +1,4 @@
-import { Boundary, state } from '@weft-js/core'
+import { Boundary, state } from '@kerf-js/core'
 import { Feed } from './index'
 
 /** The baseline: the same feed under five fixed bars. */

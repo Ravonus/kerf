@@ -1,4 +1,4 @@
-import { ScrollGrid } from '@weft-js/warp'
+import { ScrollGrid } from '@kerf-js/veneer'
 
 import { PROJECTS } from '../../world'
 

@@ -90,20 +90,20 @@ export function unitsOf(sf, abs, imports) {
     const t = resolveImport(abs, spec)
     return t ? units.has(moduleKey(t)) : unitSpecs.has(specKey(spec))
   }
-  const isWeftSpec = (spec) =>
-    spec === '@weft-js/core' || spec.startsWith('@weft-js/core/') || spec.startsWith('@weft-js/')
-  return { isComponentTest, isUnitSpec, isWeftSpec }
+  const isKerfSpec = (spec) =>
+    spec === '@kerf-js/core' || spec.startsWith('@kerf-js/core/') || spec.startsWith('@kerf-js/')
+  return { isComponentTest, isUnitSpec, isKerfSpec }
 }
 
 export function contextOf(sf, abs) {
   const { imports, namespaces, helperAsserting } = importsOf(sf, abs)
   const asserting = assertingFunctions(sf, helperAsserting)
-  const { isComponentTest, isUnitSpec, isWeftSpec } = unitsOf(sf, abs, imports)
+  const { isComponentTest, isUnitSpec, isKerfSpec } = unitsOf(sf, abs, imports)
   const fakeTimers = contains(
     sf,
     (n) =>
       ts.isPropertyAccessExpression(n) &&
       (n.name.text === 'useFakeTimers' || (n.name.text === 'install' && rootName(n) === 'clock')),
   )
-  return { imports, namespaces, asserting, isComponentTest, isUnitSpec, isWeftSpec, fakeTimers }
+  return { imports, namespaces, asserting, isComponentTest, isUnitSpec, isKerfSpec, fakeTimers }
 }

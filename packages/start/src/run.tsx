@@ -1,10 +1,10 @@
 // The client (`client.tsx` starts it) and its router (research 25 §3): hydrate the server's page, then navigate without page loads. A navigation
-// fetches `/_weft/data/<path>` (the server matches, runs the loaders and merges the head, so loaders never ship to
+// fetches `/_kerf/data/<path>` (the server matches, runs the loaders and merges the head, so loaders never ship to
 // the client), loads the route chunks it needs (started in parallel from a guess against the route table), and
 // writes the levels: a level that keeps its route keeps its component and gets new params/data in place.
 // `setHead` writes the server's merged tags for the tab title and history; crawlers only read the server's HTML.
 //
-// Server functions (research 27): the query cache seeds itself from the page's `#weft-cache` as it loads, and gets
+// Server functions (research 27): the query cache seeds itself from the page's `#kerf-cache` as it loads, and gets
 // each navigation's `c` through `client.seed`, so hydration fetches nothing (and an app without queries doesn't ship
 // the cache). Redirects from loaders and server functions navigate (at most 5 in a row); a
 // mutation that invalidates a tag the current route's loaders read refetches the route data in place.
@@ -41,14 +41,14 @@ export type RouteShape =
       cssText: string[]
       cssStatus: 'partial'
       bytes: number | null
-      /** A generated shape with no structure of its own (`$weftShapeThin`): the router stands in for it. */
+      /** A generated shape with no structure of its own (`$kerfShapeThin`): the router stands in for it. */
       thin?: boolean
     }
 
 /** Shape entries are keyed by level id, including layouts and error routes. */
 export type RouteShapes = Record<string, RouteShape>
 
-/** The client half of `virtual:weft/routes`: the page routes in match order, and a chunk loader per route id. */
+/** The client half of `virtual:kerf/routes`: the page routes in match order, and a chunk loader per route id. */
 export interface ClientRoutes {
   build?: string | null
   table: { id: string; pattern: string; layouts: string[] }[]
@@ -69,6 +69,6 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   client.navigate = navigation.go
   listeners(navigation, () => (import.meta as Hot).hot)
   // The router follows links from here: the browser's prefetching for full loads (capture.ts `speculate`) stops.
-  document.getElementById('weft-speculate')?.remove()
+  document.getElementById('kerf-speculate')?.remove()
   return page.route
 }

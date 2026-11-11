@@ -92,9 +92,9 @@ const cases: Record<string, Case> = {
   },
 }
 
-// WebKit runs with WEFT_WEBKIT=1, as the other suites do: the release gate installs it, the merge gate doesn't.
+// WebKit runs with KERF_WEBKIT=1, as the other suites do: the release gate installs it, the merge gate doesn't.
 runOn(
-  process.env.WEFT_WEBKIT
+  process.env.KERF_WEBKIT
     ? [
         ['webkit', 'iPhone 15'],
         ['chromium', 'Pixel 7'],

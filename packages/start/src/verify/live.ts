@@ -58,6 +58,6 @@ export async function checkLive(o: {
   else
     skip(
       ['denied'],
-      'a query with no `auth` and no other user to compare: set `WEFT_STAGING_OTHER_COOKIE`',
+      'a query with no `auth` and no other user to compare: set `KERF_STAGING_OTHER_COOKIE`',
     )
 }

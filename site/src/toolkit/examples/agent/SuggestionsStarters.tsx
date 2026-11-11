@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { Stack, Suggestions, Text } from '@weft-js/warp'
-import type { Suggestion } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Stack, Suggestions, Text } from '@kerf-js/veneer'
+import type { Suggestion } from '@kerf-js/veneer'
 import { STARTERS } from './shared'
 
 export function SuggestionsStarters() {

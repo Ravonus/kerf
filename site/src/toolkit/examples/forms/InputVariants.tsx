@@ -1,4 +1,4 @@
-import { Grid, Input } from '@weft-js/warp'
+import { Grid, Input } from '@kerf-js/veneer'
 
 export const InputVariants = () => (
   <Grid

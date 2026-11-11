@@ -2,13 +2,13 @@
 // network, and every signature is real HMAC over a placeholder key and URL.
 import { createHmac } from 'node:crypto'
 import { expect, test } from 'vitest'
-import { payRailSuite } from '@weft-js/pay/test'
-import { definePay, memoryPayStore } from '@weft-js/pay/server'
-import { product, type PurchaseState } from '@weft-js/pay'
+import { payRailSuite } from '@kerf-js/pay/test'
+import { definePay, memoryPayStore } from '@kerf-js/pay/server'
+import { product, type PurchaseState } from '@kerf-js/pay'
 import { squareRail } from '../src/square'
 
 const KEY = 'sq_sig_placeholder_for_tests'
-const HOOK = 'https://shop.test/_weft/x/pay/square'
+const HOOK = 'https://shop.test/_kerf/x/pay/square'
 
 interface Call {
   url: string
@@ -18,9 +18,9 @@ interface Call {
 
 function mock(
   orderMeta: Record<string, string> = {
-    weft_user: 'guest:r1',
-    weft_product: 'order',
-    weft_plan: 'r1',
+    kerf_user: 'guest:r1',
+    kerf_product: 'order',
+    kerf_plan: 'r1',
   },
 ) {
   const calls: Call[] = []
@@ -141,7 +141,7 @@ test('an order becomes one payment link, with its lines, metadata and the buyer 
       { name: 'Latte', quantity: '2', base_price_money: { amount: 500, currency: 'USD' } },
       { name: 'Oat milk', quantity: '1', base_price_money: { amount: 85, currency: 'USD' } },
     ],
-    metadata: { weft_user: 'guest:r1', weft_product: 'order', weft_plan: 'r1' },
+    metadata: { kerf_user: 'guest:r1', kerf_product: 'order', kerf_plan: 'r1' },
   })
   expect(sent.checkout_options).toEqual({ redirect_url: 'https://shop.test/order/r1' })
   expect(sent.pre_populated_data).toEqual({ buyer_email: 'sam@example.com' })

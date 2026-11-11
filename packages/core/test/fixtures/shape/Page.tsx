@@ -1,4 +1,4 @@
-import { Boundary } from '@weft-js/core'
+import { Boundary } from '@kerf-js/core'
 import { Feed, type Post } from './Feed'
 
 export function Page(props: { shape?: Post[] | undefined; effects?: string[] | undefined }) {

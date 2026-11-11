@@ -1,4 +1,4 @@
-import { Countdown, Stack, Text } from '@weft-js/warp'
+import { Countdown, Stack, Text } from '@kerf-js/veneer'
 
 export function CountdownFreeze() {
   const to = Date.now() + 2 * 3600_000 + 14 * 60_000

@@ -1,6 +1,6 @@
-import { derived } from '@weft-js/core'
-import { currentPath, Link } from '@weft-js/start'
-import { SideNavTitle } from '@weft-js/warp'
+import { derived } from '@kerf-js/core'
+import { currentPath, Link } from '@kerf-js/start'
+import { SideNavTitle } from '@kerf-js/veneer'
 import { NAV } from '../lib/nav'
 import { Mark } from './Mark.gen'
 
@@ -13,7 +13,7 @@ export function BrandTitle() {
     <Link href="/" class="brand">
       <Mark />
       <SideNavTitle title={title.value}>
-        <span>Weft</span>
+        <span>Kerf</span>
       </SideNavTitle>
     </Link>
   )

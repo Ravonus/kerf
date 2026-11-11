@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Invoices } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Invoices } from '@kerf-js/veneer'
 import { BILLS, OVERDUE_BILLS } from '../../world'
 
 export function InvoicesFailed() {

@@ -44,14 +44,14 @@ async function open(path: string) {
   page.on('console', (m) =>
     ['error', 'warning'].includes(m.type()) ? logs.push(m.text()) : undefined,
   )
-  await page.route('**/_weft/fn/**', async (r) => {
+  await page.route('**/_kerf/fn/**', async (r) => {
     await new Promise((ok) => {
       setTimeout(ok, 400)
     })
     await r.continue()
   })
   await page.goto(url + path)
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 30_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 30_000 })
   await page.evaluate(() => {
     window.__cls = 0
     new PerformanceObserver((l) => {
@@ -164,7 +164,7 @@ test('a streamed fallback is the variant, and it hydrates with no misses or writ
   expect(html).toContain('data-skeleton') // the fallback went first…
   expect(html).toContain('skeleton-scope')
   const { page, logs } = await open('/streamed')
-  expect(await page.evaluate(() => window.__weft)).toMatchObject({
+  expect(await page.evaluate(() => window.__kerf)).toMatchObject({
     misses: 0,
     writes: 0,
     hydrated: true,
@@ -189,7 +189,7 @@ test('a production build: the schema stays on the server, the stub carries its s
   })
   const r = spawnSync(process.execPath, [join(import.meta.dirname, 'build-app.mjs'), opts], {
     encoding: 'utf8',
-    env: { ...process.env, NODE_ENV: 'production', WEFT_BUILD: '1' },
+    env: { ...process.env, NODE_ENV: 'production', KERF_BUILD: '1' },
   })
   expect(r.status, r.stderr).toBe(0)
   const public_ = join(output, 'public')

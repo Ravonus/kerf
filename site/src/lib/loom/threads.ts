@@ -37,13 +37,13 @@ export const LIGHT_COLOURS = RAMPS.flatMap((r) => [
 
 export type Threads = { cover: Float32Array; born: Float32Array; band: Uint8Array }
 
-// The house mark in its 24-unit box: four warps, two wefts.
-export const WARPS = [5, 10, 15, 20]
-export const WEFTS = [9, 15]
-/** Where each kind of thread runs, in units: the wefts overhang the outer warps by the same 2.5 units each side. */
-export const WARP_SPAN = [3, 21]
-export const WEFT_SPAN = [2.5, 22.5]
-/** The middle of the threads (x, y), which is what gets centred: the warps' midpoint is 12.5, not the box's 12. */
+// The house mark in its 24-unit box: four veneers, two kerfs.
+export const VENEERS = [5, 10, 15, 20]
+export const KERFS = [9, 15]
+/** Where each kind of thread runs, in units: the kerfs overhang the outer veneers by the same 2.5 units each side. */
+export const VENEER_SPAN = [3, 21]
+export const KERF_SPAN = [2.5, 22.5]
+/** The middle of the threads (x, y), which is what gets centred: the veneers' midpoint is 12.5, not the box's 12. */
 export const MIDDLE = [12.5, 12]
 
 type Frame = {
@@ -57,10 +57,10 @@ type Frame = {
 
 const edge = (half: number, d: number) => Math.min(1, Math.max(0, half + 0.5 - Math.abs(d)))
 
-function warpThreads({ ox, oy, unit, half, delay, put }: Frame) {
-  WARPS.forEach((wx, w) => {
+function veneerThreads({ ox, oy, unit, half, delay, put }: Frame) {
+  VENEERS.forEach((wx, w) => {
     const cx = ox + wx * unit
-    for (let y = Math.ceil(oy + WARP_SPAN[0]! * unit); y < oy + WARP_SPAN[1]! * unit; y++) {
+    for (let y = Math.ceil(oy + VENEER_SPAN[0]! * unit); y < oy + VENEER_SPAN[1]! * unit; y++) {
       const at = delay + w * 0.12 + ((y - oy) / (24 * unit)) * 0.9
       for (let x = Math.floor(cx - half - 1); x <= cx + half + 1; x++)
         put(x, y, edge(half, x - cx), at, 0)
@@ -68,15 +68,15 @@ function warpThreads({ ox, oy, unit, half, delay, put }: Frame) {
   })
 }
 
-function weftThreads({ ox, oy, unit, half, delay, put }: Frame) {
-  WEFTS.forEach((wy, j) => {
+function kerfThreads({ ox, oy, unit, half, delay, put }: Frame) {
+  KERFS.forEach((wy, j) => {
     const cy = oy + wy * unit
-    for (let x = Math.ceil(ox + WEFT_SPAN[0]! * unit); x < ox + WEFT_SPAN[1]! * unit; x++) {
+    for (let x = Math.ceil(ox + KERF_SPAN[0]! * unit); x < ox + KERF_SPAN[1]! * unit; x++) {
       const at = delay + 0.9 + j * 0.16 + ((x - ox) / (24 * unit)) * 0.9
-      // The gap the weft leaves where it dives under a warp scales with the mark, or a small one loses its wefts.
+      // The gap the kerf leaves where it dives under a veneer scales with the mark, or a small one loses its kerfs.
       const gap = half + Math.min(1.5, 0.4 * unit)
-      const warp = WARPS.findIndex((wx) => Math.abs(x - (ox + wx * unit)) <= gap)
-      const under = warp >= 0 && (warp + j) % 2 === 1 // over and under: a real weave
+      const veneer = VENEERS.findIndex((wx) => Math.abs(x - (ox + wx * unit)) <= gap)
+      const under = veneer >= 0 && (veneer + j) % 2 === 1 // over and under: a real weave
       for (let y = Math.floor(cy - half - 1); y <= cy + half + 1; y++)
         if (!under) put(x, y, edge(half, y - cy), at, 2)
     }
@@ -110,7 +110,7 @@ export function threads(
     delay,
     put,
   }
-  warpThreads(frame)
-  weftThreads(frame)
+  veneerThreads(frame)
+  kerfThreads(frame)
   return { cover, born, band }
 }

@@ -9,7 +9,7 @@ import {
   createRoot,
   context,
   getOwner,
-} from '@weft-js/core'
+} from '@kerf-js/core'
 
 test('reads are consistent straight after a write', () => {
   const a = state(1)

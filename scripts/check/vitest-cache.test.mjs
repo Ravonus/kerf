@@ -16,7 +16,7 @@ void test('package caches have separate roots and survive concurrent cleanup', a
   })
   assert.notEqual(paths[0], paths[1])
   assert.ok(paths.every((path) => !path.startsWith('node_modules/.vitest-cache/')))
-  const root = mkdtempSync(join(tmpdir(), 'weft-vitest-cache-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-vitest-cache-'))
   try {
     const script = `
       import { mkdir, writeFile, rm } from 'node:fs/promises'

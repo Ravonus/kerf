@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "plugins": {
+    "@kerf-js/media": {
+      "version": null,
+      "integrity": null,
+      "permissions": [
+        "env:KERF_MEDIA_DIR",
+        "fs.read:**/*.{png,jpg,jpeg,gif,webp,avif,svg,mp4,m4v,mov,webm,mkv,ogv,mp3,wav,flac,ogg,oga,opus,m4a,aac}",
+        "native",
+        "spawn:ssimulacra2"
+      ],
+      "provides": [
+        "media.build",
+        "media.server"
+      ],
+      "undeclared": []
+    },
+    "@kerf-js/text": {
+      "version": null,
+      "integrity": null,
+      "permissions": [
+        "fs.read:**/*.{woff2,woff,ttf,otf}"
+      ],
+      "provides": [
+        "font.build"
+      ],
+      "undeclared": []
+    },
+    "@kerf-js/veneer": {
+      "version": null,
+      "integrity": null,
+      "permissions": [
+        "fs.read:node_modules/@kerf-js/veneer-core/**",
+        "fs.write:$TMPDIR/veneer-seed-*",
+        "spawn:node"
+      ],
+      "provides": [],
+      "undeclared": []
+    }
+  }
+}

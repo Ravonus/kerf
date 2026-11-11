@@ -1,4 +1,4 @@
-// Phase 2's X-codes in `weft check` (research 26 §7), on a copy of the v3 reference app with planted files.
+// Phase 2's X-codes in `kerf check` (research 26 §7), on a copy of the v3 reference app with planted files.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -28,7 +28,7 @@ describe('X-codes', () => {
     const x021 = x(r).find((d) => d.code === 'X021')
     expect(x021.fix).toMatchObject({ safe: true, edits: [{ text: 'swap' }] })
     expect(x(r).find((d) => d.code === 'X020').why).toContain(
-      'add `@weft-js/text` and declare it in `text({ fonts })`',
+      'add `@kerf-js/text` and declare it in `text({ fonts })`',
     )
 
     const fine =
@@ -57,7 +57,7 @@ describe('X-codes', () => {
 
   it('X033: a pending skeleton with no value check', async () => {
     const dir = project({
-      'src/Feed.tsx': `import { Skeleton } from '@weft-js/warp'
+      'src/Feed.tsx': `import { Skeleton } from '@kerf-js/veneer'
 export function A(props) { return props.q.pending ? <Skeleton /> : <p>{props.q.value}</p> }
 export function B(props) { return props.q.value === undefined && props.q.pending ? <Skeleton /> : <p /> }
 export function C(props) { return props.q.pending ? <p>Saving</p> : <p /> }
@@ -123,7 +123,7 @@ function registerViewportDiagnostics() {
 function registerMediaAndBoundaryDiagnostics() {
   it('X030 and X034: undimensioned media and timers inside a Boundary', async () => {
     const dir = project({
-      'src/Feed.tsx': `import { Boundary } from '@weft-js/core'
+      'src/Feed.tsx': `import { Boundary } from '@kerf-js/core'
 function Spinner() { setTimeout(() => {}, 300); return <p>…</p> }
 export function Feed() {
   return (
@@ -150,7 +150,7 @@ function registerFluidTypeDiagnostics() {
   it("X005 and X006: viewport-only sizes and clamps that zoom can't double", async () => {
     const dir = project({
       'src/type.css':
-        'h1 { font-size: 4vw; }\nh2 { font-size: clamp(1rem, 1rem + 5vw, 3rem); }\nh3 { font-size: clamp(1.5rem, 1.3rem + 0.7cqi, 1.9rem); }\n.t { font-size: var(--warp-text-title-size); }\n',
+        'h1 { font-size: 4vw; }\nh2 { font-size: clamp(1rem, 1rem + 5vw, 3rem); }\nh3 { font-size: clamp(1.5rem, 1.3rem + 0.7cqi, 1.9rem); }\n.t { font-size: var(--veneer-text-title-size); }\n',
       'src/Hero.tsx':
         "export function Hero() { return <h1 style={{ fontSize: '3cqi' }}>Hi</h1> }\n",
     })

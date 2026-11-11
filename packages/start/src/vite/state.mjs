@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
-import { solve } from '@weft-js/core/hydration'
+import { solve } from '@kerf-js/core/hydration'
 import { scanRoutes } from '../routes.mjs'
 import { scanServerModules } from './server-functions.mjs'
 import { usesShapes } from './dev.mjs'
@@ -33,9 +33,9 @@ async function hydration(s, ctx) {
   })
   const done = await s.plan
   try {
-    mkdirSync(join(s.root, '.weft'), { recursive: true })
+    mkdirSync(join(s.root, '.kerf'), { recursive: true })
     writeFileSync(
-      join(s.root, '.weft', 'hydration.json'),
+      join(s.root, '.kerf', 'hydration.json'),
       `${JSON.stringify({ islands: done.islands.map((i) => i.id), loads: done.loads, preload: PRELOAD, diagnostics: done.diagnostics, files: done.report }, null, 2)}\n`,
     )
   } catch {}

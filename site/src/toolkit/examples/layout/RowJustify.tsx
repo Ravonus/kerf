@@ -1,4 +1,4 @@
-import { Inset, Row, Stack } from '@weft-js/warp'
+import { Inset, Row, Stack } from '@kerf-js/veneer'
 import { Box, JUSTIFIES } from './shared'
 
 export const RowJustify = () => (

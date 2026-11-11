@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Grid, Card, Text } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Grid, Card, Text } from '@kerf-js/veneer'
 import { PLANS } from './card-data'
 
 export function CardPress() {

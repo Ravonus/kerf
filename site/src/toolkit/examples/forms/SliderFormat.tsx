@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Slider } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Slider } from '@kerf-js/veneer'
 import { gigabytes } from './shared'
 
 export function SliderFormat() {

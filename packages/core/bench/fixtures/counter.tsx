@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
+import { derived, state } from '@kerf-js/core'
+import { render } from '@kerf-js/core/dom'
 
 function Counter() {
   const count = state(0)

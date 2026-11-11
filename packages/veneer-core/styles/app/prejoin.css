@@ -1,0 +1,16 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* prejoin / lobby */
+:where([data-scope="prejoin"]) { container: prejoin / inline-size; }
+:where([data-scope="prejoin"] > [data-part="layout"]) { display: grid; gap: var(--veneer-space-group); }
+@container prejoin (min-width: 600px) {
+:where([data-scope="prejoin"] > [data-part="layout"]) { grid-template-columns: 1.3fr 1fr; align-items: center; }
+}
+:where([data-scope="prejoin"] [data-part="stack"]) { display: grid; gap: var(--veneer-space-group); align-content: start; min-inline-size: 0; }
+:where([data-scope="prejoin"] [data-part="preview"]:not([data-scope="prejoin"] :is([data-scope="artifact"],[data-scope="editable"],[data-scope="emoji"],[data-scope="gradient"]) *:not([data-scope="prejoin"] :is([data-scope="artifact"],[data-scope="editable"],[data-scope="emoji"],[data-scope="gradient"]) [data-scope="prejoin"] *))) { position: relative; aspect-ratio: 16 / 10; border-radius: var(--veneer-radius-surface); overflow: clip; }
+:where([data-scope="prejoin"] [data-part="preview"]:not([data-scope="prejoin"] :is([data-scope="artifact"],[data-scope="editable"],[data-scope="emoji"],[data-scope="gradient"]) *:not([data-scope="prejoin"] :is([data-scope="artifact"],[data-scope="editable"],[data-scope="emoji"],[data-scope="gradient"]) [data-scope="prejoin"] *)) [data-scope="tile"]) { block-size: 100%; }
+:where([data-scope="prejoin"] [data-part="preview-controls"]) { position: absolute; inset-inline: 0; inset-block-end: 10px; z-index: 4; display: flex; justify-content: center; gap: 8px; }
+:where([data-scope="prejoin"] [data-part="meter"]) { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; block-size: 6px; }
+:where([data-scope="prejoin"] [data-part="meter"] i) { border-radius: 2px; background: var(--veneer-color-surface-active); transition: background-color 80ms linear; }
+:where([data-scope="prejoin"] [data-part="meter"] i[data-on]) { background: var(--veneer-color-positive-solid); }
+}

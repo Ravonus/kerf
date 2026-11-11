@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 import {
   Card,
@@ -8,9 +8,9 @@ import {
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
-import type { Peer } from '@weft-js/warp'
+import type { Peer } from '@kerf-js/veneer'
 
 import { IN_CHANNEL } from './shared-wait'
 

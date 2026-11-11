@@ -1,8 +1,8 @@
-// weft-allow T005: framework test of keyed rows; it reads the row nodes and the key attribute the runtime writes
+// kerf-allow T005: framework test of keyed rows; it reads the row nodes and the key attribute the runtime writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { createRoot, onCleanup, onMount, state, untrack } from '@weft-js/core'
-import { flush, render, touches } from '@weft-js/core/test'
+import { createRoot, onCleanup, onMount, state, untrack } from '@kerf-js/core'
+import { flush, render, touches } from '@kerf-js/core/test'
 
 function Counter({ step = 1 }: { step?: number }) {
   const n = state(0)

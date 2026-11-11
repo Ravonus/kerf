@@ -65,7 +65,7 @@ window.runSlim = async () => suite(await (await import('/${browserName === 'webk
 window.runPretext = () => suite(pretext, opts())
 window.runBad = name => suite(bad[name], opts())
 `
-const budgets = process.env.WEFT_LOADED ? '{ layout: 5, prepare: 150 }' : '{}'
+const budgets = process.env.KERF_LOADED ? '{ layout: 5, prepare: 150 }' : '{}'
 const html = `<!doctype html><html lang="en"><meta charset="utf-8"><body style="margin:0"><script>${bundle}</script><script>const N=${process.env.N ?? 1000},BUDGETS=${budgets};${page_}</script></body></html>`
 
 const webkitPath = () => {

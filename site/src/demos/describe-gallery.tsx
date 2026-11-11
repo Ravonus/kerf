@@ -1,4 +1,4 @@
-import { Badge, Card, Row, Stack } from '@weft-js/warp'
+import { Badge, Card, Row, Stack } from '@kerf-js/veneer'
 
 // One component, defined once at the top level.
 function Profile({

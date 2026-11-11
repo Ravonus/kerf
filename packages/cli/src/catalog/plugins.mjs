@@ -11,8 +11,8 @@ export const pluginConfig = [
     code: 'P002',
     severity: 'warning',
     by: 'cli',
-    catches: '`package.json` script that is not a `weft …` alias',
-    fix: 'Move it to `tasks` in weft.config.ts and alias `weft run <name>`',
+    catches: '`package.json` script that is not a `kerf …` alias',
+    fix: 'Move it to `tasks` in kerf.config.ts and alias `kerf run <name>`',
   },
   {
     code: 'P003',
@@ -47,7 +47,7 @@ export const pluginConfig = [
     severity: 'error',
     by: 'cli',
     proposed: true,
-    catches: 'weft.config.ts fails to load or fails the schema (the Zod path is given)',
+    catches: 'kerf.config.ts fails to load or fails the schema (the Zod path is given)',
     fix: 'Fix the key at the path shown',
   },
   {
@@ -55,8 +55,8 @@ export const pluginConfig = [
     severity: 'error',
     by: 'cli',
     proposed: true,
-    catches: '`slots` names a slot id weft does not define',
-    fix: 'Use an id from `weft check --json` `slots`',
+    catches: '`slots` names a slot id kerf does not define',
+    fix: 'Use an id from `kerf check --json` `slots`',
   },
   {
     code: 'P009',
@@ -74,7 +74,7 @@ export const pluginSlots = [
     code: 'P010',
     severity: 'error',
     by: 'cli',
-    catches: 'More than one weft.config file',
+    catches: 'More than one kerf.config file',
     fix: 'Keep one: `.ts`, `.json` or `.yaml`',
   },
   {
@@ -96,14 +96,14 @@ export const pluginSlots = [
     severity: 'error',
     by: 'reserved',
     catches:
-      'Provider implements no slot interface version this weft supports (P102w: bound through an adapter)',
-    fix: 'Upgrade the plugin or weft',
+      'Provider implements no slot interface version this kerf supports (P102w: bound through an adapter)',
+    fix: 'Upgrade the plugin or kerf',
   },
   {
     code: 'P103',
     severity: 'error',
     by: 'reserved',
-    catches: "Plugin's `weft` peer range doesn't include the installed weft",
+    catches: "Plugin's `kerf` peer range doesn't include the installed kerf",
     fix: 'Upgrade either side',
   },
   {
@@ -146,13 +146,13 @@ export const pluginSlots = [
     severity: 'error',
     by: 'cli',
     catches: 'Undeclared permission used, or permissions widened since the lock',
-    fix: 'Declare it, then `weft plugins approve`',
+    fix: 'Declare it, then `kerf plugins approve`',
   },
   {
     code: 'P110',
     severity: 'error',
     by: 'cli',
-    catches: 'Installed plugin integrity differs from `.weft/plugins.lock.json`',
+    catches: 'Installed plugin integrity differs from `.kerf/plugins.lock.json`',
     fix: 'Reinstall, or approve the update',
   },
   {
@@ -222,7 +222,7 @@ export const pluginSlots = [
     code: 'P120',
     severity: 'error',
     by: 'cli',
-    catches: "A weft plugin's `vite` part registered directly in `vite.config.ts`",
-    fix: 'Move it to `plugins` in weft.config.ts',
+    catches: "A kerf plugin's `vite` part registered directly in `vite.config.ts`",
+    fix: 'Move it to `plugins` in kerf.config.ts',
   },
 ]

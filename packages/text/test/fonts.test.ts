@@ -78,8 +78,8 @@ describe('text() options', () => {
       root: '',
     }).agents!
     expect(notes).toContain('no import')
-    expect(notes).toContain('weft docs fonts')
-    expect(notes).not.toContain("import 'weft:fonts'")
+    expect(notes).toContain('kerf docs fonts')
+    expect(notes).not.toContain("import 'kerf:fonts'")
   })
 
   registerInvalidFontOptions()
@@ -154,7 +154,7 @@ it("the fallback face matches research 11's Inter/Arial numbers", async () => {
 
 describe('createFontBuild().build()', () => {
   let cacheDir: string
-  beforeEach(() => (cacheDir = mkdtempSync(join(tmpdir(), 'weft-fonts-'))))
+  beforeEach(() => (cacheDir = mkdtempSync(join(tmpdir(), 'kerf-fonts-'))))
   afterEach(() => rmSync(cacheDir, { recursive: true, force: true }))
 
   const opts = Object.assign(

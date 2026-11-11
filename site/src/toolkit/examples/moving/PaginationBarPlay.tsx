@@ -1,5 +1,5 @@
-import { state, untrack } from '@weft-js/core'
-import { PaginationBar } from '@weft-js/warp'
+import { state, untrack } from '@kerf-js/core'
+import { PaginationBar } from '@kerf-js/veneer'
 
 export function PaginationBarPlay({
   total,

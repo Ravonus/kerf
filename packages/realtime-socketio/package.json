@@ -1,16 +1,16 @@
 {
-  "name": "@weft-js/realtime-socketio",
-  "version": "0.1.4",
-  "description": "@weft-js/realtime-socketio: cursors through a Socket.IO relay you run, with tickets the room signs",
+  "name": "@kerf-js/realtime-socketio",
+  "version": "0.1.0",
+  "description": "@kerf-js/realtime-socketio: cursors through a Socket.IO relay you run, with tickets the room signs",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/realtime-socketio"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/realtime-socketio#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/realtime-socketio#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "type": "module",
   "exports": {
@@ -25,9 +25,9 @@
     "socket.io-client": "4.8.4"
   },
   "peerDependencies": {
-    "@weft-js/start": "*",
-    "@weft-js/core": "*",
-    "@weft-js/multiplayer": "*",
+    "@kerf-js/start": "*",
+    "@kerf-js/core": "*",
+    "@kerf-js/multiplayer": "*",
     "socket.io": "^4.8.0"
   },
   "peerDependenciesMeta": {
@@ -36,17 +36,17 @@
     }
   },
   "devDependencies": {
-    "@weft-js/start": "workspace:*",
+    "@kerf-js/start": "workspace:*",
     "vitest": "5.0.5",
-    "@weft-js/core": "workspace:*",
-    "@weft-js/multiplayer": "workspace:*",
+    "@kerf-js/core": "workspace:*",
+    "@kerf-js/multiplayer": "workspace:*",
     "socket.io": "4.8.4"
   },
   "engines": {
     "node": ">=24"
   },
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "files": [
     "src",

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Segmented } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Segmented } from '@kerf-js/veneer'
 import { VIEWS } from './shared'
 
 export function SegmentedIcons() {

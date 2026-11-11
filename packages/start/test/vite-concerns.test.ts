@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createServer, resolveConfig, type PluginOption } from 'vite'
-import weftStart from '../src/vite.mjs'
+import kerfStart from '../src/vite.mjs'
 import { createState } from '../src/vite/state.mjs'
 import { configHook, writeBundle, renderChunk, configResolved } from '../src/vite/config-hooks.mjs'
 import { configureServer, hotUpdate } from '../src/vite/dev-hooks.mjs'
@@ -11,7 +11,7 @@ import { resolveId, load, transform, api } from '../src/vite/module-hooks.mjs'
 function original(root: string): PluginOption {
   const s = createState({ root, hydration: 'full' })
   return {
-    name: 'weft:start',
+    name: 'kerf:start',
     enforce: 'pre',
     config: configHook(s),
     writeBundle: writeBundle(s),
@@ -52,12 +52,12 @@ async function snapshot(root: string, plugin: PluginOption) {
         'realtime',
         'extensions',
       ]) {
-        const id = await container.resolveId(`virtual:weft/${name}`)
+        const id = await container.resolveId(`virtual:kerf/${name}`)
         out[`${env}:${name}`] = id && (await container.load(id.id))
       }
     }
     const config = server.config
-    const exposed = config.plugins.find((p) => p.name === 'weft:start')!.api as {
+    const exposed = config.plugins.find((p) => p.name === 'kerf:start')!.api as {
       manifest: () => unknown
       types: () => unknown
       serverModules: () => unknown
@@ -80,24 +80,24 @@ async function buildSnapshot(root: string, plugin: PluginOption) {
     'build',
   )
   const virtual =
-    config.plugins.find((p) => p.name === 'weft:start:modules') ??
-    config.plugins.find((p) => p.name === 'weft:start')!
+    config.plugins.find((p) => p.name === 'kerf:start:modules') ??
+    config.plugins.find((p) => p.name === 'kerf:start')!
   const loader = virtual.load as { handler: (this: unknown, id: string) => Promise<string> }
   const app = await loader.handler.call(
     { environment: { config: { consumer: 'server' } } },
-    '\0virtual:weft/app',
+    '\0virtual:kerf/app',
   )
   return { app, root: config.root, ssr: config.ssr, optimizeDeps: config.optimizeDeps.exclude }
 }
 
-test('weftStart exposes ordered plugins for its concerns', () => {
-  const plugins = weftStart({ hydration: 'full' })
+test('kerfStart exposes ordered plugins for its concerns', () => {
+  const plugins = kerfStart({ hydration: 'full' })
   expect(Array.isArray(plugins)).toBe(true)
   expect(plugins.map((p) => [p.name, p.enforce, 'apply' in p ? p.apply : undefined])).toEqual([
-    ['weft:start', 'pre', undefined],
-    ['weft:start:sheets', 'pre', undefined],
-    ['weft:start:dev', 'pre', undefined],
-    ['weft:start:modules', 'pre', undefined],
+    ['kerf:start', 'pre', undefined],
+    ['kerf:start:sheets', 'pre', undefined],
+    ['kerf:start:dev', 'pre', undefined],
+    ['kerf:start:modules', 'pre', undefined],
   ])
   expect(plugins[0]).toMatchObject({ config: expect.any(Function), api: expect.any(Object) })
   expect(plugins[1]).toMatchObject({
@@ -116,7 +116,7 @@ test('weftStart exposes ordered plugins for its concerns', () => {
 })
 
 test('Vite receives unchanged configuration and virtual modules', async () => {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-t05-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-t05-')))
   mkdirSync(join(root, 'src/routes'), { recursive: true })
   writeFileSync(
     join(root, 'src/routes/index.tsx'),
@@ -124,12 +124,12 @@ test('Vite receives unchanged configuration and virtual modules', async () => {
   )
   const now = vi.spyOn(Date, 'now').mockReturnValue(1730000000000)
   try {
-    const dev = await snapshot(root, weftStart({ root, hydration: 'full' }))
+    const dev = await snapshot(root, kerfStart({ root, hydration: 'full' }))
     expect(dev.out['client:routes']).toBeTruthy()
     expect(dev.out['ssr:routes']).toBeTruthy()
     expect(dev.out['ssr:app']).toBeTruthy()
     expect(dev).toEqual(await snapshot(root, original(root)))
-    const build = await buildSnapshot(root, weftStart({ root, hydration: 'full' }))
+    const build = await buildSnapshot(root, kerfStart({ root, hydration: 'full' }))
     expect(build.app).toMatch(/export const build = "[a-f0-9]{8}"/)
     expect(build).toEqual(await buildSnapshot(root, original(root)))
   } finally {

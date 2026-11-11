@@ -1,8 +1,8 @@
-// @weft-js/core/persist: `state(init, { persist })` inside a defineState scope (research 14 §2.7, research 29 §2–3). Backends:
-// local, session, cookie (the one a server can read) and memory (idb comes later). The weft() Vite plugin imports this
+// @kerf-js/core/persist: `state(init, { persist })` inside a defineState scope (research 14 §2.7, research 29 §2–3). Backends:
+// local, session, cookie (the one a server can read) and memory (idb comes later). The kerf() Vite plugin imports this
 // where the option is used.
 //
-// Key `weft:<app>:<scope>.<box>`, envelope `{ v, at, data }`. On load: migrate[v] … migrate[current - 1], then the
+// Key `kerf:<app>:<scope>.<box>`, envelope `{ v, at, data }`. On load: migrate[v] … migrate[current - 1], then the
 // schema; any failure keeps `init` and moves the payload to `<key>:corrupt` (S003). Writes are coalesced to one per
 // box per microtask and flushed on pagehide.
 //
@@ -77,7 +77,7 @@ function options(scope: string, name: string, box: Box<unknown>): Options {
     if (o.in !== 'local' && o.in !== 'session' && o.in !== 'cookie' && o.in !== 'memory')
       throw new StateError(
         'S008',
-        `\`${scope}.${name}\` persists to '${o.in as string}', which weft doesn't have yet`,
+        `\`${scope}.${name}\` persists to '${o.in as string}', which kerf doesn't have yet`,
         "use 'local', 'session', 'cookie' or 'memory'",
       )
     if (object && !o.schema)
@@ -106,7 +106,7 @@ function validate<T>(schema: StandardSchema<T>, value: unknown): { value: T } | 
 function load(inst: Instance, box: Box<unknown>, name: string) {
   const opts = options(inst.name, name, box)
   const store = backend(inst, opts.in, opts.maxAge)
-  const key = `weft:${inst.app.name}:${inst.name}.${name}`
+  const key = `kerf:${inst.app.name}:${inst.name}.${name}`
   slots.set(box, { store, key, opts })
   if (DEV && rt.server && (opts.in === 'local' || opts.in === 'session'))
     readsOnServer(box, `${inst.name}.${name}`, opts.in)
@@ -193,7 +193,7 @@ const COOKIE_BUDGET = 3072
 const cookieBytes = () =>
   document.cookie
     .split('; ')
-    .filter((c) => c.startsWith('weft.'))
+    .filter((c) => c.startsWith('kerf.'))
     .reduce((n, c) => n + c.length, 0)
 
 function flush() {

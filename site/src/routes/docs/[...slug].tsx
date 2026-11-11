@@ -1,4 +1,4 @@
-import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
+import { redirect, type LoadArgs, type RouteProps } from '@kerf-js/start'
 import { Moved } from '../../components/Moved'
 
 /** Where an old /docs page lives now. Getting started is Learn's first page; every other page, codes included, is Reference. */

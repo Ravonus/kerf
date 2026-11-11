@@ -1,5 +1,5 @@
 // Realtime in the fixture (research 30): a topic, a stream over it, and a live query.
-import { mutation, query, realtimeStats, stream, topic } from '@weft-js/start'
+import { mutation, query, realtimeStats, stream, topic } from '@kerf-js/start'
 import { object } from '../schema'
 
 export const notes = topic('notes', { message: object({ text: 'string' }) })

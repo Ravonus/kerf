@@ -1,4 +1,4 @@
-// `.weft/contract.json` (research 28 §4): functions as JSON Schema with tags, cache and auth; C001 for a schema with
+// `.kerf/contract.json` (research 28 §4): functions as JSON Schema with tags, cache and auth; C001 for a schema with
 // no converter, C002 for a value its `output` rejects; Q012 when the database or auth reaches the client graph.
 import { z } from 'zod'
 import { busProblem as busProblemSource, describe as contract } from '../src/contract.mjs'
@@ -8,7 +8,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import weftStart, { clientStubs, withIds } from '../src/vite.mjs'
+import kerfStart, { clientStubs, withIds } from '../src/vite.mjs'
 
 const busProblem = busProblemSource as (options: {
   preset: string
@@ -102,18 +102,18 @@ test("C002: dev and tests check the value against `output`; production doesn't",
 })
 
 test('Q012: the database or auth in the client graph stops the build; on the server it passes through', () => {
-  const resolver = weftStart({ root: import.meta.dirname }).find(
+  const resolver = kerfStart({ root: import.meta.dirname }).find(
     (p) => 'resolveId' in p,
   )!.resolveId!
   const { filter } = resolver
   for (const id of [
-    '@weft-js/start/db',
-    '@weft-js/start/db/sqlite',
-    '@weft-js/start/db/postgres',
-    '@weft-js/start/auth',
+    '@kerf-js/start/db',
+    '@kerf-js/start/db/sqlite',
+    '@kerf-js/start/db/postgres',
+    '@kerf-js/start/auth',
   ])
     expect(filter.id.test(id)).toBe(true)
-  expect(filter.id.test('@weft-js/start/data')).toBe(false)
+  expect(filter.id.test('@kerf-js/start/data')).toBe(false)
   const ctx = (consumer: string) => ({
     environment: { config: { consumer } },
     error(m: string) {
@@ -123,11 +123,11 @@ test('Q012: the database or auth in the client graph stops the build; on the ser
   expect(() =>
     resolver.handler.call(
       ctx('client'),
-      '@weft-js/start/db/sqlite',
+      '@kerf-js/start/db/sqlite',
       `${import.meta.dirname}/page.tsx`,
     ),
   ).toThrow(/^Q012: .*page\.tsx/)
-  expect(resolver.handler.call(ctx('server'), '@weft-js/start/auth', 'x')).toBeUndefined()
+  expect(resolver.handler.call(ctx('server'), '@kerf-js/start/auth', 'x')).toBeUndefined()
 })
 
 test('a stream is in the contract, with its message; R005: an unbounded input warns', () => {
@@ -209,11 +209,11 @@ test('R002: `durableObjectBus` outside `cloudflare_durable`', () => {
 })
 
 test('R001 at build, with the line; a client stub keeps `initial` and drops the rest', () => {
-  const code = `import { channel, sharedState } from '@weft-js/start'\nexport const room = channel({ client: {} })\n`
+  const code = `import { channel, sharedState } from '@kerf-js/start'\nexport const room = channel({ client: {} })\n`
   expect(() => withIds(code, 'chat.ts', 'src/server/chat.ts')).toThrow(
     /R001: src\/server\/chat.ts:2 `room`/,
   )
-  const ok = `import { channel, sharedState } from '@weft-js/start'\nimport { db } from './db'\nexport const room = channel({ authorize: () => db.ok(), on: { say: () => db.write() } })\nexport const n = sharedState('n', { key: k, value: v, initial: { a: 1 }, authorize: { read, write } })\n`
+  const ok = `import { channel, sharedState } from '@kerf-js/start'\nimport { db } from './db'\nexport const room = channel({ authorize: () => db.ok(), on: { say: () => db.write() } })\nexport const n = sharedState('n', { key: k, value: v, initial: { a: 1 }, authorize: { read, write } })\n`
   expect(withIds(ok, 'chat.ts', 'src/server/chat.ts')).toContain('$id: "room.')
   const stub = clientStubs(ok, 'chat.ts', 'src/server/chat.ts')
   expect(stub).toMatch(/channel\(\{ \$id: "room\.\w+", \$stub: 1 \}\)/)
@@ -264,7 +264,7 @@ test('the page dials a socket only when the server answers one', () => {
 })
 
 test('R002 reads a `.live(` call, not the word in prose', () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-live-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-live-'))
   mkdirSync(join(root, 'src'))
   writeFileSync(join(root, 'src/a.ts'), "export const why = 'and .live() keeps it in step'\n")
   expect(busProblem({ preset: 'vercel', bus: 'memory', streams: false, root })).toBeUndefined()
@@ -276,7 +276,7 @@ test('R002 reads a `.live(` call, not the word in prose', () => {
 })
 
 test('a stream gets a client stub, and a topic stays on the server', () => {
-  const source = `import { stream, topic } from '@weft-js/start'\nimport { db } from '../db'\nexport const t = topic('t', { message: db })\nexport const s = stream({ async *run() { yield* t.subscribe('k') } })\n`
+  const source = `import { stream, topic } from '@kerf-js/start'\nimport { db } from '../db'\nexport const t = topic('t', { message: db })\nexport const s = stream({ async *run() { yield* t.subscribe('k') } })\n`
   const out = clientStubs(source, 'x.ts', 'src/server/x.ts')
   expect(out).toContain('stream({ $id: "s.')
   expect(out).not.toContain('topic(')
@@ -284,7 +284,7 @@ test('a stream gets a client stub, and a topic stays on the server', () => {
 })
 
 test('types keep no value: a schema read only by `z.infer` stays out of the stub, and zod with it', () => {
-  const source = `import { mutation } from '@weft-js/start'
+  const source = `import { mutation } from '@kerf-js/start'
 import { z } from 'zod'
 const input = z.object({ title: z.string() })
 export type Input = z.infer<typeof input>
@@ -299,7 +299,7 @@ export const save = mutation({ input, run: ({ input }) => input })
 })
 
 test('a stub keeps what `optimistic` reads, not what its parameters, property names or annotations spell', () => {
-  const source = `import { mutation } from '@weft-js/start'
+  const source = `import { mutation } from '@kerf-js/start'
 import { z } from 'zod'
 import { pick } from './pick'
 const input = z.object({ title: z.string() })
@@ -318,7 +318,7 @@ export const save = mutation({ input, optimistic: ({ input }, cache) => cache.ti
 })
 
 test('a value read inside a type-free position still keeps its import', () => {
-  const source = `import { mutation } from '@weft-js/start'
+  const source = `import { mutation } from '@kerf-js/start'
 import { z } from 'zod'
 import Icon from './icon'
 const input = z.object({ title: z.string() })

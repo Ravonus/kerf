@@ -1,4 +1,4 @@
-import { Stack, Textarea } from '@weft-js/warp'
+import { Stack, Textarea } from '@kerf-js/veneer'
 
 const description =
   'The public shop, served from the edge.'

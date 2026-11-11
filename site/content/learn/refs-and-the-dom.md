@@ -16,10 +16,10 @@ and `ref` is how you ask for it.
 
 ## Getting an element with `ref`
 
-Put `ref` on any element and give it a variable. When Weft makes the element, it assigns it:
+Put `ref` on any element and give it a variable. When Kerf makes the element, it assigns it:
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf-js/veneer'
 
 export function Focus() {
   // oxlint-disable-next-line no-unassigned-vars -- ref assigns it
@@ -43,14 +43,14 @@ Three things make this work:
    declared and read but never written. The write is in the compiled output, so the rule can't see it. Turn it off for
    that one line and say why, as above.
 
-If you'd rather not have the `!` and the comment, use the function form below. Both are common in Weft's own code.
+If you'd rather not have the `!` and the comment, use the function form below. Both are common in Kerf's own code.
 
 ### The function form
 
-`ref` also takes a function. Weft calls it once, with the element:
+`ref` also takes a function. Kerf calls it once, with the element:
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf-js/veneer'
 
 export function Focus() {
   let field: HTMLInputElement | undefined
@@ -68,8 +68,8 @@ you use when the element goes somewhere other than one variable: into a `Map`, i
 `ref` takes an array of functions too, `ref={[measure, el => (field = el)]}`, and calls each one.
 
 :::note React's `useRef`
-In React, `useRef(null)` gives you a box whose `.current` React fills in. Weft has no `useRef` and no `.current`: the
-variable is the element. That works because a Weft component's body runs once. In React the body runs on every render,
+In React, `useRef(null)` gives you a box whose `.current` React fills in. Kerf has no `useRef` and no `.current`: the
+variable is the element. That works because a Kerf component's body runs once. In React the body runs on every render,
 so a plain `let` would start over each time; here it's made once and lives as long as the component.
 :::
 
@@ -96,7 +96,7 @@ Use the element in code that runs later:
   On that first run the ref is still empty, so guard it with `?.` or start the `watch` inside `onMount`.
 
 ```tsx
-import { onMount } from '@weft-js/core'
+import { onMount } from '@kerf-js/core'
 
 export function Search() {
   let field: HTMLInputElement | undefined
@@ -116,7 +116,7 @@ and the browser makes the elements that `ref` points at. Code that needs an elem
 are the right places for it.
 
 :::pitfall Focusing on arrival
-For "focus this field when it appears", you don't need a ref at all. Write `autofocus` on the element. Weft focuses it
+For "focus this field when it appears", you don't need a ref at all. Write `autofocus` on the element. Kerf focuses it
 when it's created, the way React does, not only when the page first loads (which is all the plain HTML attribute does):
 
 ```tsx
@@ -130,13 +130,13 @@ It skips an element inside a closed `<dialog>` or under `hidden`, where focus wo
 
 ### An element a write just showed
 
-Writes in Weft are batched: a handler can change five boxes, and the page updates once, on the next microtask. So right
+Writes in Kerf are batched: a handler can change five boxes, and the page updates once, on the next microtask. So right
 after `open.value = true`, the element that `open` shows isn't in the page yet. If you need it now, call `flush()`
 first. It applies every pending update straight away:
 
 ```tsx
-import { flush, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { flush, state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 export function Rename() {
   const editing = state(false)
@@ -177,7 +177,7 @@ function in a list runs once per row, when that row's element is made:
 :::demo escape-scroll
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf-js/veneer'
 
 export function Cats(props: { names: string[] }) {
   const { names } = props
@@ -214,12 +214,12 @@ in the document and laid out, so measure in `onMount` or later. To follow a size
 
 :::demo escape-measure
 
-The number on screen is state, written by the observer's callback. That's the usual shape of DOM work in Weft: the
+The number on screen is state, written by the observer's callback. That's the usual shape of DOM work in Kerf: the
 element tells you something, you put it in a box, and the page follows the box like anything else.
 
 :::deepdive Why there's no layout effect
 React has `useLayoutEffect` for code that must run after the DOM changes but before the browser paints, such as
-measuring a tooltip to place it. Weft doesn't need a second kind. `onMount` callbacks run at the end of the same
+measuring a tooltip to place it. Kerf doesn't need a second kind. `onMount` callbacks run at the end of the same
 flush that put the component's nodes in the page, before the browser gets a chance to paint, and a box written there is
 applied in that same flush. So a measure-then-place in `onMount` never shows a frame in the wrong place.
 :::
@@ -232,7 +232,7 @@ whoever renders it takes a `ref` prop, a function, and puts it on that element:
 :::demo escape-forward
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf-js/veneer'
 
 function NameField(props: {
   label: string
@@ -260,12 +260,12 @@ The parent passes a function, not a variable: on a component, `ref={input}` woul
 which is `undefined`, because the compiler only turns `ref={x}` into an assignment on an element. Inside `NameField`,
 `ref={props.ref}` is on an element, so it calls the function with the input.
 
-This is what React calls forwarding a ref, without `forwardRef`. Warp's components do it where it's useful: `Button`
+This is what React calls forwarding a ref, without `forwardRef`. Veneer's components do it where it's useful: `Button`
 and `Card` take a `ref` function and call it with their element.
 
 :::pitfall Don't reach into a child's DOM to change it
 A ref is for what only the element can do: focus, scroll, measure, play a video. Don't use one to change what a
-component renders, by setting `textContent`, toggling classes or removing nodes. Weft owns those nodes and will write
+component renders, by setting `textContent`, toggling classes or removing nodes. Kerf owns those nodes and will write
 over your change on the next update, or try to update a node you removed. If the page should look different, change the
 state that drives it.
 :::
@@ -273,11 +273,11 @@ state that drives it.
 ## Values that aren't elements
 
 React's `useRef` has a second job: holding a value that survives re-renders without causing one, such as a timer id.
-In Weft that's a plain variable in the component body. The body runs once, so the variable is made once and stays:
+In Kerf that's a plain variable in the component body. The body runs once, so the variable is made once and stays:
 
 ```tsx
-import { onCleanup, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { onCleanup, state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 export function Stopwatch() {
   const tenths = state(0)
@@ -312,7 +312,7 @@ that as **W041**: a `let` written in a handler and read in TSX should be `state`
   run, never while the body runs. `flush()` puts a just-written change in the page now.
 - `autofocus` focuses an element when it's created, with no ref.
 - A component passes one of its elements out through a `ref` prop that is a function.
-- A plain `let` is Weft's `useRef` for values: the body runs once, so it lasts as long as the component.
+- A plain `let` is Kerf's `useRef` for values: the body runs once, so it lasts as long as the component.
 
 ## Try it
 
@@ -320,8 +320,8 @@ that as **W041**: a `let` written in a handler and read in TSX should be `state`
 This player's button only changes its label. Make it play and pause the video too.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 export function Player() {
   const playing = state(false)
@@ -348,8 +348,8 @@ a promise that rejects if the browser blocks playback, so the label follows the 
 `play` and `pause` events.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { Button } from '@kerf-js/veneer'
 
 export function Player() {
   const playing = state(false)
@@ -383,13 +383,13 @@ export function Player() {
 :::challenge Focus the search field from a shortcut
 Press `/` anywhere on the page to focus the search field, the way many sites do. Don't use `addEventListener`.
 
-Hint: `on(window, 'keydown', fn)` from `@weft-js/core/browser` listens until the component goes away.
+Hint: `on(window, 'keydown', fn)` from `@kerf-js/core/browser` listens until the component goes away.
 :::solution
 Listen on the window with `on`, and focus the element the ref holds. Skip the key when the user is already typing in
 a field, so `/` can still be typed there.
 
 ```tsx
-import { on } from '@weft-js/core/browser'
+import { on } from '@kerf-js/core/browser'
 
 export function SiteSearch() {
   let field: HTMLInputElement | undefined
@@ -427,7 +427,7 @@ created: made in `onMount`, the `watch` is newer than the list's own bindings, s
 already in the list when it scrolls.
 
 ```tsx
-import { onMount, watch } from '@weft-js/core'
+import { onMount, watch } from '@kerf-js/core'
 
 export function Chat(props: {
   messages: { id: number; text: string }[]

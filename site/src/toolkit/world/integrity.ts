@@ -1,7 +1,7 @@
 import type {
   IntegrityStats,
   IntegrityEvent,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 
 export const INTEGRITY_STATS: IntegrityStats = {
   sent: 42,

@@ -1,4 +1,4 @@
-// The sidecar supervisor (research 36 §5): what `weft dev`, `weft build`, `weft start` and `weft check` do for the Rust
+// The sidecar supervisor (research 36 §5): what `kerf dev`, `kerf build`, `kerf start` and `kerf check` do for the Rust
 // behind `remote()`, and for `native()`'s libraries (research 39). It runs in the CLI, never in the server bundle:
 // `remote()` is only `fetch`, so a built server runs anywhere, and a sidecar deployed on its own is one environment
 // variable away.
@@ -12,7 +12,7 @@
 //           the gap fail as R107.
 //   check   cargo check, with errors mapped to the function they belong to (R103).
 //
-// `native()` has no child and no proxy. dev: each build is a new file under `.weft/native/`, and the manifest beside it
+// `native()` has no child and no proxy. dev: each build is a new file under `.kerf/native/`, and the manifest beside it
 // says which, so the next call loads it in place: an addon can't be unloaded, and needn't be. build: an addon and a
 // `.wasm` next to the server, in `.output/server/rust/`, so whatever moves the server moves them too.
 
@@ -35,7 +35,7 @@ export function usesRemote(root) {
     (f) =>
       f.isFile() &&
       /\.[cm]?[jt]sx?$/.test(f.name) &&
-      /['"]@weft-js\/start\/rust['"]/.test(readFileSync(join(f.parentPath, f.name), 'utf8')),
+      /['"]@kerf-js\/start\/rust['"]/.test(readFileSync(join(f.parentPath, f.name), 'utf8')),
   )
 }
 
@@ -78,30 +78,30 @@ function proxy(state) {
 }
 
 /**
- * Build and start every sidecar, and keep them current. Sets `WEFT_RUST_<NAME>_URL` and `WEFT_RUST_SECRET` in this
+ * Build and start every sidecar, and keep them current. Sets `KERF_RUST_<NAME>_URL` and `KERF_RUST_SECRET` in this
  * process before the dev server's worker starts, so it inherits them.
  * @returns {Promise<{ attach(server: import('vite').ViteDevServer): void, close(): Promise<void>, ready: Record<string, any> }>}
  */
 export async function devSidecars({ root, site, rust, log = console.log }) {
   root = resolve(root)
-  const secret = (process.env.WEFT_RUST_SECRET ||= randomBytes(32).toString('hex'))
+  const secret = (process.env.KERF_RUST_SECRET ||= randomBytes(32).toString('hex'))
   const say = (d) =>
-    log(`[weft] ${d.code} ${d.severity}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}`)
+    log(`[kerf] ${d.code} ${d.severity}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}`)
   let vite,
     closed = false
   const overlay = (message) =>
-    vite?.ws.send({ type: 'error', err: { message, stack: '', plugin: 'weft:sidecar' } })
+    vite?.ws.send({ type: 'error', err: { message, stack: '', plugin: 'kerf:sidecar' } })
   const refresh = makeRefresh(root, site, rust, say)
 
   const first = await refresh()
   let contract = first.contract
   const states = new Map()
-  const nativeDir = join(root, '.weft', 'native')
+  const nativeDir = join(root, '.kerf', 'native')
   const publish = publisher(states, nativeDir, () => contract)
   if (buildable(contract, rust).some((k) => isNative(contract, k))) {
     rmSync(nativeDir, { recursive: true, force: true })
     mkdirSync(nativeDir, { recursive: true })
-    process.env.WEFT_NATIVE_DIR = nativeDir
+    process.env.KERF_NATIVE_DIR = nativeDir
   }
 
   const rebuild = devBuilder({

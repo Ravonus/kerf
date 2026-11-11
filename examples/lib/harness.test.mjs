@@ -73,8 +73,8 @@ test('spread drops holes', () =>
 
 test('the most specific stack wins', () => {
   assert.equal(
-    detect({ dependencies: { '@weft-js/core': '1', '@weft-js/warp': '1' } }).id,
-    'weft+warp',
+    detect({ dependencies: { '@kerf-js/core': '1', '@kerf-js/veneer': '1' } }).id,
+    'kerf+veneer',
   )
   assert.equal(detect({ dependencies: { react: '1', next: '1' } }).id, 'next')
   assert.equal(

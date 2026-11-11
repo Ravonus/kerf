@@ -1,5 +1,5 @@
-import { renderToString } from '@weft-js/core/ssr'
-import type { Merged } from '@weft-js/core/ssr'
+import { renderToString } from '@kerf-js/core/ssr'
+import type { Merged } from '@kerf-js/core/ssr'
 import { DefaultCard } from '../og/DefaultCard'
 import { renderCard } from '../og/index.mjs'
 import { settledView } from './payload'
@@ -25,14 +25,14 @@ export function makeCard({
     const path =
       '/' +
       url.pathname
-        .slice('/_weft/og/'.length)
+        .slice('/_kerf/og/'.length)
         .replace(/\.png$/, '')
         .replace(/^index$/, '')
     const r = await resolve(path, request)
     if (r.status !== 200 || !r.route) return new Response('Not found', { status: 404 }) // only params the route's own load accepts
     const head = await finished(r, request)
     const image = head.og.image
-    if (typeof image !== 'object' || !image.url.startsWith('/_weft/og/'))
+    if (typeof image !== 'object' || !image.url.startsWith('/_kerf/og/'))
       return new Response('Not found', { status: 404 }) // this page has no generated card
     const want = new URL(image.url, url).searchParams.get('v')
     const cardMod = mod(r.route.card ?? manifest.defaultCard)

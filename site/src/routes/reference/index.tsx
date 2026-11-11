@@ -1,4 +1,4 @@
-import { Link, type Meta } from '@weft-js/start'
+import { Link, type Meta } from '@kerf-js/start'
 import nav from '../../generated/reference-nav.json'
 import { ArtStage } from '../../toolkit/art/stage'
 import '../../styles/art.css'
@@ -19,7 +19,7 @@ export default function ReferenceHome() {
         <h1>Reference</h1>
         <p data-part="lede">
           Exact APIs, commands, config keys and diagnostic codes. The same pages{' '}
-          <code data-scope="code">weft docs</code> prints in a terminal. New to weft? Start with{' '}
+          <code data-scope="code">kerf docs</code> prints in a terminal. New to kerf? Start with{' '}
           <Link href="/learn">Learn</Link>.
         </p>
       </header>

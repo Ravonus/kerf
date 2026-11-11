@@ -73,7 +73,7 @@ export function readCargo(stdout, { contract, service, root, dir }) {
       code: hit ? 'R103' : 'R109',
       severity: 'error',
       ...(hit && { function: hit.id }),
-      file: file ?? '.weft/contract.json',
+      file: file ?? '.kerf/contract.json',
       span: at ? [at.line_start, at.column_start, at.line_end, at.column_end] : [1, 1, 1, 1],
       why: hit
         ? `\`${hit.id}\`: the Rust no longer matches the contract: ${m.message.message}`
@@ -93,7 +93,7 @@ export async function cargo(verb, { root, dir, service, contract, release, targe
     ...(target ? ['--target', target] : []),
   ]
   const env = {
-    WEFT_CONTRACT: join(root, '.weft', 'contract.json'),
+    KERF_CONTRACT: join(root, '.kerf', 'contract.json'),
     ...(target === WASM && {
       CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: '-C target-feature=+simd128',
     }),
@@ -108,7 +108,7 @@ export async function cargo(verb, { root, dir, service, contract, release, targe
           severity: 'error',
           file: 'package.json',
           span: [1, 1, 1, 1],
-          why: `\`${service}\` is Rust you opted into, so it needs \`cargo\`, and it isn't on PATH. Install it from rustup.rs, or set \`external: true\` for a sidecar built elsewhere. The rest of weft doesn't need Rust.`,
+          why: `\`${service}\` is Rust you opted into, so it needs \`cargo\`, and it isn't on PATH. Install it from rustup.rs, or set \`external: true\` for a sidecar built elsewhere. The rest of kerf doesn't need Rust.`,
         },
       ],
     }

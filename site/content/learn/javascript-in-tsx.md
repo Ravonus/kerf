@@ -8,7 +8,7 @@
 :::
 
 TSX lets you write markup in a JavaScript file, and braces let you reach back into JavaScript from the markup: to show a
-variable, call a function, or pick a class. In Weft, braces do one more thing. An expression in braces is live: when
+variable, call a function, or pick a class. In Kerf, braces do one more thing. An expression in braces is live: when
 something it reads changes, it is worked out again and only that spot in the page is written.
 
 :::demo describe-braces
@@ -102,8 +102,8 @@ You'll see this most with `style`:
 export function TodoList() {
   return (
     <ul style={{
-      background: 'var(--warp-color-surface-raised)',
-      color: 'var(--warp-color-accent-text)',
+      background: 'var(--veneer-color-surface-raised)',
+      color: 'var(--veneer-color-accent-text)',
     }}>
       <li>Improve the videophone</li>
       <li>Prepare aeronautics lectures</li>
@@ -113,12 +113,12 @@ export function TodoList() {
 }
 ```
 
-There's nothing special about it: `{{` and `}}` are an object inside braces. In Weft, `style` also takes a plain string
+There's nothing special about it: `{{` and `}}` are an object inside braces. In Kerf, `style` also takes a plain string
 (`style="padding: 0"`), so you only need the object form when the values come from JavaScript.
 
 :::pitfall CSS names in the object
 In a style object, write property names in camelCase: `backgroundColor`, not `background-color`, because a key with a
-dash needs quotes in JavaScript. Weft also accepts the dashed name in quotes, `{ 'background-color': … }`, and custom
+dash needs quotes in JavaScript. Kerf also accepts the dashed name in quotes, `{ 'background-color': … }`, and custom
 properties such as `{ '--gap': '8px' }`. A number means pixels unless the property has no unit (`opacity`, `zIndex`,
 `lineHeight`), as in React.
 :::
@@ -131,8 +131,8 @@ You can keep several values in one object and read them from it in your markup:
 const person = {
   name: 'Gregorio Y. Zara',
   theme: {
-    background: 'var(--warp-color-surface-raised)',
-    color: 'var(--warp-color-accent-text)',
+    background: 'var(--veneer-color-surface-raised)',
+    color: 'var(--veneer-color-accent-text)',
   },
 }
 
@@ -153,12 +153,12 @@ export function TodoList() {
 
 ## Braces are live
 
-So far every value has been fixed. Here's the difference Weft makes: when an expression in braces reads a piece of state
+So far every value has been fixed. Here's the difference Kerf makes: when an expression in braces reads a piece of state
 (a box, read with `.value`) or a prop, the compiler turns that spot in the page into a binding. The binding remembers what
 it read, and runs again when one of those values changes.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 export function Counter() {
   const count = state(0)
@@ -201,7 +201,7 @@ export function Counter() {
 Put the read inside the braces, or make the value `derived` if other code needs it too:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf-js/core'
 
 export function Counter() {
   const count = state(0)
@@ -248,7 +248,7 @@ problem.
 ```tsx
 const person = {
   name: 'Gregorio Y. Zara',
-  theme: { color: 'var(--warp-color-accent-text)' },
+  theme: { color: 'var(--veneer-color-accent-text)' },
 }
 
 export default function TodoList() {
@@ -265,7 +265,7 @@ export default function TodoList() {
 ```tsx
 const person = {
   name: 'Gregorio Y. Zara',
-  theme: { color: 'var(--warp-color-accent-text)' },
+  theme: { color: 'var(--veneer-color-accent-text)' },
 }
 
 export default function TodoList() {
@@ -352,7 +352,7 @@ Add a `big` box to the avatar. When it's `true` the image URL should use size `b
 flip it. The image must follow without the component running again.
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 
 const person = { name: 'Gregorio Y. Zara', imageId: '7vQD0fP' }
 

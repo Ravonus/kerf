@@ -1,4 +1,4 @@
-import { frameStats, sheetLayout } from '@weft-js/capture'
+import { frameStats, sheetLayout } from '@kerf-js/capture'
 
 test('tiles fill rows left to right with a gap between and around them', () => {
   const layout = sheetLayout(5, { tileWidth: 100, tileHeight: 50, cols: 2, gap: 4 })

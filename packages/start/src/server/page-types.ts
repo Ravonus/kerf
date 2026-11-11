@@ -1,4 +1,4 @@
-import type { Merged, Stream } from '@weft-js/core/ssr'
+import type { Merged, Stream } from '@kerf-js/core/ssr'
 import type { createRouteState, RoutePayload } from '../router'
 import type { Scope } from '../exec'
 import type { HandlerOptions, Resolved } from './types'

@@ -12,9 +12,9 @@ import {
   type ListParams,
   type ListSource,
   type SourceSpec,
-} from '@weft-js/start/list'
-import { hub } from '@weft-js/start/hub'
-import type { Source } from '@weft-js/start/changes'
+} from '@kerf-js/start/list'
+import { hub } from '@kerf-js/start/hub'
+import type { Source } from '@kerf-js/start/changes'
 
 /** What a change stream hands over, as far as anything here reads it. */
 export interface MongoEvent extends MongoChange {
@@ -129,7 +129,7 @@ export interface MongoDb {
   createCollection?(name: string, options?: object): Promise<unknown>
 }
 
-const BARRIER = '__weft_barrier'
+const BARRIER = '__kerf_barrier'
 const said = (e: unknown) => (e as { message?: string } | null)?.message ?? String(e)
 
 /**

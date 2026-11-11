@@ -4,7 +4,7 @@ import {
   Inset,
   Row,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { Box } from './shared'
 
 export const RowAlign = () => (

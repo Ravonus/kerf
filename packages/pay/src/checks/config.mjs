@@ -1,6 +1,6 @@
 /** Check config and test files for exposed credentials. */
 export function configChecks({ ctx, out, secrets, spanOf, isTest, SECRET_OPTION }) {
-  for (const rel of ctx.files.filter((r) => r.startsWith('weft.config.'))) {
+  for (const rel of ctx.files.filter((r) => r.startsWith('kerf.config.'))) {
     const text = ctx.read(rel)
     secrets(rel, text, true, out)
     const m = SECRET_OPTION.exec(text)
@@ -8,7 +8,7 @@ export function configChecks({ ctx, out, secrets, spanOf, isTest, SECRET_OPTION 
       out.push({
         code: 'PAY003',
         ...spanOf(rel, m.index, m[0].length),
-        why: 'Plugin options are written into `.weft/slots/`, so a key given here sits in a generated file.',
+        why: 'Plugin options are written into `.kerf/slots/`, so a key given here sits in a generated file.',
       })
   }
 

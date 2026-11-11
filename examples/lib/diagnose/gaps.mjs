@@ -63,7 +63,7 @@ function serverGap({ g, m, gapText, p, run, gap, path }) {
     return [
       `gap:${g}`,
       {
-        where: 'weft',
+        where: 'kerf',
         title: `${m.label} behind the best variant`,
         why: `${gapText}; served as ${p.loadEncoding} against ${run.variants[gap.best].pages[path].loadEncoding}.`,
         impact: 0.5,
@@ -73,7 +73,7 @@ function serverGap({ g, m, gapText, p, run, gap, path }) {
     return [
       `gap:${g}`,
       {
-        where: 'weft',
+        where: 'kerf',
         title: `${m.label} behind the best variant`,
         why: gapText,
         impact: 0.3,

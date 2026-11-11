@@ -1,4 +1,4 @@
-import { Grid, Textarea } from '@weft-js/warp'
+import { Grid, Textarea } from '@kerf-js/veneer'
 import { Cell } from '../../world'
 
 const description =

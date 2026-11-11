@@ -8,7 +8,7 @@
 :::
 
 So far every component you wrote lived on one page. A real app has many: a home page, a list, one page per item, a
-settings section with its own menu. In `@weft-js/start` you don't configure a router for that. You make files, and the
+settings section with its own menu. In `@kerf-js/start` you don't configure a router for that. You make files, and the
 folder they're in is the URL they answer.
 
 This page is about where pages come from and how you move between them. The next one, [Loading data](/learn/loading-data),
@@ -35,7 +35,7 @@ with a `meta` added so the tab and search results say what it is:
 
 ```tsx
 // src/routes/about.tsx
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf-js/start'
 
 export const meta: Meta = {
   title: 'About',
@@ -56,10 +56,10 @@ export default function About() {
 are left out of the URL table (other than `_layout` and `_error`), and so are test files, so you can keep a
 `todos/_parts.tsx` of helpers next to the pages that use it.
 
-`weft routes` prints the table it found, which is handy when a page isn't where you expected:
+`kerf routes` prints the table it found, which is handy when a page isn't where you expected:
 
 ```bash
-npx weft routes
+npx kerf routes
 ```
 
 :::note No configuration
@@ -79,7 +79,7 @@ first, in a server module:
 
 ```ts
 // src/server/todo.ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf-js/start'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -109,7 +109,7 @@ import {
   type LoadArgs,
   type Meta,
   type RouteProps,
-} from '@weft-js/start'
+} from '@kerf-js/start'
 import { getTodo } from '#/server/todo'
 
 export const load = async ({ params }: LoadArgs<'/todos/[id]'>) =>
@@ -135,7 +135,7 @@ export default function Todo(
 
 The string you pass to `LoadArgs` and `RouteProps` is the route's file path, and it types `params`: here `params.id` is a
 `string`, and `params.idd` is an error. `RouteProps<typeof load>` types `props.data` from what `load` returns, with
-`notFound()` taken out, so `data.title` needs no check. Weft writes `.weft/routes.d.ts` with every route path, so
+`notFound()` taken out, so `data.title` needs no check. Kerf writes `.kerf/routes.d.ts` with every route path, so
 an editor can complete them.
 
 `load` and `meta` never reach the browser: the build strips them from the client's copy of the file. [Loading
@@ -148,7 +148,7 @@ holds the whole remainder, slashes included:
 
 ```tsx
 // src/routes/docs/[...rest].tsx
-import type { RouteProps } from '@weft-js/start'
+import type { RouteProps } from '@kerf-js/start'
 
 export default function Docs(
   props: RouteProps<undefined, '/docs/[...rest]'>,
@@ -175,7 +175,7 @@ This is the one a new app starts with:
 
 ```tsx
 // src/routes/_layout.tsx
-import { Link, type RouteProps } from '@weft-js/start'
+import { Link, type RouteProps } from '@kerf-js/start'
 
 export default function Root(props: RouteProps) {
   return (
@@ -196,7 +196,7 @@ Layouts nest. A `_layout.tsx` in `src/routes/settings` wraps only the settings p
 
 ```tsx
 // src/routes/settings/_layout.tsx
-import { Link, type RouteProps } from '@weft-js/start'
+import { Link, type RouteProps } from '@kerf-js/start'
 
 export default function Settings(props: RouteProps) {
   return (
@@ -213,7 +213,7 @@ export default function Settings(props: RouteProps) {
 
 ### A layout stays while its pages change
 
-When you go from `/settings` to `/settings/profile`, the root layout and the settings layout don't change, so Weft keeps
+When you go from `/settings` to `/settings/profile`, the root layout and the settings layout don't change, so Kerf keeps
 them. They don't run again and nothing inside them is rebuilt: only the page level below them switches. That has a useful
 consequence. State in a layout survives navigation between its pages. A search box in the settings sidebar keeps what you
 typed while you click between settings pages, and a video playing in the root layout keeps playing.
@@ -227,12 +227,12 @@ it update when you go from `/teams/1/members` to `/teams/2/members`; the layout 
 A page is a chain of levels, outer to inner: the root layout, any nested layouts, the page. Each level holds three
 things: which route it shows, its params and its data.
 
-When you click a link, the browser fetches the new route's data from the server as JSON (`/_weft/data/<path>`), along with
-the code for any route it hasn't loaded yet. Then Weft walks the chain. A level that keeps its route gets the new params
+When you click a link, the browser fetches the new route's data from the server as JSON (`/_kerf/data/<path>`), along with
+the code for any route it hasn't loaded yet. Then Kerf walks the chain. A level that keeps its route gets the new params
 and data, written only if they changed. The first level whose route changed renders its new component, and everything
 inside it goes with the old one.
 
-So Weft never re-renders a page to find out what changed. It knows from the route table, and the work is proportional to
+So Kerf never re-renders a page to find out what changed. It knows from the route table, and the work is proportional to
 what is different. A level with no client code at all (a layout that is only markup) arrives as HTML and is swapped in.
 :::
 
@@ -247,9 +247,9 @@ When sections share chrome, put that chrome in the one layout above them and let
 
 ```tsx
 // src/routes/_layout.tsx
-import { currentPath, type RouteProps } from '@weft-js/start'
-import { derived } from '@weft-js/core'
-import { SideNav } from '@weft-js/warp'
+import { currentPath, type RouteProps } from '@kerf-js/start'
+import { derived } from '@kerf-js/core'
+import { SideNav } from '@kerf-js/veneer'
 import { sectionsFor } from '../lib/sections'
 
 export default function Root(props: RouteProps) {
@@ -280,10 +280,10 @@ that section loads.
 ### What shows while the next page loads
 
 A click answers at once. The URL and every `<Link>`'s `aria-current` change right away, the layouts that stay keep
-showing, and the level that changes shows a skeleton until its data and code arrive. Weft makes that skeleton from the
+showing, and the level that changes shows a skeleton until its data and code arrive. Kerf makes that skeleton from the
 route's own markup at build time, so it has the page's headings, rows and panels in the right places.
 
-When a page's markup is mostly one component the compiler can't see into, such as a Markdown body, Weft shows a
+When a page's markup is mostly one component the compiler can't see into, such as a Markdown body, Kerf shows a
 generic page outline instead. To show something that fits better, name your own:
 
 ```tsx
@@ -325,7 +325,7 @@ import {
   redirect,
   type LoadArgs,
   type RouteProps,
-} from '@weft-js/start'
+} from '@kerf-js/start'
 
 // A layout's load runs first, so signed-out visitors cannot
 // run pages under /todos.
@@ -345,7 +345,7 @@ export default function TodosLayout(props: RouteProps) {
 Use `<Link href>` for links inside the app:
 
 ```tsx
-import { Link } from '@weft-js/start'
+import { Link } from '@kerf-js/start'
 
 export function Footer() {
   return (
@@ -359,15 +359,15 @@ export function Footer() {
 }
 ```
 
-Any same-origin `<a href>` already navigates without a full page load: Weft listens for clicks on the page. What `Link`
+Any same-origin `<a href>` already navigates without a full page load: Kerf listens for clicks on the page. What `Link`
 adds is `aria-current="page"` while its `href` is the page you're on, so a menu can show where you are with one CSS rule
 (`a[aria-current="page"] { font-weight: 600 }`), and screen readers announce it. It passes every other attribute through.
 
 To navigate from code, for example after a save, call `navigate`:
 
 ```tsx
-import { navigate } from '@weft-js/start'
-import { Button } from '@weft-js/warp'
+import { navigate } from '@kerf-js/start'
+import { Button } from '@kerf-js/veneer'
 import { addTodo } from '#/server/todos'
 
 export function QuickAdd() {
@@ -397,7 +397,7 @@ throws) `notFound()`. It renders inside the root layout, with status 404. Its da
 
 ```tsx
 // src/routes/404.tsx
-import { Link, type Meta } from '@weft-js/start'
+import { Link, type Meta } from '@kerf-js/start'
 
 export const meta: Meta = {
   title: 'Page not found',
@@ -422,7 +422,7 @@ own; in production it is "Something went wrong.", so nothing about your server l
 
 ```tsx
 // src/routes/_error.tsx
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf-js/start'
 
 export const meta: Meta = { title: 'Something went wrong' }
 
@@ -452,7 +452,7 @@ before any HTML is sent; on a client navigation the router follows it. You can p
 TypeScript knows it:
 
 ```tsx
-import { redirect, type LoadArgs } from '@weft-js/start'
+import { redirect, type LoadArgs } from '@kerf-js/start'
 import { getTodo } from '#/server/todo'
 
 export const load = async ({
@@ -473,14 +473,14 @@ Here `todo` is typed as the row, never `null`: if there was no row, `redirect` a
 | `default` | server and browser | The page or layout component. |
 | `load` | server only | Data for this level, before the first byte. [Loading data](/learn/loading-data). |
 | `meta` | server only | Title, description and the rest of the head. [Metadata and share images](/learn/metadata-and-share-images). |
-| `prerender` | build only | The params of a `[param]` route that `weft build` knows ahead of time. |
+| `prerender` | build only | The params of a `[param]` route that `kerf build` knows ahead of time. |
 
-`prerender` lists the pages of a parameter route that exist at build time. `weft build` draws their share cards
-ahead of time, and `weft check` checks their metadata. A static host, with no server to draw a card on request, needs it
+`prerender` lists the pages of a parameter route that exist at build time. `kerf build` draws their share cards
+ahead of time, and `kerf check` checks their metadata. A static host, with no server to draw a card on request, needs it
 (H002). A route without parameters is always covered:
 
 ```tsx
-import type { Prerender, RouteProps } from '@weft-js/start'
+import type { Prerender, RouteProps } from '@kerf-js/start'
 
 export const prerender: Prerender<'/guides/[slug]'> = [
   { slug: 'setup' },
@@ -545,7 +545,7 @@ import {
   type LoadArgs,
   type Meta,
   type RouteProps,
-} from '@weft-js/start'
+} from '@kerf-js/start'
 
 const PAGES: Record<string, string> = {
   setup: 'Setting up',
@@ -584,7 +584,7 @@ import {
   redirect,
   type LoadArgs,
   type RouteProps,
-} from '@weft-js/start'
+} from '@kerf-js/start'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')

@@ -4,13 +4,13 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
-const SKIP = new Set(['node_modules', '.weft', '.output', 'dist', '.netlify', '.vercel'])
+const SKIP = new Set(['node_modules', '.kerf', '.output', 'dist', '.netlify', '.vercel'])
 /** npm packages with a compiled addon: one built on a Mac doesn't load on a Linux function. */
 const ADDONS =
   /^(better-sqlite3|sqlite3|sharp|bcrypt|argon2|canvas|@node-rs\/.+|@napi-rs\/canvas|bufferutil|utf-8-validate)$/
 /** A bus that reaches every instance. The memory bus is what's left when none is named. */
 const BUSES =
-  /\b(postgresBus|redisBus|natsBus|durableObjectBus)\s*\(|@weft-js\/realtime-(redis|nats|durable-object)/
+  /\b(postgresBus|redisBus|natsBus|durableObjectBus)\s*\(|@kerf-js\/realtime-(redis|nats|durable-object)/
 
 const posix = (p) => p.replaceAll('\\', '/')
 
@@ -29,9 +29,9 @@ function sources(root) {
   return out
 }
 
-/** `.weft/contract.json`, when it's newer than every source file: what the last build saw is then what's there. */
+/** `.kerf/contract.json`, when it's newer than every source file: what the last build saw is then what's there. */
 function freshContract(root, files) {
-  const file = join(root, '.weft', 'contract.json')
+  const file = join(root, '.kerf', 'contract.json')
   if (!existsSync(file)) return
   const at = statSync(file).mtimeMs
   if (files.some((f) => statSync(f).mtimeMs > at)) return
@@ -50,7 +50,7 @@ const read = (file) => {
 
 /**
  * @param {string} root
- * @param {any} [config] the loaded weft.config
+ * @param {any} [config] the loaded kerf.config
  * @returns {{ sockets?: Need, required?: Need, feed?: Need, memoryBus?: Need, sidecar?: Need, native?: Need, sqlite?: Need, uploads?: Need, addons?: Need, runtime: string }}
  * @typedef {{ file: string, what: string }} Need
  */
@@ -66,12 +66,12 @@ export function needsOf(root, config = {}) {
     const live = contract.functions?.find((f) => f.kind === 'channel' || f.kind === 'shared')
     if (live)
       needs.sockets = {
-        file: '.weft/contract.json',
+        file: '.kerf/contract.json',
         what: `\`${live.name}\` is a ${live.kind === 'shared' ? '`sharedState`' : '`channel`'}`,
       }
     streams = contract.functions?.some((f) => ['stream', 'channel', 'shared'].includes(f.kind))
     const native = Object.entries(contract.services ?? {}).find(([, s]) => s.kind === 'native')
-    if (native) needs.native = { file: '.weft/contract.json', what: `\`native('${native[0]}')\`` }
+    if (native) needs.native = { file: '.kerf/contract.json', what: `\`native('${native[0]}')\`` }
   }
   streams = scanNeeds({ files, rel, contract, needs, config, realtime, streams })
   if (!needs.sockets && /\bshare\s*[:,}]/.test(realtime))
@@ -81,7 +81,7 @@ export function needsOf(root, config = {}) {
   const plugins = (config.plugins ?? [])
     .map((p) => p?.name ?? p)
     .filter((n) => typeof n === 'string')
-  const configText = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs']
+  const configText = ['kerf.config.ts', 'kerf.config.mts', 'kerf.config.js', 'kerf.config.mjs']
     .map((n) => read(join(root, n)))
     .join('\n')
   if (
@@ -95,7 +95,7 @@ export function needsOf(root, config = {}) {
       what: 'the memory bus',
     }
   if (!needs.uploads && /encoder:\s*['"]server['"]/.test(configText))
-    needs.uploads = { file: 'weft.config.ts', what: "`media({ encoder: 'server' })`" }
+    needs.uploads = { file: 'kerf.config.ts', what: "`media({ encoder: 'server' })`" }
   if (
     needs.uploads &&
     !plugins.some((n) => n.includes('plugin-media')) &&
@@ -130,7 +130,7 @@ function scanNeeds({ files, rel, contract, needs, config, realtime, streams }) {
       if (/\b(stream|channel|sharedState)\s*[(<]/.test(text)) streams = true
     }
     if (/\.live\(/.test(text)) streams = true
-    if (/['"]@weft-js\/start\/rust['"]/.test(text)) {
+    if (/['"]@kerf-js\/start\/rust['"]/.test(text)) {
       for (const m of text.matchAll(/\bremote\(\s*['"`]rust:\/\/([\w-]+)/g))
         if (!config.rust?.services?.[m[1]]?.external)
           needs.sidecar ??= { file: rel(f), what: `\`remote('rust://${m[1]}')\`` }

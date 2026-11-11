@@ -42,7 +42,7 @@ export function checkoutInput<P extends Product>(byId: Map<string, P>): Pay<P>['
   return {
     '~standard': {
       version: 1,
-      vendor: 'weft',
+      vendor: 'kerf',
       validate(v: unknown) {
         const { product, plan, currency, quantity } = (
           v && typeof v === 'object' ? v : {}

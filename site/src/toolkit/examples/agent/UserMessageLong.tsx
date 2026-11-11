@@ -1,4 +1,4 @@
-import { UserMessage } from '@weft-js/warp'
+import { UserMessage } from '@kerf-js/veneer'
 
 export const UserMessageLong = () => (
   <UserMessage

@@ -1,4 +1,4 @@
-import { Text } from '@weft-js/warp'
+import { Text } from '@kerf-js/veneer'
 
 export const TextInline = () => (
   <Text>

@@ -70,7 +70,7 @@ test('params, splats and bad names', () => {
   expect(m.problems.map((p) => p.file)).toEqual(['routes/bad[x].tsx'])
 })
 
-test('.weft/routes.d.ts lists every route file path', () => {
+test('.kerf/routes.d.ts lists every route file path', () => {
   const t = routeTypes(scanRoutes(fixture))
   expect(t).toContain("'/users/[id]': true")
   expect(t).toContain("'/': true")
@@ -82,5 +82,5 @@ test('the client build of a route has no load, meta or prerender, and no import 
   const out = stripServerExports(readFileSync(file, 'utf8'), file)
   expect(out).not.toMatch(/export const (load|meta|prerender)|db\.user|notFound|from '..\/..\/db'/) // `typeof load` in a type stays: types are erased
   expect(out).toContain('export default function User')
-  expect(out).toMatch(/import \{ type RouteProps \} from '@weft-js\/start'|import type/)
+  expect(out).toMatch(/import \{ type RouteProps \} from '@kerf-js\/start'|import type/)
 })

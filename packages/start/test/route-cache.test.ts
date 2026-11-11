@@ -252,7 +252,7 @@ it('sends explicit validators and bypasses the browser HTTP cache', async () => 
   try {
     const ctrl = new AbortController()
     await ask(url('/a?x=1#part'), ctrl.signal, '"tag"')
-    expect(fetcher).toHaveBeenCalledWith('/_weft/data/a?x=1', {
+    expect(fetcher).toHaveBeenCalledWith('/_kerf/data/a?x=1', {
       cache: 'no-cache',
       signal: ctrl.signal,
       headers: { accept: 'application/json', 'if-none-match': '"tag"' },

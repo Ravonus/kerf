@@ -2,7 +2,7 @@ export async function commandMap({ formatMap, writeMap, args, print, say }) {
   const map = await writeMap(args.root)
   if (args.json) print(map)
   else if (args.stdout) process.stdout.write(formatMap(map))
-  else say(`.weft/map.md: ${map.rows.length} rows`)
+  else say(`.kerf/map.md: ${map.rows.length} rows`)
   return 0
 }
 
@@ -16,12 +16,12 @@ export async function commandIcons({
   say,
 }) {
   if (args.positional[0] !== 'publish' || !args.positional[1]) {
-    say('usage: weft icons publish <dir>')
+    say('usage: kerf icons publish <dir>')
     return 1
   }
   const { publish } = await import(
     pathToFileURL(
-      createRequire(join(args.root, 'package.json')).resolve('@weft-js/warp-icons/compile'),
+      createRequire(join(args.root, 'package.json')).resolve('@kerf-js/veneer-icons/compile'),
     ).href
   )
   const out = await publish(resolve(args.root, args.positional[1]))
@@ -92,7 +92,7 @@ export async function commandPlugins({
     const written = loaded.diagnostics.some((d) => d.code === 'P007') ? [] : sync(args.root, loaded)
     if (args.json) print({ ok: errors.length === 0, written, diagnostics: loaded.diagnostics })
     say(formatHuman(loaded.diagnostics))
-    say(`weft plugins sync: ${written.length} files written`)
+    say(`kerf plugins sync: ${written.length} files written`)
     return errors.length ? 1 : 0
   }
   if (sub === 'audit') {
@@ -197,12 +197,12 @@ export async function commandStyle({
     const written = args.stdout ? false : writeMatrixFile(args.root, matrix)
     if (args.stdout || args.json) print(matrix)
     say(
-      `.weft/styles.json: ${Object.keys(matrix.groups).length} groups, ${matrix.diagnostics.length} diagnostics, ${args.stdout ? 'not written' : written ? 'written' : 'current'}`,
+      `.kerf/styles.json: ${Object.keys(matrix.groups).length} groups, ${matrix.diagnostics.length} diagnostics, ${args.stdout ? 'not written' : written ? 'written' : 'current'}`,
     )
     return 0
   }
   throw Object.assign(
-    new Error(`weft style ${sub ?? ''}: use find <query>, explain <group|selector> or matrix`),
+    new Error(`kerf style ${sub ?? ''}: use find <query>, explain <group|selector> or matrix`),
     { code: 'E_USAGE' },
   )
 }

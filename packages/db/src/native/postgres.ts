@@ -4,7 +4,7 @@ import { driver } from '../driver'
 import { createNative, type Driver, type Row } from './index'
 
 const { default: postgres } = await driver(
-  '@weft-js/db/plugin-native/postgres',
+  '@kerf-js/db/plugin-native/postgres',
   'postgres',
   () => import('postgres'),
 )

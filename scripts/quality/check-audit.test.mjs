@@ -10,14 +10,14 @@ const root = repoRoot
 
 for (const stage of ['production', 'development', 'clean'])
   await test(`the check reports a ${stage} dependency audit faithfully`, () => {
-    const dir = mkdtempSync(join(tmpdir(), 'weft-audit-test-'))
+    const dir = mkdtempSync(join(tmpdir(), 'kerf-audit-test-'))
     try {
       const program = join(dir, 'audit.cjs')
       writeFileSync(
         program,
         `#!/usr/bin/env node
 const stage = process.argv.includes('--prod') ? 'production' : 'development'
-if (process.env.WEFT_AUDIT_FAILURE === stage) {
+if (process.env.KERF_AUDIT_FAILURE === stage) {
   console.error('fixture audit failure')
   process.exit(23)
 }
@@ -33,7 +33,7 @@ if (process.env.WEFT_AUDIT_FAILURE === stage) {
         env: {
           ...process.env,
           PATH: `${dir}${delimiter}${process.env.PATH}`,
-          WEFT_AUDIT_FAILURE: stage,
+          KERF_AUDIT_FAILURE: stage,
         },
       })
       assert.equal(result.status, stage === 'clean' ? 0 : 1, result.stdout + result.stderr)

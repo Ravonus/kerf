@@ -15,7 +15,7 @@ if (tracked.status !== 0) {
   process.exit(1)
 }
 const excluded =
-  /^(?:evals\/results|site\/content|packages\/cli\/docs|packages\/warp\/test\/a11y\/gallery\/assets)\/|(?:^|\/)(?:vendor|gen|generated|dist|build|archive|archives|__snapshots__|snapshots)\/|^packages\/core\/node\/(?:(?:css|matrix)(?:\.mjs|\/.*\.mjs)|vocab\.mjs)$/
+  /^(?:evals\/results|site\/content|packages\/cli\/docs|packages\/veneer\/test\/a11y\/gallery\/assets)\/|(?:^|\/)(?:vendor|gen|generated|dist|build|archive|archives|__snapshots__|snapshots)\/|^packages\/core\/node\/(?:(?:css|matrix)(?:\.mjs|\/.*\.mjs)|vocab\.mjs)$/
 const files = tracked.stdout
   .split('\0')
   .filter(

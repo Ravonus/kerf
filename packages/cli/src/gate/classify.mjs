@@ -11,13 +11,13 @@ export function classify(root, changes, code, configFile, importsOf) {
   const testAbs = new Set(
     discover(root, {
       include: ['**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'],
-      exclude: ['.weft/**'],
+      exclude: ['.kerf/**'],
     }).map((r) => join(root, r)),
   )
   const importedBySource = new Set()
   for (const rel of discover(root, {
     include: ['**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'],
-    exclude: ['.weft/**'],
+    exclude: ['.kerf/**'],
   })) {
     const abs = join(root, rel)
     if (testAbs.has(abs)) continue
@@ -48,7 +48,7 @@ export function classify(root, changes, code, configFile, importsOf) {
   }
 
   // The tests this change has to prove.
-  // `// weft-allow T010: <reason>` / T011 on a test keeps it (shown in the result, for the reviewer).
+  // `// kerf-allow T010: <reason>` / T011 on a test keeps it (shown in the result, for the reviewer).
   const allowFns = new Map(
     tests
       .filter((c) => c.after != null)

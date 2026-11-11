@@ -2,7 +2,7 @@ import { upperMedian as median } from '../../scripts/lib/helpers.mjs'
 // Before, after, and the other stacks, on one machine, one page at a time. Every stack gets the same driver
 // (shared/driver.js), the same production settings, the same 5 microsecond timer (cross-origin isolated) and fresh
 // pages, and the order of the stacks changes each round. Nothing here counts at load above 20.
-//   node measure.mjs [--out results.json] [--quick] [--rows] [--no-reactive] [--rounds 3] [--stacks weft-base,weft,solid,solid-batch,react]
+//   node measure.mjs [--out results.json] [--quick] [--rows] [--no-reactive] [--rounds 3] [--stacks kerf-base,kerf,solid,solid-batch,react]
 // CHROME=<path> uses that browser (another machine's Playwright build).
 import { execFileSync, execSync } from 'node:child_process'
 import { createServer } from 'node:http'
@@ -19,7 +19,7 @@ const arg = (name, fallback) => {
 }
 const quick = process.argv.includes('--quick')
 const out = arg('out', join(here, 'results.json'))
-const want = arg('stacks', 'weft-base,weft,solid,solid-batch,react')
+const want = arg('stacks', 'kerf-base,kerf,solid,solid-batch,react')
   .split(',')
   .filter((s) => existsSync(join(here, 'dist', s.replace('-batch', ''))))
 const load = () =>
@@ -243,7 +243,7 @@ const compared = Object.fromEntries(
 const paths = Object.fromEntries(
   Object.keys(data)
     .filter((s) => s.startsWith('off-'))
-    .map((s) => [s, versus(s, 'weft')]),
+    .map((s) => [s, versus(s, 'kerf')]),
 )
 
 const results = {

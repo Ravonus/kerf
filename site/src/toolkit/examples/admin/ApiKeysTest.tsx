@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { ApiKeys, Toaster } from '@weft-js/warp'
-import type { ApiKey } from '@weft-js/warp'
+import { state } from '@kerf-js/core'
+import { ApiKeys, Toaster } from '@kerf-js/veneer'
+import type { ApiKey } from '@kerf-js/veneer'
 import { API_KEYS, NOW } from '../../world'
 import { wait } from './shared'
 

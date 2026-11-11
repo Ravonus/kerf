@@ -1,4 +1,4 @@
-import { Stack, Heading, Text } from '@weft-js/warp'
+import { Stack, Heading, Text } from '@kerf-js/veneer'
 
 export const HeadingPageTop = () => (
   <Stack gap="section">

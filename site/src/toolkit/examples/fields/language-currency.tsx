@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf-js/core'
 import {
   Card,
   CurrencySelect,
@@ -7,7 +7,7 @@ import {
   Stack,
   Text,
   TimeZoneSelect,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { Cell } from '../../world'
 import {
   NEAR_LANGUAGES,

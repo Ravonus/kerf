@@ -1,7 +1,7 @@
 // The shapes fixture's client entry: the same hydration probe as test/fixtures/app.
-import { start } from '@weft-js/start/client'
-import { hydration } from '@weft-js/core/dom'
-import * as routes from 'virtual:weft/routes'
+import { start } from '@kerf-js/start/client'
+import { hydration } from '@kerf-js/core/dom'
+import * as routes from 'virtual:kerf/routes'
 
 const writes: MutationRecord[] = []
 const observer = new MutationObserver((r) => writes.push(...r))
@@ -14,5 +14,5 @@ observer.observe(document.getElementById('app')!, {
 start(routes as any, { eager: true }).then(() => {
   writes.push(...observer.takeRecords())
   observer.disconnect()
-  ;(window as any).__weft = { misses: hydration.misses, writes: writes.length, hydrated: true }
+  ;(window as any).__kerf = { misses: hydration.misses, writes: writes.length, hydrated: true }
 })

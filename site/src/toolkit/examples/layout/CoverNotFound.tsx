@@ -5,7 +5,7 @@ import {
   Heading,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf-js/veneer'
 import { SCREEN } from './shared'
 
 export const CoverNotFound = () => (

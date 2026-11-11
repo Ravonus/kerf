@@ -1,4 +1,4 @@
-import { Stack, Snippet } from '@weft-js/warp'
+import { Stack, Snippet } from '@kerf-js/veneer'
 
 export const SnippetPlay = (p: {
   code: string

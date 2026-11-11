@@ -2,10 +2,10 @@
 import { DatabaseSync } from 'node:sqlite'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { drizzle } from 'drizzle-orm/sqlite-proxy'
-import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
-import type { SchemaIssue } from '@weft-js/start/data'
-import { decodeCursor, encodeCursor, listInput, type ListParams } from '@weft-js/start/list'
-import { drizzleSource } from '@weft-js/start/list/drizzle'
+import { LIST_ROWS, listSuite } from '@kerf-js/core/test/plugins'
+import type { SchemaIssue } from '@kerf-js/start/data'
+import { decodeCursor, encodeCursor, listInput, type ListParams } from '@kerf-js/start/list'
+import { drizzleSource } from '@kerf-js/start/list/drizzle'
 
 const input = listInput({
   sort: ['rank', 'title'],

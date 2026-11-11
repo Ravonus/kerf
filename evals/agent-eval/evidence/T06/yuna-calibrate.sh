@@ -2,21 +2,21 @@
 # Run on the manager's combined checkout. No agent or model is invoked.
 set -euo pipefail
 
-if [[ "${WEFT_T06_CLEAN_ENV:-}" != 1 ]]; then
-  : "${WEFT_T06_PNPM_ENTRY:?Set WEFT_T06_PNPM_ENTRY to the cached pnpm 12.15.0 bin/pnpm.mjs}"
+if [[ "${KERF_T06_CLEAN_ENV:-}" != 1 ]]; then
+  : "${KERF_T06_PNPM_ENTRY:?Set KERF_T06_PNPM_ENTRY to the cached pnpm 12.15.0 bin/pnpm.mjs}"
   exec /usr/bin/env -i HOME="$HOME" PATH="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-    WEFT_T06_CLEAN_ENV=1 WEFT_T06_PNPM_ENTRY="$WEFT_T06_PNPM_ENTRY" \
-    WEFT_T06_NODE="${WEFT_T06_NODE:-$HOME/work/toolchain/node-v26.13.0-darwin-arm64/bin/node}" \
-    WEFT_T06_REPO="${WEFT_T06_REPO:-$HOME/work/weft-S5-verify/repo}" \
-    WEFT_T06_TASK="${WEFT_T06_TASK:-medium-shop}" \
+    KERF_T06_CLEAN_ENV=1 KERF_T06_PNPM_ENTRY="$KERF_T06_PNPM_ENTRY" \
+    KERF_T06_NODE="${KERF_T06_NODE:-$HOME/work/toolchain/node-v26.13.0-darwin-arm64/bin/node}" \
+    KERF_T06_REPO="${KERF_T06_REPO:-$HOME/work/kerf-S5-verify/repo}" \
+    KERF_T06_TASK="${KERF_T06_TASK:-medium-shop}" \
     PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/Library/Caches/ms-playwright}" \
     /bin/bash "$0"
 fi
 
-repo="$WEFT_T06_REPO"
-[[ "$WEFT_T06_TASK" == medium-shop || "$WEFT_T06_TASK" == edit-shop || "$WEFT_T06_TASK" == bugfix-shop ]] || { echo 'Unknown calibration task' >&2; exit 2; }
-node="$WEFT_T06_NODE"
-pnpm="$WEFT_T06_PNPM_ENTRY"
+repo="$KERF_T06_REPO"
+[[ "$KERF_T06_TASK" == medium-shop || "$KERF_T06_TASK" == edit-shop || "$KERF_T06_TASK" == bugfix-shop ]] || { echo 'Unknown calibration task' >&2; exit 2; }
+node="$KERF_T06_NODE"
+pnpm="$KERF_T06_PNPM_ENTRY"
 pnpm_root="$(dirname "$(dirname "$pnpm")")"
 [[ "$(uname -s)" == Darwin && "$(uname -m)" == arm64 ]] || { echo 'Requires macOS arm64' >&2; exit 2; }
 [[ -x "$node" && -f "$pnpm" && -x "$pnpm_root/pnpm-native" ]] || { echo 'Missing cached Node or native pnpm' >&2; exit 2; }
@@ -31,7 +31,7 @@ free_kib="$(df -Pk "$HOME" | awk 'NR==2 {print $4}')"
 [[ "$free_kib" =~ ^[0-9]+$ ]] || { echo 'Cannot read free space' >&2; exit 2; }
 (( free_kib >= 13 * 1024 * 1024 )) || { echo 'Need 3 GiB staging plus 10 GiB free' >&2; exit 2; }
 
-base="$HOME/work/weft-S5-verify"
+base="$HOME/work/kerf-S5-verify"
 mkdir -p "$base" "$repo/evidence/T06"
 job="$(mktemp -d "$base/t06-calibration.XXXXXXXX")"
 cleanup() {
@@ -57,10 +57,10 @@ mkdir "$receipts"
 printf 'Calibration receipts: %s (progress: setup.log)\n' "$receipts"
 exec > "$receipts/setup.log" 2>&1
 
-export WEFT_EVAL_ROOT="$job" WEFT_EVAL_DEPS="$job/deps" WEFT_T06_JOB="$job" WEFT_T06_REPO="$repo"
-export WEFT_EVAL_HOST_HOME="$HOME"
+export KERF_EVAL_ROOT="$job" KERF_EVAL_DEPS="$job/deps" KERF_T06_JOB="$job" KERF_T06_REPO="$repo"
+export KERF_EVAL_HOST_HOME="$HOME"
 export HOME="$job/home" CI=1 COREPACK_ENABLE_NETWORK=0 NO_COLOR=1
-mkdir -p "$HOME" "$job/bin" "$job/source" "$job/state/tgz" "$job/state/golden/weft-warp" "$job/projects" "$WEFT_EVAL_DEPS"
+mkdir -p "$HOME" "$job/bin" "$job/source" "$job/state/tgz" "$job/state/golden/kerf-veneer" "$job/projects" "$KERF_EVAL_DEPS"
 export PATH="$job/bin:$(dirname "$node"):/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 printf '#!/bin/bash\nexec %q %q "$@"\n' "$node" "$pnpm" > "$job/bin/pnpm"
 chmod 755 "$job/bin/pnpm"
@@ -68,12 +68,12 @@ chmod 755 "$job/bin/pnpm"
 printf '%s\n' "$(git -C "$repo" rev-parse HEAD)" > "$receipts/candidate-sha.txt"
 printf '%s\n' "$("$node" --version)" > "$receipts/node-version.txt"
 printf '%s\n' "$(pnpm --version)" > "$receipts/pnpm-version.txt"
-git -C "$repo" archive HEAD packages crates/weft crates/weft-compiler pnpm-workspace.yaml pnpm-lock.yaml package.json | tar -xf - -C "$job/source"
+git -C "$repo" archive HEAD packages crates/kerf crates/kerf-compiler pnpm-workspace.yaml pnpm-lock.yaml package.json | tar -xf - -C "$job/source"
 source="$job/source"
 stamp="$("$node" -e 'process.stdout.write(require(process.argv[1]).sourceStamp())' "$source/packages/core/scripts/native-stamp.cjs")"
 [[ "$stamp" =~ ^[0-9a-f]{64}$ ]] || { echo 'Missing compiler source stamp' >&2; exit 2; }
 mkdir -p "$source/packages/core/native"
-for artifact in weft-compiler.darwin-arm64.node weft-compiler.wasm; do
+for artifact in kerf-compiler.darwin-arm64.node kerf-compiler.wasm; do
   from="$repo/packages/core/native/$artifact"
   [[ -f "$from" && -f "$from.stamp" && "$(tr -d '[:space:]' < "$from.stamp")" == "$stamp" ]] || { echo "Compiler stamp mismatch: $artifact" >&2; exit 2; }
   cp "$from" "$from.stamp" "$source/packages/core/native/"
@@ -104,36 +104,36 @@ ready
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-const stage = process.env.WEFT_T06_JOB
-const { packWithAddon } = await import(pathToFileURL(join(stage, 'source/packages/create/scripts/pack-all.mjs')))
+const stage = process.env.KERF_T06_JOB
+const { packWithAddon } = await import(pathToFileURL(join(stage, 'source/packages/create-kerf/scripts/pack-all.mjs')))
 const packed = packWithAddon(join(stage, 'state/tgz'))
-if (!packed['@weft-js/core'] || !packed['@weft-js/compiler-darwin-arm64']) throw Error('missing packed compiler')
+if (!packed['@kerf-js/core'] || !packed['@kerf-js/compiler-darwin-arm64']) throw Error('missing packed compiler')
 writeFileSync(join(stage, 'state/tgz/tarballs.json'), JSON.stringify(packed, null, 2))
 NODE
 
-app="$job/state/golden/weft-warp/app"
-"$node" "$source/packages/create/bin/create-weft.mjs" "$app" --ui warp --db none --no-auth --pm pnpm --no-git --no-install --yes --tarballs "$job/state/tgz"
+app="$job/state/golden/kerf-veneer/app"
+"$node" "$source/packages/create-kerf/bin/create-kerf.mjs" "$app" --ui veneer --db none --no-auth --pm pnpm --no-git --no-install --yes --tarballs "$job/state/tgz"
 "$node" --input-type=module <<'NODE'
 import { appendFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-const stage = process.env.WEFT_T06_JOB
-const { writePackedPolicy } = await import(pathToFileURL(join(stage, 'source/packages/create/scripts/tarballs.mjs')))
+const stage = process.env.KERF_T06_JOB
+const { writePackedPolicy } = await import(pathToFileURL(join(stage, 'source/packages/create-kerf/scripts/tarballs.mjs')))
 const tarballs = JSON.parse((await import('node:fs')).readFileSync(join(stage, 'state/tgz/tarballs.json')))
-const app = join(stage, 'state/golden/weft-warp/app')
+const app = join(stage, 'state/golden/kerf-veneer/app')
 writePackedPolicy(app, tarballs)
-const { normalizeOverrides } = await import(pathToFileURL(join(process.env.WEFT_T06_REPO, 'evals/agent-eval/lib/pnpm-policy.mjs')))
+const { normalizeOverrides } = await import(pathToFileURL(join(process.env.KERF_T06_REPO, 'evals/agent-eval/lib/pnpm-policy.mjs')))
 normalizeOverrides(app)
 appendFileSync(join(app, 'pnpm-workspace.yaml'), '\nnodeLinker: hoisted\n')
 writeFileSync(join(stage, 'deps/package.json'), JSON.stringify({private:true,dependencies:{'playwright-core':'1.64.1','axe-core':'4.14.0'}}))
 writePackedPolicy(join(stage, 'deps'))
 NODE
 [[ "$(cd "$app" && pnpm config get minimumReleaseAge)" == 4320 ]] || { echo 'Age policy missing for app' >&2; exit 2; }
-[[ "$(cd "$WEFT_EVAL_DEPS" && pnpm config get minimumReleaseAge)" == 4320 ]] || { echo 'Age policy missing for grader' >&2; exit 2; }
+[[ "$(cd "$KERF_EVAL_DEPS" && pnpm config get minimumReleaseAge)" == 4320 ]] || { echo 'Age policy missing for grader' >&2; exit 2; }
 ready
 (cd "$app" && pnpm install --ignore-scripts --store-dir "$job/store")
 ready
-(cd "$WEFT_EVAL_DEPS" && pnpm install --ignore-scripts --store-dir "$job/store")
+(cd "$KERF_EVAL_DEPS" && pnpm install --ignore-scripts --store-dir "$job/store")
 ready
 "$node" "$repo/evals/agent-eval/evidence/T06/verify-packages.mjs" "$app" "$job/provenance" "$job/state/tgz/tarballs.json" > "$receipts/package-provenance.json"
 
@@ -145,5 +145,5 @@ cp -R "$pnpm_root/dist" "$app/.calibration-pnpm/dist"
 printf '%s\n' '#!/bin/sh' 'exec node "$(dirname "$0")/../.calibration-pnpm/bin/pnpm.mjs" "$@"' > "$app/.calibration-bin/pnpm"
 chmod 755 "$app/.calibration-bin/pnpm" "$app/.calibration-pnpm/pnpm-native"
 unset NODE_TEST_CONTEXT
-"$node" "$repo/evals/agent-eval/evidence/T06/run-calibrations.mjs" "$repo" "$receipts" "$WEFT_T06_TASK"
+"$node" "$repo/evals/agent-eval/evidence/T06/run-calibrations.mjs" "$repo" "$receipts" "$KERF_T06_TASK"
 printf 'Calibration receipts: %s\n' "$receipts"
