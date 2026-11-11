@@ -30,6 +30,7 @@ const ALIASES = {
   nats: '@weft-js/realtime-nats',
   pay: '@weft-js/pay',
   'pay-stripe': '@weft-js/pay/stripe',
+  'pay-square': '@weft-js/pay/square',
 }
 
 /** Add-ons `weft add` knows by the name after the scope, as `weft add realtime-redis`. */

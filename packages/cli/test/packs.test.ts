@@ -20,6 +20,7 @@ const packs = [
   ]),
   ['@weft-js/pay', 'pay', 'plugin.mjs'],
   ['@weft-js/pay/stripe', 'pay', 'stripe-plugin.mjs'],
+  ['@weft-js/pay/square', 'pay', 'square-plugin.mjs'],
 ]
 
 const load = async (name: string) => {

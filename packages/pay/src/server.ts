@@ -178,6 +178,8 @@ export interface Pay<P extends Product = Product> extends ServerExtension {
   /** Apply events that have been verified. Anything else must go through `webhook`. */
   ingest(rail: string, events: RailEvent[], report?: PayReport): Promise<string[]>
   refund(purchase: string): Promise<void>
+  /** Whether the rail takes test payments, for a "test mode" banner. False when it can't tell. */
+  sandbox(rail?: string): Promise<boolean>
   /** A rail in place of the slot: `fakePay`. */
   use(rail: PayRail | undefined): void
   /** Back to the slot, with an empty ledger if it can be emptied: `net.extension` calls this after each test. */
@@ -228,6 +230,9 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
       const rail = await railFor(p.rail)
       if (!rail.refund) throw new PayError('PAY022', `\`${rail.id}\` can't refund from here`, 501)
       await rail.refund({ purchase: id.slice(p.rail.length + 1) })
+    },
+    async sandbox(key) {
+      return (await railFor(key)).sandbox === true
     },
     use(rail) {
       rails.use(rail)

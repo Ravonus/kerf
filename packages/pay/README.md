@@ -66,6 +66,8 @@ It is also Weft's reference plugin. Nothing in `@weft-js/start` or the CLI names
 - [Checkout, portal and webhooks](#checkout-portal-and-webhooks)
 - [Entitlements](#entitlements)
 - [Stripe](#stripe)
+- [Square](#square)
+- [Sandbox and test mode](#sandbox-and-test-mode)
 - [Storing the ledger](#storing-the-ledger)
 - [Writing another rail](#writing-another-rail)
 - [Testing with `fakePay`](#testing-with-fakepay)
@@ -120,7 +122,7 @@ export default defineConfig({
 | `src/server/pay.ts`    | The `entitlements` query and the `checkout` and `portal` mutations.                                                    |
 | `src/db/pay.schema.ts` | The `purchases` and `pay_events` tables, for SQLite, Postgres or MySQL. Drizzle apps only.                             |
 | `src/env.server.ts`    | `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` added to the `server` block.                                           |
-| `.env`, `.env.example` | `STRIPE_SECRET_KEY=sk_test_placeholder`, `STRIPE_WEBHOOK_SECRET=whsec_placeholder`                                     |
+| `.env`, `.env.example` | `STRIPE_MODE=test`, `STRIPE_SECRET_KEY=sk_test_placeholder`, `STRIPE_WEBHOOK_SECRET=whsec_placeholder`                  |
 
 On Drizzle, `src/pay.server.ts` uses `drizzlePayStore(db, { purchases, payEvents })`; then run `npx weft db generate` and
 the migration applies on the next request. On another data layer it starts on `memoryPayStore()`, and you write a
@@ -132,6 +134,7 @@ the migration applies on the next request. On another data layer it starts on `m
 | ------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | A database                | `weft add` refuses without one | Holds the ledger.                                                                                                                            |
 | Auth                      | `weft add` refuses without it  | A purchase belongs to `ctx.user.id`.                                                                                                         |
+| `STRIPE_MODE`             | `.env`, server only            | `test` until launch: a live key is then refused (PAY032). Set `live` with the live keys. See [Sandbox and test mode](#sandbox-and-test-mode). |
 | `STRIPE_SECRET_KEY`       | `.env`, server only            | Replace the placeholder with a real test key. The placeholder is refused before anything is sent (PAY003).                                   |
 | `STRIPE_WEBHOOK_SECRET`   | `.env`, server only            | Without it every webhook is refused (PAY011).                                                                                                |
 | A Stripe webhook endpoint | Stripe dashboard               | URL `https://<your-app>/_weft/x/pay/stripe`. Events: `customer.subscription.*`, `checkout.session.*`, `charge.refunded`, `charge.dispute.*`. |
@@ -389,6 +392,7 @@ HMAC-SHA256 on `<t>.<raw body>`, accepting any of several `v1` signatures while 
 | `apiVersion`        | `string`                 | `2025-09-30.clover`      | Pinned, so an account's default version can't reshape the calls.                                                           |
 | `tolerance`         | `number` (s)             | `300`                    | How old a signed delivery may be before it is refused as a replay.                                                         |
 | `shippingCountries` | `string[]`               | `['US', 'CA']`           | Where a `shipping` product delivers.                                                                                       |
+| `mode`              | `'test' \| 'live'`       | `STRIPE_MODE`, else the key | What the keys must be; one from the other mode is PAY032. See [Sandbox and test mode](#sandbox-and-test-mode).             |
 
 Keys come from the server environment, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. Don't pass a key as an option:
 plugin options are written into `.weft/slots/`, a generated file (PAY003).
@@ -420,6 +424,95 @@ How Stripe events map to the ledger:
 
 Who bought what travels in metadata (`weft_user`, `weft_product`, `weft_plan`) on the session, the subscription and the
 payment intent. `pay.refund()` refunds one-time payments (`pi_…`); a subscription is cancelled in the portal.
+
+## Square
+
+`square(options?)` from `@weft-js/pay/square/plugin` provides `pay.rail` under the key `square`: Square payment links for
+one-time payments (`pay.order` and one-time products), so web orders land in the same Square account as the shop's card
+readers. Subscriptions and `portal` are PAY022 on it; sell those with Stripe.
+
+| Option        | Type                         | Default                                        | What it does                                                    |
+| ------------- | ---------------------------- | ---------------------------------------------- | --------------------------------------------------------------- |
+| `environment` | `'sandbox' \| 'production'`  | `SQUARE_ENVIRONMENT` (or `SQUARE_ENV`), else production | Picks the API host. Any other value is PAY032, never a guess. |
+| `api`         | `string`                     | from `environment`                             | The API origin; point it at a local mock.                       |
+| `apiVersion`  | `string`                     | `2025-10-16`                                   | Pinned `Square-Version`.                                        |
+
+Env, server only: `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID` (the shop the payments land in), and for the webhook at
+`/_weft/x/pay/square` `SQUARE_WEBHOOK_SIGNATURE_KEY` plus `SQUARE_WEBHOOK_URL`, the exact URL given to Square, which it
+signs. Subscribe the webhook to `payment.created` and `payment.updated`. `SQUARE_APPLICATION_ID` is optional and only
+checked against the environment.
+
+## Sandbox and test mode
+
+Both rails have a sandbox that takes the provider's test cards and never moves money. Build and test against it, then
+switch the environment's variables, not code, to go live. A key from the other mode is refused before anything is sent
+(PAY032), so a live key can't reach a dev server and a test key can't quietly run a shop.
+
+**Stripe.** Test mode is the keys: in the dashboard turn on *Test mode* (or open a sandbox) and copy them.
+
+```bash
+# .env
+STRIPE_MODE=test               # `live` at launch, with sk_live_
+STRIPE_SECRET_KEY=sk_test_…    # or a restricted rk_test_ key
+STRIPE_WEBHOOK_SECRET=whsec_…  # from `stripe listen`, below
+# STRIPE_PUBLISHABLE_KEY=pk_test_…  # only for Stripe.js
+```
+
+`STRIPE_WEBHOOK_SECRET` is the one `stripe listen` prints locally, or the endpoint's signing secret in the dashboard once
+deployed. `STRIPE_PUBLISHABLE_KEY` is only checked to be the same mode as the secret key; nothing here sends it.
+
+Locally, forward webhooks with the Stripe CLI and use the `whsec_` it prints:
+
+```bash
+stripe listen \
+  --forward-to localhost:5173/_weft/x/pay/stripe
+```
+
+Pay on the hosted Checkout page with `4242 4242 4242 4242`, any future expiry, any CVC (`4000 0000 0000 9995` declines,
+`4000 0025 0000 3155` asks for 3-D Secure). Refund from your admin with `pay.refund(id)`; `charge.refunded` comes back
+through the webhook. `stripe trigger checkout.session.completed` sends a signed event without a browser.
+
+**Square.** The sandbox has its own credentials: in the Developer Console open your application, switch to the
+*Sandbox* tab, and take the sandbox access token and application id (`sandbox-sq0idb-…`), and a location of the
+sandbox's test seller account (*Locations* page).
+
+```bash
+# .env
+SQUARE_ENVIRONMENT=sandbox  # `production` at launch
+SQUARE_ACCESS_TOKEN=…       # the Sandbox tab's token
+SQUARE_LOCATION_ID=…        # a sandbox location
+SQUARE_APPLICATION_ID=sandbox-sq0idb-…  # optional, checked
+SQUARE_WEBHOOK_SIGNATURE_KEY=…  # the sandbox subscription's
+SQUARE_WEBHOOK_URL=https://<tunnel>/_weft/x/pay/square
+```
+
+At launch, swap in the production token and location with `SQUARE_ENVIRONMENT=production`; a `sandbox-` application id
+is then refused.
+
+`SQUARE_ENVIRONMENT=sandbox` sends every call to `connect.squareupsandbox.com`; unset or `production`, to
+`connect.squareup.com`. A sandbox webhook needs a public URL, so run a tunnel (`cloudflared tunnel --url
+http://localhost:5173`) and give Square that URL plus `/_weft/x/pay/square`, the same string as `SQUARE_WEBHOOK_URL`.
+Pay on the hosted sandbox page with `4111 1111 1111 1111`, any future expiry, CVV `111`, any ZIP. Square answers a
+token sent to the other environment's host with a bare 401, so that PAY030 names the host it hit.
+
+**In the app.** `rail.sandbox` is `true` for a sandbox, and `await pay.sandbox()` reads the bound rail's, for a banner:
+
+```ts
+export const testMode = query({ run: () => pay.sandbox() })
+```
+
+**Against the real sandboxes.** `test/sandbox.live.test.ts` in this package runs checkout and refund through each rail
+against the provider's sandbox, paying with the published test instruments (`pm_card_visa`, `cnon:card-nonce-ok`). It
+skips without credentials and refuses a live key or a production Square environment:
+
+```bash
+export PAY_SANDBOX=1 STRIPE_SECRET_KEY=sk_test_…
+pnpm --filter @weft-js/pay test sandbox.live
+
+export PAY_SANDBOX=1 SQUARE_ENVIRONMENT=sandbox \
+  SQUARE_ACCESS_TOKEN=… SQUARE_LOCATION_ID=…
+pnpm --filter @weft-js/pay test sandbox.live
+```
 
 ## Storing the ledger
 
@@ -528,8 +621,10 @@ test('checkout grants nothing; the verified event does', async () => {
 | `@weft-js/pay/drizzle`       | server            | `drizzlePayStore`                                                                                                                                                                                                                |
 | `@weft-js/pay/test`          | tests             | `fakePay`, `payRailSuite`; types `FakePay`, `PayScenario`, `PayRailSuiteOptions`, `Check`                                                                                                                                        |
 | `@weft-js/pay/plugin`        | config            | `pay` (default and named): the `server.extension`, the PAY checks, `weft docs pay` and `weft add pay`                                                                                                                            |
-| `@weft-js/pay/stripe`        | server            | `stripeRail`; type `StripeOptions`                                                                                                                                                                                               |
+| `@weft-js/pay/stripe`        | server            | `stripeRail`, `stripeKeyMode`; type `StripeOptions`                                                                                                                                                                                            |
 | `@weft-js/pay/stripe/plugin` | config            | `stripe` (default and named): the `pay.rail` provider                                                                                                                                                                            |
+| `@weft-js/pay/square`        | server            | `squareRail`, `squareSandbox`; type `SquareOptions`                                                                                                                                                                              |
+| `@weft-js/pay/square/plugin` | config            | `square` (default and named): the `pay.rail` provider                                                                                                                                                                            |
 
 Importing `@weft-js/pay/server` or `@weft-js/pay/drizzle` from client code is PAY017.
 
@@ -537,7 +632,8 @@ Importing `@weft-js/pay/server` or `@weft-js/pay/drizzle` from client code is PA
 <summary><code>stripeRail(options)</code>: options the plugin doesn't document</summary>
 
 `stripeRail` is what the plugin loads on the server. Besides the plugin options above, it accepts `secretKey` (default
-`process.env.STRIPE_SECRET_KEY`), `webhookSecret` (default `process.env.STRIPE_WEBHOOK_SECRET`) and `fetch` (default the
+`process.env.STRIPE_SECRET_KEY`), `publishableKey` (default `process.env.STRIPE_PUBLISHABLE_KEY`, only checked),
+`webhookSecret` (default `process.env.STRIPE_WEBHOOK_SECRET`) and `fetch` (default the
 global one). Use those in tests of the rail itself; in an app, keys stay in the environment.
 
 </details>
@@ -630,7 +726,8 @@ At run time:
 | PAY022                 | 500 / 501 / 400 | No rail chosen while several are bound, a named rail isn't bound, or the rail can't refund this purchase |
 | PAY023                 | 409             | The user already holds this subscription                                                                 |
 | PAY024                 | 404             | Nothing to manage or refund                                                                              |
-| PAY030                 | 502 / 503       | Stripe refused the call (503 when it rate-limited)                                                       |
+| PAY030                 | 502 / 503       | The rail's provider refused the call (503 when it rate-limited)                                          |
+| PAY032                 | 500             | The keys and the chosen mode disagree (a live key with `STRIPE_MODE=test`, a sandbox app id in production), or a misspelled mode: nothing was sent |
 | P101                   | 500             | `pay.rail` has no provider in `plugins`                                                                  |
 | `ENTITLEMENT_REQUIRED` | 403             | A `requires` entitlement is missing                                                                      |
 | `E_PAY`                | 500             | Applying a verified delivery failed; the rail will redeliver                                             |

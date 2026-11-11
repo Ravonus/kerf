@@ -22,8 +22,14 @@ export interface StripeOptions {
   tolerance?: number
   /** ISO countries a `shipping` product delivers to. Default US and CA. */
   shippingCountries?: string[]
-  /** Default `process.env.STRIPE_SECRET_KEY`. */
+  /** `test` (sandbox) or `live`: what the keys must be, so a live key can't slip into a dev server or a test key into a
+   * shop. Default `process.env.STRIPE_MODE`; unset, the secret key's prefix decides. A mismatch is PAY032. */
+  mode?: 'test' | 'live'
+  /** Default `process.env.STRIPE_SECRET_KEY`: `sk_test_…` or `rk_test_…` in test mode, `sk_live_…`/`rk_live_…` live. */
   secretKey?: string
+  /** Checked against the secret key when set, since a page that loads Stripe.js needs the matching one. Default
+   * `process.env.STRIPE_PUBLISHABLE_KEY`; nothing here sends it anywhere. */
+  publishableKey?: string
   /** Default `process.env.STRIPE_WEBHOOK_SECRET`. */
   webhookSecret?: string
   /** Default the global one. */
@@ -43,6 +49,46 @@ const STATES: Record<string, PurchaseState> = {
 
 const API = 'https://api.stripe.com'
 const encoder = new TextEncoder()
+const env = (name: string) => (typeof process === 'undefined' ? undefined : process.env[name])
+
+/** `test` or `live` from a Stripe key's prefix (`sk_`, `rk_`, `pk_`), undefined for anything else. */
+export function stripeKeyMode(key: string | undefined): 'test' | 'live' | undefined {
+  const m = /^(?:sk|rk|pk)_(test|live)_/.exec(key ?? '')
+  return m ? (m[1] as 'test' | 'live') : undefined
+}
+
+/** The mode asked for, by option or `STRIPE_MODE`. A value other than `test` or `live` is refused, not guessed at. */
+function wantedMode(options: StripeOptions): 'test' | 'live' | undefined {
+  const raw = options.mode ?? env('STRIPE_MODE')
+  if (raw === undefined || raw === '') return undefined
+  const mode = raw.trim().toLowerCase()
+  if (mode === 'test' || mode === 'sandbox') return 'test'
+  if (mode === 'live' || mode === 'production') return 'live'
+  throw new PayError('PAY032', `\`STRIPE_MODE\` is \`${raw}\`: set it to \`test\` or \`live\``, 500)
+}
+
+/** The mode the keys are in, after checking they agree with each other and with `STRIPE_MODE`. */
+function keyMode(options: StripeOptions, key: string) {
+  const wanted = wantedMode(options)
+  const mode = stripeKeyMode(key)
+  if (wanted && mode && wanted !== mode)
+    throw new PayError(
+      'PAY032',
+      wanted === 'test'
+        ? '`STRIPE_MODE` is `test` but `STRIPE_SECRET_KEY` is a live key: nothing was sent. Use the `sk_test_` key from the dashboard in test mode'
+        : '`STRIPE_MODE` is `live` but `STRIPE_SECRET_KEY` is a test key: no real payment would be taken. Use the `sk_live_` key',
+      500,
+    )
+  const publishable = options.publishableKey ?? env('STRIPE_PUBLISHABLE_KEY')
+  const other = stripeKeyMode(publishable)
+  if (publishable && mode && other && other !== mode)
+    throw new PayError(
+      'PAY032',
+      `\`STRIPE_PUBLISHABLE_KEY\` is a ${other} key and \`STRIPE_SECRET_KEY\` a ${mode} one: take both from the same mode`,
+      500,
+    )
+  return mode ?? wanted
+}
 
 const fromHex = (s: string) =>
   /^[0-9a-f]{64}$/.test(s) ? Uint8Array.from(s.match(/../g)!, (b) => parseInt(b, 16)) : undefined
@@ -173,8 +219,9 @@ function stripeCall(
   fetcher: typeof fetch,
 ) {
   const secret = () => {
-    const key = options.secretKey ?? process.env.STRIPE_SECRET_KEY
+    const key = options.secretKey ?? env('STRIPE_SECRET_KEY')
     if (!key) throw new PayError('PAY003', '`STRIPE_SECRET_KEY` is not set on the server', 500)
+    keyMode(options, key)
     if (api === API && /placeholder/i.test(key))
       throw new PayError(
         'PAY003',
@@ -216,7 +263,7 @@ async function verifyStripe(
   tolerance: number,
   { body, headers }: Parameters<PayRail['verify']>[0],
 ) {
-  const signing = options.webhookSecret ?? process.env.STRIPE_WEBHOOK_SECRET
+  const signing = options.webhookSecret ?? env('STRIPE_WEBHOOK_SECRET')
   if (!signing)
     throw new PayError(
       'PAY011',
@@ -233,6 +280,17 @@ async function verifyStripe(
     throw new PayError('PAY011', 'the signature is too old: a replay, or a clock adrift')
   const event = normalise(JSON.parse(body) as StripeEvent)
   return event ? [event] : []
+}
+
+/** Test mode or not, for `rail.sandbox`; undefined while it can't tell, or the keys disagree (every call says PAY032). */
+function sandboxOf(options: StripeOptions) {
+  try {
+    const key = options.secretKey ?? env('STRIPE_SECRET_KEY')
+    const mode = key ? keyMode(options, key) : wantedMode(options)
+    return mode === undefined ? undefined : mode === 'test'
+  } catch {
+    return undefined
+  }
 }
 
 /** The Stripe `pay.rail` provider: hosted Checkout, the customer portal, and webhooks verified here. */
@@ -257,6 +315,9 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
 
   return {
     id: 'stripe',
+    get sandbox() {
+      return sandboxOf(options)
+    },
     async checkout(request) {
       const { line, user, customer } = request
       const metadata = {

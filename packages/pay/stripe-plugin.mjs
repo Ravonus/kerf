@@ -13,7 +13,10 @@ export const stripe = definePlugin({
   name: '@weft-js/pay/stripe',
   version: '0.0.0',
   weft: '*',
-  permissions: { net: ['api.stripe.com'], env: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'] },
+  permissions: {
+    net: ['api.stripe.com'],
+    env: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_MODE', 'STRIPE_PUBLISHABLE_KEY'],
+  },
   contribute: (options) => ({
     provides: [
       provide(slot, {
@@ -23,7 +26,7 @@ export const stripe = definePlugin({
     ],
     agents: {
       title: 'Pay rail: Stripe',
-      text: 'Stripe Checkout, server side only: `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` for `/_weft/x/pay/stripe`, the webhook URL to give Stripe.',
+      text: 'Stripe Checkout, server side only: `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` for `/_weft/x/pay/stripe`, the webhook URL to give Stripe. Test mode is an `sk_test_` key; `STRIPE_MODE=test` makes a live key an error (PAY032). Test card 4242 4242 4242 4242; `stripe listen --forward-to localhost:5173/_weft/x/pay/stripe` for local webhooks.',
     },
     map: [
       {

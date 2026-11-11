@@ -242,4 +242,6 @@ export interface PayRail {
   portal(request: { customer: string; returnUrl: string }): Promise<{ url: string }>
   verify(request: { body: string; headers: Headers }): RailEvent[] | Promise<RailEvent[]>
   refund?(request: { purchase: string }): Promise<void>
+  /** True in the provider's sandbox (Stripe test mode, Square sandbox); undefined when it can't tell. */
+  readonly sandbox?: boolean | undefined
 }
