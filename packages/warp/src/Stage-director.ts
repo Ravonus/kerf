@@ -52,6 +52,10 @@ export interface Director {
   shown: boolean | null
   /** A still being made: it replaces the scroll's scenes until it is drawn. */
   hold: Hold | null
+  /** Which tier the stage draws on; null until `auto` decides. */
+  tier: 'live' | 'poster' | null
+  /** The governor's `start`, once asked. */
+  started?: Promise<void> | undefined
   /** The scroll offset of the last settled frame, written as `data-stage-ready`; null while moving. */
   ready: string | null
   root?: HTMLElement
@@ -326,6 +330,7 @@ export function director(props: StageProps): Director {
     fade: null,
     shown: null,
     hold: null,
+    tier: props.tier === 'auto' ? null : (props.tier ?? 'live'),
     ready: null,
   }
 }
@@ -333,7 +338,9 @@ export function director(props: StageProps): Director {
 /** What a driver outside the page reaches the stage by: its scenes, a frozen clock and stills. */
 export function handleOf(d: Director): StageHandle {
   return {
-    tier: 'live',
+    get tier() {
+      return d.tier
+    },
     scenes: () =>
       d.entries.map((entry) => ({
         index: entry.index,

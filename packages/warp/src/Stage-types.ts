@@ -1,6 +1,7 @@
 // The shapes a scene stage and its scenes agree on. A renderer's bridge (plugin-keel's `defineScene`) fills them;
 // the stage needs nothing else from it, so warp imports no renderer.
 import type { SurfaceBase } from '@weft-js/core/surface'
+import type { MediaAsset } from '@weft-js/core/media'
 import type { Handover, Levers } from '@weft-js/warp-core/scenes'
 
 export type { Handover, Levers }
@@ -120,6 +121,8 @@ export interface StageGovernor {
   readonly hold?: boolean
   /** The highest pixel ratio for a canvas `width` CSS px wide, before the render scale. */
   pixelRatio(width: number): number
+  /** The device's tier once `start` resolved. A stage with `tier="auto"` shows posters on `low`. */
+  readonly tier?: 'high' | 'mid' | 'low'
 }
 
 /** Where the page stands, written once per frame when it moves. */
@@ -142,6 +145,12 @@ export interface StageProps {
   onActive?: (active: ActiveScene) => void
   /** Called when the scroll has settled and the scenes it wants have drawn: the frame a capture may take. */
   onReady?: (active: ActiveScene) => void
+  /**
+   * `live` draws the scenes. `poster` shows only their posters and never loads a renderer. `auto` shows posters
+   * on a phone or tablet and where the governor rates the device `low`, decided before any renderer loads.
+   * Default `live`.
+   */
+  tier?: 'live' | 'poster' | 'auto'
   class?: string
   children?: unknown
 }
@@ -149,8 +158,11 @@ export interface StageProps {
 /** `<Scene>`'s props. */
 export interface SceneProps extends SceneLook {
   use: StageSceneDef
-  /** A colour or an image URL, shown until the scene draws, and where it can't. */
-  poster?: string
+  /**
+   * Shown until the scene draws, and where it can't: a colour, an image URL, a baked poster, or `bake` for the
+   * one `bakedPosters` holds under this scene's `id`.
+   */
+  poster?: string | ScenePoster
   /** How many viewports the blend into this scene lasts. Default 1. */
   hero?: number
   /** How many viewports before the section enters its position starts. Default 0.2. */
@@ -160,6 +172,12 @@ export interface SceneProps extends SceneLook {
   class?: string
   label?: string
   children?: unknown
+}
+
+/** A still of a scene for wide screens, and one for tall ones: what a poster bake writes, as media records. */
+export interface ScenePoster {
+  readonly desktop: MediaAsset
+  readonly mobile?: MediaAsset
 }
 
 /** A scene as a driver outside the page sees it. */

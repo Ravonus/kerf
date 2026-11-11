@@ -5,12 +5,14 @@ import { renderToString } from '@weft-js/core/ssr'
 import { clock } from '@weft-js/core/surface'
 import { clock as time, flush, render } from '@weft-js/core/test'
 import {
+  bakedPosters,
   Scene,
   STAGE,
   Stage,
   type ActiveScene,
   type BlendOptions,
   type StageGovernor,
+  type ScenePoster,
   type StageHandle,
   type StagePost,
   type StageScene,
@@ -155,8 +157,9 @@ test('the server sends the sections, their posters and a sized place for the can
   expect(html).toContain('data-stage-viewport')
   expect(html).toContain('data-surface="stage"')
   expect(html).not.toContain('<canvas')
-  expect(html.match(/data-scene-poster/g)).toHaveLength(2)
+  expect(html.match(/data-scene-poster/g)).toHaveLength(3)
   expect(html).toContain('url(&quot;/second.avif&quot;)')
+  expect(html).toMatch(/<img[^>]*src="\/third.avif"/)
   expect(html).toMatch(/<h2[^>]*>Second<\/h2>/)
 })
 
@@ -383,3 +386,79 @@ test('a still goes through the blend, and without a position stands at the hold 
   clock.play()
 })
 
+const still = (src: string, width: number, height: number) => ({
+  kind: 'photo' as const,
+  src,
+  width,
+  height,
+  type: 'image/avif',
+  sources: [],
+  name: src,
+  dominant: '#102030',
+})
+const BAKED: Record<string, ScenePoster> = {
+  b: { desktop: still('/b.desktop.avif', 1440, 900), mobile: still('/b.mobile.avif', 780, 1688) },
+}
+bakedPosters(BAKED)
+
+function tiered(tier: 'live' | 'poster' | 'auto', governor = UNGOVERNED) {
+  return render(() => (
+    <Stage label="Two scenes" kind="canvas2d" governor={governor} tier={tier}>
+      <Scene id="a" use={SCENES[0]!} poster="#123456">
+        <h2>a</h2>
+      </Scene>
+      <Scene id="b" use={SCENES[1]!} poster="bake">
+        <h2>b</h2>
+      </Scene>
+    </Stage>
+  ))
+}
+
+test('a scene whose poster is baked shows the one baked for its id: the tall one on a tall screen', async () => {
+  const { container } = tiered('live')
+  await flush()
+  const layer = container.querySelectorAll<HTMLElement>('[data-scene-poster]')[1]!
+  expect(layer.style.background).toContain('rgb(16, 32, 48)')
+  expect(layer.querySelector('source')!.getAttribute('srcset')).toBe('/b.mobile.avif')
+  expect(layer.querySelector('source')!.getAttribute('media')).toBe('(max-aspect-ratio: 1/1)')
+  expect(layer.querySelector('img')!.getAttribute('src')).toBe('/b.desktop.avif')
+})
+
+test('on the poster tier the stage shows posters only: no surface, and nothing is built', async () => {
+  const { container } = tiered('poster')
+  await frames()
+  const root = container.querySelector<HTMLElement>('[data-stage]')!
+  expect(container.querySelector('[data-surface]')).toBeNull()
+  expect(root.dataset.stageTier).toBe('poster')
+  expect(root.dataset.stageReady).toBe('poster')
+  expect(log.filter((l) => l.startsWith('build'))).toEqual([])
+  expect(container.querySelectorAll('[data-scene-poster]')).toHaveLength(2)
+})
+
+test('auto asks the governor before any surface mounts, and a low tier keeps to posters', async () => {
+  let start = () => {}
+  const governor = (tier: 'low' | 'high'): StageGovernor => ({
+    ...UNGOVERNED,
+    tier,
+    start: () =>
+      new Promise<void>((done) => {
+        start = done
+      }),
+  })
+  const low = tiered('auto', governor('low'))
+  await frames()
+  expect(low.container.querySelector('[data-surface]')).toBeNull()
+  start()
+  await frames()
+  expect(low.container.querySelector('[data-stage]')!.getAttribute('data-stage-tier')).toBe(
+    'poster',
+  )
+  expect(low.container.querySelector('[data-surface]')).toBeNull()
+  low.unmount()
+  const high = tiered('auto', governor('high'))
+  start()
+  await frames()
+  expect(high.container.querySelector('[data-stage]')!.getAttribute('data-stage-tier')).toBe('live')
+  expect(high.container.querySelectorAll('canvas')).toHaveLength(1)
+  expect(log).toContain('render a')
+})
