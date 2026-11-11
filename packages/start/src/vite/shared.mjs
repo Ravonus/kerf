@@ -44,12 +44,34 @@ export const SHEET_PIECES = '__WEFT_SHEET_PIECES__'
  */
 export const ENTRY_SHEETS = `${LATE_SHEETS}\n${REFUSED_SHEETS}\n`
 
+const OWN = /[\\/]node_modules[\\/]@weft-js[\\/]/
+
+/**
+ * Whether a module loads only behind one of weft's own `import()`s: a split its package chose, such as the text engine
+ * behind `measure()`. Every other path, a static import or the app's own `import()` (the routes table's included),
+ * can bring it with a page.
+ */
+export function packageLazy(id, info, seen = new Set()) {
+  const m = info(id)
+  if (!m || m.isEntry) return false
+  seen.add(id)
+  if (m.dynamicImporters.some((d) => !OWN.test(d))) return false
+  return m.importers.every((i) => seen.has(i) || packageLazy(i, info, seen))
+}
+
+const kitGroup = (name) => (id, ctx) => (packageLazy(id, (m) => ctx.getModuleInfo(m)) ? null : name)
+
 /**
  * weft's own packages from an install, as one chunk of icons and one of what two routes share. Left alone they're a chunk
  * per component: 31 scripts and 18 sheets for an admin page (Solid's: 16 in all), each its own request and its own
- * compression, and 53 KB against 46. An app's own code splits as it likes.
+ * compression, and 53 KB against 46. An app's own code splits as it likes, and so does a package's own `import()`: the
+ * kit every page loads would otherwise carry it.
  */
 export const KIT_CHUNKS = [
-  { name: 'icons', test: /[\\/]node_modules[\\/]@weft-js[\\/]warp-icons[\\/]/, priority: 2 },
-  { name: 'kit', test: /[\\/]node_modules[\\/]@weft-js[\\/]/, minShareCount: 2, priority: 1 },
+  {
+    name: kitGroup('icons'),
+    test: /[\\/]node_modules[\\/]@weft-js[\\/]warp-icons[\\/]/,
+    priority: 2,
+  },
+  { name: kitGroup('kit'), test: OWN, minShareCount: 2, priority: 1 },
 ]
