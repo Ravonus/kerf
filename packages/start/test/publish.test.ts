@@ -1,6 +1,7 @@
 // The publishing helpers: `cache: { warm }` refills the shared store after an invalidation, a preview request never
 // touches the shared store, and `after` runs once the response is finished.
-import { after, query } from '@weft-js/start'
+import { AsyncLocalStorage } from 'node:async_hooks'
+import { after, mutation, preview, query } from '@weft-js/start'
 import { fnOf, runtime } from '@weft-js/start/data'
 import * as exec from '../src/exec'
 import { forgetWarm } from '../src/exec/warm'
@@ -113,4 +114,36 @@ test('after runs when the client abandons the stream, and a failure stops none o
   enter(s, () => after(() => done.push('late'))) // after the response: at once
   await settle()
   expect(done).toEqual(['second', 'late'])
+})
+
+test("a mutation's refreshes read with the preview the response leaves on, or with none after stop", async () => {
+  const seen = () => (preview.id() ? 'draft' : 'live')
+  const read = fnOf(query({ $id: 'previewRead', tags: ['menu'], run: seen }))
+  const leave = fnOf(
+    mutation({ $id: 'previewLeave', invalidates: ['menu'], run: () => preview.stop() }),
+  )
+  const open = fnOf(
+    mutation({ $id: 'previewOpen', invalidates: ['menu'], run: () => preview.start('9') }),
+  )
+  const post = (cookie: string) =>
+    exec.createScope(
+      new Request('http://localhost/_weft', { method: 'POST', headers: { cookie } }),
+      { store: exec.memoryStore() },
+    )
+  const refresh: [string, unknown][] = [['previewRead', undefined]]
+  // the server's AsyncLocalStorage, so the scope survives awaits
+  const als = new AsyncLocalStorage<exec.Scope>()
+  const was = { scope: runtime.scope, enter: runtime.enter }
+  runtime.scope = () => als.getStore()
+  runtime.enter = (s, fn) => als.run(s as exec.Scope, fn)
+  const mutate = (cookie: string, fn: typeof leave) => {
+    const s = post(cookie)
+    return als.run(s, () => exec.runMutation(s, fn, undefined, refresh))
+  }
+  try {
+    expect((await mutate('s=1; weft-preview=9', leave)).c?.[0]?.[2]).toBe('live')
+    expect((await mutate('s=1', open)).c?.[0]?.[2]).toBe('draft')
+  } finally {
+    Object.assign(runtime, was)
+  }
 })

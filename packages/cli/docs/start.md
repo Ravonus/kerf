@@ -181,6 +181,8 @@ export const publish = mutation({
   never written to the shared cache, so draft data can't leak to anyone else. What the value means is the app's:
   `src/context.server.ts` reads `preview.id()`, checks that `ctx.user` may see that draft, and gives `run` a `db`
   with the draft applied (for example, a transaction that `after()` rolls back).
+- A mutation's refreshes read as the browser's next GET will, with the preview cookie the mutation set or cleared.
+  The admin sees its draft as it saves, and its live data again right after `preview.stop()`.
 - `after(fn)` runs once the response has finished streaming or the call has answered, including when the visitor
   leaves early. Use it for a rollback, a snapshot, a git push or an email. A failure is reported as `E_AFTER` and
   doesn't stop the rest.

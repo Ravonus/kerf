@@ -27,6 +27,7 @@ import {
   createScope,
   finishScope,
   finishing,
+  rereads,
   frame,
   memoryStore,
   defaultStore,
@@ -338,6 +339,17 @@ export async function runMutation(
     missedTags(fn, 'write', touched.write, tags, scope)
     missedPokes(fn, touched.write, tags, scope)
   }
+  // in a preview, refreshes read as the next page will: with the preview this response leaves on (or turned off)
+  const next = rereads(scope)
+  const reader = next ? createScope(next, scope.options) : scope
+  try {
+    return { v, t: tags, c: await enter(reader, () => refreshed(reader, refresh, tags)) }
+  } finally {
+    if (reader !== scope) await finishScope(reader)
+  }
+}
+
+async function refreshed(scope: Scope, refresh: [string, unknown][], tags: string[]) {
   const c: Wire[] = []
   for (const [id, inp] of refresh) {
     const q = fns.get(id)
@@ -355,7 +367,7 @@ export async function runMutation(
       c.push([id, inp, e.v, e.tags])
     } catch {} // the client refetches it and sees the error there
   }
-  return { v, t: tags, c }
+  return c
 }
 
 /** Drop `tags` for the rest of this request and bump them in the shared store. */

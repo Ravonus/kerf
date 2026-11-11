@@ -186,6 +186,27 @@ export function memoryStore(): Store {
 
 export const defaultStore = memoryStore()
 
+/**
+ * The GET a mutation's refreshes read as, when a preview is involved: the browser's next request, with the preview
+ * cookie this response sets or clears, so what comes back is what the next page shows. Undefined when no preview is.
+ */
+export function rereads(scope: Scope): Request | undefined {
+  const set = scope.headers.getSetCookie().findLast((c) => c.startsWith(`${PREVIEW_COOKIE}=`))
+  if (!set && !scope.preview) return undefined
+  const cookies = (scope.request.headers.get('cookie') ?? '')
+    .split(/;\s*/)
+    .filter((c) => c && !c.startsWith(`${PREVIEW_COOKIE}=`))
+  const pair = set ? set.split(';')[0]! : `${PREVIEW_COOKIE}=${previewValue(scope)}`
+  if (!set || !/max-age=0/i.test(set)) cookies.push(pair)
+  const headers = new Headers(scope.request.headers)
+  for (const h of ['content-type', 'content-length']) headers.delete(h)
+  headers.set('cookie', cookies.join('; '))
+  return new Request(scope.request.url, { method: 'GET', headers })
+}
+
+const previewValue = (scope: Scope) =>
+  /(?:^|;\s*)weft-preview=([^;]+)/.exec(scope.request.headers.get('cookie') ?? '')?.[1] ?? ''
+
 /** The response is done: run what `after` queued, each once, a failure a diagnostic that stops none of the rest. */
 export async function finishScope(scope: Scope) {
   if (scope.finished) return
