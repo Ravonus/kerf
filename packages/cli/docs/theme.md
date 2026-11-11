@@ -123,6 +123,25 @@ warp({
 The properties are `size weight leading tracking case font`. A number is px for `size` and `tracking`. A role's name is
 lowercase. warp's own roles take only the tokens warp has for them.
 
+Any property can change with the viewport: `base` holds below the first breakpoint, and each other key is a min-width
+in px. `size` and `tracking` can also be fluid, `{ min, max, from, to }` in px: `min` at the `from` width, `max` at
+`to`, held outside them. Inside a breakpoint, `from` is the breakpoint. Each breakpoint is a media query that sets the
+tokens, so there is no script; a fluid line runs on `vw` to meet them, in the user's rem.
+
+```ts
+warp({
+  system: {
+    text: {
+      // 72 below 768, then 120 at 768 to 220 at 1680
+      display: {
+        size: { base: 72, 768: { min: 120, max: 220, to: 1680 } },
+      },
+      body: { size: { base: 16, 768: 14 } },
+    },
+  },
+})
+```
+
 ## Brutalist
 
 ```ts

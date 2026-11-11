@@ -72,14 +72,30 @@ type TextRole =
   | 'prose'
   | 'title'
 
-/** One text role's type. A number is px for `size` and `tracking`. */
+/**
+ * A length on a line: `min` px at the `from` width, `max` px at `to`, held outside them (a `clamp()` on `vw`). Inside a
+ * breakpoint, `from` is the breakpoint.
+ */
+export interface Fluid {
+  min: number
+  max: number
+  from?: number
+  to: number
+}
+/** A value by viewport width: `base` below the first breakpoint, then one from each min-width in px. */
+export type ByWidth<T> = { base?: T; [minWidth: number]: T }
+
+/**
+ * One text role's type. A number is px for `size` and `tracking`. Any property can change by width
+ * (`{ base: 16, 768: 14 }`); `size` and `tracking` can also be `Fluid`: `{ base: 72, 768: { min: 120, max: 220, to: 1680 } }`.
+ */
 export interface TextStyle {
-  size?: Len
-  weight?: number | string
-  leading?: number | string
-  tracking?: Len
-  case?: string
-  font?: string
+  size?: Len | Fluid | ByWidth<Len | Fluid>
+  weight?: number | string | ByWidth<number | string>
+  leading?: number | string | ByWidth<number | string>
+  tracking?: Len | Fluid | ByWidth<Len | Fluid>
+  case?: string | ByWidth<string>
+  font?: string | ByWidth<string>
 }
 
 /** The design system's own scales, retuned app-wide: `system.radius.control`, `system.space.related`, `system.text.button`. */

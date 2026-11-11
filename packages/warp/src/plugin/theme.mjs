@@ -193,10 +193,12 @@ export function themeOptions(input, tokenNames, checkTheme) {
   const colors = checkColors(input.colors, 'colors')
   if (Object.keys(colors).length) out.colors = colors
   const names = (c) => new Set(Object.keys(c))
-  // the app's own text roles, from the page's system and every theme's: each gets one rule
+  // the app's own text roles, from the page's system and every theme's: each gets one rule. `media` holds the
+  // tokens a breakpoint sets, per scope.
   out.roles = {}
+  out.media = {}
   const ctx = { tokenNames, roles: out.roles }
-  out.system = systemTokens(input.system, ctx, 'system')
+  out.system = systemTokens(input.system, { ...ctx, media: out.media }, 'system')
   out.rows = partRows(input.parts, names(colors), 'parts')
   out.themes = {}
   if (input.themes !== undefined && !plain(input.themes))
@@ -214,14 +216,16 @@ export function themeOptions(input, tokenNames, checkTheme) {
     const neutral = seed?.neutral
       ? { '--warp-ref-neutral-h': seed.neutral.hue, '--warp-ref-neutral-c': seed.neutral.chroma }
       : {}
+    const media = {}
     out.themes[name] = {
       seed,
       colors: own,
       system: {
         ...neutral,
-        ...systemTokens(theme.system, ctx, `${at}.system`),
+        ...systemTokens(theme.system, { ...ctx, media }, `${at}.system`),
         ...checkTheme.tokens(theme.tokens, `${at}.tokens`),
       },
+      media,
       rows: partRows(theme.parts, names({ ...colors, ...own }), `${at}.parts`),
     }
   }

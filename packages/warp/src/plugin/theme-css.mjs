@@ -2,7 +2,7 @@
 // each named theme under [data-palette]. Read and checked options come from theme.mjs.
 import { fromHex } from '../../tokens/color.mjs'
 import { STATES } from './theme-parts.mjs'
-import { roleCss } from './theme-text.mjs'
+import { mediaCss, roleCss } from './theme-text.mjs'
 
 // -- CSS -----------------------------------------------------------------------------------------------------------
 
@@ -93,6 +93,7 @@ export function themeCss(o, ctx) {
   const { layers, scopes, formulas, stops } = ctx
   let parts = colorsCss(o.colors ?? {}, null, formulas) + partCss(o.rows, null, scopes)
   let tokens = ''
+  let media = mediaCss(o.media, 'warp.base', scopes)
   for (const [name, theme] of Object.entries(o.themes)) {
     const prefixes = [
       `[data-palette="${name}"]`,
@@ -104,17 +105,19 @@ export function themeCss(o, ctx) {
     // a seed or a fitted token moves colour tokens the stop's refs point at
     if (theme.seed || Object.keys(theme.system).length)
       tokens += stopRefsCss(`[data-palette="${name}"]`, stops)
-    if (Object.keys(theme.system).length)
-      parts += `${prefixes.flatMap((p) => [p, `${p} :is(${scopes})`]).join(',')}{${declare(theme.system)}}`
+    const at = prefixes.flatMap((p) => [p, `${p} :is(${scopes})`]).join(',')
+    if (Object.keys(theme.system).length) parts += `${at}{${declare(theme.system)}}`
     parts += colorsCss(theme.colors, prefixes, formulas) + partCss(theme.rows, prefixes, scopes)
+    media += mediaCss(theme.media, 'warp.theme', at)
   }
   const roles = roleCss(o.roles)
-  if (!parts && !tokens && !roles) return ''
+  if (!parts && !tokens && !roles && !media) return ''
   return (
     `@layer warp.${layers.join(',warp.')},warp.theme;\n` +
     (tokens && `@layer warp.tokens{${tokens}}\n`) +
     roles +
-    (parts && `@layer warp.theme{${parts}}\n`)
+    (parts && `@layer warp.theme{${parts}}\n`) +
+    media
   )
 }
 // A palette below the page's root: the stop's colour refs again, at no specificity so the element's own stop wins.
