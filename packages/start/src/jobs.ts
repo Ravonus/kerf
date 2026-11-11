@@ -46,10 +46,11 @@ export interface JobRun<I> {
 }
 
 /** One kind of job: what input it takes, what it does, and how often it's tried. */
-export interface JobDef<I = any> {
+export interface JobDef<I = unknown> {
   /** Checked when it's enqueued (J006), so a bad input fails the caller, not a run later. */
   input?: StandardSchemaV1
-  run: (args: JobRun<I>) => unknown
+  // A method, so a job taking any input fits `JobDefs`.
+  run(args: JobRun<I>): unknown
   /** Runs after the first that fail before it's dead. Default 5. */
   retries?: number
   /** Milliseconds to wait after a failed attempt. Default 2^attempt seconds, at most an hour. */
@@ -169,47 +170,51 @@ export function memoryQueue({ deadLimit = 100 }: { deadLimit?: number } = {}): Q
   dead: DeadJob[]
   size(): number
 } {
-  const jobs = new Map<string, QueuedJob & { key?: string }>()
+  const held = new Map<string, QueuedJob & { key?: string }>()
   const keys = new Map<string, string>()
   const dead: DeadJob[] = []
   const wakes: (() => void)[] = []
-  const drop = (job: QueuedJob) => {
-    const held = jobs.get(job.id)
-    if (held?.key) keys.delete(held.key)
-    jobs.delete(job.id)
+  const drop = (queued: QueuedJob) => {
+    const key = held.get(queued.id)?.key
+    if (key !== undefined) keys.delete(key)
+    held.delete(queued.id)
   }
+  const done = Promise.resolve()
   return {
     dead,
-    size: () => jobs.size,
-    async push(job, key) {
-      if (key !== undefined && keys.has(key)) return false
-      if (key !== undefined) keys.set(key, job.id)
-      jobs.set(job.id, { ...job, ...(key !== undefined && { key }) })
+    size: () => held.size,
+    push(queued, key) {
+      if (key !== undefined && keys.has(key)) return Promise.resolve(false)
+      if (key !== undefined) keys.set(key, queued.id)
+      held.set(queued.id, { ...queued, ...(key !== undefined && { key }) })
       for (const wake of wakes) wake()
-      return true
+      return Promise.resolve(true)
     },
-    async claim(now, lease, max) {
+    claim(now, lease, max) {
       const out: QueuedJob[] = []
-      for (const job of jobs.values()) {
+      for (const h of held.values()) {
         if (out.length >= max) break
-        if (job.runAt > now) continue
-        job.attempt++
-        job.runAt = now + lease
-        out.push({ id: job.id, name: job.name, input: job.input, attempt: job.attempt, runAt: now })
+        if (h.runAt > now) continue
+        h.attempt++
+        h.runAt = now + lease
+        out.push({ id: h.id, name: h.name, input: h.input, attempt: h.attempt, runAt: now })
       }
-      return out
+      return Promise.resolve(out)
     },
-    async done(job) {
-      drop(job)
+    done(queued) {
+      drop(queued)
+      return done
     },
-    async retry(job, runAt) {
-      const held = jobs.get(job.id)
-      if (held) held.runAt = runAt
+    retry(queued, runAt) {
+      const h = held.get(queued.id)
+      if (h) h.runAt = runAt
+      return done
     },
-    async fail(job, error) {
-      drop(job)
-      dead.push({ ...job, error, at: Date.now() })
+    fail(queued, error) {
+      drop(queued)
+      dead.push({ ...queued, error, at: Date.now() })
       if (dead.length > deadLimit) dead.splice(0, dead.length - deadLimit)
+      return done
     },
     onPush(wake) {
       wakes.push(wake)
