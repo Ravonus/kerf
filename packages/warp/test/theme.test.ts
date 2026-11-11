@@ -28,6 +28,7 @@ describe('theming', () => {
   test('no theming options writes no theming CSS', () => {
     const css = run().tokens.css ?? ''
     expect(css).not.toContain('warp.theme')
+    expect(css).not.toContain('warp.layout{')
     expect(css).not.toContain('--warp-color-brand')
     expect(run().tokens.cssEntries).toBeUndefined()
   })
@@ -90,6 +91,42 @@ describe('theming', () => {
     }).tokens.cssEntries?.tailwind
     expect(tw).toContain('--color-brand: var(--warp-color-brand)')
     expect(tw).toContain('--color-glow: var(--warp-color-glow)')
+  })
+})
+
+describe('text roles', () => {
+  test("an app's own role gets tokens and a rule; warp's roles get tokens only", () => {
+    const css =
+      run({
+        system: {
+          text: {
+            narrative: { size: 28, leading: 0.96, font: 'Georgia, serif' },
+            display: { size: 72, weight: 700 },
+          },
+        },
+        themes: { print: { system: { text: { initial: { size: 70 } } } } },
+      }).tokens.css ?? ''
+    expect(css).toContain('--warp-text-narrative-size:28px;--warp-text-narrative-leading:0.96')
+    expect(css).toContain('--warp-text-narrative-font:Georgia, serif')
+    expect(css).toContain(
+      '@layer warp.layout{:where([data-scope="text"][data-role="narrative"]){font-size:var(--warp-text-narrative-size);line-height:var(--warp-text-narrative-leading);font-family:var(--warp-text-narrative-font)}',
+    )
+    // a role first named by a theme is applied everywhere; its value lands under the palette
+    expect(css).toContain(':where([data-scope="text"][data-role="initial"]){font-size:')
+    expect(css).toContain('--warp-text-display-size:72px')
+    expect(css).not.toContain('[data-role="display"]')
+  })
+
+  test('refuses a role it cannot name and a property warp has no token for', () => {
+    expect(fails({ system: { text: { Narrative: { size: 20 } } } }).path).toBe(
+      'system.text.Narrative',
+    )
+    expect(fails({ system: { text: { narrative: { colour: 'red' } } } }).path).toBe(
+      'system.text.narrative.colour',
+    )
+    expect(fails({ system: { text: { body: { tracking: '1px' } } } }).message).toMatch(
+      /warp has no --warp-text-body-tracking/,
+    )
   })
 })
 

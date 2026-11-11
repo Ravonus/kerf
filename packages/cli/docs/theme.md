@@ -30,7 +30,7 @@ sets a dial, such as a Table's density.
 | Option | Does |
 |---|---|
 | `colors` | `{ brand: '#e8590c' }`: `--warp-color-brand`, a tone (`tone="brand"`), and `bg-brand` via `.weft/tokens/warp.tailwind.css`. Lowercase names, `#rrggbb` |
-| `system` | The scales: `radius`, `space`, `pad`, `control`, `font`, `shadow`, `duration`, `ease`, `border`, `icon`, `text.<role>` |
+| `system` | The scales: `radius`, `space`, `pad`, `control`, `font`, `shadow`, `duration`, `ease`, `border`, `icon`, `text.<role>` (warp's roles or your own, below) |
 | `parts` | One element, at rest and per state (`hover focus press active open disabled`). Numbers are px (ms for `duration`); names are system steps or `colors` |
 | `themes` | `{ ocean: { seed, colors, system, parts } }` under `[data-palette="ocean"]`. `dials.palette` sets the default; `setPalette()` switches |
 
@@ -97,6 +97,31 @@ warp({
   },
 })
 ```
+
+## Text roles
+
+`system.text` retunes warp's roles (`display title heading body label caption eyebrow code prose control button`) and
+names your own. Each property becomes a token, `--warp-text-<role>-<property>`. A role of your own also gets a rule, so
+`<Text role="narrative">` or any element with `data-scope="text" data-role="narrative"` takes it:
+
+```ts
+warp({
+  system: {
+    text: {
+      display: { size: 72, weight: 700, leading: 0.9 },
+      narrative: {
+        size: 28,
+        leading: 0.96,
+        tracking: '-0.05em',
+        font: '"Fraunces", "Fraunces Fallback", Georgia, serif',
+      },
+    },
+  },
+})
+```
+
+The properties are `size weight leading tracking case font`. A number is px for `size` and `tracking`. A role's name is
+lowercase. warp's own roles take only the tokens warp has for them.
 
 ## Brutalist
 

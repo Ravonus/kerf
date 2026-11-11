@@ -5,6 +5,7 @@
 import { contrast, fromHex, toLinear } from '../../tokens/color.mjs'
 import { themeCss } from './theme-css.mjs'
 import { PARTS, STATES, allParts, propsOf, statesOf } from './theme-parts.mjs'
+import { textTokens } from './theme-text.mjs'
 import { NAME, bad, fontValue, plain, px, safe } from './theme-values.mjs'
 
 const BUILTIN = new Set(['white', 'black', 'transparent', 'currentColor', 'inherit'])
@@ -36,14 +37,6 @@ const RADIUS = {
 }
 const SHADOW = { none: 'none', 0: 0, 1: 1, 2: 2, 3: 3, sm: 1, md: 2, lg: 3 }
 const EASE = ['in', 'out', 'in-out', 'pop', 'spring', 'sheet']
-const TEXT_PROPS = {
-  size: 'size',
-  weight: 'weight',
-  leading: 'leading',
-  tracking: 'tracking',
-  case: 'case',
-  font: 'font',
-}
 const SYSTEM = {
   radius: (k) => RADIUS[k] !== undefined && RADIUS[k] !== null && `--warp-radius-${k}`,
   space: (k) => SPACE.includes(k) && `--warp-space-${k}`,
@@ -118,8 +111,8 @@ function checkColors(colors = {}, path) {
   return out
 }
 
-/** `system` as `--warp-*` declarations, checked against the stylesheet's own token names. */
-function systemTokens(system = {}, tokenNames, path) {
+/** `system` as `--warp-*` declarations, checked against the stylesheet's own token names (`ctx.tokenNames`). */
+function systemTokens(system = {}, ctx, path) {
   if (!plain(system)) throw bad(path, 'must be an object')
   const out = {}
   for (const [group, entries] of Object.entries(system)) {
@@ -127,13 +120,7 @@ function systemTokens(system = {}, tokenNames, path) {
     for (const [key, value] of Object.entries(entries)) {
       const at = `${path}.${group}.${key}`
       if (group === 'text') {
-        if (!plain(value)) throw bad(at, 'must be { size, weight, leading, tracking, case, font }')
-        for (const [prop, v] of Object.entries(value)) {
-          const token = `--warp-text-${key}-${TEXT_PROPS[prop] ?? '?'}`
-          if (!tokenNames.has(token)) throw bad(`${at}.${prop}`, `warp has no ${token}`)
-          if (!safe(v)) throw bad(`${at}.${prop}`, 'must be a CSS value or a number')
-          out[token] = prop === 'font' ? KINDS.font(v) : UNITLESS.has(prop) ? String(v) : px(v)
-        }
+        textTokens(key, value, { ...ctx, out, at })
         continue
       }
       const token = SYSTEM[group]?.(key)
@@ -206,7 +193,10 @@ export function themeOptions(input, tokenNames, checkTheme) {
   const colors = checkColors(input.colors, 'colors')
   if (Object.keys(colors).length) out.colors = colors
   const names = (c) => new Set(Object.keys(c))
-  out.system = systemTokens(input.system, tokenNames, 'system')
+  // the app's own text roles, from the page's system and every theme's: each gets one rule
+  out.roles = {}
+  const ctx = { tokenNames, roles: out.roles }
+  out.system = systemTokens(input.system, ctx, 'system')
   out.rows = partRows(input.parts, names(colors), 'parts')
   out.themes = {}
   if (input.themes !== undefined && !plain(input.themes))
@@ -229,7 +219,7 @@ export function themeOptions(input, tokenNames, checkTheme) {
       colors: own,
       system: {
         ...neutral,
-        ...systemTokens(theme.system, tokenNames, `${at}.system`),
+        ...systemTokens(theme.system, ctx, `${at}.system`),
         ...checkTheme.tokens(theme.tokens, `${at}.tokens`),
       },
       rows: partRows(theme.parts, names({ ...colors, ...own }), `${at}.parts`),

@@ -72,6 +72,16 @@ type TextRole =
   | 'prose'
   | 'title'
 
+/** One text role's type. A number is px for `size` and `tracking`. */
+export interface TextStyle {
+  size?: Len
+  weight?: number | string
+  leading?: number | string
+  tracking?: Len
+  case?: string
+  font?: string
+}
+
 /** The design system's own scales, retuned app-wide: `system.radius.control`, `system.space.related`, `system.text.button`. */
 export interface WarpSystem {
   radius?: { control?: Len; surface?: Len; mark?: Len; round?: Len }
@@ -79,19 +89,8 @@ export interface WarpSystem {
   pad?: { control?: Len; surface?: Len }
   control?: { sm?: Len; md?: Len; lg?: Len }
   font?: { sans?: string; display?: string; mono?: string }
-  text?: Partial<
-    Record<
-      TextRole,
-      {
-        size?: Len
-        weight?: number | string
-        leading?: number | string
-        tracking?: Len
-        case?: string
-        font?: string
-      }
-    >
-  >
+  /** warp's roles, and any role the app names (`narrative`): each becomes `--warp-text-<role>-*` and `data-role="<role>"`. */
+  text?: { [R in TextRole]?: TextStyle } & Record<string, TextStyle>
   shadow?: { 0?: string; 1?: string; 2?: string; 3?: string; sm?: string; md?: string; lg?: string }
   duration?: { instant?: Len; fast?: Len; base?: Len; slow?: Len }
   ease?: {

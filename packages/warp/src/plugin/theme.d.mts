@@ -30,6 +30,8 @@ export interface ThemeOptions {
   rows: PartRow[]
   themes: Record<string, CheckedTheme>
   default?: string
+  /** The app's own text roles (not warp's), each with the properties it sets. */
+  roles?: Record<string, Set<string>>
 }
 
 /** Checks `colors`, `system`, `parts` and `themes`; throws an Error with `path` on the first bad value. */

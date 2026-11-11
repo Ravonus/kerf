@@ -70,7 +70,10 @@ export function Heading({
   )
 }
 
-/** Text in a role. A paragraph by default; `inline` makes it a span. `tone` colours it, `subtle` and `faint` quieten it. */
+/**
+ * Text in a role: one of warp's, or one the app names in `warp({ system: { text } })`. A paragraph by default; `inline`
+ * makes it a span. `tone` colours it, `subtle` and `faint` quieten it.
+ */
 export function Text({
   role,
   tone,
@@ -80,7 +83,7 @@ export function Text({
   children,
   ...rest
 }: Open & {
-  role?: TextRole
+  role?: TextRole | (string & {})
   tone?: Tone | undefined
   subtle?: boolean
   faint?: boolean

@@ -2,6 +2,7 @@
 // each named theme under [data-palette]. Read and checked options come from theme.mjs.
 import { fromHex } from '../../tokens/color.mjs'
 import { STATES } from './theme-parts.mjs'
+import { roleCss } from './theme-text.mjs'
 
 // -- CSS -----------------------------------------------------------------------------------------------------------
 
@@ -107,10 +108,12 @@ export function themeCss(o, ctx) {
       parts += `${prefixes.flatMap((p) => [p, `${p} :is(${scopes})`]).join(',')}{${declare(theme.system)}}`
     parts += colorsCss(theme.colors, prefixes, formulas) + partCss(theme.rows, prefixes, scopes)
   }
-  if (!parts && !tokens) return ''
+  const roles = roleCss(o.roles)
+  if (!parts && !tokens && !roles) return ''
   return (
     `@layer warp.${layers.join(',warp.')},warp.theme;\n` +
     (tokens && `@layer warp.tokens{${tokens}}\n`) +
+    roles +
     (parts && `@layer warp.theme{${parts}}\n`)
   )
 }
