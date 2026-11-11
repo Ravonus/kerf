@@ -110,7 +110,7 @@ export function themeCss(o, ctx) {
     parts += colorsCss(theme.colors, prefixes, formulas) + partCss(theme.rows, prefixes, scopes)
     media += mediaCss(theme.media, 'warp.theme', at)
   }
-  const roles = roleCss(o.roles)
+  const roles = roleCss(o.roles, o.firsts)
   if (!parts && !tokens && !roles && !media) return ''
   return (
     `@layer warp.${layers.join(',warp.')},warp.theme;\n` +

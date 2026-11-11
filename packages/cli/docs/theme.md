@@ -125,6 +125,11 @@ name is lowercase. warp's own roles take only the tokens warp has for them, and 
 size, set as `font-variation-settings: "opsz" <n>`, so a face without the axis ignores it; `'auto'` leaves it to the
 font size, as `font-optical-sizing` does.
 
+A pseudo-element can't take `data-role`, so a role with `firstLetter: true` also sets the first letter of any element
+that names it in `data-first-letter`: a script initial on a serif paragraph is
+`initial: { size: 70, leading: 0, font: '"Mea Culpa", Georgia, serif', firstLetter: true }` and
+`<Text role="narrative" data-first-letter="initial">`.
+
 Any property can change with the viewport: `base` holds below the first breakpoint, and each other key is a min-width
 in px. `size` and `tracking` can also be fluid, `{ min, max, from, to }` in px: `min` at the `from` width, `max` at
 `to`, held outside them. Inside a breakpoint, `from` is the breakpoint. Each breakpoint is a media query that sets the

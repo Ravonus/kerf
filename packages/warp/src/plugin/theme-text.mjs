@@ -63,13 +63,24 @@ function place(token, prop, v, { out, media, at }) {
   }
 }
 
-/** Writes one role's tokens into `out` and `media`; an app's role also records its properties in `roles`. */
-export function textTokens(role, value, { tokenNames, out, media, roles, at }) {
-  if (!plain(value)) throw bad(at, `must be { ${Object.keys(PROPS).join(', ')} }`)
-  const own = [...tokenNames].some((t) => t.startsWith(`--warp-text-${role}-`))
+/**
+ * Writes one role's tokens into `out` and `media`; an app's role also records its properties in `roles`, and a role
+ * with `firstLetter` the ones its first-letter rule sets in `firsts`.
+ */
+export function textTokens(role, value, { tokenNames, out, media, roles, firsts, at }) {
+  if (!plain(value)) throw bad(at, `must be { ${Object.keys(PROPS).join(', ')}, firstLetter }`)
+  const prefix = `--warp-text-${role}-`
+  const own = [...tokenNames].some((t) => t.startsWith(prefix))
   if (!own && !NAME.test(role)) throw bad(at, 'must be a lowercase name, like narrative')
   for (const [prop, v] of Object.entries(value)) {
-    const token = `--warp-text-${role}-${prop}`
+    const token = `${prefix}${prop}`
+    if (prop === 'firstLetter') {
+      if (typeof v !== 'boolean') throw bad(`${at}.${prop}`, 'must be true or false')
+      // warp's own role sets what warp has tokens for; an app's sets what it names (`roles`)
+      const mine = Object.keys(PROPS).filter((p) => tokenNames.has(prefix + p))
+      if (v) firsts[role] = new Set(own ? mine : [])
+      continue
+    }
     if (!PROPS[prop])
       throw bad(`${at}.${prop}`, `unknown property; use ${Object.keys(PROPS).join(', ')}`)
     const extra = prop === 'opsz'
@@ -90,13 +101,24 @@ export const mediaCss = (media = {}, layer, selector) =>
     )
     .join('')
 
-/** The rules for the app's roles, in warp.layout beside warp's own, so the app's CSS still wins. */
-export function roleCss(roles = {}) {
-  const rules = Object.entries(roles).map(
-    ([role, props]) =>
-      `:where([data-scope="text"][data-role="${role}"]){${[...props]
-        .map((p) => `${PROPS[p]}:var(--warp-text-${role}-${p})`)
-        .join(';')}}`,
-  )
+const declare = (role, props) =>
+  [...props].map((p) => `${PROPS[p]}:var(--warp-text-${role}-${p})`).join(';')
+
+/**
+ * The rules for the app's roles, in warp.layout beside warp's own, so the app's CSS still wins. A pseudo-element can't
+ * carry `data-role`, so a role with `firstLetter` also sets the first letter of an element that names it in
+ * `data-first-letter`.
+ */
+export function roleCss(roles = {}, firsts = {}) {
+  const rules = [
+    ...Object.entries(roles).map(
+      ([role, props]) =>
+        `:where([data-scope="text"][data-role="${role}"]){${declare(role, props)}}`,
+    ),
+    ...Object.entries(firsts).map(
+      ([role, props]) =>
+        `:where([data-first-letter="${role}"])::first-letter{${declare(role, new Set([...props, ...(roles[role] ?? [])]))}}`,
+    ),
+  ]
   return rules.length ? `@layer warp.layout{${rules.join('')}}\n` : ''
 }

@@ -148,6 +148,30 @@ describe('text roles', () => {
     )
   })
 
+  test('firstLetter sets the first letter of an element that names the role', () => {
+    const css =
+      run({
+        system: {
+          text: {
+            initial: { size: 70, leading: 0, font: 'var(--font-script)', firstLetter: true },
+            narrative: { size: 28 },
+            display: { firstLetter: true },
+          },
+        },
+      }).tokens.css ?? ''
+    expect(css).toContain(
+      ':where([data-first-letter="initial"])::first-letter{font-size:var(--warp-text-initial-size);line-height:var(--warp-text-initial-leading);font-family:var(--warp-text-initial-font)}',
+    )
+    expect(css).not.toContain('[data-first-letter="narrative"]')
+    // warp's own role: every property warp has a token for
+    expect(css).toMatch(
+      /:where\(\[data-first-letter="display"\]\)::first-letter\{font-size:var\(--warp-text-display-size\);font-weight:var\(--warp-text-display-weight\);line-height:var\(--warp-text-display-leading\);letter-spacing:var\(--warp-text-display-tracking\);[^}]*font-family:var\(--warp-text-display-font\)\}/,
+    )
+    expect(fails({ system: { text: { initial: { firstLetter: 'yes' } } } }).path).toBe(
+      'system.text.initial.firstLetter',
+    )
+  })
+
   test('refuses a role it cannot name and a property warp has no token for', () => {
     expect(fails({ system: { text: { Narrative: { size: 20 } } } }).path).toBe(
       'system.text.Narrative',
