@@ -171,6 +171,19 @@ describe('text roles by width', () => {
     )
   })
 
+  test("a fluid role brings the user's rem for a page that loads the tokens alone; warp.css's own wins", () => {
+    const REM = '@layer warp.tokens{:where(:root){--warp-rem:1rem}}\n'
+    const fluid = run({
+      system: { text: { narrative: { size: { min: 28, max: 48, from: 390, to: 1680 } } } },
+    })
+    expect(fluid.tokens.css?.startsWith(REM)).toBe(true)
+    const fixed = run({ system: { text: { narrative: { size: 28 } } } })
+    expect(fixed.tokens.css).not.toContain('--warp-rem:')
+    // warp.css sets it on `:root`, which outranks `:where(:root)` in the same layer whichever loads first
+    const sheet = readFileSync(new URL('../../warp-core/styles/warp.css', import.meta.url), 'utf8')
+    expect(sheet).toMatch(/:root \{\s*--warp-rem: calc\(1rem \* var\(--warp-ref-rem-k\)\);/)
+  })
+
   test('refuses a breakpoint it cannot read and a fluid line it cannot draw', () => {
     expect(fails({ system: { text: { body: { size: { wide: 14 } } } } }).path).toBe(
       'system.text.body.size.wide',

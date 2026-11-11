@@ -123,6 +123,10 @@ function overrides({ seed, radius, icons, fonts = {}, tokens = {}, theme }) {
 const overrideCss = (declarations) =>
   declarations ? `@layer warp.base{${SCOPES}{${declarations}}}\n` : ''
 
+// A fluid role is written in the user's rem, --warp-rem. warp.css sets it beside its root font-size; a page that loads
+// these tokens alone keeps the browser's root size, where it is 1rem. `:where` lets warp.css's own value win.
+const REM = '@layer warp.tokens{:where(:root){--warp-rem:1rem}}\n'
+
 const seedCss = (s) =>
   `@layer warp.tokens{:root{--warp-seed-accent-h:${s.hue};--warp-seed-accent-c:${s.chroma}}}\n`
 
@@ -356,12 +360,13 @@ export const warp = definePlugin({
     const dials = Object.entries(o.dials ?? {})
       .map(([dial, value]) => dialCss(dial, value))
       .join('')
-    const css =
+    const made =
       (custom ? seedCss(seed) : '') +
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
       overrideCss(declarations) +
       theming
+    const css = (made.includes('var(--warp-rem)') ? REM : '') + made
     return {
       tokens: {
         namespace: 'warp',
