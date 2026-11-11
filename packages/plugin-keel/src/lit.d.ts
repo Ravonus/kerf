@@ -48,6 +48,52 @@ export interface LitNode {
 export interface LitStage extends LitNode {
   fog: { color: LitColor; near: number; far: number } | null
   background: LitColor | null
+  /** Light from the room around the scene: an `Environment`. A metal reflects it; a rough surface takes its diffuse. */
+  environment: LitEnvironment | null
+  environmentIntensity: number
+  /** Turns the room: `environmentRotation.y = Math.PI / 6`. */
+  environmentRotation: {
+    x: number
+    y: number
+    z: number
+    set(x: number, y: number, z: number): void
+  }
+}
+
+/** One soft box of a studio: where it hangs, how big, its linear colour and strength. */
+export interface SoftBox {
+  /** A direction from the subject. */
+  readonly dir: readonly [number, number, number]
+  /** Half its width and height, as tangents of the angle it spans. */
+  readonly size: readonly [number, number]
+  readonly colour: readonly [number, number, number]
+  readonly intensity: number
+  /** Edge softness, 0 crisp to 0.5 very soft. */
+  readonly soft?: number
+  /** Turn about its own axis, radians. */
+  readonly roll?: number
+}
+
+/** A studio as data: a sky, horizon and ground gradient (linear) and its soft boxes. */
+export interface Studio {
+  readonly sky: readonly [number, number, number]
+  readonly horizon: readonly [number, number, number]
+  readonly ground: readonly [number, number, number]
+  readonly boxes: readonly SoftBox[]
+}
+
+/** Options for `Environment`. */
+export interface EnvironmentOptions {
+  /** A face's size at the sharpest level: a power of two, 16 or more. Default 128. */
+  size?: number
+  /** GGX samples per texel at the first blurred level. Default 384. */
+  samples?: number
+}
+
+/** A studio prefiltered for lit shading on the GPU the first frame that reads it. No file. */
+export interface LitEnvironment extends LitTexture {
+  studio: Studio
+  readonly size: number
 }
 
 /** A perspective camera. Call `updateProjectionMatrix()` after changing `fov` or `aspect`. */
@@ -93,6 +139,15 @@ export interface LitMaterialNode {
   depthWrite: boolean
   needsUpdate: boolean
   dispose(): void
+}
+
+/** The physically based material's own fields. */
+export interface LitSurfaceMaterial extends LitMaterialNode {
+  color: LitColor
+  roughness: number
+  metalness: number
+  /** Its share of the stage's environment light. Default 1. */
+  envMapIntensity: number
 }
 
 /** A uniform the shader reads: set `value` and the next frame uploads it. */
@@ -245,10 +300,17 @@ export declare const Fog: new (
   near: number,
   far: number,
 ) => NonNullable<LitStage['fog']>
+/** The house studio: a big key upper left, two strips for the edges, a soft top, a low fill. */
+export declare const STUDIO: Studio
+/** A generated environment for `stage.environment`: `new Environment(STUDIO, { size: 128 })`. */
+export declare const Environment: new (
+  studio?: Studio,
+  options?: EnvironmentOptions,
+) => LitEnvironment
 /** A geometry drawn with a material. */
 export declare const Mesh: new (geometry: unknown, material: unknown) => LitMesh
-/** The physically based material: `color`, `roughness`, `metalness`, maps. */
-export declare const LitMaterial: new (options?: Record<string, unknown>) => LitMaterialNode
+/** The physically based material: `color`, `roughness`, `metalness`, `envMapIntensity`, maps. */
+export declare const LitMaterial: new (options?: Record<string, unknown>) => LitSurfaceMaterial
 /** Unlit colour or texture. */
 export declare const FlatMaterial: new (options?: Record<string, unknown>) => LitMaterialNode
 /** A material from GLSL: `uniforms`, `vertexShader`, `fragmentShader`, `transparent`, `depthWrite`. */

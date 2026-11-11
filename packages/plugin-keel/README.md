@@ -57,7 +57,8 @@ export const Grove = defineSurface<{}, 'keel-lit'>({
 
 - `s.lit`: the keel/lit namespace. `Stage`, `Group`, `Mesh`, `Instances`, `PerspectiveCamera`, `SunLight`,
   `SkyLight`, `LitMaterial`, `ToonMaterial`, `CustomMaterial`, geometry functions (`box()`, `sphere()`,
-  `plane()`, `lathe()`, `extrude()` and more), render targets and fog.
+  `plane()`, `lathe()`, `extrude()` and more), render targets, fog, and environment light:
+  `stage.environment = new Environment(STUDIO, { size: 128 })`, a generated studio with no file.
 - `s.renderer`: its renderer, bound to the surface's canvas and sized with it.
 
 The surface's own rules still hold: the server renders a sized placeholder, an off-screen surface skips its

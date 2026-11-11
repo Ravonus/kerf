@@ -20,7 +20,7 @@ const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 /** keel-engine: the lit renderer's source. keel-modules: the catalog that carries each built module. */
 export const PINS = {
-  engine: 'f4e677c9c21ea47e1af0b28cc97cd3d429e047f2',
+  engine: 'af034863bceefa8a81bbff8fe64ab36435028c29',
   modules: '258811f19f5a805227393b1da216058300ad8f15',
 }
 
@@ -46,7 +46,7 @@ export const SOURCE_MODULES = {
   },
 }
 
-const ENGINE_PACKAGES = ['lit', 'runtime']
+const ENGINE_PACKAGES = ['lit', 'runtime', 'studio']
 const tsc = join(pkg, '../../node_modules/.bin/tsc')
 
 export const digest = (data) => createHash('sha256').update(data).digest('hex')
