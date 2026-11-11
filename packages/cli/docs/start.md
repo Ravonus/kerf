@@ -149,20 +149,29 @@ shared cache, edits go to a draft the owner can preview, and publishing refreshe
 arrives.
 
 ```ts
-// what every visitor reads: cached across requests, and re-run in the background the moment an edit invalidates it
-export const menu = query({ tags: ['menu'], cache: { life: 'hours', warm: true }, run: ({ ctx }) => readMenu(ctx.db) })
+// what every visitor reads: cached, and re-run in the
+// background the moment an edit invalidates it
+export const menu = query({
+  tags: ['menu'],
+  cache: { life: 'hours', warm: true },
+  run: ({ ctx }) => readMenu(ctx.db),
+})
 
-// the owner turns on preview for a draft; publishing applies it and turns preview off
+// the owner previews a draft; publishing applies it
 export const startPreview = mutation({
-  input: z.object({ draft: z.int() }), auth: 'user',
+  input: z.object({ draft: z.int() }),
+  auth: 'user',
   run: ({ input }) => preview.start(String(input.draft)),
 })
 export const publish = mutation({
-  input: z.object({ draft: z.int() }), auth: 'user', invalidates: ['menu'],
+  input: z.object({ draft: z.int() }),
+  auth: 'user',
+  invalidates: ['menu'],
   run: async ({ input, ctx }) => {
     await applyDraft(ctx.db, input.draft)
     preview.stop()
-    after(() => writeSnapshot()) // runs once the response is out: the owner never waits for it
+    // once the response is out: the owner never waits
+    after(() => writeSnapshot())
   },
 })
 ```
