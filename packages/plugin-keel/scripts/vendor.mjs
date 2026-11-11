@@ -21,15 +21,17 @@ const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 /** keel-engine: the lit renderer's source. keel-modules: the catalog that carries each built module. */
 export const PINS = {
   engine: 'f4e677c9c21ea47e1af0b28cc97cd3d429e047f2',
-  modules: 'd76f6b1635d32c16c11ae6dd8e0c3b0c75fbd6e5',
+  modules: '258811f19f5a805227393b1da216058300ad8f15',
 }
 
 /** The keel-modules this package ships, each its own lazily loaded file. */
 export const MODULES = [
+  'camera-rail',
   'device-profile',
   'lit-finish',
   'look',
   'quality',
+  'tracks',
   'tree-growth',
   'tree-render',
   'voxel-dither',

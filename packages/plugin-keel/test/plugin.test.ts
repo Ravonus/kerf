@@ -43,3 +43,32 @@ describe('the band module', () => {
     expect(band.eventsAt(score, 0).length).toBeGreaterThan(0)
   })
 })
+
+describe('the tracks and camera-rail modules', () => {
+  it('ride a camera on keyed tracks', async () => {
+    const { sampleTracks } = await import('../vendor/modules/tracks.mjs')
+    const { createCameraRail } = await import('../vendor/modules/camera-rail.mjs')
+    const tracks = [
+      {
+        target: 'camera',
+        property: 'eye',
+        keys: [
+          [0, [0, 0, 10]],
+          [2, [0, 0, 4]],
+        ],
+      },
+      {
+        target: 'camera',
+        property: 'fov',
+        keys: [
+          [0, 30],
+          [2, 50],
+        ],
+      },
+    ] as const
+    const rail = createCameraRail(sampleTracks, { tracks })
+    expect(rail.at(0).eye).toEqual([0, 0, 10])
+    expect(rail.at(1).fov).toBeCloseTo(40)
+    expect(rail.at(3)).toMatchObject({ eye: [0, 0, 4], fov: 50, roll: 0 })
+  })
+})

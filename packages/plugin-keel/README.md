@@ -91,6 +91,8 @@ that never reaches that line never downloads it.
 | `lit-finish` | The realism look: ambient occlusion, aerial haze, light through leaves, TAA, bloom, tone map, grade. |
 | `band` | A seeded generative band in eight styles on plain Web Audio, layered by an energy dial. |
 | `quality`, `device-profile` | Detail levels by device, and a frame-time governor. |
+| `tracks` | Keyed tracks sampled at a position, eased by cubic-bezier handles. |
+| `camera-rail` | A camera on keyed tracks, with pointer pan and tilt. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 
