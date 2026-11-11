@@ -453,8 +453,14 @@ function, or the four handles of a CSS `cubic-bezier`, as `[1, 3, [0.5, 0, 0.5, 
 `easeInOut`. A value holds before the first key and after the last. With `range: 'pin'` (the default) the position is 0 when
 the section's top meets the top of the viewport and 1 when its bottom meets the bottom, which suits a tall
 section holding a `position: sticky` scene. `range: 'through'` runs from the section entering below to leaving
-above. `damp` sets how fast the eased position catches up; under `prefers-reduced-motion: reduce` it follows
-the scroll exactly. Call `scrub.destroy()` when the scene goes.
+above. `range: 'scene'` is `through` in viewports instead of 0 to 1, for a scene on a stage pinned behind the
+whole page: 0 as the section enters, 1 about as its top reaches the top, and `(height + viewport) / viewport`
+as it leaves. `early` starts it that many viewports sooner, and `viewport` names the element whose height is
+one viewport (a stage sized `100lvh`), where the window's height would move with a phone's toolbar. `damp`
+sets how fast the eased position catches up; under `prefers-reduced-motion: reduce` it follows the scroll
+exactly, and so does `touch: 'raw'` on a touch screen, whose own scrolling is already smooth. `velocity` is how
+fast the target moves, in its units per ms, for an effect that calms down while the page is moving. Call
+`scrub.destroy()` when the scene goes.
 
 ### Keys, focus and accessibility
 
