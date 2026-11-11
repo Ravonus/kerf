@@ -21,7 +21,7 @@ const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 /** keel-engine: the lit renderer's source. keel-modules: the catalog that carries each built module. */
 export const PINS = {
   engine: 'af034863bceefa8a81bbff8fe64ab36435028c29',
-  modules: '884d31d3cebfc8bb794cabccead116b5dad7b010',
+  modules: '53c36d0eb50798ff9d17f93eae0035449a61f368',
 }
 
 /** The keel-modules this package ships, each its own lazily loaded file. */
@@ -37,6 +37,7 @@ export const MODULES = [
   'quality',
   'scene-blend',
   'section-post',
+  'surfaces',
   'tracks',
   'tree-growth',
   'tree-render',

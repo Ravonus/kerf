@@ -1,4 +1,4 @@
-// butterflies@0.1.0 from keel-modules 884d31d (MIT). Generated: don't edit.
+// butterflies@0.1.0 from keel-modules 53c36d0 (MIT). Generated: don't edit.
 var v=`
 attribute vec2 aWing;
 attribute float aFlap;

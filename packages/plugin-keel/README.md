@@ -100,6 +100,7 @@ that never reaches that line never downloads it.
 | `butterflies` | A small flock of glowing butterflies with Shape wings, wandering on a seed and the page's clock. |
 | `plate-painter` | A painted landscape plate from a seeded recipe, generated on the GPU and drawn behind a scene. |
 | `portrait` | A seeded waist-up portrait bust at hero detail, sculpted and meshed when generated, with soft portrait light. |
+| `surfaces` | Seeded paper grain, rib knit and painted grounds as an albedo and a relief, on the GPU or the CPU; prints. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 
