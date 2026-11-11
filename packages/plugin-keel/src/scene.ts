@@ -12,6 +12,7 @@ import type * as LitFinish from '../vendor/modules/lit-finish.mjs'
 import type * as Look from '../vendor/modules/look.mjs'
 import type * as Quality from '../vendor/modules/quality.mjs'
 import type * as SceneBlendModule from '../vendor/modules/scene-blend.mjs'
+import type * as SectionPost from '../vendor/modules/section-post.mjs'
 import type * as Tracks from '../vendor/modules/tracks.mjs'
 import type * as TreeGrowth from '../vendor/modules/tree-growth.mjs'
 import type * as TreeRender from '../vendor/modules/tree-render.mjs'
@@ -27,6 +28,7 @@ export interface KeelModules {
   look: typeof Look
   quality: typeof Quality
   'scene-blend': typeof SceneBlendModule
+  'section-post': typeof SectionPost
   tracks: typeof Tracks
   'tree-growth': typeof TreeGrowth
   'tree-render': typeof TreeRender
@@ -129,6 +131,7 @@ const LOAD: { [K in ModuleId]: () => Promise<KeelModules[K]> } = {
   look: () => import('../vendor/modules/look.mjs'),
   quality: () => import('../vendor/modules/quality.mjs'),
   'scene-blend': () => import('../vendor/modules/scene-blend.mjs'),
+  'section-post': () => import('../vendor/modules/section-post.mjs'),
   tracks: () => import('../vendor/modules/tracks.mjs'),
   'tree-growth': () => import('../vendor/modules/tree-growth.mjs'),
   'tree-render': () => import('../vendor/modules/tree-render.mjs'),

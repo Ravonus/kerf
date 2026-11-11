@@ -32,6 +32,7 @@ export const MODULES = [
   'look',
   'quality',
   'scene-blend',
+  'section-post',
   'tracks',
   'tree-growth',
   'tree-render',

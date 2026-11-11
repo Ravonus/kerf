@@ -78,19 +78,20 @@ one look recipe (`keel-look@1`):
 Each is `@weft-js/plugin-keel/modules/<id>`, typed, and its own file: import it with `import()` and a page
 that never reaches that line never downloads it.
 
-| Module                      | What it makes                                                                                        |
-| --------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `tree-growth`               | A tree grown from a species and a seed, posed for any age and day of the year.                       |
-| `tree-render`               | Draws that tree, or a forest of them with levels of detail and impostor cards.                       |
-| `world-light`               | The sun, moon, sky colours, fog and haze of a place and instant.                                     |
-| `look`                      | Resolves a `keel-look@1` recipe for a target.                                                        |
-| `voxel-dither`              | The dithered pixel look: palettes, screens, outlines, cel light.                                     |
-| `lit-finish`                | The realism look: ambient occlusion, aerial haze, light through leaves, TAA, bloom, tone map, grade. |
-| `band`                      | A seeded generative band in eight styles on plain Web Audio, layered by an energy dial.              |
-| `quality`, `device-profile` | Detail levels by device, a frame-time governor, and the page levers a scene spends.                  |
-| `tracks`                    | Keyed tracks sampled at a position, eased by cubic-bezier handles.                                   |
-| `camera-rail`               | A camera on keyed tracks, with pointer pan and tilt.                                                 |
-| `scene-blend`               | A hand-over between two lit scenes: line work and a seeded noise or radial reveal, or a plain fade.  |
+| Module                      | What it makes                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `tree-growth`               | A tree grown from a species and a seed, posed for any age and day of the year.                            |
+| `tree-render`               | Draws that tree, or a forest of them with levels of detail and impostor cards.                            |
+| `world-light`               | The sun, moon, sky colours, fog and haze of a place and instant.                                          |
+| `look`                      | Resolves a `keel-look@1` recipe for a target.                                                             |
+| `voxel-dither`              | The dithered pixel look: palettes, screens, outlines, cel light.                                          |
+| `lit-finish`                | The realism look: ambient occlusion, aerial haze, light through leaves, TAA, bloom, tone map, grade.      |
+| `band`                      | A seeded generative band in eight styles on plain Web Audio, layered by an energy dial.                   |
+| `quality`, `device-profile` | Detail levels by device, a frame-time governor, and the page levers a scene spends.                       |
+| `tracks`                    | Keyed tracks sampled at a position, eased by cubic-bezier handles.                                        |
+| `camera-rail`               | A camera on keyed tracks, with pointer pan and tilt.                                                      |
+| `scene-blend`               | A hand-over between two lit scenes: line work and a seeded noise or radial reveal, or a plain fade.       |
+| `section-post`              | A section's pass after the finish: a paper panel with a straight or torn edge, darkening, blur and grain. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 

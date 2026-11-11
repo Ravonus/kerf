@@ -84,3 +84,15 @@ describe('the scene-blend module', () => {
     expect(blend.noiseTexels(7)).not.toEqual(blend.noiseTexels(8))
   })
 })
+
+describe('the section-post module', () => {
+  it('sweeps a panel in and out over progress 0..2, and leaves an idle frame alone', async () => {
+    const post = await import('../vendor/modules/section-post.mjs')
+    const at = (progress: number) => post.frameOf({ progress, grain: 0 }, post.postSettings())
+    expect(post.panelShows(at(0))).toBe(false)
+    expect(post.panelShows(at(1))).toBe(true)
+    expect(post.panelShows(at(2))).toBe(false)
+    expect(post.idle(at(0))).toBe(true)
+    expect(post.idle(at(0.5))).toBe(false)
+  })
+})
