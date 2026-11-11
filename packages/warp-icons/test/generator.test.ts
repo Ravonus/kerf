@@ -35,7 +35,7 @@ test('icon declarations match the independent pre-split artwork reference', asyn
   expect(declarations).toHaveLength(1958)
   expect(digest(declarations)).toBe(reference)
   expect(digest([...declarations, 'changed'])).not.toBe(reference)
-})
+}, 30_000) // it renders every icon, as the inventory test does
 
 test('generated file inventory agrees with the tracked files', async () => {
   const expected = Object.keys(await outputs()).sort()
@@ -51,26 +51,33 @@ test('generated file inventory agrees with the tracked files', async () => {
   expect([...tracked, 'all-orphan.tsx'].sort()).not.toEqual(expected)
 }, 30_000) // it renders every icon: about 1.5 s alone, over 5 s on a loaded gate
 
+// The check names every stale module at once, so two runs cover each module both missing and stale: half the
+// modules removed and the rest changed, then the other way round. One run per module took a minute on a loaded gate.
 test('the generator check rejects every missing and stale icon module', async () => {
   const files = Object.keys(await outputs()).filter((name) => /^all-.*\.tsx$/.test(name))
   expect(files).toHaveLength(7)
   const dir = mkdtempSync(join(tmpdir(), 'weft-icon-check-'))
+  const named = (stderr: string) => (/stale \((.*)\)/.exec(stderr)?.[1] ?? '').split(', ').sort()
   try {
     for (const path of ['art', 'scripts', 'src/gen'])
       cpSync(join(root, path), join(dir, path), { recursive: true })
     expect(check(dir).status).toBe(0)
-    for (const file of files) {
-      const path = join(dir, 'src/gen', file)
-      const original = readFileSync(path)
-      rmSync(path)
-      const missing = check(dir)
-      expect(missing.status).toBe(1)
-      expect(missing.stderr).toContain(file)
-      writeFileSync(path, Buffer.concat([original, Buffer.from('\n')]))
-      const stale = check(dir)
-      expect(stale.status).toBe(1)
-      expect(stale.stderr).toContain(file)
-      writeFileSync(path, original)
+    const originals = new Map(files.map((f) => [f, readFileSync(join(dir, 'src/gen', f))]))
+    const half = Math.ceil(files.length / 2)
+    for (const [missing, stale] of [
+      [files.slice(0, half), files.slice(half)],
+      [files.slice(half), files.slice(0, half)],
+    ]) {
+      for (const f of missing!) rmSync(join(dir, 'src/gen', f))
+      for (const f of stale!)
+        writeFileSync(
+          join(dir, 'src/gen', f),
+          Buffer.concat([originals.get(f)!, Buffer.from('\n')]),
+        )
+      const result = check(dir)
+      expect(result.status).toBe(1)
+      expect(named(result.stderr)).toEqual([...files].sort())
+      for (const [f, original] of originals) writeFileSync(join(dir, 'src/gen', f), original)
     }
     expect(check(dir).status).toBe(0)
   } finally {

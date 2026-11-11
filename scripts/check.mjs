@@ -14,7 +14,8 @@ import { repoRoot } from './lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { run, allJobs } from './check/run.mjs'
 import { runSteps } from './check/steps.mjs'
-import { affected, mergeArgs } from './check/tiers.mjs'
+import { affected, mergeArgs, releaseArgs } from './check/tiers.mjs'
+import { releaseSteps } from './check/release-steps.mjs'
 import { typeProblems } from './check/types.mjs'
 import { webkitWorks } from './check/webkit.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
@@ -335,14 +336,7 @@ const STEPS = [
     fix: 'Add a test that fails without the fix, or a `No-Regression-Test: <reason>` trailer if one truly cannot exist.',
     run: async () => lines(await run(process.execPath, ['scripts/quality/commits.mjs'])),
   },
-  {
-    id: 'instant-navigation',
-    covers: 'landing scaffold navigation on Fast and Slow 3G',
-    slow: true,
-    release: true,
-    fix: 'Run `pnpm --filter @weft-js/create test:e2e` and inspect the failures.',
-    run: async () => lines(await run('pnpm', ['--filter', '@weft-js/create', 'test:e2e'])),
-  },
+  ...releaseSteps(run, all),
   {
     id: 'guardrails',
     covers: 'the tests of the check scripts and eval gates themselves',
@@ -377,7 +371,8 @@ const STEPS = [
         )
           .filter((d) => !changedSince || testable.includes(d))
           .sort((a, b) => LONG.indexOf(b) - LONG.indexOf(a)),
-        (d) => run('pnpm', ['test', '--maxWorkers=4', ...(release ? [] : mergeArgs(d))], d),
+        (d) =>
+          run('pnpm', ['test', '--maxWorkers=4', ...(release ? releaseArgs(d) : mergeArgs(d))], d),
       ),
   },
 ]

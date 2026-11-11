@@ -33,6 +33,12 @@ export const RELEASE_TESTS = {
   'packages/warp-icons': ['test/generator.test.ts', 'test/distinct.test.ts', 'test/shake.test.ts'],
 }
 
+/**
+ * Files that hold a timing budget (HMR p95 at 1k components): `--release` runs them in their own step, alone after
+ * the suites, since a machine busy with every other package's tests misses the budget for reasons that aren't the code.
+ */
+export const QUIET_TESTS = { 'packages/core': ['test/hmr.test.ts'] }
+
 /** Paths whose change can't break a package's tests. */
 const INERT = /^(?:docs\/|site\/|examples\/|benchmarks\/|evals\/|[^/]+\.md$|\.github\/)/
 
@@ -75,3 +81,6 @@ export function affected(root, packages, base) {
 
 /** The extra Vitest arguments for a package in a merge gate: its release-only files left out. */
 export const mergeArgs = (dir) => (RELEASE_TESTS[dir] ?? []).flatMap((f) => ['--exclude', f])
+
+/** The extra Vitest arguments for a package in a release gate's suites: its timing files left for the quiet step. */
+export const releaseArgs = (dir) => (QUIET_TESTS[dir] ?? []).flatMap((f) => ['--exclude', f])
