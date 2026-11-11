@@ -2,16 +2,25 @@
   "name": "@weft-js/plugin-keel",
   "version": "0.1.4",
   "description": "@weft-js/plugin-keel: KEEL generation for weft. The `keel-lit` surface kind (surface.renderer@1) and KEEL's generative modules: trees, looks, light.",
+  "keywords": [
+    "weft"
+  ],
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/plugin-keel#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ravonus/weft.git",
     "directory": "packages/plugin-keel"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/plugin-keel#readme",
-  "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
-  },
+  "files": [
+    "src",
+    "vendor",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -20,6 +29,7 @@
     },
     "./runtime": "./src/runtime.ts",
     "./stage": "./src/stage.ts",
+    "./scene": "./src/scene.ts",
     "./lit": {
       "types": "./vendor/lit.d.mts",
       "default": "./vendor/lit.mjs"
@@ -29,13 +39,13 @@
       "default": "./vendor/modules/*.mjs"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "vitest run",
     "test:e2e": "node test/e2e.mjs",
     "vendor": "node scripts/vendor.mjs"
-  },
-  "peerDependencies": {
-    "@weft-js/core": "*"
   },
   "devDependencies": {
     "@weft-js/core": "workspace:*",
@@ -45,19 +55,10 @@
     "vite": "8.3.5",
     "vitest": "5.0.5"
   },
+  "peerDependencies": {
+    "@weft-js/core": "*"
+  },
   "engines": {
     "node": ">=24"
-  },
-  "keywords": [
-    "weft"
-  ],
-  "files": [
-    "src",
-    "vendor",
-    "README.md",
-    "LICENSE"
-  ],
-  "publishConfig": {
-    "access": "public"
   }
 }
