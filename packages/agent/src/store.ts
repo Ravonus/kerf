@@ -30,6 +30,10 @@ export interface AgentStore {
   saveToken(t: TokenRow): Promise<void>
 }
 
+const ok = <T>(v: T) => Promise.resolve(v)
+/** Settled with nothing, whatever the map call returned. */
+const done = (_?: unknown) => Promise.resolve()
+
 /** Everything in maps: lost on restart. `clear` empties it. */
 export function memoryAgentStore(): AgentStore & { clear(): void } {
   const conversations = new Map<string, Conversation>()
@@ -48,54 +52,53 @@ export function memoryAgentStore(): AgentStore & { clear(): void } {
       held.clear()
       tokens.clear()
     },
-    async conversations(owner, state) {
-      return [...conversations.values()]
-        .filter((c) => c.owner === owner && c.state === state)
-        .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updated - a.updated)
-    },
-    conversation: async (id) => conversations.get(id) ?? null,
-    saveConversation: async (c) => void conversations.set(c.id, { ...c }),
-    async removeConversation(id) {
+    conversations: (owner, state) =>
+      ok(
+        [...conversations.values()]
+          .filter((c) => c.owner === owner && c.state === state)
+          .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updated - a.updated),
+      ),
+    conversation: (id) => ok(conversations.get(id) ?? null),
+    saveConversation: (c) => done(conversations.set(c.id, { ...c })),
+    removeConversation(id) {
       conversations.delete(id)
       messages.delete(id)
       for (const [k, p] of held) if (p.conversation === id) held.delete(k)
+      return done()
     },
-    messages: async (conversation) => [...(messages.get(conversation) ?? [])],
-    async addMessage(m) {
-      messages.set(m.conversation, [...(messages.get(m.conversation) ?? []), m])
-    },
-    addUsage: async (u) => void usage.push(u),
-    async usage(owner, since) {
+    messages: (conversation) => ok([...(messages.get(conversation) ?? [])]),
+    addMessage: (m) =>
+      done(messages.set(m.conversation, [...(messages.get(m.conversation) ?? []), m])),
+    addUsage: (u) => done(usage.push(u)),
+    usage(owner, since) {
       const mine = owned(owner)
-      const theirTokens = new Set(
-        [...tokens.values()].filter((t) => t.owner === owner).map((t) => t.id),
-      )
-      return usage.filter(
-        (u) =>
-          u.at >= since &&
-          ((u.conversation !== null && mine.has(u.conversation)) ||
-            (u.token !== null && theirTokens.has(u.token))),
+      const theirs = new Set([...tokens.values()].filter((t) => t.owner === owner).map((t) => t.id))
+      return ok(
+        usage.filter(
+          (u) =>
+            u.at >= since &&
+            ((u.conversation !== null && mine.has(u.conversation)) ||
+              (u.token !== null && theirs.has(u.token))),
+        ),
       )
     },
-    async pending(conversation) {
-      return [...held.values()].filter((p) => p.conversation === conversation)
-    },
-    hold: async (p) => void held.set(p.id, p),
-    async take(id) {
+    pending: (conversation) =>
+      ok([...held.values()].filter((p) => p.conversation === conversation)),
+    hold: (p) => done(held.set(p.id, p)),
+    take(id) {
       const p = held.get(id) ?? null
       held.delete(id)
-      return p
+      return ok(p)
     },
-    async tokens(owner) {
-      return [...tokens.values()]
-        .filter((t) => t.owner === owner)
-        .map(({ hash: _, ...t }) => t)
-        .sort((a, b) => b.created - a.created)
-    },
-    token: async (id) => tokens.get(id) ?? null,
-    async tokenByHash(hash) {
-      return [...tokens.values()].find((t) => t.hash === hash) ?? null
-    },
-    saveToken: async (t) => void tokens.set(t.id, { ...t }),
+    tokens: (owner) =>
+      ok(
+        [...tokens.values()]
+          .filter((t) => t.owner === owner)
+          .map(({ hash: _, ...t }) => t)
+          .sort((a, b) => b.created - a.created),
+      ),
+    token: (id) => ok(tokens.get(id) ?? null),
+    tokenByHash: (hash) => ok([...tokens.values()].find((t) => t.hash === hash) ?? null),
+    saveToken: (t) => done(tokens.set(t.id, { ...t })),
   }
 }

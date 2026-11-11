@@ -73,17 +73,16 @@ function read(
     ev.event?.type === 'content_block_delta' &&
     ev.event.delta?.type === 'text_delta'
   ) {
-    const d = String(ev.event.delta.text ?? '')
+    const d = ev.event.delta.text ?? ''
     s.text += d
     said(d)
-  } else if (ev.type === 'system' && ev.subtype === 'init' && ev.model)
-    s.usage.model = String(ev.model)
+  } else if (ev.type === 'system' && ev.subtype === 'init' && ev.model) s.usage.model = ev.model
   else if (ev.type === 'result') {
-    if (ev.is_error) s.errors += String(ev.result ?? 'claude reported an error')
+    if (ev.is_error)
+      s.errors += typeof ev.result === 'string' ? ev.result : 'claude reported an error'
     else if (!s.text && typeof ev.result === 'string') s.text = ev.result
-    s.usage.input =
-      Number(ev.usage?.input_tokens ?? 0) + Number(ev.usage?.cache_read_input_tokens ?? 0)
-    s.usage.output = Number(ev.usage?.output_tokens ?? 0)
+    s.usage.input = (ev.usage?.input_tokens ?? 0) + (ev.usage?.cache_read_input_tokens ?? 0)
+    s.usage.output = ev.usage?.output_tokens ?? 0
   }
 }
 
@@ -119,7 +118,8 @@ function run(command: string, turn: BridgeTurn, options: CliOptions): Promise<Br
     child.stdout.setEncoding('utf8')
     child.stdout.on(
       'data',
-      (chunk: string) => (buffered = lines(buffered + chunk, (ev) => read(ev, s, turn.text))),
+      (chunk: string) =>
+        (buffered = lines(buffered + chunk, (ev) => read(ev, s, (d) => turn.text(d)))),
     )
     child.stderr.setEncoding('utf8')
     child.stderr.on('data', (c: string) => (s.errors = (s.errors + c).slice(-600)))

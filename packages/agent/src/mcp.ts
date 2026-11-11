@@ -45,7 +45,7 @@ async function answer(m: Rpc, s: Serve): Promise<unknown> {
         })),
       }
     case 'tools/call': {
-      const name = String(m.params?.name ?? '')
+      const name = typeof m.params?.name === 'string' ? m.params.name : ''
       const r = await s.call(name, m.params?.arguments ?? {})
       const text = typeof r.output === 'string' ? r.output : JSON.stringify(r.output)
       return { content: [{ type: 'text', text }], isError: r.status !== 'ok' }

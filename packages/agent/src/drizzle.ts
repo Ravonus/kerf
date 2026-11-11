@@ -155,8 +155,8 @@ function usageRows(client: Client, upsert: Upsert, { conversations, usage, token
           ),
         )
       return rows.map((r): Usage => ({
-        conversation: r.conversation == null ? null : String(r.conversation),
-        token: r.token == null ? null : String(r.token),
+        conversation: typeof r.conversation === 'string' ? r.conversation : null,
+        token: typeof r.token === 'string' ? r.token : null,
         bridge: String(r.bridge),
         model: String(r.model),
         input: Number(r.input),

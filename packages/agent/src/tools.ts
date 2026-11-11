@@ -74,15 +74,11 @@ export const toolsFor = (grants: readonly string[]) =>
   allTools().filter((t) => allows(grants, t.permission))
 
 /** The input wrapper `inputSchema` adds for a non-object schema, taken off again. */
-export const unwrap = (tool: ToolInfo, input: unknown) =>
-  tool.input.properties &&
-  'input' in (tool.input.properties as object) &&
-  Object.keys(tool.input.properties as object).length === 1 &&
-  input &&
-  typeof input === 'object' &&
-  'input' in input
-    ? (input as { input: unknown }).input
-    : input
+export function unwrap(tool: ToolInfo, input: unknown) {
+  const props = tool.input.properties
+  const wrapped = !!props && typeof props === 'object' && Object.keys(props).join() === 'input'
+  return wrapped && input && typeof input === 'object' && 'input' in input ? input.input : input
+}
 
 /** Every scope a tool names, for the grants editor: `[{ scope: 'menu', read: [...], write: [...] }]`. */
 export function scopes() {

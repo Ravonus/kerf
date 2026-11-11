@@ -122,7 +122,7 @@ function app(
         body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
       }),
     )
-    return { status: res.status, body: res.status === 200 ? ((await res.json()) as Loose) : null }
+    return { status: res.status, body: res.status === 200 ? await res.json() : null }
   }
   return {
     agent,
@@ -398,18 +398,17 @@ test('a bridge that runs tools over MCP: its turn token works for this turn only
     extensions: [{ key: 'agent', load: () => Promise.resolve(extension(agent)) }],
   })
   box.handle = handler
-  const post = async (id: string, i: unknown = {}) =>
-    (
-      (await (
-        await handler(
-          new Request(`http://localhost/_weft/fn/${id}`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json', 'x-weft': '1' },
-            body: JSON.stringify({ i }),
-          }),
-        )
-      ).json()) as Loose
-    ).v
+  const post = async (id: string, i: unknown = {}): Promise<Loose> => {
+    const res = await handler(
+      new Request(`http://localhost/_weft/fn/${id}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-weft': '1' },
+        body: JSON.stringify({ i }),
+      }),
+    )
+    const body: Loose = await res.json()
+    return body.v
+  }
   const c = await post('mstart.000001')
   const reply = await post('msend.000001', { conversation: c.id, text: 'latte 3.80' })
   expect(prices.get('latte')).toBe(380)

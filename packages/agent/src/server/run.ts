@@ -16,7 +16,8 @@ import { allTools, toolsFor, unwrap } from '../tools'
 import { AgentError, MCP, acting, liveTurns, turnTokens, userOf, type Core } from './core'
 
 export type Result = { status: Extract<Part, { type: 'result' }>['status']; output: unknown }
-type Call = { id: string; tool: string; input: unknown }
+/** A tool call as a bridge asks for it. */
+export type Call = { id: string; tool: string; input: unknown }
 
 type Failed = {
   answer?: { message?: string }
@@ -102,15 +103,17 @@ function openMcp(
   }
 }
 
+/** What a turn carries from step to step. */
+type Turning = {
+  c: Conversation
+  caller: AgentCaller
+  reply: Message
+  emit: (e: TurnEvent) => void
+}
+
 /** Run a step's calls in order, recording each; true when one waits for the owner. */
-async function runCalls(
-  core: Core,
-  c: Conversation,
-  calls: Call[],
-  caller: AgentCaller,
-  reply: Message,
-  emit: (e: TurnEvent) => void,
-) {
+async function runCalls(core: Core, calls: Call[], t: Turning) {
+  const { c, caller, reply, emit } = t
   let waiting = false
   for (const call of calls) {
     reply.parts.push({ type: 'call', ...call })
@@ -188,7 +191,7 @@ export async function turn(
         },
         reply,
       )
-      if (!calls.length || (await runCalls(core, c, calls, caller, reply, emit))) break
+      if (!calls.length || (await runCalls(core, calls, { c, caller, reply, emit }))) break
     }
   } finally {
     live?.end()

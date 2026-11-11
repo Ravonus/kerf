@@ -8,7 +8,7 @@ import { allows } from '../index'
 import { serveMcp } from '../mcp'
 import { allTools, toolsFor } from '../tools'
 import { AgentError, acting, liveTurns, type Core } from './core'
-import { decide, runTool, type Result } from './run'
+import { decide, runTool, type Call, type Result } from './run'
 import { bearer } from './tokens'
 
 /** Checked, held or run: what an MCP call comes to. */
@@ -16,9 +16,7 @@ async function outcome(
   core: Core,
   ctx: Context,
   call: ExtensionApi['call'],
-  id: string,
-  name: string,
-  input: unknown,
+  { id, tool: name, input }: Call,
 ): Promise<Result> {
   const caller = ctx.agent!
   const tool = allTools().find((t) => t.name === name)
@@ -47,7 +45,7 @@ async function mcpCall(
   const id = randomUUID()
   live?.reply.parts.push({ type: 'call', id, tool: name, input })
   live?.emit({ type: 'call', id, tool: name, input })
-  const result = await outcome(core, ctx, call, id, name, input)
+  const result = await outcome(core, ctx, call, { id, tool: name, input })
   live?.reply.parts.push({ type: 'result', id, tool: name, ...result })
   live?.emit({ type: 'result', id, tool: name, status: result.status })
   if (caller.via.kind === 'token')
@@ -99,7 +97,7 @@ export function agentExtension(core: Core): ServerExtension {
         })
       return serveMcp(request, {
         tools: () => toolsFor(ctx.agent!.grants),
-        call: (name, input) => mcpCall(core, ctx, ext.call, name, input),
+        call: (name, input) => mcpCall(core, ctx, (id, i) => ext.call(id, i), name, input),
       })
     },
     check(dev) {

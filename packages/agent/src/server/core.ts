@@ -53,13 +53,7 @@ export const liveTurns = new Map<string, { reply: Message; emit: (e: TurnEvent) 
 export const hash = (secret: string) => createHash('sha256').update(secret).digest('hex')
 
 const rolesOf = (u: User | null | undefined) =>
-  !u?.role
-    ? []
-    : Array.isArray(u.role)
-      ? u.role
-      : String(u.role)
-          .split(',')
-          .map((r) => r.trim())
+  !u?.role ? [] : Array.isArray(u.role) ? u.role : u.role.split(',').map((r) => r.trim())
 
 export function userOf(ctx: Context): User {
   const u = (ctx as { user?: User | null }).user
