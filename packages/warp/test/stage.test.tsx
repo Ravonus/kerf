@@ -462,3 +462,15 @@ test('auto asks the governor before any surface mounts, and a low tier keeps to 
   expect(high.container.querySelectorAll('canvas')).toHaveLength(1)
   expect(log).toContain('render a')
 })
+
+test('a seek back in time still draws: the fps cap skips only frames that moved forward', async () => {
+  page()
+  await frames(30)
+  clock.pause()
+  clock.seek(0)
+  log.length = 0
+  place([-1.2, -0.2, 0.8, 1.8])
+  await frames(40)
+  expect(log).toContain('render b')
+  clock.play()
+})

@@ -257,7 +257,8 @@ function govern(d: Director, frame: number) {
   const governor = d.props.governor
   if (!governor) return true
   if (frame !== d.frame) {
-    if (frame - d.frame < 60 / governor.fps - 0.5) return false
+    // A seek can move the clock back: only a frame that moved forward inside the cap is skipped.
+    if (frame > d.frame && frame - d.frame < 60 / governor.fps - 0.5) return false
     d.frame = frame
     const now = performance.now()
     if (d.last && now - d.last < 250) governor.frame(now - d.last)
