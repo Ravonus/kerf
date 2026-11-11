@@ -40,7 +40,11 @@ impl Emitter<'_> {
         };
         if let [(kind, name, e)] = dynamic {
             let a = self.write(el, kind, name, "v", "p");
-            let check = if self.hydratable { format!(", {el}, {}", js_string(&spec(kind, name))) } else { String::new() };
+            let check = if self.hydratable {
+                format!(", {el}, {}", js_string(&spec(kind, name)))
+            } else {
+                String::new()
+            };
             return format!("{bind}(() => ({e}), (v, p) => {{ v !== p && {a}; }}{check});");
         }
         let values: Vec<&str> = dynamic.iter().map(|(_, _, e)| e.as_str()).collect();
@@ -50,7 +54,10 @@ impl Emitter<'_> {
             let _ = write!(body, " v[{i}] !== p[{i}] && {a};");
         }
         let check = if self.hydratable {
-            let specs: Vec<String> = dynamic.iter().map(|(k, n, _)| js_string(&spec(k, n))).collect();
+            let specs: Vec<String> = dynamic
+                .iter()
+                .map(|(k, n, _)| js_string(&spec(k, n)))
+                .collect();
             format!(", {el}, [{}]", specs.join(", "))
         } else {
             String::new()

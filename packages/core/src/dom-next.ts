@@ -80,13 +80,19 @@ function hasProperty(el: Element, name: string, value: unknown) {
   if (name === 'innerHTML' || name === 'outerHTML') return true
   const node = el as Element & Record<string, unknown>
   if (name === 'value' && 'defaultValue' in node && node.value !== node.defaultValue) return true
-  if (name === 'checked' && 'defaultChecked' in node && node.checked !== node.defaultChecked) return true
+  if (name === 'checked' && 'defaultChecked' in node && node.checked !== node.defaultChecked)
+    return true
   return node[name] === (name === 'value' || name === 'defaultValue' ? (value ?? '') : value)
 }
 
 /** The attribute reads as `setAttribute` would write `value`. Objects and functions aren't compared: the server's stand. */
 function hasAttribute(el: Element, name: string, value: unknown) {
-  if ((typeof value === 'object' && value !== null) || typeof value === 'function' || typeof value === 'symbol') return true
+  if (
+    (typeof value === 'object' && value !== null) ||
+    typeof value === 'function' ||
+    typeof value === 'symbol'
+  )
+    return true
   if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
   const has = el.getAttribute(name)
   if (value == null || value === false) return has === null
@@ -193,7 +199,13 @@ const CAPTURE = /(?<!Pointer)Capture$/
  * markup are compared by nothing cheaper than writing them, so the server's stand.
  */
 function shows(el: Element, key: string, value: unknown) {
-  if (key === 'class' || key === 'className' || key === 'style' || key === 'dangerouslySetInnerHTML') return true
+  if (
+    key === 'class' ||
+    key === 'className' ||
+    key === 'style' ||
+    key === 'dangerouslySetInnerHTML'
+  )
+    return true
   if (key === 'autoFocus' || key === 'defaultValue' || key === 'defaultChecked') return true
   return PROPERTIES.has(key) ? hasProperty(el, key, value) : hasAttribute(el, attrName(key), value)
 }
@@ -214,7 +226,8 @@ export function spread(el: Element, props: () => Record<string, unknown>) {
     delete v.key
     for (const k in p) if (!(k in v)) write(k, undefined, p[k])
     for (const k in v)
-      if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k) || !shows(el, k, v[k]))) write(k, v[k], p[k])
+      if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k) || !shows(el, k, v[k])))
+        write(k, v[k], p[k])
     hydrating = false
   })
 
