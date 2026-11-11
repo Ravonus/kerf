@@ -124,3 +124,15 @@ describe('the plate-painter module', () => {
     expect(plan.digest).not.toBe(painter.planPlate(painter.LAKE_VALLEY, { seed: 12 }).digest)
   })
 })
+
+describe('the portrait module', () => {
+  it('gives the same sitter and features from the same seed', async () => {
+    const portrait = await import('../vendor/modules/portrait.mjs')
+    const settings = portrait.portraitSettings({ seed: 21 })
+    expect(portrait.sitterOf(settings)).toEqual(
+      portrait.sitterOf(portrait.portraitSettings({ seed: 21 })),
+    )
+    expect(portrait.featuresOf(21)).toEqual(portrait.featuresOf(21))
+    expect(portrait.featuresOf(21)).not.toEqual(portrait.featuresOf(22))
+  })
+})

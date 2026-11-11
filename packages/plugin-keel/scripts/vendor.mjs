@@ -33,6 +33,7 @@ export const MODULES = [
   'look',
   'motes',
   'plate-painter',
+  'portrait',
   'quality',
   'scene-blend',
   'section-post',

@@ -13,6 +13,7 @@ import type * as LitFinish from '../vendor/modules/lit-finish.mjs'
 import type * as Look from '../vendor/modules/look.mjs'
 import type * as MotesModule from '../vendor/modules/motes.mjs'
 import type * as PlatePainterModule from '../vendor/modules/plate-painter.mjs'
+import type * as PortraitModule from '../vendor/modules/portrait.mjs'
 import type * as Quality from '../vendor/modules/quality.mjs'
 import type * as SceneBlendModule from '../vendor/modules/scene-blend.mjs'
 import type * as SectionPost from '../vendor/modules/section-post.mjs'
@@ -32,6 +33,7 @@ export interface KeelModules {
   look: typeof Look
   motes: typeof MotesModule
   'plate-painter': typeof PlatePainterModule
+  portrait: typeof PortraitModule
   quality: typeof Quality
   'scene-blend': typeof SceneBlendModule
   'section-post': typeof SectionPost
@@ -170,6 +172,7 @@ const LOAD: { [K in ModuleId]: () => Promise<KeelModules[K]> } = {
   look: () => import('../vendor/modules/look.mjs'),
   motes: () => import('../vendor/modules/motes.mjs'),
   'plate-painter': () => import('../vendor/modules/plate-painter.mjs'),
+  portrait: () => import('../vendor/modules/portrait.mjs'),
   quality: () => import('../vendor/modules/quality.mjs'),
   'scene-blend': () => import('../vendor/modules/scene-blend.mjs'),
   'section-post': () => import('../vendor/modules/section-post.mjs'),
