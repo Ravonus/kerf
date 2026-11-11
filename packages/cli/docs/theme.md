@@ -120,8 +120,10 @@ warp({
 })
 ```
 
-The properties are `size weight leading tracking case font`. A number is px for `size` and `tracking`. A role's name is
-lowercase. warp's own roles take only the tokens warp has for them.
+The properties are `size weight leading tracking case font opsz`. A number is px for `size` and `tracking`. A role's
+name is lowercase. warp's own roles take only the tokens warp has for them, and `opsz`. `opsz` is the face's optical
+size, set as `font-variation-settings: "opsz" <n>`, so a face without the axis ignores it; `'auto'` leaves it to the
+font size, as `font-optical-sizing` does.
 
 Any property can change with the viewport: `base` holds below the first breakpoint, and each other key is a min-width
 in px. `size` and `tracking` can also be fluid, `{ min, max, from, to }` in px: `min` at the `from` width, `max` at

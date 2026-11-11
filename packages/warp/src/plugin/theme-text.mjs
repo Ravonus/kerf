@@ -1,5 +1,6 @@
 // `system.text.<role>`: a role's type tokens. One of warp's roles takes the tokens warp has for it; a role the app
 // names takes all six, and a rule that applies them to `data-role="<role>"`, as warp's type.css does for its own.
+// `opsz` is no token of warp's, so any role takes it, with a rule of its own for one of warp's roles.
 // A value can change with the viewport: a base, then a value or a fluid line from each min-width. Breakpoints are
 // media queries, so a fluid line runs on vw and meets them exactly.
 import { NAME, bad, fontValue, plain, px, safe } from './theme-values.mjs'
@@ -11,8 +12,11 @@ const PROPS = {
   tracking: 'letter-spacing',
   case: 'text-transform',
   font: 'font-family',
+  opsz: 'font-variation-settings',
 }
 const UNITLESS = new Set(['weight', 'leading'])
+// a number sets the optical size; `auto` leaves it to the size, as font-optical-sizing does by default
+const opsz = (v) => (Number.isFinite(v) ? `"opsz" ${v}` : v === 'auto' ? 'normal' : undefined)
 const format = (prop, v) =>
   prop === 'font' ? fontValue(v) : UNITLESS.has(prop) ? String(v) : px(v)
 
@@ -37,6 +41,10 @@ function valueCss(prop, v, { from, at }) {
     if (prop !== 'size' && prop !== 'tracking') throw bad(at, 'only size and tracking can be fluid')
     return fluidCss(v, v.from ?? from, at)
   }
+  if (prop === 'opsz') {
+    if (opsz(v) === undefined) throw bad(at, "must be an optical size or 'auto'")
+    return opsz(v)
+  }
   if (!safe(v)) throw bad(at, 'must be a CSS value, a number, or { base, <min-width>: value }')
   return format(prop, v)
 }
@@ -57,16 +65,17 @@ function place(token, prop, v, { out, media, at }) {
 
 /** Writes one role's tokens into `out` and `media`; an app's role also records its properties in `roles`. */
 export function textTokens(role, value, { tokenNames, out, media, roles, at }) {
-  if (!plain(value)) throw bad(at, 'must be { size, weight, leading, tracking, case, font }')
+  if (!plain(value)) throw bad(at, `must be { ${Object.keys(PROPS).join(', ')} }`)
   const own = [...tokenNames].some((t) => t.startsWith(`--warp-text-${role}-`))
   if (!own && !NAME.test(role)) throw bad(at, 'must be a lowercase name, like narrative')
   for (const [prop, v] of Object.entries(value)) {
     const token = `--warp-text-${role}-${prop}`
     if (!PROPS[prop])
       throw bad(`${at}.${prop}`, `unknown property; use ${Object.keys(PROPS).join(', ')}`)
-    if (own && !tokenNames.has(token)) throw bad(`${at}.${prop}`, `warp has no ${token}`)
+    const extra = prop === 'opsz'
+    if (own && !extra && !tokenNames.has(token)) throw bad(`${at}.${prop}`, `warp has no ${token}`)
     place(token, prop, v, { out, media, at: `${at}.${prop}` })
-    if (!own) (roles[role] ??= new Set()).add(prop)
+    if (!own || extra) (roles[role] ??= new Set()).add(prop)
   }
 }
 

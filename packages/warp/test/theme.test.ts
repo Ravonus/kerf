@@ -123,6 +123,31 @@ describe('text roles', () => {
     expect(css).not.toContain('[data-role="display"]')
   })
 
+  test('opsz sets the optical size on any role, by width too; auto leaves it to the size', () => {
+    const css =
+      run({
+        system: {
+          text: {
+            narrative: { size: 28, opsz: { base: 28, 768: 72 } },
+            display: { opsz: 'auto' },
+          },
+        },
+      }).tokens.css ?? ''
+    expect(css).toContain('--warp-text-narrative-opsz:"opsz" 28')
+    expect(css).toMatch(/@media \(min-width:768px\)\{[^}]*--warp-text-narrative-opsz:"opsz" 72/)
+    expect(css).toContain(
+      'font-size:var(--warp-text-narrative-size);font-variation-settings:var(--warp-text-narrative-opsz)}',
+    )
+    // warp's own role takes no token of warp's for it, so it gets a rule for this one property
+    expect(css).toContain('--warp-text-display-opsz:normal')
+    expect(css).toContain(
+      ':where([data-scope="text"][data-role="display"]){font-variation-settings:var(--warp-text-display-opsz)}',
+    )
+    expect(fails({ system: { text: { narrative: { opsz: 'big' } } } }).path).toBe(
+      'system.text.narrative.opsz',
+    )
+  })
+
   test('refuses a role it cannot name and a property warp has no token for', () => {
     expect(fails({ system: { text: { Narrative: { size: 20 } } } }).path).toBe(
       'system.text.Narrative',

@@ -100,6 +100,8 @@ export interface TextStyle {
   tracking?: Len | Fluid | ByWidth<Len | Fluid>
   case?: string | ByWidth<string>
   font?: string | ByWidth<string>
+  /** The face's optical size, as `font-variation-settings: "opsz" <n>`; `'auto'` leaves it to the font size. */
+  opsz?: number | 'auto' | ByWidth<number | 'auto'>
 }
 
 /** The design system's own scales, retuned app-wide: `system.radius.control`, `system.space.related`, `system.text.button`. */
