@@ -18,8 +18,11 @@ export interface Face {
   /**
    * Only these characters: one small file whose `unicode-range` leaves every other character to the next face in the
    * stack. For a face that draws a few letters, like a drop-cap initial: `glyphs: 'ABCR'`. Replaces `subsets`.
+   * `{ selector }` reads them from the text of the elements it matches (`.class`, `[attr="value"]` or a tag) in a
+   * build, and `first: true` from each one's first letter, as `::first-letter` draws it. Text the source holds only
+   * as an expression keeps the face whole, and `.weft/fonts.json` says why.
    */
-  glyphs?: string
+  glyphs?: string | { selector: string; first?: boolean }
 }
 
 /** A Unicode range the fonts are cut to. */

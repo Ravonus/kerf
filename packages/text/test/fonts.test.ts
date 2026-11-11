@@ -17,6 +17,7 @@ import {
   scanAxes,
   toRange,
 } from '../plugin/build.mjs'
+import { scopedText } from '../plugin/glyphs.mjs'
 
 type FontOptions = Parameters<typeof createFontBuild>[0] & { trim?: boolean }
 const fontBuild: (options: FontOptions) => ReturnType<typeof createFontBuild> = createFontBuild
@@ -105,6 +106,15 @@ function registerInvalidFontOptions() {
         { fonts: { body: { family: 'Inter', src: 'a', fallback: 'Arial', glyphs: '' } } },
         'fonts.body.glyphs',
         /characters the face draws/,
+      ],
+      [
+        {
+          fonts: {
+            body: { family: 'Inter', src: 'a', fallback: 'Arial', glyphs: { selector: 'p > b' } },
+          },
+        },
+        'fonts.body.glyphs.selector',
+        /\.class, \[attr="value"\] or a tag/,
       ],
     ]
     for (const [input, path, message] of bad) {
@@ -196,8 +206,55 @@ describe('createFontBuild().build()', () => {
   registerGlyphTests(opts, () => cacheDir)
 })
 
+describe('scopedText()', () => {
+  const page = `
+    .narrative::first-letter { font-family: var(--font-script) }
+    <p class="narrative">Remember every shopper,<br class="wide" /> {'accept'} cards.</p>
+    <p class="lead narrative">“Quiet{' '}<em>shops</em></p>
+    <Text role="initial">Ü</Text>
+    <p data-role="initial">{"Ç"}</p>`
+
+  it("reads the text of each element a selector matches, or each one's first letter", () => {
+    expect(scopedText(page, { selector: '.narrative', first: true })).toEqual({ text: 'R“Q' })
+    expect(scopedText(page, { selector: '[data-role="initial"]' })).toEqual({ text: 'ÜÇ' })
+    const all = scopedText(page, { selector: '.narrative' }).text!
+    for (const c of 'Rmb,acpt.“Qshp ') expect(all, c).toContain(c)
+    expect(all).not.toContain('{')
+  })
+
+  it('names the element whose text it cannot read, and a selector that matches nothing', () => {
+    const dynamic = '<p class="narrative">{copy.narrative}</p>'
+    expect(scopedText(dynamic, { selector: '.narrative' }).unread).toMatch(/expression/)
+    expect(scopedText(dynamic, { selector: '.narrative', first: true }).unread).toMatch(
+      /expression/,
+    )
+    // the first letter is literal, so what follows it doesn't matter
+    expect(
+      scopedText('<p class="narrative">R{rest}</p>', { selector: '.narrative', first: true }),
+    ).toEqual({ text: 'R' })
+    expect(scopedText(page, { selector: '.missing' }).unread).toMatch(/no element matches/)
+  })
+})
+
 function registerGlyphTests(opts: FontOptions, getCacheDir: () => string) {
   describe('glyphs', () => {
+    it('reads a scope from the source in a build, and keeps the face whole when it cannot', async () => {
+      const scoped = {
+        fonts: { initial: { ...opts.fonts.body!, glyphs: { selector: '.dropcap' } } },
+        subsets: ['latin'],
+      }
+      const build = (source: string, dev = false) =>
+        fontBuild(scoped).build({ root: '/', cacheDir: getCacheDir(), url: (n) => n, source, dev })
+      const read = await build('<span class="dropcap">W</span>')
+      expect(read.css).toContain('unicode-range:U+0057}')
+      const unread = await build('<span class="dropcap">{letter}</span>')
+      expect(unread.files.map((f) => f.name)).toHaveLength(2)
+      expect(unread.report.faces[0]).toMatchObject({
+        glyphs: expect.stringMatching(/^kept whole: /),
+      })
+      expect((await build('', true)).css).toContain('unicode-range:U+0000-00FF')
+    })
+
     it('cuts a face to the characters it lists, in a build and in dev', async () => {
       const all = await fontBuild({ fonts: { body: opts.fonts.body! }, subsets: ['latin'] }).build({
         root: '/',

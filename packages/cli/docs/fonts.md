@@ -78,6 +78,24 @@ text({
 })
 ```
 
+`glyphs: { selector }` reads the characters from your markup instead: the text of every element the selector matches
+(`.class`, `[attr="value"]` or a tag; `[data-role="initial"]` also matches `<Text role="initial">`). With
+`first: true` it takes only each one's first letter, as `::first-letter` draws it:
+
+```ts
+script: {
+  family: 'Mea Culpa',
+  src: 'assets/fonts/mea-culpa.ttf',
+  fallback: 'Georgia',
+  glyphs: { selector: '.narrative', first: true },
+},
+```
+
+A build reads the scope from your source; `weft dev` serves the whole face. Text the source holds only as an
+expression (`{copy.intro}`), or a selector that matches nothing, keeps the face whole, and `.weft/fonts.json` says
+which element. Then list the characters yourself, or build the list from your copy in the config. CSS that changes
+case (`text-transform`) draws characters the source doesn't hold: list those too.
+
 ## Using a face
 
 The build declares faces; it doesn't apply them. Name one in your CSS, with its fallback second:
