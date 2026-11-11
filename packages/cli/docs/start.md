@@ -142,6 +142,51 @@ A table a function touches must be in its `tags`/`invalidates` (Q011): a tag nam
 **`auth: 'user'` says who is calling, not what they may touch.** A `run` taking a row's id must check that row belongs
 to `ctx.user`. `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))` in the `where` is the usual way.
 
+## Publishing
+
+For content an owner edits and every visitor reads (a menu, settings, pages, a search index). Visitors read from the
+shared cache, edits go to a draft the owner can preview, and publishing refreshes the cache before the next visitor
+arrives.
+
+```ts
+// what every visitor reads: cached, and re-run in the
+// background the moment an edit invalidates it
+export const menu = query({
+  tags: ['menu'],
+  cache: { life: 'hours', warm: true },
+  run: ({ ctx }) => readMenu(ctx.db),
+})
+
+// the owner previews a draft; publishing applies it
+export const startPreview = mutation({
+  input: z.object({ draft: z.int() }),
+  auth: 'user',
+  run: ({ input }) => preview.start(String(input.draft)),
+})
+export const publish = mutation({
+  input: z.object({ draft: z.int() }),
+  auth: 'user',
+  invalidates: ['menu'],
+  run: async ({ input, ctx }) => {
+    await applyDraft(ctx.db, input.draft)
+    preview.stop()
+    // once the response is out: the owner never waits
+    after(() => writeSnapshot())
+  },
+})
+```
+
+- `warm: true` is for values that every visitor shares: no `auth` and no `scope: 'user'`.
+- `preview.start(value)` sets an http-only cookie. While it's there, every query on that browser runs fresh and is
+  never written to the shared cache, so draft data can't leak to anyone else. What the value means is the app's:
+  `src/context.server.ts` reads `preview.id()`, checks that `ctx.user` may see that draft, and gives `run` a `db`
+  with the draft applied (for example, a transaction that `after()` rolls back).
+- A mutation's refreshes read as the browser's next GET will, with the preview cookie the mutation set or cleared.
+  The admin sees its draft as it saves, and its live data again right after `preview.stop()`.
+- `after(fn)` runs once the response has finished streaming or the call has answered, including when the visitor
+  leaves early. Use it for a rollback, a snapshot, a git push or an email. A failure is reported as `E_AFTER` and
+  doesn't stop the rest.
+
 ## Form fields
 
 `form.field(name)` restores the raw submitted value, which can

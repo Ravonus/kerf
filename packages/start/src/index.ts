@@ -21,6 +21,8 @@ export {
   raise,
   invalid,
   invalidate,
+  after,
+  preview,
   cache,
   skip,
   isRedirect,

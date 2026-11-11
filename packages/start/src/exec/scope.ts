@@ -34,6 +34,13 @@ export interface Scope {
   said: Set<string>
   /** The render read a live query or a stream: the page carries the realtime cursor (research 30 §1). */
   live?: boolean
+  /** A preview (the `weft-preview` cookie, `preview.start`): its queries never read or write the shared cache, so what
+   * it sees (a draft, applied in a transaction the app rolls back) can't reach anyone else. */
+  preview: boolean
+  /** Work for when the response is finished (`after`): a rollback, a snapshot, a push. */
+  after: (() => unknown)[]
+  /** The response is finished and `after` has run: a later `after` runs at once. */
+  finished?: boolean
   ctx(): Promise<Context>
   options: ScopeOptions
 }
@@ -78,6 +85,10 @@ export interface ScopeOptions {
   extensions?: ServerExtension[] | undefined
 }
 
+/** The cookie `preview.start` sets. Its value is the app's (a draft's id); weft only reads that it's there. */
+export const PREVIEW_COOKIE = 'weft-preview'
+const PREVIEW = /(?:^|;\s*)weft-preview=[^;]/
+
 export function createScope(request: Request, options: ScopeOptions = {}): Scope {
   const headers = new Headers()
   let ctx: Promise<Context> | undefined
@@ -88,6 +99,8 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
     headers,
     options,
     said: new Set(),
+    preview: PREVIEW.test(request.headers.get('cookie') ?? ''),
+    after: [],
     // oxlint-disable typescript/no-unnecessary-type-assertion -- needed where a plugin such as pay adds required fields to Context
     ctx: () =>
       (ctx ??= Promise.resolve()
@@ -172,3 +185,73 @@ export function memoryStore(): Store {
 }
 
 export const defaultStore = memoryStore()
+
+/**
+ * The GET a mutation's refreshes read as, when a preview is involved: the browser's next request, with the preview
+ * cookie this response sets or clears, so what comes back is what the next page shows. Undefined when no preview is.
+ */
+export function rereads(scope: Scope): Request | undefined {
+  const set = scope.headers.getSetCookie().findLast((c) => c.startsWith(`${PREVIEW_COOKIE}=`))
+  if (!set && !scope.preview) return undefined
+  const cookies = (scope.request.headers.get('cookie') ?? '')
+    .split(/;\s*/)
+    .filter((c) => c && !c.startsWith(`${PREVIEW_COOKIE}=`))
+  const pair = set ? set.split(';')[0]! : `${PREVIEW_COOKIE}=${previewValue(scope)}`
+  if (!set || !/max-age=0/i.test(set)) cookies.push(pair)
+  const headers = new Headers(scope.request.headers)
+  for (const h of ['content-type', 'content-length']) headers.delete(h)
+  headers.set('cookie', cookies.join('; '))
+  return new Request(scope.request.url, { method: 'GET', headers })
+}
+
+const previewValue = (scope: Scope) =>
+  /(?:^|;\s*)weft-preview=([^;]+)/.exec(scope.request.headers.get('cookie') ?? '')?.[1] ?? ''
+
+/** The response is done: run what `after` queued, each once, a failure a diagnostic that stops none of the rest. */
+export async function finishScope(scope: Scope) {
+  if (scope.finished) return
+  scope.finished = true
+  for (const fn of scope.after.splice(0))
+    try {
+      await fn()
+    } catch (e) {
+      scope.options.onDiagnostic?.({
+        code: 'E_AFTER',
+        severity: 'error',
+        message: `an \`after()\` task failed: ${e instanceof Error ? e.message : String(e)}`,
+      })
+    }
+}
+
+/**
+ * `response` with `finishScope` run when its body has been read to the end, failed, or been abandoned by the client.
+ * A response whose request queued nothing, and isn't a preview, goes out untouched (a preview's context may queue its
+ * rollback while the page is still streaming).
+ */
+export function finishing(response: Response, scope: Scope): Response {
+  if (!response.body || (!scope.after.length && !scope.preview)) {
+    void finishScope(scope)
+    return response
+  }
+  const reader = response.body.getReader()
+  const end = () => void finishScope(scope)
+  const body = new ReadableStream<Uint8Array>({
+    async pull(c) {
+      try {
+        const { value, done } = await reader.read()
+        if (done) {
+          c.close()
+          end()
+        } else c.enqueue(value)
+      } catch (e) {
+        c.error(e)
+        end()
+      }
+    },
+    cancel(reason) {
+      end()
+      return reader.cancel(reason)
+    },
+  })
+  return new Response(body, response)
+}

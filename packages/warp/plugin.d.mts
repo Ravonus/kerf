@@ -28,6 +28,8 @@ export interface WarpOptions {
   }
   /** Replaces the radius each expression sets. */
   radius?: 'sharp' | 'soft' | 'round'
+  /** Replaces the icon drawing each expression shows: a vivid site with balanced (line) icons is `icons: 'balanced'`. */
+  icons?: 'quiet' | 'balanced' | 'vivid'
   /** A family name, or a full CSS font stack. */
   fonts?: { body?: string; display?: string; mono?: string }
   /** Any spec token, like `{ '--warp-color-page': '#fafafa' }`. Checked at the stops `dials` leave (D010). */

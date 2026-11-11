@@ -9,6 +9,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
 import { hex, luminance, toLinear } from './tokens/color.mjs'
+import { ICONS } from './src/plugin/icons.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { DEFAULT, normalizeSeed, seedByName } from './src/plugin/seed.mjs'
@@ -38,7 +39,9 @@ const bad = (path, message) => Object.assign(new Error(message), { path })
 function options(input) {
   const out = {}
   for (const key of Object.keys(input))
-    if (!['seed', 'fields', 'dials', 'radius', 'fonts', 'tokens', ...THEMING].includes(key))
+    if (
+      !['seed', 'fields', 'dials', 'radius', 'icons', 'fonts', 'tokens', ...THEMING].includes(key)
+    )
       throw Object.assign(new Error(`unknown option \`${key}\``), { path: key })
   if (input.fields !== undefined && input.fields !== 'floating' && input.fields !== 'classic')
     throw Object.assign(new Error(`must be 'floating' or 'classic'`), { path: 'fields' })
@@ -64,6 +67,9 @@ function options(input) {
     if (!RADII[input.radius]) throw bad('radius', `must be one of ${Object.keys(RADII).join(', ')}`)
     out.radius = input.radius
   }
+  if (input.icons !== undefined && !ICONS[input.icons])
+    throw bad('icons', `must be one of ${Object.keys(ICONS).join(', ')}`)
+  if (input.icons) out.icons = input.icons
   for (const [font, value] of Object.entries(input.fonts ?? {})) {
     if (!FONTS[font])
       throw bad(`fonts.${font}`, `unknown font; use ${Object.keys(FONTS).join(', ')}`)
@@ -92,7 +98,7 @@ const fontStack = (value, fallback) =>
   value.includes(',') ? value : `${JSON.stringify(value)}, ${fallback}`
 
 /** The radius, fonts and tokens as declarations, or '' with none set. */
-function overrides({ seed, radius, fonts = {}, tokens = {}, theme }) {
+function overrides({ seed, radius, icons, fonts = {}, tokens = {}, theme }) {
   const out = {}
   // The neutral's refs are redeclared at each expression stop, so it lands on every scope, as a token does.
   if (seed?.neutral)
@@ -104,6 +110,7 @@ function overrides({ seed, radius, fonts = {}, tokens = {}, theme }) {
     [out['--warp-radius-control'], out['--warp-radius-surface'], out['--warp-radius-mark']] = RADII[
       radius
     ].map((px) => `${px}px`)
+  if (icons) for (const [k, v] of Object.entries(ICONS[icons])) out[`--warp-icon-${k}`] = v
   for (const [font, value] of Object.entries(fonts))
     out[`--warp-font-${FONTS[font][0]}`] = fontStack(value, FONTS[font][1])
   Object.assign(out, theme?.system, tokens)
@@ -314,7 +321,7 @@ function cardColors(seed, dials) {
   }
 }
 
-const agents = `Import components from \`@weft-js/warp\`. Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page). No raw values (D001–D007); intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). The look comes from dials: \`data-expression|theme|density|motion|flair\` on any element (scopes nest). Fields take \`label\` (required), \`hint\`, \`error\`. App-wide: \`warp({ seed: { accent }, dials, radius, fonts, tokens })\`; D010 fails a pair that can't pass. Theming: \`colors\` names colours (\`tone="brand"\`), \`system\` retunes scales, \`parts\` restyles an element per state (\`parts.button.hover.bg\`; \`weft docs theme\` lists parts), \`themes\` are named looks switched by \`data-palette\` or \`setPalette\`. Own CSS: never a bare \`[data-part]\`; hang it from its \`[data-scope]\`. A tall sticky header sets \`--warp-scroll-offset\`.`
+const agents = `Import components from \`@weft-js/warp\`. Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page). No raw values (D001–D007); intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). The look comes from dials: \`data-expression|theme|density|motion|flair\` on any element (scopes nest). Fields take \`label\` (required), \`hint\`, \`error\`. App-wide: \`warp({ seed: { accent }, dials, radius, icons, fonts, tokens })\` (\`icons\` pins the icon tier); D010 fails a pair that can't pass. Theming: \`colors\` names colours (\`tone="brand"\`), \`system\` retunes scales, \`parts\` restyles an element per state (\`parts.button.hover.bg\`; \`weft docs theme\` lists parts), \`themes\` are named looks switched by \`data-palette\` or \`setPalette\`. Own CSS: never a bare \`[data-part]\`; hang it from its \`[data-scope]\`. A tall sticky header sets \`--warp-scroll-offset\`.`
 
 const catalog = componentCatalog()
 

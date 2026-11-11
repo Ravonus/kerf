@@ -2,6 +2,7 @@
 
 - **Reads:** `query({ tags: ['todos'], auth: 'user', run: ({ ctx }) => ctx.db.select().from(todos) })`. In a component `todos().value ?? []`; in `load` and handlers `await todos.fetch()`.
 - **Writes:** `mutation({ input, auth: 'user', invalidates: ['todos'], optimistic, run })`.
+- **Content an owner edits** (menu, settings, pages): what every visitor reads is `cache: { life: 'hours', warm: true }` (an edit re-runs it in the background). Edits go to a draft; `preview.start(id)` shows it to the owner only (their reads skip the shared cache); publishing applies it; slow follow-up work goes in `after()`. `weft docs start` § Publishing.
 - **Database:** Drizzle; `await` every statement. Schema change: `weft db generate` (Q015). Inputs: `schemas.todos.insert.pick({ title: true })`.
 - **Auth:** `ctx.user` is the user or `null`; `auth: 'user'` refuses anyone else (A002). A guard is `redirect('/login')` in a layout's `load`. `run` must still check who owns a row. Login is a database session: a signed cookie caches it for pages for 5 minutes, and mutations read the database (`session.cookieCache` in `createAuth`). JWTs are API-only (`api: { functions }`).
 - **Never** copy query results into `state`, import `db` from a component (Q012), `fetch` `/_weft/*`, or poll (`todos.live()`; rooms: `channel`).
