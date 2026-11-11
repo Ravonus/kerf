@@ -23,8 +23,12 @@ export const Grove = defineSurface<{}, 'keel-lit'>({
   setup(s) {
     let draw = () => {}
     void keelStage(s, { prefer: 'realism' }).then(async (stage) => {
-      const growth = await import('@weft-js/plugin-keel/modules/tree-growth')
-      const { createTreeRender } = await import('@weft-js/plugin-keel/modules/tree-render')
+      const growth = await import(
+        '@weft-js/plugin-keel/modules/tree-growth'
+      )
+      const { createTreeRender } = await import(
+        '@weft-js/plugin-keel/modules/tree-render'
+      )
       const model = growth.growTree({ species: 'oak', seed: 42 })
       const tree = createTreeRender(s.lit as never, model, {
         colors,
@@ -65,33 +69,33 @@ paints, and under `prefers-reduced-motion: reduce` the clock starts paused on on
 `keelStage(s, options)` from `@weft-js/plugin-keel/stage` sets up what most scenes need and draws them through
 one look recipe (`keel-look@1`):
 
-|                                                         |                                                                                                                                                                  |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stage.scene`, `stage.camera`, `stage.sun`, `stage.sky` | Add to the scene; move the camera and lights.                                                                                                                    |
-| `stage.setLook('realism' \| 'pixel', recipe?)`          | The same scene in lit full colour (ambient occlusion, haze, bloom, a tone map and grade) or dithered pixel art. Each pass loads the first time its look is used. |
-| `stage.light(worldLight(...))`                          | Sun, sky fill, background and air from `world-light`'s answer.                                                                                                   |
-| `stage.look`                                            | What the look asks of generators: `density`, `trees`, `kind`.                                                                                                    |
-| `stage.render()`                                        | Draws a frame. Call it inside `s.frame`.                                                                                                                         |
+| | |
+| --- | --- |
+| `stage.scene`, `stage.camera`, `stage.sun`, `stage.sky` | Add to the scene; move the camera and lights. |
+| `stage.setLook('realism' \| 'pixel', recipe?)` | The same scene in lit full colour (ambient occlusion, haze, bloom, a tone map and grade) or dithered pixel art. Each pass loads the first time its look is used. |
+| `stage.light(worldLight(...))` | Sun, sky fill, background and air from `world-light`'s answer. |
+| `stage.look` | What the look asks of generators: `density`, `trees`, `kind`. |
+| `stage.render()` | Draws a frame. Call it inside `s.frame`. |
 
 ## Modules
 
 Each is `@weft-js/plugin-keel/modules/<id>`, typed, and its own file: import it with `import()` and a page
 that never reaches that line never downloads it.
 
-| Module                      | What it makes                                                                                             |
-| --------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `tree-growth`               | A tree grown from a species and a seed, posed for any age and day of the year.                            |
-| `tree-render`               | Draws that tree, or a forest of them with levels of detail and impostor cards.                            |
-| `world-light`               | The sun, moon, sky colours, fog and haze of a place and instant.                                          |
-| `look`                      | Resolves a `keel-look@1` recipe for a target.                                                             |
-| `voxel-dither`              | The dithered pixel look: palettes, screens, outlines, cel light.                                          |
-| `lit-finish`                | The realism look: ambient occlusion, aerial haze, light through leaves, TAA, bloom, tone map, grade.      |
-| `band`                      | A seeded generative band in eight styles on plain Web Audio, layered by an energy dial.                   |
-| `quality`, `device-profile` | Detail levels by device, a frame-time governor, and the page levers a scene spends.                       |
-| `tracks`                    | Keyed tracks sampled at a position, eased by cubic-bezier handles.                                        |
-| `camera-rail`               | A camera on keyed tracks, with pointer pan and tilt.                                                      |
-| `scene-blend`               | A hand-over between two lit scenes: line work and a seeded noise or radial reveal, or a plain fade.       |
-| `section-post`              | A section's pass after the finish: a paper panel with a straight or torn edge, darkening, blur and grain. |
+| Module | What it makes |
+| --- | --- |
+| `tree-growth` | A tree grown from a species and a seed, posed for any age and day of the year. |
+| `tree-render` | Draws that tree, or a forest of them with levels of detail and impostor cards. |
+| `world-light` | The sun, moon, sky colours, fog and haze of a place and instant. |
+| `look` | Resolves a `keel-look@1` recipe for a target. |
+| `voxel-dither` | The dithered pixel look: palettes, screens, outlines, cel light. |
+| `lit-finish` | The realism look: ambient occlusion, aerial haze, light through leaves, TAA, bloom, tone map, grade. |
+| `band` | A seeded generative band in eight styles on plain Web Audio, layered by an energy dial. |
+| `quality`, `device-profile` | Detail levels by device, a frame-time governor, and the page levers a scene spends. |
+| `tracks` | Keyed tracks sampled at a position, eased by cubic-bezier handles. |
+| `camera-rail` | A camera on keyed tracks, with pointer pan and tilt. |
+| `scene-blend` | A hand-over between two lit scenes: line work and a seeded noise or radial reveal, or a plain fade. |
+| `section-post` | A section's pass after the finish: a paper panel with a straight or torn edge, darkening, blur and grain. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 
@@ -103,14 +107,8 @@ that never reaches that line never downloads it.
 import { progress, timeline } from '@weft-js/scroll/timeline'
 
 const tracks = timeline({
-  z: [
-    [0, 54],
-    [1, 8],
-  ],
-  fov: [
-    [0, 34],
-    [1, 50],
-  ],
+  z: [[0, 54], [1, 8]],
+  fov: [[0, 34], [1, 50]],
 })
 const scrub = progress(section, { onChange: () => s.invalidate() })
 s.frame(() => {
@@ -132,19 +130,9 @@ export const orchard = defineScene({
     {
       target: 'camera',
       property: 'eye',
-      keys: [
-        [0, [0, 2, 9]],
-        [2, [3, 2, 5]],
-      ],
+      keys: [[0, [0, 2, 9]], [2, [3, 2, 5]]],
     },
-    {
-      target: 'tree',
-      property: 'sway',
-      keys: [
-        [0, 0],
-        [2, 1],
-      ],
-    },
+    { target: 'tree', property: 'sway', keys: [[0, 0], [2, 1]] },
   ],
   build({ lit }) {
     const stage = new lit.Stage()
@@ -183,11 +171,7 @@ tracks: [
   {
     target: 'post',
     property: 'progress',
-    keys: [
-      [1, 0],
-      [2, 1],
-      [3, 2],
-    ],
+    keys: [[1, 0], [2, 1], [3, 2]],
   },
   { target: 'post', property: 'tear', keys: [[0, 1]] },
 ]
@@ -198,7 +182,9 @@ tracks: [
 ## Music
 
 ```ts
-const { createBand, scoreOf } = await import('@weft-js/plugin-keel/modules/band')
+const { createBand, scoreOf } = await import(
+  '@weft-js/plugin-keel/modules/band'
+)
 // From a click: browsers start audio only from a gesture.
 const band = createBand(new AudioContext())
 band.start(scoreOf({ seed: 'grove', style: 'dream' }))
