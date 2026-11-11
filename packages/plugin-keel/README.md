@@ -98,6 +98,7 @@ that never reaches that line never downloads it.
 | `section-post` | A section's pass after the finish: a paper panel with a straight or torn edge, darkening, blur and grain. |
 | `motes` | Dust, light motes and sparkles on one instanced quad, drifting and blinking on the page's clock. |
 | `butterflies` | A small flock of glowing butterflies with Shape wings, wandering on a seed and the page's clock. |
+| `plate-painter` | A painted landscape plate from a seeded recipe, generated on the GPU and drawn behind a scene. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 

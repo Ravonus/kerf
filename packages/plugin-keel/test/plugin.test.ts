@@ -115,3 +115,12 @@ describe('the butterflies module', () => {
     expect(flock.flyAt(flights[0]!, 2)).not.toEqual(flock.flyAt(flights[0]!, 3))
   })
 })
+
+describe('the plate-painter module', () => {
+  it('plans the same plate, digest and all, from the same recipe and seed', async () => {
+    const painter = await import('../vendor/modules/plate-painter.mjs')
+    const plan = painter.planPlate(painter.LAKE_VALLEY, { seed: 11 })
+    expect(plan.digest).toBe(painter.planPlate(painter.LAKE_VALLEY, { seed: 11 }).digest)
+    expect(plan.digest).not.toBe(painter.planPlate(painter.LAKE_VALLEY, { seed: 12 }).digest)
+  })
+})

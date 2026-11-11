@@ -17,6 +17,7 @@ export const MODULES = [
   'lit-finish',
   'look',
   'motes',
+  'plate-painter',
   'quality',
   'scene-blend',
   'section-post',
@@ -44,7 +45,7 @@ export const keel = definePlugin({
       text: [
         "- `kind: 'keel-lit'`: `s.lit` is keel/lit (WebGL2 scene graph, PBR, soft shadows), `s.renderer` its renderer.",
         "- `keelStage(s, { prefer: 'realism' | 'pixel' })` from `@weft-js/plugin-keel/stage` gives `scene`, `camera`, `sun`, `sky`, `setLook()`, `light()` and `render()`. Call `stage.render()` inside `s.frame`.",
-        '- Generators load lazily: `await import("@weft-js/plugin-keel/modules/tree-growth")` (also tree-render, world-light, quality, device-profile, tracks, camera-rail, scene-blend, section-post, motes, butterflies). Same seed, same result.',
+        '- Generators load lazily: `await import("@weft-js/plugin-keel/modules/tree-growth")` (also tree-render, world-light, quality, device-profile, tracks, camera-rail, scene-blend, section-post, motes, butterflies, plate-painter). Same seed, same result.',
         '- Music: `createBand(audioContext)` and `scoreOf({ seed, style })` from `@weft-js/plugin-keel/modules/band` (ambient, lofi, synthwave, chiptune, house, cinematic, folk, dream). `band.setEnergy(0..1)` layers parts. Start it from a click.',
         '- Scrub a scene with `timeline()` and `progress()` from `@weft-js/scroll/timeline`.',
       ].join('\n'),
