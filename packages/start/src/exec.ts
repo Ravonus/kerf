@@ -368,6 +368,18 @@ async function refreshed(scope: Scope, refresh: [string, unknown][], tags: strin
 }
 
 /** Drop `tags` for the rest of this request and bump them in the shared store. */
+/** Run a query or mutation by id as this scope's caller, guards and all, as a browser call would (`@weft-js/agent`). */
+export async function callById(scope: Scope, id: string, input: unknown): Promise<unknown> {
+  const fn = fns.get(id)
+  if (!fn || (fn.kind !== 'query' && fn.kind !== 'mutation'))
+    throw new StartError('Q019', `no query or mutation \`${id}\``, 'call one by its `$id`', {
+      status: 404,
+    })
+  return fn.kind === 'query'
+    ? (await fetchQuery(scope, fn, input)).v
+    : (await runMutation(scope, fn, input, [])).v
+}
+
 export async function invalidate(scope: Scope, tags: string[]) {
   if (!tags.length) return
   for (const t of tags) scope.invalidated.add(t)

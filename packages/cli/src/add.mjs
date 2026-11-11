@@ -28,6 +28,7 @@ const ALIASES = {
   keel: '@weft-js/plugin-keel',
   redis: '@weft-js/realtime-redis',
   nats: '@weft-js/realtime-nats',
+  agent: '@weft-js/agent',
   pay: '@weft-js/pay',
   'pay-stripe': '@weft-js/pay/stripe',
   'pay-square': '@weft-js/pay/square',
@@ -36,6 +37,7 @@ const ALIASES = {
 /** Add-ons `weft add` knows by the name after the scope, as `weft add realtime-redis`. */
 const ADDONS = new Set([
   '@weft-js/text',
+  '@weft-js/agent',
   '@weft-js/pay',
   '@weft-js/plugin-media',
   '@weft-js/plugin-media-ffmpeg',

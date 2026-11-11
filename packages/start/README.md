@@ -1361,6 +1361,8 @@ from the environment only: one written into the config or a host file is E008. A
 | Q015                                 | `src/db/schema.ts` changed since the last generate                       | `weft db generate`                                                      |
 | Q016 (503)                           | The database is down, or a migration failed                              | Start it, check `DATABASE_URL`, or fix the migration; no restart needed |
 | Q018 (413)                           | A request body over `site.limits`                                        | Send less, or raise `site.limits.body` / `.upload`                      |
+| Q019 (404)                           | `api.call` / `serverCall` named no query or mutation                     | Call one by its `$id`                                                   |
+| Q020 (500)                           | `serverCall` outside a request                                           | Call it from a query, mutation, `load` or extension route               |
 | A001                                 | The auth secret is missing or under 32 characters in production          | Set `BETTER_AUTH_SECRET`                                                |
 | A002 (401)                           | `auth: 'user'` (or a mutation in an app with auth) called with no session | Sign in first, or guard the route in a layout's `load`                  |
 | A006 (403)                           | A signed-in user without the `role`, or `can` said no                    | Sign in as a user it allows, or change the rule                         |

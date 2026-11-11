@@ -15,7 +15,8 @@
 
 import type { MediaAsset } from '@weft-js/core/media'
 import { cache, resetRetry } from './data/cache'
-import { configureReset } from './data/foundation'
+import { configureReset, currentScope, runtime } from './data/foundation'
+import { StartError } from './data/primitives'
 import { resetMutation } from './data/mutation'
 
 export type {
@@ -80,6 +81,24 @@ export { after, preview } from './data/after'
 export { liveApi } from './data/live-api'
 export type { LiveApi } from './data/live-api'
 export { query, mutation } from './data/definitions'
+
+/**
+ * Run a query or mutation by `$id` as the caller of the request in progress: its schema, `auth`, every extension's
+ * `guard` and its invalidations, as a browser call would. Server code only: `@weft-js/agent` runs tools this way.
+ */
+export function serverCall(id: string, input?: unknown): Promise<unknown> {
+  const scope = currentScope()
+  if (!scope || !runtime.exec)
+    return Promise.reject(
+      new StartError(
+        'Q020',
+        `\`serverCall('${id}')\` outside a request`,
+        'call it from a query, mutation, `load` or extension route',
+        { status: 500 },
+      ),
+    )
+  return runtime.exec.callById(scope, id, input)
+}
 
 /**
  * What `run` and `load` get. Augment it with what `src/context.server.ts` returns:

@@ -6,6 +6,7 @@
 |---|---|
 | [site/content/learn](../site/content/learn) | Learn: the tutorial, from installation to Rust, in order. The site serves it at `/learn`. |
 | [packages/cli/docs](../packages/cli/docs) | Reference: every API, command, config key and diagnostic. `npx weft docs <topic>` prints the same pages, and the site serves them at `/reference`. |
+| [packages/agent/docs/agent.md](../packages/agent/docs/agent.md) | Reference for the agent: tools, grants, conversations, MCP, bridges. |
 | [packages/pay/docs/pay.md](../packages/pay/docs/pay.md) | Reference for payments. |
 | [react-props.md](react-props.md) | Coming from React: prop names, values and events. |
 | Each `packages/*/README.md` | What one package is for, how to install it and where its docs are. |

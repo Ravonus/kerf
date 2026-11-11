@@ -16,14 +16,18 @@ export interface ExtensionApi {
   invalidate(tags: string[]): Promise<void>
   /** The server log. */
   report(d: { code: string; severity: string; message: string }): void
+  /** This request's `ctx`, with every extension's part. */
+  ctx(): Promise<Context>
+  /** Run a query or mutation by `$id` as this request's caller, with its schema, `auth` and every `guard`. */
+  call(id: string, input: unknown): Promise<unknown>
 }
 
 /** A plugin's server half: its routes, what it adds to `ctx`, and what it guards. */
 export interface ServerExtension {
   /** Serves `/_weft/x/<key>/<path>`. It sees the raw request: nothing has read the body. */
   handle?(request: Request, path: string, api: ExtensionApi): Promise<Response> | Response
-  /** Merged into `ctx`, after the app's own. */
-  context?(ctx: Context): object
+  /** Merged into `ctx`, after the app's own. It may replace `user` (a caller with a token) and may look things up first. */
+  context?(ctx: Context): object | Promise<object>
   /** Before a function's `run`. Throw to refuse: an error with `answer: { code, message, status }` reaches the client as it is. */
   guard?(
     fn: { id: string; kind: string; def: Record<string, unknown> },
