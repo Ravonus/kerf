@@ -3,8 +3,8 @@
 // then the vertical overrides divided by it), and list the preloads. Cached by content hash under `cacheDir`.
 //
 // Trimming (on in a build, off in dev, `trim: false` turns it off): font bytes are what set LCP on a text hero. Two
-// cuts keep the design and every character. Custom axes (SOFT, WONK, GRAD…) the source never varies are pinned, and
-// `latin` splits in two: a preloaded core (ASCII, common punctuation, what the source uses) and the rest, which a
+// cuts keep the design and every character. Custom axes (SOFT, WONK, GRAD…) the source never varies are pinned, an
+// axis `axes` declares is cut to that range, and `latin` splits in two: a preloaded core (ASCII, common punctuation, what the source uses) and the rest, which a
 // browser fetches through `unicode-range` only when a page holds one of those characters, so text from a database
 // still gets the face.
 import { createHash } from 'node:crypto'
@@ -124,6 +124,24 @@ export function pinned(axes, declared, { values, dynamic }) {
   return pins
 }
 
+/**
+ * The axes `declared` narrows, cut to the declared range: `{ min, max }`, or one value when the range is a point.
+ * The face's `@font-face` rule already keeps CSS inside that range, so the deltas outside it never draw.
+ */
+export function limited(axes, declared) {
+  const limits = {}
+  for (const a of axes) {
+    const range = declared[a.tag]
+    if (!range) continue
+    const clamp = (n) => Math.min(a.max, Math.max(a.min, n))
+    const min = clamp(Math.min(...range))
+    const max = clamp(Math.max(...range))
+    if (min === a.min && max === a.max) continue
+    limits[a.tag] = min === max ? min : { min, max }
+  }
+  return limits
+}
+
 const camel = (name) => name.toLowerCase().replace(/[^a-z0-9]+(.)/g, (_, c) => c.toUpperCase())
 const pct = (n) => `${Math.round(n * 10000) / 100}%`
 const slug = (s) =>
@@ -196,13 +214,17 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
           })
 
         const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
-        const pins = trimming ? pinned(await readAxes(bytes), f.axes, scan) : {}
+        const axes = trimming ? await readAxes(bytes) : []
+        const pins = pinned(axes, f.axes, scan)
+        const limits = limited(axes, f.axes)
+        const variationAxes = { ...pins, ...limits }
         entry.pins = pins
+        entry.limits = limits
         const cuts = faceCuts(f, { source, entry }) ?? subsets.flatMap(parts)
         for (const { subset, text, range } of cuts) {
           const inputs = createHash('sha256')
             .update(text)
-            .update(JSON.stringify(pins))
+            .update(JSON.stringify(variationAxes))
             .digest('hex')
             .slice(0, 8)
           const cached = join(cacheDir, `${hash}-${subset}-${inputs}-v${VERSION}.woff2`)
@@ -211,7 +233,7 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
           else {
             out = await subsetFont(bytes, text, {
               targetFormat: 'woff2',
-              ...(Object.keys(pins).length && { variationAxes: pins }),
+              ...(Object.keys(variationAxes).length && { variationAxes }),
             })
             writeFileSync(cached, out)
           }
@@ -336,6 +358,7 @@ function faceReport(faces) {
     family: f.family,
     role: f.role,
     pinned: f.pins,
+    ...(Object.keys(f.limits).length && { limited: f.limits }),
     ...(f.unread && { glyphs: `kept whole: ${f.unread}` }),
     files: f.files.map(({ subset, bytes }) => ({ subset, bytes })),
   }))

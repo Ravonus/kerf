@@ -45,7 +45,8 @@ face sets `preload: false`, others only with `preload: true`. Other options: `di
     to the font's default if the source never sets it. An axis set to two values stays. A value weft can't read from the
     source (`var()`, a template, an expression) keeps every axis. `wght`, `wdth`, `opsz`, `slnt` and `ital` are never
     pinned: CSS drives them. A pinned value applies to every use of the face, so a face used both with and without the
-    setting needs the axis declared.
+    setting needs the axis declared. An axis named in `axes` is cut to that range, or to one value when the range is a
+    point, so `axes: { wght: [500, 700] }` drops the rest of the weight axis.
   - **Characters.** `latin` becomes two files. The core is preloaded: ASCII, common punctuation, and every other latin
     character in your source. The rest is fetched through `unicode-range` only by a page that shows one of those
     characters, so text from a database still gets the face, after a fallback-matched swap.

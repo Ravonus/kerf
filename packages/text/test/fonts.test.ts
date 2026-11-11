@@ -11,6 +11,7 @@ import {
   RANGES,
   createFontBuild,
   fallbackFace,
+  limited,
   pinned,
   rangeText,
   readAxes,
@@ -21,6 +22,11 @@ import { scopedText } from '../plugin/glyphs.mjs'
 
 type FontOptions = Parameters<typeof createFontBuild>[0] & { trim?: boolean }
 const fontBuild: (options: FontOptions) => ReturnType<typeof createFontBuild> = createFontBuild
+
+// Figtree, variable on wght 300–900 (OFL), as the landing template ships it.
+const figtree = fileURLToPath(
+  new URL('../../create/templates/landing/files/assets/fonts/figtree.woff2', import.meta.url),
+)
 
 const inter = (w: number) =>
   fileURLToPath(
@@ -305,6 +311,56 @@ describe('axes', () => {
     ).toEqual({ WONK: 1 })
     expect(pinned([SOFT, WONK], { SOFT: [0, 100] }, scanAxes(''))).toEqual({ WONK: 1 })
     expect(pinned([SOFT, WONK], {}, scanAxes('a{font-variation-settings:var(--x)}'))).toEqual({})
+  })
+
+  it('cuts a declared axis to its range, clamped to the font, and to one value for a point', () => {
+    expect(limited([WGHT, OPSZ, SOFT], { wght: [500, 700], SOFT: [0, 100] })).toEqual({
+      wght: { min: 500, max: 700 },
+    })
+    expect(limited([WGHT], { wght: [700, 500] })).toEqual({ wght: { min: 500, max: 700 } })
+    expect(limited([WGHT], { wght: [50, 1000] })).toEqual({})
+    expect(limited([WGHT], { wght: [600, 600] })).toEqual({ wght: 600 })
+    expect(limited([WGHT], { wght: [950, 1000] })).toEqual({ wght: 900 })
+    expect(limited([WGHT], {})).toEqual({})
+  })
+
+  it('a built face keeps only the declared range, and dev keeps the whole axis', async () => {
+    const cacheDir = mkdtempSync(join(tmpdir(), 'weft-axes-'))
+    const build = (axes: Record<string, [number, number]>, dev = false) =>
+      fontBuild({
+        fonts: {
+          body: {
+            family: 'Figtree',
+            src: figtree,
+            fallback: 'Arial',
+            display: 'swap',
+            weight: 400,
+            style: 'normal',
+            axes,
+            preload: true,
+            glyphs: 'Hello',
+          },
+        },
+        subsets: ['latin'],
+      }).build({ root: '/', cacheDir, url: (n) => n, dev })
+    try {
+      const whole = await build({})
+      const range = await build({ wght: [500, 700] })
+      const point = await build({ wght: [600, 600] })
+      const dev = await build({ wght: [500, 700] }, true)
+      const axesOf = async (out: typeof whole) => readAxes(Buffer.from(out.files[0]!.bytes))
+      expect(await axesOf(whole)).toEqual([{ tag: 'wght', min: 300, default: 300, max: 900 }])
+      expect(await axesOf(range)).toEqual([{ tag: 'wght', min: 500, default: 500, max: 700 }])
+      expect(await axesOf(point)).toEqual([])
+      expect(await axesOf(dev)).toEqual([{ tag: 'wght', min: 300, default: 300, max: 900 }])
+      expect(range.report.faces[0]).toMatchObject({ limited: { wght: { min: 500, max: 700 } } })
+      expect(whole.report.faces[0]).not.toHaveProperty('limited')
+      expect(range.files[0]!.bytes.length).toBeLessThan(whole.files[0]!.bytes.length)
+      expect(point.files[0]!.bytes.length).toBeLessThan(range.files[0]!.bytes.length)
+      expect(range.css).toContain('font-weight:500 700')
+    } finally {
+      rmSync(cacheDir, { recursive: true, force: true })
+    }
   })
 
   it('reads fvar, and finds none in a static face', async () => {
