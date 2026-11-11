@@ -9,11 +9,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use kerf_compiler::{Options, compile};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Declaration, ImportDeclarationSpecifier, ModuleExportName, Statement};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
-use kerf_compiler::{Options, compile};
 
 /// Every `.tsx` under the given repo directories.
 fn components() -> Vec<(String, String)> {

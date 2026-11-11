@@ -70,10 +70,7 @@ pub fn apply<'a>(
     if t.needs_memo {
         imports.push(("memo", "_$kerfMemo"));
     }
-    for (module, names) in [
-        ("@kerf/core", imports),
-        ("@kerf/core/internal", internal),
-    ] {
+    for (module, names) in [("@kerf/core", imports), ("@kerf/core/internal", internal)] {
         if !names.is_empty() {
             program.body.insert(0, t.import(module, &names));
         }

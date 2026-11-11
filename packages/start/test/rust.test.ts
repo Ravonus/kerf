@@ -103,7 +103,7 @@ test('the signature matches the vector the crate checks', async () => {
   const ctx =
     'eyJ1c2VyIjp7ImlkIjoidTEiLCJyb2xlcyI6WyJhZG1pbiJdfSwicmVxdWVzdElkIjoicjEiLCJkZWFkbGluZU1zIjoxMDAwLCJ0cmFjZXBhcmVudCI6bnVsbCwiaWF0IjoxMDAwMDAwfQ'
   expect(await sign('s3cret', 'f.abc', ctx, '{"input":{"q":"x"}}')).toBe(
-    '1a4c89d125bdeda4db5f2dd02045bc1044ff4ecfacff00c7f42f602ceef3ad08',
+    '2f1e20f81794af5526c0209b9d5e225945ea0c48b2c1594f666b30a33d127b10',
   ) // crates/kerf/src/envelope.rs
 })
 

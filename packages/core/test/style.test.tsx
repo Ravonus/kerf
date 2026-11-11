@@ -10,7 +10,6 @@ import { flush, render, touches } from '@kerf/core/test'
 import { group } from '@kerf/core/style'
 import { hydration } from '../src/hydrate'
 import { emitGroups, GroupError, resolve, type GroupSource, type GroupUse } from '../src/style/css'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { GroupShop as ServerShop } from './fixtures/ssr/GroupShop.tsx?kerf-ssr'
 import { GroupShop as ClientShop } from './fixtures/ssr/GroupShop.tsx?kerf-hydrate'
 import type { Product } from '../../../evals/reference-v3/kerf/src/api'

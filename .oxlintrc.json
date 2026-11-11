@@ -123,6 +123,13 @@
   },
   "overrides": [
     {
+      // A `?kerf-ssr` / `?kerf-hydrate` import is a different module from the plain one (vite.mjs compiles it for the
+      // server or for hydration). import/no-duplicates strips the query, and which import it flags shifts with the
+      // query text, so per-line disables went stale on the rename.
+      "files": ["packages/core/test/**"],
+      "rules": { "import/no-duplicates": "off" }
+    },
+    {
       "files": ["**/test/**", "**/tests/**", "**/__tests__/**", "**/*.test.*", "**/*.spec.*", "**/*-test.*", "**/*_test.*", "**/*-spec.*", "**/*_spec.*", "**/test-*.*", "**/test_*.*", "**/*.generated.*", "**/*.gen.*", "**/*-generated.*", "**/*_generated.*", "**/*-gen.*", "**/*_gen.*", "**/generated/**", "**/gen/**", "**/vendor/**", "**/vendored/**", "**/fixtures/**", "**/fixture/**"],
       "rules": { "max-lines": ["error", { "max": 800, "skipBlankLines": false }] }
     },
