@@ -475,6 +475,9 @@ importers:
 
   packages/plugin-keel:
     devDependencies:
+      '@weft-js/capture':
+        specifier: workspace:*
+        version: link:../capture
       '@weft-js/core':
         specifier: workspace:*
         version: link:../core
