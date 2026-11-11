@@ -405,12 +405,11 @@ function overlayATimerEndsInsideThe({
       )
     expect(await state()).toBe('running')
     const box = (await page.getByRole('button', { name: 'Undo' }).first().boundingBox())!
+    // polled, not a fixed wait: a loaded gate's Firefox can take longer than 150 ms to deliver the hover
     await page.mouse.move(box.x + 2, box.y + 2)
-    await page.waitForTimeout(150)
-    expect(await state()).toBe('paused')
+    await expect.poll(state, { timeout: 3000 }).toBe('paused')
     await page.mouse.move(5, 5)
-    await page.waitForTimeout(150)
-    expect(await state()).toBe('running')
+    await expect.poll(state, { timeout: 3000 }).toBe('running')
     await raise(page, { title: 'Brief', duration: 200, action: undefined })
     await expect
       .poll(() => page.locator('[data-part="root"]', { hasText: 'Brief' }).count(), {

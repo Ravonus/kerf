@@ -156,6 +156,7 @@ The parts of `check.mjs`, split out so each can be tested.
 | ---- | ------------ |
 | [`run.mjs`](check/run.mjs) | `run(cmd, args, cwd, env)` spawns a command from the repo root with `NO_COLOR=1` and keeps its output. `allJobs` runs a job per item with bounded concurrency, prints each failure's output, and reports the three slowest |
 | [`steps.mjs`](check/steps.mjs) | `runSteps` runs the chosen steps in three waves (static, suites, then the `alone` steps with timing budgets one at a time), prints one line per step in list order, then each failure with its fix |
+| [`release-steps.mjs`](check/release-steps.mjs) | The `--release`-only steps, `instant-navigation` and `timing`, both run alone after the suites |
 | [`tiers.mjs`](check/tiers.mjs) | `RELEASE_TESTS`: the heavy test files only `--release` runs (scaffolds, builds, mutation tests, benchmarks, cross-browser checks). `affected()` works out the packages `--changed` tests. `mergeArgs()` turns the release-only files into Vitest `--exclude` flags. `QUIET_TESTS`: files with a timing budget, which the release gate runs in the `timing` step instead of with their package |
 | [`types.mjs`](check/types.mjs) | Pulls `error TS` lines out of `tsc` output, leaving out `evals/`, `examples/` and `packages/text/gen/` |
 | [`webkit.mjs`](check/webkit.mjs) | `webkitWorks(root, ms = 30000)`: launches WebKit through `packages/start`'s playwright-core and opens a page. `--release` calls it first |
