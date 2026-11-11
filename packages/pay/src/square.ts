@@ -14,8 +14,12 @@ import {
 
 /** Options of `squareRail()`. Secrets default to the environment, which is where they belong. */
 export interface SquareOptions {
-  /** `sandbox` talks to squareupsandbox.com. Default `process.env.SQUARE_ENV`, else production. */
+  /** `sandbox` talks to connect.squareupsandbox.com with a sandbox token. Default `process.env.SQUARE_ENVIRONMENT` (or
+   * `SQUARE_ENV`), else production. Any other value is refused (PAY032) rather than read as production. */
   environment?: 'sandbox' | 'production'
+  /** Default `process.env.SQUARE_APPLICATION_ID`. Only checked: a `sandbox-sq0idb-…` id says sandbox, `sq0idp-…`
+   * production, and one that disagrees with `environment` is PAY032. */
+  applicationId?: string
   /** The API's origin: point it at a local mock. Default from `environment`. */
   api?: string
   /** Pinned, so an account's default version can't reshape these calls. */
@@ -89,15 +93,45 @@ function stateOf(p: SquarePayment): PurchaseState | null {
   return PAYMENT[p.status ?? ''] ?? null
 }
 
+/** `true` for the sandbox, after checking the environment's spelling and the application id against it. */
+export function squareSandbox(options: Pick<SquareOptions, 'environment' | 'applicationId'> = {}) {
+  const raw = options.environment ?? env('SQUARE_ENVIRONMENT') ?? env('SQUARE_ENV')
+  const value = (raw ?? '').trim().toLowerCase()
+  if (value && value !== 'sandbox' && value !== 'production')
+    throw new PayError(
+      'PAY032',
+      `\`SQUARE_ENVIRONMENT\` is \`${raw}\`: set it to \`sandbox\` or \`production\``,
+      500,
+    )
+  const sandbox = value === 'sandbox'
+  const app = options.applicationId ?? env('SQUARE_APPLICATION_ID')
+  if (app && app.startsWith('sandbox-') !== sandbox)
+    throw new PayError(
+      'PAY032',
+      sandbox
+        ? '`SQUARE_ENVIRONMENT` is `sandbox` but `SQUARE_APPLICATION_ID` is a production app: take the token and id from the Sandbox tab of the Developer Console'
+        : '`SQUARE_APPLICATION_ID` is a sandbox app (`sandbox-…`) but `SQUARE_ENVIRONMENT` is not `sandbox`: set `SQUARE_ENVIRONMENT=sandbox`, or use the production credentials',
+      500,
+    )
+  return sandbox
+}
+
+const SANDBOX_API = 'https://connect.squareupsandbox.com'
+const PRODUCTION_API = 'https://connect.squareup.com'
+
 function squareCall(options: SquareOptions, fetcher: typeof fetch) {
-  const sandbox = (options.environment ?? env('SQUARE_ENV')) === 'sandbox'
-  const api =
-    options.api ??
-    (sandbox ? 'https://connect.squareupsandbox.com' : 'https://connect.squareup.com')
   const version = options.apiVersion ?? '2025-10-16'
   return async function call(path: string, body?: unknown) {
+    const sandbox = squareSandbox(options)
+    const api = options.api ?? (sandbox ? SANDBOX_API : PRODUCTION_API)
     const token = options.accessToken ?? env('SQUARE_ACCESS_TOKEN')
     if (!token) throw new PayError('PAY003', '`SQUARE_ACCESS_TOKEN` is not set on the server', 500)
+    if (!options.api && /placeholder/i.test(token))
+      throw new PayError(
+        'PAY003',
+        '`SQUARE_ACCESS_TOKEN` is still a placeholder: nothing was sent to Square',
+        500,
+      )
     const res = await fetcher(`${api}${path}`, {
       method: body === undefined ? 'GET' : 'POST',
       headers: {
@@ -110,9 +144,16 @@ function squareCall(options: SquareOptions, fetcher: typeof fetch) {
     const data = (await res.json().catch(() => null)) as Record<string, unknown> | null
     if (!res.ok) {
       const errors = (data?.errors as { detail?: string }[] | undefined) ?? []
+      // A token only works on its own host, and Square says no more than UNAUTHORIZED when it's sent to the other one.
+      const hint =
+        res.status === 401 && !options.api
+          ? sandbox
+            ? ' (this is the sandbox host: is `SQUARE_ACCESS_TOKEN` the sandbox token, from the Sandbox tab?)'
+            : ' (this is the production host: a sandbox token needs `SQUARE_ENVIRONMENT=sandbox`)'
+          : ''
       throw new PayError(
         'PAY030',
-        `Square refused ${path}: ${errors[0]?.detail ?? res.status}`,
+        `Square refused ${path}: ${errors[0]?.detail ?? res.status}${hint}`,
         res.status === 429 ? 503 : 502,
       )
     }
@@ -181,6 +222,13 @@ export function squareRail(options: SquareOptions = {}): PayRail {
   return {
     id: 'square',
     modes: ['payment'],
+    get sandbox() {
+      try {
+        return squareSandbox(options)
+      } catch {
+        return undefined // a misspelled environment: every call says so (PAY032)
+      }
+    },
     checkout: (request) => paymentLink(call, options, request),
     portal() {
       return Promise.reject(

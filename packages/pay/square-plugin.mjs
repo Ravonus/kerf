@@ -9,6 +9,25 @@ const slot = defineSlot({
   sides: ['server', 'client', 'native'],
 })
 
+/** What `weft add pay-square` writes: the sandbox's variables, empty but for the switch, in .env and .env.example. */
+const setup = {
+  run: () => ({
+    env: {
+      SQUARE_ENVIRONMENT: 'sandbox',
+      SQUARE_ACCESS_TOKEN: 'square_sandbox_placeholder',
+      SQUARE_LOCATION_ID: '',
+      SQUARE_APPLICATION_ID: '',
+      SQUARE_WEBHOOK_SIGNATURE_KEY: '',
+      SQUARE_WEBHOOK_URL: '',
+    },
+    next: [
+      "from the Developer Console's Sandbox tab, put the sandbox access token, a sandbox location and the `sandbox-sq0idb-…` app id in .env",
+      'set SQUARE_ENVIRONMENT=production with the production token and location to go live: a sandbox app id is then refused (PAY032)',
+      'give Square the webhook URL /_weft/x/pay/square (a tunnel locally), the same string as SQUARE_WEBHOOK_URL',
+    ],
+  }),
+}
+
 export const square = definePlugin({
   name: '@weft-js/pay/square',
   version: '0.0.0',
@@ -20,10 +39,13 @@ export const square = definePlugin({
       'SQUARE_LOCATION_ID',
       'SQUARE_WEBHOOK_SIGNATURE_KEY',
       'SQUARE_WEBHOOK_URL',
+      'SQUARE_ENVIRONMENT',
       'SQUARE_ENV',
+      'SQUARE_APPLICATION_ID',
     ],
   },
   contribute: (options) => ({
+    setup,
     provides: [
       provide(slot, {
         key: 'square',
@@ -32,7 +54,7 @@ export const square = definePlugin({
     ],
     agents: {
       title: 'Pay rail: Square',
-      text: 'Square payment links, one-time payments only (`pay.order`, one-time products): `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`, and for `/_weft/x/pay/square` (subscribe it to `payment.created` and `payment.updated`) `SQUARE_WEBHOOK_SIGNATURE_KEY` plus `SQUARE_WEBHOOK_URL`, the exact URL given to Square. `SQUARE_ENV=sandbox` for test.',
+      text: 'Square payment links, one-time payments only (`pay.order`, one-time products): `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`, and for `/_weft/x/pay/square` (subscribe it to `payment.created` and `payment.updated`) `SQUARE_WEBHOOK_SIGNATURE_KEY` plus `SQUARE_WEBHOOK_URL`, the exact URL given to Square. For the sandbox, `SQUARE_ENVIRONMENT=sandbox` with the token, location and app id (`sandbox-sq0idb-…`); a mismatch is PAY032. Pay on the hosted page with test card 4111 1111 1111 1111.',
     },
     map: [
       {

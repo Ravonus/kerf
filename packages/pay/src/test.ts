@@ -81,6 +81,7 @@ function fakeRail(
 ): PayRail {
   const rail: PayRail = {
     id: 'fake',
+    sandbox: true,
     checkout(request) {
       sessions.push(request)
       return Promise.resolve({ url: `https://fake-pay.test/checkout/${next('cs')}` })
