@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
 import { posters } from '@weft-js/capture/vite'
+import { keelPaint } from '../src/paint.mjs'
 
 const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const demo = join(pkg, 'demo')
@@ -18,6 +19,7 @@ const TYPES = {
   '.css': 'text/css',
   '.avif': 'image/avif',
   '.webp': 'image/webp',
+  '.png': 'image/png',
 }
 
 /** Builds the demo into a temporary folder and serves it on 127.0.0.1. */
@@ -31,11 +33,13 @@ export async function serveDemo(port = 0, baked = join(demo, 'posters')) {
     root: demo,
     configFile: false,
     logLevel: 'error',
-    plugins: [weft(), posters({ dir: baked })],
+    plugins: [keelPaint(), weft(), posters({ dir: baked })],
     build: {
       outDir: out,
       emptyOutDir: true,
-      rolldownOptions: { input: [join(demo, 'index.html'), join(demo, 'stage.html')] },
+      rolldownOptions: {
+        input: [join(demo, 'index.html'), join(demo, 'stage.html'), join(demo, 'paint.html')],
+      },
     },
   })
   const server = createServer((req, res) => {

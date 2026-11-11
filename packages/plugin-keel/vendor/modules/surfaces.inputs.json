@@ -1,0 +1,54 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "surface",
+      "label": "Surface",
+      "required": false,
+      "help": "Which of the module's recipes to paint.",
+      "type": "select",
+      "options": [
+        {
+          "value": "paper",
+          "label": "Paper"
+        },
+        {
+          "value": "knit",
+          "label": "Rib knit"
+        },
+        {
+          "value": "floral",
+          "label": "Painted flowers"
+        },
+        {
+          "value": "cloth",
+          "label": "Painted cloth"
+        }
+      ],
+      "default": "paper"
+    },
+    {
+      "key": "seed",
+      "label": "Seed",
+      "required": false,
+      "help": "Decides every fibre, stitch and stroke inside the recipe's bounds.",
+      "type": "number",
+      "min": 0,
+      "max": 999999,
+      "step": 1,
+      "default": 0
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "required": false,
+      "help": "Pixels across; a tile is square.",
+      "placement": "advanced",
+      "type": "number",
+      "min": 16,
+      "max": 4096,
+      "step": 16,
+      "default": 1024
+    }
+  ]
+}

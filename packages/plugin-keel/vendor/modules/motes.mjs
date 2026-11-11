@@ -1,4 +1,4 @@
-// motes@0.1.0 from keel-modules 884d31d (MIT). Generated: don't edit.
+// motes@0.1.0 from keel-modules 53c36d0 (MIT). Generated: don't edit.
 var x=`
 uniform vec3 uDrift, uBoxMin, uBox;
 uniform float uTurbulence;

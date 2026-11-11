@@ -136,3 +136,14 @@ describe('the portrait module', () => {
     expect(portrait.featuresOf(21)).not.toEqual(portrait.featuresOf(22))
   })
 })
+
+describe('the surfaces module', () => {
+  it('paints the same tileable paper, digest and bytes, from the same seed', async () => {
+    const surfaces = await import('../vendor/modules/surfaces.mjs')
+    const a = surfaces.paintSurface(surfaces.PAPER, { seed: 2, width: 32 })
+    const b = surfaces.paintSurface(surfaces.PAPER, { seed: 2, width: 32 })
+    expect(a.digest).toBe(b.digest)
+    expect(new Uint8Array(a.buffers[0])).toEqual(new Uint8Array(b.buffers[0]))
+    expect(a.digest).not.toBe(surfaces.planSurface(surfaces.PAPER, { seed: 3, width: 32 }).digest)
+  })
+})

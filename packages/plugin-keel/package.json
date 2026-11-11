@@ -32,6 +32,14 @@
     "./scene": "./src/scene.ts",
     "./governor": "./src/governor.ts",
     "./blend": "./src/blend.ts",
+    "./paint": {
+      "types": "./src/paint.d.mts",
+      "default": "./src/paint.mjs"
+    },
+    "./paint-live": "./src/paint-live.ts",
+    "./client": {
+      "types": "./src/client.d.ts"
+    },
     "./lit": {
       "types": "./vendor/lit.d.mts",
       "default": "./vendor/lit.mjs"
@@ -46,12 +54,13 @@
   },
   "scripts": {
     "test": "vitest run",
-    "test:e2e": "node test/e2e.mjs",
+    "test:e2e": "node test/e2e.mjs && node test/paint-e2e.mjs",
     "vendor": "node scripts/vendor.mjs"
   },
   "devDependencies": {
     "@weft-js/capture": "workspace:*",
     "@weft-js/core": "workspace:*",
+    "@weft-js/plugin-media": "workspace:*",
     "@weft-js/scroll": "workspace:*",
     "@weft-js/warp": "workspace:*",
     "esbuild": "0.28.2",

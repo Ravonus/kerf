@@ -1,0 +1,38 @@
+body {
+  margin: 0;
+  font: 16px/24px ui-sans-serif, system-ui, sans-serif;
+  color: rgb(32, 34, 30);
+}
+/* A band of tiled paper: the painted tile repeats at its own size, and meets itself at every edge. */
+.band {
+  min-height: 100vh;
+  padding: 48px 6vw;
+  box-sizing: border-box;
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+.card {
+  position: relative;
+  width: 554px;
+  max-width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.25);
+}
+.card p {
+  position: absolute;
+  inset: auto 24px 20px;
+  margin: 0;
+  color: rgb(250, 248, 240);
+  font-weight: 600;
+}
+.card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}

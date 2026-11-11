@@ -100,6 +100,7 @@ that never reaches that line never downloads it.
 | `butterflies` | A small flock of glowing butterflies with Shape wings, wandering on a seed and the page's clock. |
 | `plate-painter` | A painted landscape plate from a seeded recipe, generated on the GPU and drawn behind a scene. |
 | `portrait` | A seeded waist-up portrait bust at hero detail, sculpted and meshed when generated, with soft portrait light. |
+| `surfaces` | Seeded paper grain, rib knit and painted grounds as an albedo and a relief, on the GPU or the CPU; prints. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 
@@ -183,6 +184,51 @@ tracks: [
 
 `keelBlend({ finish, blend, post })` passes settings to each module: `blend: { seed: 7, lineColour: '#ffffff' }`.
 
+## Painted grounds
+
+A seeded surface can be painted at build time and served as ordinary media. Add `keelPaint()` before weft's
+Vite plugin, and `media()` to `weft.config.ts` for the AVIF ladder and the placeholder:
+
+```json
+{
+  "surface": "painted-floral",
+  "seed": 7,
+  "width": 1108,
+  "height": 700
+}
+```
+
+```tsx
+import floral from './floral.paint.json?paint'
+
+<Media
+  src={floral}
+  alt=""
+  decorative
+  width="554px"
+/>
+```
+
+A recipe names a preset (`paper`, `knit`, `painted-floral`, `painted-cloth`) with `with` laid over it, or
+gives a whole `recipe`. The PNG is painted on the CPU in Node and kept in `.weft/cache/paint` under the plan's
+digest and the module's version, so a rebuild with the recipe unchanged paints nothing. Add
+`"@weft-js/plugin-keel/client"` to `types` for the `?paint` declaration. `paper` and `knit` tile: `cssImage`
+from `paint-live` gives an `image-set` of each format's widest file, for `background-image`.
+
+A colour or seed known only at run time is painted in the page, on a WebGL2 `OffscreenCanvas` or the CPU:
+
+```ts
+import { paintLive } from '@weft-js/plugin-keel/paint-live'
+
+const themed = await paintLive({
+  surface: 'painted-cloth',
+  seed: 12,
+  with: { ground: '#3a2347' },
+})
+```
+
+It gives a media record whose `src` is a blob URL; `themed.revoke()` frees it.
+
 ## Music
 
 ```ts
@@ -213,6 +259,9 @@ node test/serve.mjs 4179
 
 `pnpm run test:e2e` runs it in Chrome on the GPU and checks its pixels. It also bakes the stage's posters,
 rebuilds with them, and captures the stage at three scroll stops.
+
+`demo/paint.html` shows two card grounds and a paper band painted at build, and a card painted in the page in
+a theme's colour. `node test/paint-e2e.mjs` checks them and prints each rung's bytes.
 
 ## Vendored code
 
