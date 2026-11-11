@@ -32,6 +32,10 @@
     "./scene": "./src/scene.ts",
     "./governor": "./src/governor.ts",
     "./blend": "./src/blend.ts",
+    "./paint": {
+      "types": "./src/paint.d.mts",
+      "default": "./src/paint.mjs"
+    },
     "./lit": {
       "types": "./vendor/lit.d.mts",
       "default": "./vendor/lit.mjs"
