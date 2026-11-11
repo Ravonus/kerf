@@ -85,7 +85,7 @@ function overlayAMenuFollowsItsTrigger({
     await page.getByRole('button', { name: 'ScrollMenu' }).scrollIntoViewIfNeeded()
     await opened(page, 'ScrollMenu')
     const a = await boxes(page, 'scrolled')
-    await page.evaluate(() => scrollBy(0, 40))
+    await page.evaluate(() => scrollBy({ top: 40, behavior: 'instant' })) // instant: the page scrolls smoothly by default
     // It moves on the next frame, which a busy machine delays: wait for it rather than a fixed time.
     let b = a
     await expect
@@ -161,7 +161,7 @@ function overlayThePageBehindAS({ fresh, opened }: Pick<OverlayTools, 'fresh' | 
 function overlayTheLockKeepsTheScroll({ fresh }: Pick<OverlayTools, 'fresh'>) {
   return async () => {
     const page = await fresh()
-    await page.evaluate(() => scrollTo(0, 300))
+    await page.evaluate(() => scrollTo({ top: 300, behavior: 'instant' }))
     await page.evaluate(() => {
       window.api.modal.value = true
     })
@@ -216,7 +216,7 @@ function overlayASliderClickInRTL({ fresh }: Pick<OverlayTools, 'fresh'>) {
     const page = await fresh()
     const t = await page.evaluate(() => {
       const r = document.querySelector('#rtl [data-part="track"]')!
-      r.scrollIntoView({ block: 'center' })
+      r.scrollIntoView({ block: 'center', behavior: 'instant' })
       const b = r.getBoundingClientRect()
       return { l: b.left, w: b.width, y: b.top + b.height / 2 }
     })

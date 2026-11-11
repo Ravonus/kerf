@@ -108,6 +108,21 @@ test('a button pays nothing for canvas or dither; a Canvas brings no dither engi
   for (const word of ['putImageData', 'Path2D']) expect(canvas.js, word).not.toContain(word)
 }, 60000)
 
+/** The CSS without its `:not(…)` fences: what's left is what the rules select. */
+function unfenced(css: string) {
+  let out = '',
+    i = 0
+  for (let at = css.indexOf(':not(', i); at !== -1; at = css.indexOf(':not(', i)) {
+    out += css.slice(i, at)
+    let depth = 0
+    for (i = at + 4; i < css.length; i++)
+      if (css[i] === '(') depth++
+      else if (css[i] === ')' && --depth === 0) break
+    i++
+  }
+  return out + css.slice(i)
+}
+
 test('a dither brings its own CSS and the inks it can name, and no field or signature rules', async () => {
   const { css } = await bundle('<DitherField />', 'DitherField')
   expect(css).toContain('[data-scope=dither]')
@@ -117,7 +132,8 @@ test('a dither brings its own CSS and the inks it can name, and no field or sign
     '--warp-color-text',
   ])
     expect(css, token).toContain(token)
-  expect(css).not.toContain('[data-scope=field]')
+  // a fence like `:not([data-scope=field] *)` keeps another component's rule off a field; it styles no field
+  expect(unfenced(css)).not.toContain('[data-scope=field]')
 }, 60000)
 
 test('a button brings no grid, palette or editor', async () => {
