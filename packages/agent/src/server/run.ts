@@ -18,6 +18,24 @@ import { AgentError, MCP, acting, liveTurns, turnTokens, userOf, type Core } fro
 export type Result = { status: Extract<Part, { type: 'result' }>['status']; output: unknown }
 type Call = { id: string; tool: string; input: unknown }
 
+type Failed = {
+  answer?: { message?: string }
+  data?: { message?: unknown }
+  issues?: { path?: readonly unknown[]; message: string }[]
+}
+
+/** What went wrong, in words the agent can act on: a declared error's message, or each input issue by its path. */
+export function failure(e: unknown): string {
+  const f = (e ?? {}) as Failed
+  if (f.answer?.message) return f.answer.message
+  if (typeof f.data?.message === 'string') return f.data.message
+  if (f.issues?.length) {
+    const key = (p: unknown) => String(typeof p === 'object' && p ? (p as { key: unknown }).key : p)
+    return `Fix the input: ${f.issues.map((i) => `${(i.path ?? []).map(key).join('.') || 'input'}: ${i.message}`).join('; ')}`
+  }
+  return e instanceof Error ? e.message : String(e)
+}
+
 /** Run one tool as the signed-in caller, checked against `caller`'s grants by the guard. */
 export async function runTool(
   tool: ToolInfo,
@@ -31,11 +49,7 @@ export async function runTool(
     )
     return { status: 'ok', output: output ?? null }
   } catch (e) {
-    const said = (e as { answer?: { message?: string } }).answer
-    return {
-      status: 'error',
-      output: said?.message ?? (e instanceof Error ? e.message : String(e)),
-    }
+    return { status: 'error', output: failure(e) }
   }
 }
 

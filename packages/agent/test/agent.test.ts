@@ -501,3 +501,12 @@ test('drizzleAgentStore keeps it all in SQLite', async () => {
   expect(await store.messages('c1')).toEqual([])
   expect(db.$weft.exempt.has('agent_messages')).toBe(true)
 })
+
+test('a failed tool tells the agent why: a declared message, or each input issue', async () => {
+  const { failure } = await import('../src/server/run')
+  expect(failure({ data: { message: 'Step 2: no such item' } })).toBe('Step 2: no such item')
+  expect(failure({ issues: [{ path: [{ key: 'cents' }], message: 'Too small' }] })).toBe(
+    'Fix the input: cents: Too small',
+  )
+  expect(failure(new Error('boom'))).toBe('boom')
+})

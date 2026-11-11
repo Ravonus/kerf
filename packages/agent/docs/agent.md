@@ -53,7 +53,8 @@ export default defineAgent({
   bridges: [anthropic(), claudeCli()],
   system: 'You run the shop for its owner.',
   roles: { owner: ['*'], staff: ['orders.*', 'menu.read'] },
-  user: (id) => db.query.users.findFirst({ where: eq(users.id, id) }) ?? null,
+  // the user a token acts as
+  user: (id) => findUser(id),
 })
 ```
 
@@ -88,11 +89,18 @@ The first available bridge answers a new conversation. Each conversation keeps i
 <!-- example: skip fragments of a server module -->
 
 ```ts
-import { bridgeInput, bridgeOutput, rustBridge } from '@weft-js/agent/rust'
+import { bridgeInput, bridgeOutput } from '@weft-js/agent/rust'
+import { rustBridge } from '@weft-js/agent/rust'
 
-export const planner = mutation({ input: bridgeInput, output: bridgeOutput, impl: remote('rust://planner') })
+export const planner = mutation({
+  input: bridgeInput,
+  output: bridgeOutput,
+  impl: remote('rust://planner'),
+})
+
 // src/agent.server.ts
-defineAgent({ bridges: [anthropic(), rustBridge({ fn: planner, label: 'House rules' })], … })
+const house = rustBridge({ fn: planner, label: 'House rules' })
+defineAgent({ bridges: [anthropic(), house], … })
 ```
 
 ## Outside agents: MCP and tokens
@@ -101,7 +109,9 @@ The app is an MCP server at `/_weft/x/agent/mcp` (Streamable HTTP, JSON answers)
 returns a secret once. Give it to Claude Code, Codex or a script as `Authorization: Bearer <secret>`:
 
 ```bash
-claude mcp add --transport http shop https://example.com/_weft/x/agent/mcp --header "Authorization: Bearer wa_…"
+claude mcp add --transport http shop \
+  https://example.com/_weft/x/agent/mcp \
+  --header "Authorization: Bearer wa_…"
 ```
 
 - A token never grants more than its creator holds, when it's made or later: a demoted owner's tokens shrink with them.
@@ -122,11 +132,14 @@ Every bridge step records its model and input and output tokens, and every token
 import { memoryAgentStore } from '@weft-js/agent/server'
 import { fakeBridge } from '@weft-js/agent/test'
 
-const bridge = fakeBridge([
-  { call: { tool: 'setPrice', input: { item: 'latte', cents: 400 } } },
-  'Done.',
-])
-const agent = defineAgent({ store: memoryAgentStore(), bridges: [bridge], system: '' })
+const input = { item: 'latte', cents: 400 }
+const setPrice = { tool: 'setPrice', input }
+const bridge = fakeBridge([{ call: setPrice }, 'Done.'])
+const agent = defineAgent({
+  store: memoryAgentStore(),
+  bridges: [bridge],
+  system: '',
+})
 ```
 
 Each line answers one step: words, a call or calls, or a function of the turn. `bridge.turns` keeps what it was handed.
