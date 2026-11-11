@@ -1,12 +1,17 @@
-# Every night, the newest commit on main that passed `quality` goes to npm under the `next` tag, as
-# <next patch>-nightly.<date>.<run> (0.1.5-nightly.20261111.12). `latest` stays the last release cut by hand.
+# Every push to main that passes `quality` goes to npm under the `next` tag, as <next patch>-nightly.<date>.<run>
+# (0.1.5-nightly.20261111.12); a daily run catches anything that slipped. `latest` stays the last release cut by hand.
 #
 #   npm i @weft-js/start@next        try tonight's
 #
 # It publishes by trusted publishing: npm trusts this workflow file in this repo, so no token is stored and none can
-# leak. A night with nothing new since the last one publishes nothing. The `nightly` git tag marks what last went out.
+# leak. Nothing new since the last publish, nothing published; the `nightly` git tag marks what last went out. The
+# file keeps its name: npm's trust is tied to it.
 name: nightly
 on:
+  workflow_run:
+    workflows: [quality]
+    types: [completed]
+    branches: [main]
   schedule:
     - cron: '0 9 * * *' # 09:00 UTC: the small hours in the Americas
   workflow_dispatch:
@@ -19,6 +24,10 @@ permissions: {}
 concurrency: { group: nightly, cancel-in-progress: false }
 jobs:
   plan:
+    # after quality: only a push to main that passed
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     permissions:
       actions: read # which commits passed quality
       contents: read

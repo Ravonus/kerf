@@ -1,24 +1,26 @@
 # Releasing
 
 Only the owner cuts a release, and a release runs on the owner's machine. The one exception is the nightly, which
-CI publishes on its own (below).
+CI publishes on its own after every merge (below).
 
 ## Channels
 
 | npm tag  | What it is                                                       | Version                      | Install                   |
 | -------- | ---------------------------------------------------------------- | ---------------------------- | ------------------------- |
 | `latest` | The last release the owner cut, after the full release gate      | `0.1.4`                      | `npm i @weft-js/start`      |
-| `next`   | Every night, the newest `main` that passed `quality`             | `0.1.5-nightly.20261111.12`  | `npm i @weft-js/start@next` |
+| `next`   | Every push to `main` that passes `quality`                       | `0.1.5-nightly.20261111.12`  | `npm i @weft-js/start@next` |
 
 Before 1.0 there is no separate stable line: `latest` is the stable one, and a release is a nightly the owner has
 run the full release gate on. A minor (0.2.0) may break things; a patch (0.1.5) should not.
 
-## Nightly
+## Next (the nightly workflow)
 
-[.github/workflows/nightly.yml](../.github/workflows/nightly.yml) runs at 09:00 UTC, or by hand from the Actions tab
-(with `force` to publish a commit again). It picks the newest commit on `main` whose `quality` run passed, builds the
-compilers for every platform at the nightly's version, and publishes all the packages under `next`. A night with
-nothing new publishes nothing; the `nightly` git tag marks the last commit that went out.
+[.github/workflows/nightly.yml](../.github/workflows/nightly.yml) runs each time `quality` passes on a push to `main`,
+again at 09:00 UTC in case one was missed, and by hand from the Actions tab (with `force` to publish a commit again).
+It picks the newest commit on `main` whose `quality` run passed, builds the compilers for every platform at that
+version, and publishes all the packages under `next`. Merges that land while one is publishing wait and go out
+together in the next run. Nothing new since the last publish, nothing published; the `nightly` git tag marks the last
+commit that went out. Push as often as you like: publishing never holds a merge back.
 
 It publishes by npm's trusted publishing: npm trusts that workflow file in this repo, and no token is stored. Each
 package has to trust it once, from a terminal logged in to npm (`npm login --auth-type=web`):
