@@ -5,8 +5,10 @@ import { onCleanup, onMount, state, untrack, type State } from '@weft-js/core'
 import { defineSurface, Surface, type SurfaceBase } from '@weft-js/core/surface'
 import { progress, type Progress } from '@weft-js/scroll/timeline'
 import { FULL, handover, sceneWindow, type Handover, type Levers } from '@weft-js/warp-core/scenes'
+import { dissolve, lookOf, postOf, type Fade } from './Stage-look'
 import type {
   ActiveScene,
+  SceneLook,
   StageBlend,
   StageGovernor,
   StagePointer,
@@ -33,7 +35,7 @@ export interface StageProps {
 }
 
 /** `<Scene>`'s props. */
-export interface SceneProps {
+export interface SceneProps extends SceneLook {
   use: StageSceneDef
   /** A colour or an image URL, shown until the scene draws, and where it can't. */
   poster?: string
@@ -42,8 +44,6 @@ export interface SceneProps {
   /** How many viewports before the section enters its position starts. Default 0.2. */
   early?: number
   seed?: number
-  /** How the hand-over into this scene looks. Default `noise`. */
-  mode?: 'noise' | 'radial'
   id?: string
   class?: string
   label?: string
@@ -76,6 +76,8 @@ interface Director {
   frame: number
   last: number
   active: ActiveScene | null
+  /** Under reduced motion, the timed dissolve into the active scene. */
+  fade: Fade | null
   /** Whether the canvas shows, so a still frame writes nothing. */
   shown: boolean | null
   root?: HTMLElement
@@ -134,26 +136,43 @@ function show(d: Director, drawn: boolean) {
   d.s.el.style.opacity = drawn ? '1' : '0'
 }
 
+function look(d: Director, p: Handover, positions: readonly number[]) {
+  const active = d.entries[p.active]!
+  const post = postOf(active.props, active.live, positions[p.active]!)
+  return lookOf(d.entries[p.to]!.props, {
+    reduced: d.reduced,
+    pointer: d.pointer,
+    levers: d.levers,
+    post,
+  })
+}
+
 function draw(d: Director, h: Handover, positions: readonly number[]) {
   const frame = {
     pointer: d.pointer,
     velocity: (d.entries[h.active]?.scroll.velocity ?? 0) * 1000,
     time: d.s!.clock.seconds,
   }
-  const a = d.entries[h.from]!.live
-  const b = d.entries[h.to]!.live
-  const cut = h.t < 0.5 ? h.from : h.to
-  if (h.from !== h.to && a && b && d.blend) {
-    a.at(positions[h.from]!, frame)
-    b.at(positions[h.to]!, frame)
-    const mode = d.reduced ? 'fade' : (d.entries[h.to]!.props.mode ?? 'noise')
-    d.blend.draw(a, b, h.t, { mode, pointer: d.pointer, lines: !d.reduced })
-    return show(d, true)
+  let p = h
+  if (d.reduced) {
+    const fade = dissolve(d.fade, h, performance.now(), (i) => !!d.entries[i]?.live)
+    d.fade = fade.fade
+    if (fade.moving) d.s!.invalidate()
+    p = fade.shown
   }
-  const one = d.entries[cut]!.live
-  one?.at(positions[cut]!, frame)
-  one?.render()
-  show(d, !!one)
+  const pose = (i: number) => {
+    const live = d.entries[i]!.live
+    live?.at(positions[i]!, frame)
+    return live
+  }
+  const a = pose(p.from)
+  const b = p.to === p.from ? a : pose(p.to)
+  const one = p.t < 0.5 ? a : b
+  if (!d.blend) one?.render()
+  // With a blend every frame goes through it, so a scene looks the same alone as in a hand-over.
+  else if (a && b) d.blend.draw(a, b, p.t, look(d, p, positions))
+  else if (one) d.blend.draw(one, one, 1, look(d, p, positions))
+  show(d, !!one || !!(d.blend && a && b))
 }
 
 /** Writes where the page stands: `data-active` on the active section, and `onActive` when anything moved. */
@@ -272,6 +291,7 @@ function director(props: StageProps): Director {
     frame: -1e9,
     last: 0,
     active: null,
+    fade: null,
     shown: null,
   }
 }
