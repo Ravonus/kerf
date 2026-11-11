@@ -337,7 +337,8 @@ function enter(d: Director, entry: Entry) {
 
 /**
  * A section with a scene, inside a `<Stage>`. Its poster is pinned behind it while it is on screen: the page's
- * first paint, and what shows without WebGL2 or before the scene is built.
+ * first paint, and what shows without WebGL2 or before the scene is built. The section's `--scene-position` is its
+ * scene's position, for styles that move with it.
  */
 export function Scene(props: SceneProps) {
   let el!: HTMLElement
@@ -349,7 +350,11 @@ export function Scene(props: SceneProps) {
       early: props.early ?? 0.2,
       damp: 0.5,
       touch: 'raw',
-      onChange: () => d.s?.invalidate(),
+      // The position goes to the section too, for its own styles: `--scene-position`, canvas or none.
+      onChange: (value) => {
+        el.style.setProperty('--scene-position', String(Math.round(value * 1e4) / 1e4))
+        d.s?.invalidate()
+      },
     })
     // The entry keeps the live props: the stage reads `use`, `hero` and `mode` where it needs them.
     enter(

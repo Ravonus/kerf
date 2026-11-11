@@ -502,7 +502,8 @@ import { orchard, harbour } from './scenes'
 </Stage>
 ```
 
-Each scene's position is in viewports since its section began to enter. The stage keeps the active scene and its
+Each scene's position is in viewports since its section began to enter. Its section carries it as
+`--scene-position`, so the section's own styles can move with the scene without a second `progress()`. The stage keeps the active scene and its
 neighbours built and frees one two away. As a section arrives its scene blends in over `hero` viewports; the
 active scene moves at the half-way point. Without a `blend` the stage cuts there. A `governor` sets the levers,
 the pixel ratio and the frame rate. A scene's `poster` is pinned behind its section: the first paint, and what

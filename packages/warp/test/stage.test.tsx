@@ -270,3 +270,14 @@ test('a dissolve starts when the active scene changes, and is skipped when the s
     shown: { from: 1 },
   })
 })
+
+test('each section carries its scene position as `--scene-position`, for its own styles', async () => {
+  const { container } = page()
+  await frames()
+  place([-0.25, 0.75, 1.75, 2.75])
+  await frames(40)
+  const read = (i: number) =>
+    Number(container.querySelectorAll('section')[i]!.style.getPropertyValue('--scene-position'))
+  expect(read(0)).toBeCloseTo(1.25, 2)
+  expect(read(1)).toBeCloseTo(0.25, 2)
+})
