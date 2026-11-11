@@ -88,10 +88,7 @@ jobs:
         run: |
           mkdir -p packages/core/native packages/core/dist/platform
           cp artifacts/wasm/* packages/core/native/
-          # win32-arm64 has never been on npm, and trusted publishing can't create a package: it runs the WASM build
-          for d in artifacts/*; do
-            case "$d" in artifacts/wasm | artifacts/win32-arm64) ;; *) cp -r "$d" packages/core/dist/platform/ ;; esac
-          done
+          for d in artifacts/*; do [ "$d" = artifacts/wasm ] || cp -r "$d" packages/core/dist/platform/; done
       - run: node scripts/set-version.mjs "$VERSION"
       - run: node scripts/release.mjs --publish --no-build --ci
       - name: Mark what went out

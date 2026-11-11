@@ -25,7 +25,8 @@ jobs:
           - { name: linux-x64-musl, target: x86_64-unknown-linux-musl, os: ubuntu-latest, cross: zigbuild }
           - { name: linux-arm64-musl, target: aarch64-unknown-linux-musl, os: ubuntu-latest, cross: zigbuild }
           - { name: win32-x64, target: x86_64-pc-windows-msvc, os: windows-latest }
-          - { name: win32-arm64, target: aarch64-pc-windows-msvc, os: windows-latest }
+          # win32-arm64 isn't built: it has never been published (Windows on ARM runs the WASM build), and its cross
+          # build needs cargo-xwin, which the Windows runner doesn't have
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
