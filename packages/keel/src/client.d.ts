@@ -1,4 +1,4 @@
-// Ambient types for `?paint` imports: add `"types": ["@kerf-js/keel/client"]` to tsconfig.
+// Ambient types for `?paint` and `?gen` imports: add `"types": ["@kerf-js/keel/client"]` to tsconfig.
 
 /** `./card.paint.json?paint`: a surface painted at build, as `@kerf-js/core/media`'s record. */
 declare module '*?paint' {
@@ -6,4 +6,23 @@ declare module '*?paint' {
   const asset: MediaAsset
   /** The painted image's record: its AVIF ladder and placeholder with `media()`, the PNG alone without. */
   export default asset
+}
+
+/** `./plate.gen.json?gen`: each slot's committed basis, from `keelGen()` in `@kerf-js/keel/gen`. */
+declare module '*?gen' {
+  const slots: Readonly<
+    Record<
+      string,
+      {
+        /** The basis file's URL, served and emitted by Vite. */
+        readonly basis: string
+        readonly kind: string
+        readonly dims: unknown
+        /** sha256 of the basis bytes. */
+        readonly digest: string
+        readonly params?: unknown
+      }
+    >
+  >
+  export default slots
 }
