@@ -13,7 +13,7 @@ export function BrandTitle() {
     <Link href="/" class="brand">
       <Mark />
       <SideNavTitle title={title.value}>
-        <span>Kerf</span>
+        <span data-site="wordmark">kerfjs</span>
       </SideNavTitle>
     </Link>
   )

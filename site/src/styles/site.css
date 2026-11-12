@@ -108,6 +108,11 @@ p {
   font: 600 calc(1.25 * var(--veneer-rem))/1 var(--veneer-font-sans);
   letter-spacing: -0.03em;
 }
+/* The wordmark: lowercase and heavy beside the cut K, tracked tight like the mark's own slabs. */
+[data-site='bar'] .brand [data-site='wordmark'] {
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
 [data-site='bar'] .brand {
   display: inline-flex;
   align-items: center;
