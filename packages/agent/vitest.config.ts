@@ -5,5 +5,10 @@ import weft from '@weft-js/core/vite'
 export default defineConfig({
   plugins: [weft()],
   server: { fs: { allow: ['..'] } },
-  test: { globals: true, include: ['test/**/*.test.{mjs,ts,tsx}'], testTimeout: 120_000 },
+  test: {
+    fsModuleCachePath: 'node_modules/.vitest-cache',
+    globals: true,
+    include: ['test/**/*.test.{mjs,ts,tsx}'],
+    testTimeout: 120_000,
+  },
 })

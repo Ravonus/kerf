@@ -6,5 +6,10 @@ import path from 'node:path'
 export default defineConfig({
   resolve: { alias: { '@engine': path.resolve(import.meta.dirname, 'gen/blink') } },
   define: { __ENGINE__: '"blink"' },
-  test: { include: ['test/*.test.{ts,mjs}'], environment: 'node', testTimeout: 30000 },
+  test: {
+    fsModuleCachePath: 'node_modules/.vitest-cache',
+    include: ['test/*.test.{ts,mjs}'],
+    environment: 'node',
+    testTimeout: 30000,
+  },
 })
