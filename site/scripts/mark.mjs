@@ -1,5 +1,5 @@
 // The house mark, from the hero's own geometry (src/lib/loom/threads.ts): a K cut in two, green above the cut and coral
-// below. Smooth for the logo files; dithered with the hero's Bayer shading for the share card, where it sits on the field.
+// below. The logo files keep its edges crisp with a light Bayer grain inside; the share card dithers it fully.
 import { registerHooks } from 'node:module'
 import { deflateSync } from 'node:zlib'
 
@@ -29,7 +29,7 @@ const hex = (c) =>
     .map((n) => n.toString(16).padStart(2, '0'))
     .join('')}`
 
-/** The smooth mark's two inks: the hero's middle green and its brightest coral. */
+/** The logo's two base inks: the hero's middle green and its brightest coral. */
 export const FILLS = [hex(INKS[2]), hex(INKS[6])]
 
 /** Each piece as an SVG path in the 24-unit box. */
@@ -59,6 +59,90 @@ export function markCells(size, { dither = 1.2 } = {}) {
       out[y * size + x] = (k ? 4 : 1) + Math.max(0, Math.min(2, Math.floor(q)))
     }
   return out
+}
+
+/** Distance in units from the cut's line. */
+const fromCut = (ux, uy) => Math.abs((ux - 2) * -9.55 - (uy - 19.35) * 13) / Math.hypot(13, 9.55)
+
+/**
+ * The logo's light: above 0 a share of its cells go bright, below 0 dark. The upper piece catches light at its top
+ * left and shades along the cut; the lower one shades under the cut and toward its far corner. Mostly 0: a bit of grain.
+ */
+function light(k, ux, uy) {
+  const near = fromCut(ux, uy)
+  const shade = Math.max(0, 1 - near / 2.6)
+  if (k === 0) return 0.38 - (ux + uy - 4.5) / 28 - shade * 0.45
+  return -shade * 0.45 - Math.max(0, (ux + uy - 22) / 20) * 0.5
+}
+
+/** Which ink the dither gives a cell of piece `k` at (i, j), `cell` units square: an INKS index, or -1 for the base. */
+function cellInk(k, i, j, cell) {
+  const l = light(k, (i + 0.5) * cell, (j + 0.5) * cell)
+  const b = (BAYER[(j & 3) * 4 + (i & 3)] + 0.5) / 16
+  if (b >= Math.abs(l)) return -1
+  return k ? (l > 0 ? 6 : 5) : l > 0 ? 3 : 1
+}
+
+/** INKS index of the dithered logo at a point: its piece's base ink, or the dither's where it marks that cell. */
+export function logoInk(ux, uy, cell) {
+  const k = pieceAt(ux, uy)
+  if (k < 0) return 0
+  const d = cellInk(k, Math.floor(ux / cell), Math.floor(uy / cell), cell)
+  return d < 0 ? (k ? 6 : 2) : d
+}
+
+/** Clip a polygon to an axis-aligned box (Sutherland–Hodgman; the box is convex, the piece need not be). */
+function clipBox(poly, x0, y0, x1, y1) {
+  const edges = [(p) => p[0] >= x0, (p) => p[0] <= x1, (p) => p[1] >= y0, (p) => p[1] <= y1]
+  const cross = [
+    (a, b) => [x0, a[1] + ((b[1] - a[1]) * (x0 - a[0])) / (b[0] - a[0])],
+    (a, b) => [x1, a[1] + ((b[1] - a[1]) * (x1 - a[0])) / (b[0] - a[0])],
+    (a, b) => [a[0] + ((b[0] - a[0]) * (y0 - a[1])) / (b[1] - a[1]), y0],
+    (a, b) => [a[0] + ((b[0] - a[0]) * (y1 - a[1])) / (b[1] - a[1]), y1],
+  ]
+  let out = poly
+  for (let e = 0; e < 4 && out.length; e++) {
+    const src = out
+    out = []
+    for (let n = 0; n < src.length; n++) {
+      const a = src[(n + src.length - 1) % src.length],
+        b = src[n]
+      const ina = edges[e](a),
+        inb = edges[e](b)
+      if (inb) {
+        if (!ina) out.push(cross[e](a, b))
+        out.push(b)
+      } else if (ina) out.push(cross[e](a, b))
+    }
+  }
+  return out
+}
+
+const area = (p) =>
+  Math.abs(
+    p.reduce((s, [x, y], n) => {
+      const [u, v] = p[(n + 1) % p.length]
+      return s + x * v - u * y
+    }, 0),
+  ) / 2
+const num = (n) => String(Math.round(n * 100) / 100)
+
+/** The dither as SVG paths, one per ink, `{ fill, d }`, cells `cell` units square and cut to the pieces' edges. */
+export function grainPaths(cell) {
+  const by = new Map()
+  const steps = Math.round(24 / cell)
+  PIECES.forEach((piece, k) => {
+    for (let j = 0; j < steps; j++)
+      for (let i = 0; i < steps; i++) {
+        const ink = cellInk(k, i, j, cell)
+        if (ink < 0) continue
+        const bit = clipBox(piece, i * cell, j * cell, (i + 1) * cell, (j + 1) * cell)
+        if (bit.length < 3 || area(bit) < cell * cell * 0.12) continue
+        const d = `M${bit.map(([x, y]) => `${num(x)} ${num(y)}`).join('L')}Z`
+        by.set(ink, (by.get(ink) ?? '') + d)
+      }
+  })
+  return [...by].sort(([a], [b]) => a - b).map(([ink, d]) => ({ fill: hex(INKS[ink]), d }))
 }
 
 const crcTable = Int32Array.from({ length: 256 }, (_, n) => {
@@ -115,27 +199,34 @@ export function png(width, height, pixel, palette) {
 }
 
 /**
- * The smooth mark as an RGBA PNG, `size` pixels square, the K filling `fill` of it, on `ground` ([r, g, b] or none).
- * Each pixel is 8×8 samples, so the cut's edges are antialiased.
+ * The logo as an RGBA PNG, `size` pixels square, the K filling `fill` of it, on `ground` ([r, g, b] or none), its
+ * dither in cells `cell` units square. Each pixel is 8×8 samples, so the cut's edges are antialiased.
  */
-export function smoothPng(size, { fill = 0.8, ground = null } = {}) {
-  const inks = [INKS[2], INKS[6]]
+export function logoPng(size, { fill = 0.8, ground = null, cell = 1 } = {}) {
   const unit = (size * fill) / 19,
     ox = size / 2 - 12 * unit,
     oy = size / 2 - 12 * unit
   const [sig, ihdr, raw] = encode(size, size, 6, 4, (y, buf, at) => {
     for (let x = 0; x < size; x++) {
-      const n = [0, 0]
+      const sum = [0, 0, 0]
+      let hit = 0
       for (let sy = 0; sy < 8; sy++)
         for (let sx = 0; sx < 8; sx++) {
-          const k = pieceAt((x + (sx + 0.5) / 8 - ox) / unit, (y + (sy + 0.5) / 8 - oy) / unit)
-          if (k >= 0) n[k]++
+          const ink = logoInk(
+            (x + (sx + 0.5) / 8 - ox) / unit,
+            (y + (sy + 0.5) / 8 - oy) / unit,
+            cell,
+          )
+          if (!ink) continue
+          hit++
+          for (let c = 0; c < 3; c++) sum[c] += INKS[ink][c]
         }
-      const a = (n[0] + n[1]) / 64
-      const mix = (c) => (n[0] * inks[0][c] + n[1] * inks[1][c]) / Math.max(1, n[0] + n[1])
+      const a = hit / 64
       const o = at + x * 4
-      for (let c = 0; c < 3; c++)
-        buf[o + c] = Math.round(ground ? ground[c] * (1 - a) + mix(c) * a : mix(c))
+      for (let c = 0; c < 3; c++) {
+        const m = sum[c] / Math.max(1, hit)
+        buf[o + c] = Math.round(ground ? ground[c] * (1 - a) + m * a : m)
+      }
       buf[o + 3] = ground ? 255 : Math.round(a * 255)
     }
   })
