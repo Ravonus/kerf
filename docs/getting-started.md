@@ -18,7 +18,7 @@ An alias saves typing. Put it in your shell's startup file, with the path to you
 
 ```bash
 alias kerf-local='node ~/path/to/kerf/packages/'\
-'create/scripts/local.mjs'
+'create-kerf/scripts/local.mjs'
 ```
 
 If your `~/.npmrc` sets `min-release-age`, npm skips packages newer than that many days, which can leave it nothing to
