@@ -303,7 +303,7 @@ const person = join(personScope, 'person')
 await shell(
   'node',
   [
-    join(pkgs, 'create/bin/create-kerf.mjs'),
+    join(pkgs, 'create-kerf/bin/create-kerf.mjs'),
     person,
     '--yes',
     '--pm',
