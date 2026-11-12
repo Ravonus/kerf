@@ -1,64 +1,51 @@
-// The logo files, drawn by scripts/mark.mjs from the hero's own geometry and palette. They are committed:
+// The logo files: the hero's cut K, smooth, from scripts/mark.mjs and the hero's own geometry. They are committed:
 // run `node scripts/logo.mjs` from site/ after changing the mark, and test/logo.test.mjs checks they are current.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { INKS, markCells, markPaths, png } from './mark.mjs'
+import { FILLS, piecePaths, smoothPng } from './mark.mjs'
 
 const site = join(import.meta.dirname, '..')
-const GROUND = [11, 18, 13, 255]
+const GROUND = [11, 18, 13]
 
-const svg = (size, cells, ground) => {
-  const back = ground
-    ? `<rect width="${size}" height="${size}" rx="${Math.round(size / 6)}" fill="#0b120d"/>`
-    : ''
-  const paths = markPaths(cells, size)
-    .map(([fill, d]) => `<path fill="${fill}" d="${d}"/>`)
+const paths = () =>
+  piecePaths()
+    .map((d, k) => `<path fill="${FILLS[k]}" d="${d}"/>`)
     .join('')
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges">${back}${paths}</svg>\n`
+
+/** The mark alone, or on the dark ground with rounded corners (the favicon), in the 24-unit box. */
+const svg = (ground) => {
+  const back = ground ? '<rect x="0" y="0" width="24" height="24" rx="5" fill="#0b120d"/>' : ''
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${back}${paths()}</svg>\n`
 }
 
-/** A square PNG on the dark ground, each cell `zoom` pixels. */
-const tile = (size, cells, zoom) =>
-  png(size * zoom, size * zoom, (x, y) => cells[((y / zoom) | 0) * size + ((x / zoom) | 0)], [
-    GROUND,
-    ...INKS.slice(1),
-  ])
-
-/** The header's mark as a component: the cells written out as JSX, so the page draws it with no work at all. */
-const component = (size, cells) => {
-  const paths = markPaths(cells, size)
-    .map(([fill, d]) => `      <path fill="${fill}" d="${d}" />`)
-    .join('\n')
-  return `/** The house mark as the hero weaves it, one cell a pixel. Drawn by scripts/logo.mjs. */
+/** The header's mark as a component: two paths, so the page draws it with no work at all. */
+const component = () => `/** The house mark: the hero's K, cut in two. Drawn by scripts/logo.mjs. */
 export function Mark() {
   return (
     <svg
       data-site="mark"
-      viewBox="0 0 ${size} ${size}"
-      width="${size}"
-      height="${size}"
-      shape-rendering="crispEdges"
+      viewBox="0 0 24 24"
+      width="24"
+      height="24"
       aria-hidden="true"
       focusable="false"
     >
-${paths}
+${piecePaths()
+  .map((d, k) => `      <path fill="${FILLS[k]}" d="${d}" />`)
+  .join('\n')}
     </svg>
   )
 }
 `
-}
 
 /** Every file, by path under site/. */
 export function outputs() {
-  const big = markCells(72, 3, 4)
-  const icon = markCells(32, 1.2, 2, { dither: 0.5, fibre: 0.2, step: 2 })
-  const header = markCells(24, 1, 1, { dither: 0.8 })
   return {
-    'public/logo.svg': svg(72, big, false),
-    'public/favicon.svg': svg(32, icon, true),
-    'public/favicon-32.png': tile(32, icon, 1),
-    'public/apple-touch-icon.png': tile(36, markCells(36, 1.5, 2), 5),
-    'src/components/Mark.gen.tsx': component(24, header),
+    'public/logo.svg': svg(false),
+    'public/favicon.svg': svg(true),
+    'public/favicon-32.png': smoothPng(32, { fill: 0.8, ground: GROUND }),
+    'public/apple-touch-icon.png': smoothPng(180, { fill: 0.7, ground: GROUND }),
+    'src/components/Mark.gen.tsx': component(),
   }
 }
 

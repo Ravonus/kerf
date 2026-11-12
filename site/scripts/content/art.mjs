@@ -39,7 +39,7 @@ function buildIcons() {
 
 // ------------------------------------------------------------------ art
 
-/** The share card's picture: the hero's field, fading out towards the words, with the mark woven on it. 10 px cells. */
+/** The share card's picture: the hero's field, fading out towards the words, with the mark cut into it. 10 px cells. */
 function cardArt() {
   const cols = 120,
     rows = 63,
@@ -47,7 +47,7 @@ function cardArt() {
   const ox = 62,
     oy = 3,
     size = 58
-  const mark = markCells(size, 2.4, 3)
+  const mark = markCells(size)
   const cell = (x, y) => {
     const ink =
       x >= ox && x < ox + size && y >= oy && y < oy + size ? mark[(y - oy) * size + x - ox] : 0

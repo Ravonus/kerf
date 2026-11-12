@@ -37,53 +37,61 @@ export const LIGHT_COLOURS = RAMPS.flatMap((r) => [
 
 export type Threads = { cover: Float32Array; born: Float32Array; band: Uint8Array }
 
-// The house mark in its 24-unit box: four veneers, two kerfs.
-export const VENEERS = [5, 10, 15, 20]
-export const KERFS = [9, 15]
-/** Where each kind of thread runs, in units: the kerfs overhang the outer veneers by the same 2.5 units each side. */
-export const VENEER_SPAN = [3, 21]
-export const KERF_SPAN = [2.5, 22.5]
-/** The middle of the threads (x, y), which is what gets centred: the veneers' midpoint is 12.5, not the box's 12. */
-export const MIDDLE = [12.5, 12]
+// The house mark in its 24-unit box: a K cut in two. The upper piece is green, the lower coral, and the kerf between
+// them runs up from the lower left. Both edges of the cut are parallel, so the gap is one width all along.
+export const UPPER = [
+  [2, 2.5],
+  [8.4, 2.5],
+  [8.4, 9.2],
+  [14.6, 2.5],
+  [22, 2.5],
+  [16.6, 7.8],
+  [2, 18.5],
+] as const
+export const LOWER = [
+  [2, 20.2],
+  [13.4, 11.8],
+  [21.3, 21.5],
+  [13, 21.5],
+  [8.4, 16.2],
+  [8.4, 21.5],
+  [2, 21.5],
+] as const
+export const PIECES = [UPPER, LOWER] as const
+/** The cut's centre line, from where it leaves the stem to where it ends in the upper arm. */
+export const CUT = [
+  [2, 19.35],
+  [15, 9.8],
+] as const
 
-type Frame = {
-  ox: number
-  oy: number
-  unit: number
-  half: number
-  delay: number
-  put: (x: number, y: number, a: number, at: number, b: number) => void
+type Poly = readonly (readonly [number, number])[]
+
+/** Whether (x, y), in units, is inside a piece: even-odd, so the stem's notch stays out. */
+export function inside(poly: Poly, x: number, y: number) {
+  let c = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i]!,
+      [xj, yj] = poly[j]!
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c
+  }
+  return c
 }
 
-const edge = (half: number, d: number) => Math.min(1, Math.max(0, half + 0.5 - Math.abs(d)))
-
-function veneerThreads({ ox, oy, unit, half, delay, put }: Frame) {
-  VENEERS.forEach((wx, w) => {
-    const cx = ox + wx * unit
-    for (let y = Math.ceil(oy + VENEER_SPAN[0]! * unit); y < oy + VENEER_SPAN[1]! * unit; y++) {
-      const at = delay + w * 0.12 + ((y - oy) / (24 * unit)) * 0.9
-      for (let x = Math.floor(cx - half - 1); x <= cx + half + 1; x++)
-        put(x, y, edge(half, x - cx), at, 0)
-    }
-  })
+/** How far along the cut (x, y) lies, 0 where it starts and 1 where it ends: the order the blade reaches it. */
+export function along(x: number, y: number) {
+  const [[ax, ay], [bx, by]] = CUT
+  const dx = bx - ax,
+    dy = by - ay
+  return ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)
 }
 
-function kerfThreads({ ox, oy, unit, half, delay, put }: Frame) {
-  KERFS.forEach((wy, j) => {
-    const cy = oy + wy * unit
-    for (let x = Math.ceil(ox + KERF_SPAN[0]! * unit); x < ox + KERF_SPAN[1]! * unit; x++) {
-      const at = delay + 0.9 + j * 0.16 + ((x - ox) / (24 * unit)) * 0.9
-      // The gap the kerf leaves where it dives under a veneer scales with the mark, or a small one loses its kerfs.
-      const gap = half + Math.min(1.5, 0.4 * unit)
-      const veneer = VENEERS.findIndex((wx) => Math.abs(x - (ox + wx * unit)) <= gap)
-      const under = veneer >= 0 && (veneer + j) % 2 === 1 // over and under: a real weave
-      for (let y = Math.floor(cy - half - 1); y <= cy + half + 1; y++)
-        if (!under) put(x, y, edge(half, y - cy), at, 2)
-    }
-  })
-}
+/** Which piece a point is in: 0 upper, 1 lower, -1 neither. */
+export const pieceAt = (x: number, y: number) => PIECES.findIndex((p) => inside(p, x, y))
 
-/** The mark, large and centred. Each thread records when it reaches each cell, so the logo draws itself on. */
+/**
+ * The mark, large and centred. Each cell records how much of it the K covers (3×3 samples, so small marks keep their
+ * edges) and when the blade reaches it: the K appears behind a cut that runs from the lower left to the upper right.
+ */
 export function threads(
   cols: number,
   rows: number,
@@ -95,22 +103,29 @@ export function threads(
   const born = new Float32Array(cols * rows).fill(1e9)
   const band = new Uint8Array(cols * rows)
   const unit = (rows * size) / 24
-  const put = (x: number, y: number, a: number, at: number, b: number) => {
-    const i = y * cols + x
-    if (x < 0 || y < 0 || x >= cols || y >= rows) return
-    cover[i] = Math.max(cover[i]!, a)
-    born[i] = Math.min(born[i]!, at)
-    if (a > 0.5) band[i] = b
-  }
-  const frame = {
-    ox: cols * centre - MIDDLE[0]! * unit,
-    oy: rows / 2 - MIDDLE[1]! * unit,
-    unit,
-    half: Math.max(0.9, 0.62 * unit), // the mark's own proportion, down to threads two cells wide
-    delay,
-    put,
-  }
-  veneerThreads(frame)
-  kerfThreads(frame)
+  const ox = cols * centre - 12 * unit,
+    oy = rows / 2 - 12 * unit
+  const x0 = Math.max(0, Math.floor(ox + 1.5 * unit)),
+    x1 = Math.min(cols, Math.ceil(ox + 22.5 * unit))
+  const y0 = Math.max(0, Math.floor(oy + 2 * unit)),
+    y1 = Math.min(rows, Math.ceil(oy + 22 * unit))
+  for (let y = y0; y < y1; y++)
+    for (let x = x0; x < x1; x++) {
+      let hits = 0,
+        lower = 0
+      for (let sy = 0; sy < 3; sy++)
+        for (let sx = 0; sx < 3; sx++) {
+          const k = pieceAt((x + (sx + 0.5) / 3 - ox) / unit, (y + (sy + 0.5) / 3 - oy) / unit)
+          if (k >= 0) hits++
+          if (k === 1) lower++
+        }
+      if (!hits) continue
+      const i = y * cols + x
+      const ux = (x + 0.5 - ox) / unit,
+        uy = (y + 0.5 - oy) / unit
+      cover[i] = hits / 9
+      band[i] = lower * 2 > hits ? 2 : 0
+      born[i] = delay + 0.2 + Math.max(-0.4, Math.min(1.4, along(ux, uy))) * 0.8
+    }
   return { cover, born, band }
 }
