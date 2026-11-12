@@ -89,6 +89,7 @@ const STEPS = [
         '--test',
         'scripts/quality/layout-paths.test.mjs',
         'scripts/quality/shared-helpers.test.mjs',
+        'scripts/check/vitest-cache.test.mjs',
       ])
       const { problems } = lines(check)
       problems.push(

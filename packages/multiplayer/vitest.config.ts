@@ -5,5 +5,9 @@ import kerf from '@kerf-js/core/vite'
 export default defineConfig({
   plugins: [kerf()],
   server: { fs: { allow: ['..'] } },
-  test: { environment: 'node', globals: true },
+  test: {
+    fsModuleCachePath: 'node_modules/.vitest-cache',
+    environment: 'node',
+    globals: true,
+  },
 })

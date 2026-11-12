@@ -3,5 +3,11 @@ import base from '../../../vitest.config.ts'
 
 export default {
   ...base,
-  test: { ...base.test, globalSetup: [], include: ['test/fixtures/runtime/*.fixture.tsx'] },
+  test: {
+    ...base.test,
+    // Its own cache: core's suite spawns this run while its own run holds core's cache.
+    fsModuleCachePath: 'node_modules/.vitest-cache-runtime-fixture',
+    globalSetup: [],
+    include: ['test/fixtures/runtime/*.fixture.tsx'],
+  },
 }
