@@ -81,6 +81,8 @@ function page(governor = UNGOVERNED, onReady: (active: ActiveScene) => void = ()
   ))
 }
 
+// A live stage's surface is a dynamic import (Stage-live): loaded once here, it arrives within a frame.
+beforeAll(() => import('../src/Stage-live'))
 beforeEach(() => {
   log.length = 0
   for (const name of NAMES) tracked[name] = null
@@ -92,7 +94,9 @@ afterEach(() => vi.restoreAllMocks())
 
 test('the sections scroll over one pinned canvas, each over its own pinned poster', async () => {
   const { container } = page()
-  await flush()
+  expect(container.querySelector('canvas')).toBeNull()
+  // The surface arrives a few tasks after mount, before any frame: nothing is drawn yet, so it doesn't show.
+  for (let i = 0; i < 20 && !container.querySelector('canvas'); i++) await flush()
   const viewport = container.querySelector<HTMLElement>('[data-stage-viewport]')!
   expect(viewport.style.position).toBe('sticky')
   expect(container.querySelectorAll('canvas')).toHaveLength(1)
@@ -150,12 +154,12 @@ test('a governor sets the pixel ratio and the levers every scene gets', async ()
   expect(document.querySelector('canvas')!.width).toBe(150)
 })
 
-test('the server sends the sections, their posters and a sized place for the canvas, but no canvas', async () => {
+test('the server sends the sections and their posters, and no surface: it comes once the page is up', async () => {
   // @ts-expect-error: query imports (@kerf-js/core/vite)
   const { StagePage } = await import('./fixtures/StagePage.tsx?kerf-ssr')
   const html = renderToString(() => StagePage())
   expect(html).toContain('data-stage-viewport')
-  expect(html).toContain('data-surface="stage"')
+  expect(html).not.toContain('data-surface')
   expect(html).not.toContain('<canvas')
   expect(html.match(/data-scene-poster/g)).toHaveLength(3)
   expect(html).toContain('url(&quot;/second.avif&quot;)')
@@ -433,6 +437,26 @@ test('on the poster tier the stage shows posters only: no surface, and nothing i
   expect(root.dataset.stageReady).toBe('poster')
   expect(log.filter((l) => l.startsWith('build'))).toEqual([])
   expect(container.querySelectorAll('[data-scene-poster]')).toHaveLength(2)
+})
+
+test("a page's own stage code holds no surface: that loads with the live tier", async () => {
+  const sources = await Promise.all([
+    // @ts-expect-error: query imports (vite)
+    import('../src/Stage.tsx?raw'),
+    // @ts-expect-error: query imports (vite)
+    import('../src/Stage-state.ts?raw'),
+    // @ts-expect-error: query imports (vite)
+    import('../src/Stage-poster.tsx?raw'),
+  ])
+  const eager = sources.flatMap((m: { default: string }) => [
+    ...m.default.matchAll(/^import (?!type)(.*) from '([^']+)'/gm),
+  ])
+  expect(eager.map((m) => m[2])).not.toContain('./Stage-live')
+  expect(eager.map((m) => m[2])).not.toContain('./Stage-director')
+  // Only the shared clock comes from the surface module, and it tree-shakes to that.
+  expect(eager.filter((m) => m[2] === '@kerf-js/core/surface').map((m) => m[1])).toEqual([
+    '{ clock, type SurfaceBase }',
+  ])
 })
 
 test('auto asks the governor before any surface mounts, and a low tier keeps to posters', async () => {

@@ -69,6 +69,42 @@ test('it follows re-exports and barrels', async () => {
   expect(plan.islands.length).toBe(1)
 })
 
+describe('only what a route can render holds islands', () => {
+  const ui = {
+    'button.tsx': button,
+    'ui/a.tsx': `import { Button } from '../button'\nexport function A() { return <div><Button label="a" /></div> }`,
+    'ui/b.tsx': `import { Button } from '../button'\nexport function B() { return <div><Button label="b" /></div> }`,
+    'ui/index.tsx': `export * from './a'\nexport * from './b'`,
+  }
+
+  test('a barrel brings only the components imported from it', async () => {
+    const { plan } = await project({
+      ...ui,
+      'route.tsx': `import { A } from './ui'\nexport default function R() { return <A /> }`,
+    })
+    expect(plan.islands.map((i) => i.id)).toEqual(['ui/a.tsx#0'])
+  })
+
+  test('a namespace or a table read as a value keeps all it can reach', async () => {
+    const tag = await project({
+      ...ui,
+      'route.tsx': `import * as UI from './ui'\nexport default function R() { return <UI.A /> }`,
+    })
+    expect(tag.plan.islands.map((i) => i.id)).toEqual(['ui/a.tsx#0'])
+    const ns = await project({
+      ...ui,
+      'route.tsx': `import * as UI from './ui'\nexport default function R(p) { const C = UI[p.k]; return <C /> }`,
+    })
+    expect(ns.plan.islands.map((i) => i.id).sort()).toEqual(['ui/a.tsx#0', 'ui/b.tsx#0'])
+    const table = await project({
+      ...ui,
+      'pick.tsx': `import { A, B } from './ui'\nconst T = { a: A, b: B }\nexport function Pick(p) { const C = T[p.k]; return <C /> }`,
+      'route.tsx': `import { Pick } from './pick'\nexport default function R() { return <Pick k="b" /> }`,
+    })
+    expect(table.plan.islands.map((i) => i.id).sort()).toEqual(['ui/a.tsx#0', 'ui/b.tsx#0'])
+  })
+})
+
 test('reactivity reaches callers through what they read', async () => {
   const { why } = await project({
     'route.tsx': `import { state } from '@kerf-js/core'\nconst n = state(0)\nfunction Show() { return <p>{n.value}</p> }\nexport default function R() { return <Show /> }`,

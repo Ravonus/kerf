@@ -163,7 +163,7 @@ Options of `text()`. Anything else is refused with the option's path (P115).
 | `display`  | `'swap' \| 'optional' \| 'fallback'`  | `'swap'`                            | `font-display`. `block` and `auto` are refused: they hide text while the font loads (X021).      |
 | `weight`   | integer 1–1000                        | `400`                               | The face's weight. A `wght` range in `axes` takes its place in the `@font-face` rule.            |
 | `style`    | `'normal' \| 'italic'`                | `'normal'`                          | The face's style.                                                                                |
-| `axes`     | `Record<string, [min, max]>`          | `{}`                                | `{ wght: [400, 700] }` sets the weight range. A custom axis named here is kept whatever the source sets. |
+| `axes`     | `Record<string, [min, max]>`          | `{}`                                | `{ wght: [400, 700] }` sets the weight range. A build cuts each named axis to its range; a custom axis named here is kept whatever the source sets. |
 | `preload`  | `boolean`                             | `true` for `body` and `display`     | Preload the face's first latin file. Other roles preload only with `preload: true`.              |
 
 Two roles on the same face (same family, `src`, weight and style) emit it once; it's preloaded if either asks.
@@ -194,7 +194,8 @@ Font bytes are what hold back the largest paint on a text hero, so a build trims
 - **Axes.** A custom axis (`SOFT`, `WONK`, `GRAD`…) is pinned to the one value your `font-variation-settings` give it,
   or to the font's default if the source never sets it. An axis set to two values stays. A value Kerf can't read from
   the source (`var()`, a template, an expression) keeps every axis. `wght`, `wdth`, `opsz`, `slnt` and `ital` are never
-  pinned: CSS drives them.
+  pinned: CSS drives them. An axis named in `axes` is cut to that range, or to one value when the range is a point:
+  `axes: { wght: [500, 700] }` drops the rest of the weight axis.
 - **Characters.** `latin` becomes two files. The core is preloaded: ASCII, common punctuation, and every other latin
   character in your source. The rest (`latin-rest`) is fetched through `unicode-range` only by a page that shows one
   of those characters, so text from a database still gets the face, after a fallback-matched swap.

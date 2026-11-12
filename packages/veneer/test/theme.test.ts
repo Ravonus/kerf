@@ -4,6 +4,8 @@
 import { readFileSync } from 'node:fs'
 import * as plugin from '../plugin.mjs'
 import { allParts, PARTS, PROPS, STATES } from '../src/plugin/theme-parts.mjs'
+import { themeContext as veneerFacts } from '../src/plugin/theme-context.mjs'
+import { toneChannels } from '../src/plugin/theme-css.mjs'
 
 const { veneer } = plugin
 type Out = { tokens: { css?: string; cssEntries?: { tailwind: string } } }
@@ -136,6 +138,77 @@ describe('text roles', () => {
   })
 })
 
+describe('named colours as tones', () => {
+  test('each tone holds its hue family, and the one shared rule solves its channels as toneChannels does', () => {
+    const colors = { brand: '#e8590c', pay: '#8051ff', ink: '#1b1b1f' }
+    const css = run({ colors }).tokens.css ?? ''
+    const { formulas } = veneerFacts(new URL('../../veneer-core/', import.meta.url))
+    const all = Object.keys(colors)
+      .map((n) => `\\[data-tone="${n}"\\]`)
+      .join(',')
+    const shared = new RegExp(`:where\\(${all}\\)\\{([^}]*)\\}`).exec(css)![1]!
+    for (const [name, hex] of Object.entries(colors)) {
+      const own = new RegExp(
+        `:where\\(\\[data-tone="${name}"\\]\\)\\{--_tc:([^;]+);--_th:([^}]+)\\}`,
+      ).exec(css)!
+      const solved = shared.replaceAll('var(--_tc)', own[1]!).replaceAll('var(--_th)', own[2]!)
+      expect(solved).toBe(toneChannels(hex, formulas))
+    }
+    expect(css.match(/--_solid:/g)).toHaveLength(1)
+  })
+})
+
+describe('text roles: optical size and first letter', () => {
+  test('opsz sets the optical size on any role, by width too; auto leaves it to the size', () => {
+    const css =
+      run({
+        system: {
+          text: {
+            narrative: { size: 28, opsz: { base: 28, 768: 72 } },
+            display: { opsz: 'auto' },
+          },
+        },
+      }).tokens.css ?? ''
+    expect(css).toContain('--veneer-text-narrative-opsz:"opsz" 28')
+    expect(css).toMatch(/@media \(min-width:768px\)\{[^}]*--veneer-text-narrative-opsz:"opsz" 72/)
+    expect(css).toContain(
+      'font-size:var(--veneer-text-narrative-size);font-variation-settings:var(--veneer-text-narrative-opsz)}',
+    )
+    // veneer's own role takes no token of veneer's for it, so it gets a rule for this one property
+    expect(css).toContain('--veneer-text-display-opsz:normal')
+    expect(css).toContain(
+      ':where([data-scope="text"][data-role="display"]){font-variation-settings:var(--veneer-text-display-opsz)}',
+    )
+    expect(fails({ system: { text: { narrative: { opsz: 'big' } } } }).path).toBe(
+      'system.text.narrative.opsz',
+    )
+  })
+
+  test('firstLetter sets the first letter of an element that names the role', () => {
+    const css =
+      run({
+        system: {
+          text: {
+            initial: { size: 70, leading: 0, font: 'var(--font-script)', firstLetter: true },
+            narrative: { size: 28 },
+            display: { firstLetter: true },
+          },
+        },
+      }).tokens.css ?? ''
+    expect(css).toContain(
+      ':where([data-first-letter="initial"])::first-letter{font-size:var(--veneer-text-initial-size);line-height:var(--veneer-text-initial-leading);font-family:var(--veneer-text-initial-font)}',
+    )
+    expect(css).not.toContain('[data-first-letter="narrative"]')
+    // veneer's own role: every property veneer has a token for
+    expect(css).toMatch(
+      /:where\(\[data-first-letter="display"\]\)::first-letter\{font-size:var\(--veneer-text-display-size\);font-weight:var\(--veneer-text-display-weight\);line-height:var\(--veneer-text-display-leading\);letter-spacing:var\(--veneer-text-display-tracking\);[^}]*font-family:var\(--veneer-text-display-font\)\}/,
+    )
+    expect(fails({ system: { text: { initial: { firstLetter: 'yes' } } } }).path).toBe(
+      'system.text.initial.firstLetter',
+    )
+  })
+})
+
 describe('text roles by width', () => {
   test('a value by width: a base, then a step or a fluid line from each min-width', () => {
     const css =
@@ -169,6 +242,22 @@ describe('text roles by width', () => {
     expect(css.indexOf('--veneer-text-body-size:16px')).toBeLessThan(
       css.indexOf('--veneer-text-body-size:14px'),
     )
+  })
+
+  test("a fluid role brings the user's rem for a page that loads the tokens alone; veneer.css's own wins", () => {
+    const REM = '@layer veneer.tokens{:where(:root){--veneer-rem:1rem}}\n'
+    const fluid = run({
+      system: { text: { narrative: { size: { min: 28, max: 48, from: 390, to: 1680 } } } },
+    })
+    expect(fluid.tokens.css?.startsWith(REM)).toBe(true)
+    const fixed = run({ system: { text: { narrative: { size: 28 } } } })
+    expect(fixed.tokens.css).not.toContain('--veneer-rem:')
+    // veneer.css sets it on `:root`, which outranks `:where(:root)` in the same layer whichever loads first
+    const sheet = readFileSync(
+      new URL('../../veneer-core/styles/veneer.css', import.meta.url),
+      'utf8',
+    )
+    expect(sheet).toMatch(/:root \{\s*--veneer-rem: calc\(1rem \* var\(--veneer-ref-rem-k\)\);/)
   })
 
   test('refuses a breakpoint it cannot read and a fluid line it cannot draw', () => {

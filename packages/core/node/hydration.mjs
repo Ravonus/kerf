@@ -25,6 +25,7 @@ import { gather } from './hydration/graph.mjs'
 import { bindings } from './hydration/bindings.mjs'
 import { classify } from './hydration/classify.mjs'
 import { buildReport } from './hydration/report.mjs'
+import { reach } from './hydration/reach.mjs'
 
 /**
  * @param {object} o
@@ -39,6 +40,9 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
   const mods = await gather(entries, transform, resolve, cache)
   const { exported, local, tagOf } = bindings(mods)
   const { client, all, isClient, interactive, hoist, inner } = classify(mods, local, tagOf)
+  // A call site no route can render is never an island (hydration/reach.mjs).
+  const reached = reach(entries, mods, local, tagOf)
+  const sites = (n) => (reached.has(n) ? inner(n) : [])
   return buildReport(
     entries,
     lazy,
@@ -50,7 +54,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     isClient,
     interactive,
     hoist,
-    inner,
+    sites,
     rel,
   )
 }

@@ -238,6 +238,10 @@ as D001–D007.
 `gap` is a relationship, not a size: `none hair tight related group section page`. There are no breakpoint props,
 because boxes answer to their container.
 
+`Heading` and `Text` load only their role rules and your tokens (`kerf:tokens/veneer`), so a page that sets its look
+with veneer's tokens alone can use them for a few hundred bytes. veneer's own role values, and `tone`, come with veneer's
+sheet, which every other component loads.
+
 Components share three intent props:
 
 | Prop | Values | Default |
@@ -579,7 +583,8 @@ A poster can be baked: `poster="bake"` shows the still `bakedPosters` holds unde
 and a tall one as media records. `@kerf-js/capture` renders them from the scenes themselves at build time, each
 through the blend and at its `hold` where it has one, and writes the module that registers them. `tier` picks what draws: `live` (the default) draws the scenes, `poster`
 shows only posters and never loads a renderer, and `auto` shows posters on a phone or tablet and where the
-governor rates the device `low`, decided before anything 3D loads.
+governor rates the device `low`, decided before anything 3D loads. The canvas and the code that draws on it load
+once the tier is `live`, after the page is up: the server sends none, and a page on posters never loads them.
 
 Once every section's position has caught up with the scroll and the scenes it wants have drawn, the stage writes
 the scroll offset on its root as `data-stage-ready` and calls `onReady`: the frame a test or a capture may take.

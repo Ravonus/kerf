@@ -196,8 +196,9 @@ export function themeOptions(input, tokenNames, checkTheme) {
   // the app's own text roles, from the page's system and every theme's: each gets one rule. `media` holds the
   // tokens a breakpoint sets, per scope.
   out.roles = {}
+  out.firsts = {}
   out.media = {}
-  const ctx = { tokenNames, roles: out.roles }
+  const ctx = { tokenNames, roles: out.roles, firsts: out.firsts }
   out.system = systemTokens(input.system, { ...ctx, media: out.media }, 'system')
   out.rows = partRows(input.parts, names(colors, input.system), 'parts')
   out.themes = {}

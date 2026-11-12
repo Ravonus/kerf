@@ -25,6 +25,7 @@
      data-numeric     figures on a face with tnum at every stop (vivid's serif has none)
      data-trim        ="display": non-heading text that sets text-box: var(--veneer-text-display-trim) keeps
                       its trimmed box through the font swap (h1–h6 and the hero title do this already)
+     data-paint       a data-theme scope that paints its theme's page colour behind it (the root always does)
    Forced colours: @layer veneer.signature §5 redraws every signature part in system colours (01 §12).
 
    Signature (SIGNATURE.md): the sweep border and the floating border label
@@ -817,13 +818,14 @@
     :where(:root:not([data-motion="reduce"])) { scroll-behavior: smooth; }
   }
   :where(:root[data-motion="full"]) { scroll-behavior: smooth; }
-  /* a scope that changes theme or expression repaints its own ink and font */
+  /* a scope that changes theme or expression repaints its own ink and font. Its ground only when it asks
+     (data-paint): a themed section over an image or a scene stays clear, and the root paints above */
   :where([data-theme]),
   :where([data-expression]) {
     color: var(--veneer-color-text);
     font-family: var(--veneer-text-body-font);
   }
-  :where([data-theme]) { background-color: var(--veneer-color-page); }
+  :where([data-theme][data-paint]) { background-color: var(--veneer-color-page); }
 
   :where(:focus-visible) {
     outline: var(--veneer-focus-width) solid var(--veneer-color-focus);

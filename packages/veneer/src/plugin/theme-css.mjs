@@ -68,15 +68,28 @@ export function toneChannels(hex, formulas) {
     .join(';')
 }
 
+/**
+ * The named colours as tokens, and each as a tone. A tone holds only its hue family (`--_tc`, `--_th`); one rule for all
+ * of them solves the six channels from it, so a palette of nine colours doesn't write the formulas nine times.
+ */
 function colorsCss(colors, prefixes, formulas) {
   if (!Object.keys(colors).length) return ''
   const vars = Object.entries(colors)
     .map(([n, v]) => `--veneer-color-${n}:${v}`)
     .join(';')
   const root = prefixes ? prefixes.join(',') : ':root'
-  let css = `${root}{${vars}}`
-  for (const [name, hex] of Object.entries(colors))
-    css += `${where(prefixes, `[data-tone="${name}"]`)}{${toneChannels(hex, formulas)}}`
+  const tone = (name) => `[data-tone="${name}"]`
+  const channels = Object.entries(formulas)
+    .map(
+      ([channel, f]) =>
+        `${channel}:${f.replaceAll('var(--_ac)', 'var(--_tc)').replaceAll('var(--_ah)', 'var(--_th)')}`,
+    )
+    .join(';')
+  let css = `${root}{${vars}}${where(prefixes, Object.keys(colors).map(tone).join(','))}{${channels}}`
+  for (const [name, hex] of Object.entries(colors)) {
+    const { C, H } = fromHex(hex)
+    css += `${where(prefixes, tone(name))}{--_tc:calc(${C.toFixed(3)} * var(--veneer-ref-accent-k));--_th:${H.toFixed(1)}}`
+  }
   return css
 }
 
@@ -110,7 +123,7 @@ export function themeCss(o, ctx) {
     parts += colorsCss(theme.colors, prefixes, formulas) + partCss(theme.rows, prefixes, scopes)
     media += mediaCss(theme.media, 'veneer.theme', at)
   }
-  const roles = roleCss(o.roles)
+  const roles = roleCss(o.roles, o.firsts)
   if (!parts && !tokens && !roles && !media) return ''
   return (
     `@layer veneer.${layers.join(',veneer.')},veneer.theme;\n` +

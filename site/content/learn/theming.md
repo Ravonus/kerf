@@ -135,6 +135,7 @@ export function Layout() {
     <Split side="start" width="nav">
       <nav
         data-theme="dark"
+        data-paint
         data-density="compact"
         aria-label="Main"
       >
@@ -151,8 +152,9 @@ export function Layout() {
 }
 ```
 
-The sidebar is dark and compact whatever the page is; the main area follows the page. An element with `data-theme` also
-paints the page background for its theme, so the dark sidebar doesn't show the light page through it.
+The sidebar is dark and compact whatever the page is; the main area follows the page. `data-paint` paints the page
+background for its theme behind it, so the dark sidebar doesn't show the light page through it. Without it a themed
+element recolours its text and leaves its background clear, for a section over an image or a scene.
 
 To set a dial on an element from code, pass it as `root`: `setDial('expression', 'vivid', { root: el })`. In JSX, the
 attribute itself is simpler, as in the demo: `data-theme={theme.value}`.

@@ -123,6 +123,25 @@ describe('route shape style preparation', () => {
   })
 })
 
+describe('route shape styles that load after the page', () => {
+  it('prepares nothing while a sheet is still loading, and the shape once it has arrived', () => {
+    const f = fixture()
+    try {
+      const shape = f.routes.shapes!['/generated']!
+      if (shape.kind !== 'generated') throw new Error('fixture')
+      const styles: string[] = []
+      Object.defineProperty(shape, 'cssText', { get: () => [styles[0]] })
+      expect(prepareRouteShape(f.routes, '/generated', f.doc)).toBeNull()
+      expect([...f.doc.head.querySelectorAll('style')].map((style) => style.id)).toEqual(['app'])
+      styles[0] = '.box { width: 2px }'
+      expect(prepareRouteShape(f.routes, '/generated', f.doc)).not.toBeNull()
+      expect(f.doc.querySelector('style[data-kerf-shape-style]')!.textContent).toBe(styles[0])
+    } finally {
+      f.dom.window.close()
+    }
+  })
+})
+
 describe('thin generated shapes', () => {
   it('stand in a page outline for a page and pass through for a layout', async () => {
     const { PageSkeleton, PassThroughSkeleton } = await import('../src/run/page-skeleton')

@@ -331,6 +331,9 @@ export const skeleton = HomeSkeleton
 It runs before the page's code loads, so it may use only `div span section article main header footer p h1`–`h6
 ul ol li`, string `class` and `data-*` attributes, and text. Anything else warns and leaves no skeleton.
 
+In a build, a skeleton's stylesheet text loads with the router once the page is up, not with the page's own code. A
+navigation that comes before it keeps the old page up until the new one arrives.
+
 ## Data loading
 
 `load` runs on the server for the first request and for each client navigation (the client fetches the route's data as

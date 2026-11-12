@@ -1,7 +1,8 @@
 // @kerf-js/veneer: the kerf binding of veneer. Each component renders the spec's specimen markup with kerf's compiled
 // templates and attaches veneer-core's behaviour; each imports only its own CSS (veneer-core/styles, split per component).
 export { Stack, Row, Grid, Split, Center, Cover, Frame, Spacer, Inset, type Step } from './Layout'
-export { Heading, Text, Link } from './Type'
+export { Heading, Text } from './Type'
+export { Link } from './Link'
 export { Button, type ButtonProps, type Tone, type Emphasis } from './Button'
 export { Toggle, type ToggleProps } from './Toggle'
 export { Field, Input, Search, Textarea, type FieldProps } from './Field'

@@ -42,3 +42,10 @@ export function themeContext(core) {
   context = { layers, scopes, tokenNames, formulas, stops }
   return context
 }
+
+// A fluid role is written in the user's rem, --veneer-rem. veneer.css sets it beside its root font-size; a page that loads
+// the tokens alone keeps the browser's root size, where it is 1rem. `:where` lets veneer.css's own value win.
+const REM = '@layer veneer.tokens{:where(:root){--veneer-rem:1rem}}\n'
+
+/** The tokens CSS, led by the user's rem when anything in it is fluid. */
+export const withRem = (css) => (css.includes('var(--veneer-rem)') ? REM : '') + css

@@ -120,13 +120,22 @@ veneer({
 })
 ```
 
-The properties are `size weight leading tracking case font`. A number is px for `size` and `tracking`. A role's name is
-lowercase. veneer's own roles take only the tokens veneer has for them.
+The properties are `size weight leading tracking case font opsz`. A number is px for `size` and `tracking`. A role's
+name is lowercase. veneer's own roles take only the tokens veneer has for them, and `opsz`. `opsz` is the face's optical
+size, set as `font-variation-settings: "opsz" <n>`, so a face without the axis ignores it; `'auto'` leaves it to the
+font size, as `font-optical-sizing` does.
+
+A pseudo-element can't take `data-role`, so a role with `firstLetter: true` also sets the first letter of any element
+that names it in `data-first-letter`: a script initial on a serif paragraph is
+`initial: { size: 70, leading: 0, font: '"Mea Culpa", Georgia, serif', firstLetter: true }` and
+`<Text role="narrative" data-first-letter="initial">`.
 
 Any property can change with the viewport: `base` holds below the first breakpoint, and each other key is a min-width
 in px. `size` and `tracking` can also be fluid, `{ min, max, from, to }` in px: `min` at the `from` width, `max` at
 `to`, held outside them. Inside a breakpoint, `from` is the breakpoint. Each breakpoint is a media query that sets the
-tokens, so there is no script; a fluid line runs on `vw` to meet them, in the user's rem.
+tokens, so there is no script; a fluid line runs on `vw` to meet them, in the user's rem (`--veneer-rem`). A page that
+imports `kerf:tokens/veneer` without veneer's stylesheet gets `--veneer-rem: 1rem` from the tokens, so its fluid sizes
+hold, and `<Heading>` and `<Text>` bring only their role rules there, not veneer's sheet.
 
 ```ts
 veneer({

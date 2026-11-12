@@ -46,6 +46,20 @@ test('Split splits with no container around it, and a narrow container still sta
   expect(await columns(held, '#s')).toBe(1)
 })
 
+test('a themed scope paints its ground only with data-paint; the root always does', async () => {
+  const p = await page(
+    '<section id="clear" data-theme="dark">x</section><section id="paint" data-theme="dark" data-paint>x</section>',
+  )
+  const ground = (sel: string) => p.$eval(sel, (n) => getComputedStyle(n).backgroundColor)
+  expect(await ground('#clear')).toBe('rgba(0, 0, 0, 0)')
+  expect(await ground('#paint')).not.toBe('rgba(0, 0, 0, 0)')
+  expect(await ground('html')).not.toBe('rgba(0, 0, 0, 0)')
+  // the scope still recolours its ink
+  const ink = (sel: string) => p.$eval(sel, (n) => getComputedStyle(n).color)
+  expect(await ink('#clear')).toBe(await ink('#paint'))
+  await p.close()
+})
+
 test('a checkbox input takes the click itself, so role-based tools reach it', async () => {
   const p = await page(
     '<label data-scope="checkbox"><input type="checkbox" aria-label="Pick"><span data-part="control" data-sweep><span data-part="sweep"></span></span></label>',

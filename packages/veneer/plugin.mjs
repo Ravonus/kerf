@@ -14,7 +14,7 @@ import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { DEFAULT, normalizeSeed, seedByName } from './src/plugin/seed.mjs'
 import { checkTokens, tailwindTheme, themed, themeOptions } from './src/plugin/theme.mjs'
-import { themeContext } from './src/plugin/theme-context.mjs'
+import { themeContext, withRem } from './src/plugin/theme-context.mjs'
 
 const core = new URL('../veneer-core/', import.meta.url)
 const DIALS = {
@@ -364,7 +364,7 @@ export const veneer = definePlugin({
     return {
       tokens: {
         namespace: 'veneer',
-        ...(css && { css }),
+        ...(css && { css: withRem(css) }),
         ...(tailwind && { cssEntries: { tailwind } }),
         values: {
           seed: { hue: seed.hue, chroma: seed.chroma },

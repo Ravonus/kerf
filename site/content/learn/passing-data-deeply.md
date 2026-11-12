@@ -99,7 +99,7 @@ export function Page() {
     <>
       <Label />
       {ThemeContext.provide('dark', () => (
-        <div data-theme="dark">
+        <div data-theme="dark" data-paint>
           <Label />
         </div>
       ))}

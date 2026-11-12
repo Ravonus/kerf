@@ -492,7 +492,7 @@ export function ThemeToggle() {
     (look.theme.value =
       look.theme.value === 'light' ? 'dark' : 'light')
   return (
-    <div data-theme={look.theme.value}>
+    <div data-theme={look.theme.value} data-paint>
       <button type="button" onClick={flip}>
         {look.theme.value === 'light' ? 'Dark' : 'Light'} mode
       </button>
