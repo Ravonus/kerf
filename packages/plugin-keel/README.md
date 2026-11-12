@@ -264,6 +264,70 @@ Storage under the worker's hashed file name, so a later visit reads it back (sec
 `{ keep: false }` shares one only while it runs, as plates are by default. The data comes back; geometry and
 textures are made here, on the renderer's thread. Without workers the job runs on this thread.
 
+## Model materials
+
+`@weft-js/plugin-keel/gen` turns a short recipe of slots into images made by a model, distils each into a
+small basis file, and records it in a lock. Builds read the lock and the committed bases only, so an ordinary
+build makes no model call.
+
+```json
+{
+  "gen": "keel-gen@1",
+  "style": "./look.style.json",
+  "slots": {
+    "plate.sky": {
+      "op": "over",
+      "on": "id:sky block",
+      "says": "overcast, soft cloud band right",
+      "out": "palette:6 residual:48x30"
+    },
+    "mat.knit": {
+      "op": "make",
+      "says": "rib knit, folded cuff",
+      "out": "palette:4 tile:128+pbr"
+    }
+  }
+}
+```
+
+The style bible (`keel-style@1`) holds the seed, manner, light, palette and what to avoid, shared by every
+recipe. A slot gives only its intent in `says`, at most 25 words; the prompt around it comes from the style
+and a template for its `op`. `checkRecipe` reports every problem at once, each with its JSON path.
+
+```bash
+gen=node_modules/@weft-js/plugin-keel/src/gen/cli.mjs
+node $gen plan plate.gen.json --config gen.config.mjs
+node $gen run plate.gen.json --config gen.config.mjs \
+  --adapter bridge --max-calls 4 --max-wall-ms 600000
+```
+
+`plan` lists each slot as locked, cached or a miss, and writes and calls nothing. `run` needs both caps and
+stops before a call would cross either, with the lock consistent. Each call first passes the deny list and a
+guard that refuses any input inside, or byte-identical to a file inside, the reference folders. The config
+module gives `guides`, `distil`, and optionally `critic`, `deny` and `reference`. The `mock` adapter is
+deterministic and is the one tests use; `bridge` posts to a model service on loopback, and an optional
+bearer token comes from `WEFT_GEN_BRIDGE_TOKEN` only. The critic's route comes from `WEFT_GEN_CRITIC_MODEL`;
+with it unset, the bridge refuses a critique.
+
+Raw outputs, their provenance and the call ledger stay in `.weft/cache/gen`. `gen.lock.json` and
+`basis/*.kmx` sit beside the recipe and are committed. `--reroll <slot>` makes a locked slot again.
+
+```ts
+// vite.config.ts
+import { keelGen } from '@weft-js/plugin-keel/gen'
+
+export default { plugins: [keelGen()] }
+```
+
+```ts
+import plate from './plate.gen.json?gen'
+
+plate['plate.sky'].basis // the basis file's URL
+```
+
+A slot with no basis fails the build, naming it. `?gen&bake=<slot>` hands on the slot's raw output as
+`?media`, for comparison only.
+
 ## Music
 
 ```ts
