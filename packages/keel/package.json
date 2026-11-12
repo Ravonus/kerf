@@ -37,6 +37,7 @@
       "default": "./src/paint.mjs"
     },
     "./paint-live": "./src/paint-live.ts",
+    "./generate": "./src/generate.ts",
     "./client": {
       "types": "./src/client.d.ts"
     },
@@ -54,7 +55,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "test:e2e": "node test/e2e.mjs && node test/paint-e2e.mjs",
+    "test:e2e": "node test/e2e.mjs && node test/paint-e2e.mjs && node test/generate-e2e.mjs",
     "vendor": "node scripts/vendor.mjs"
   },
   "devDependencies": {

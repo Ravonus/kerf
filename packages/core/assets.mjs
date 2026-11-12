@@ -57,7 +57,8 @@ export function readSources(root) {
   return out
 }
 
-const MEDIA = /\?media(?:&audio=[^&]+)?$/
+// `&audio=<file>` muxes a sound into a loop; `&photo` encodes a lossless source (a painted PNG) as a photo.
+const MEDIA = /\?media(?:&audio=[^&]+)?(?:&photo)?$/
 const FONTS = 'kerf:fonts'
 const PRELOADS = 'kerf:fonts/preloads'
 const DEV_PREFIX = '/@kerf-assets/'
@@ -198,7 +199,8 @@ export function assets() {
         if (id === '\0' + PRELOADS)
           return `export const preloads = ${JSON.stringify((await buildFonts(this)).preloads)}\n`
         const file = id.replace(MEDIA, '')
-        const track = /&audio=([^&]+)$/.exec(id)?.[1]
+        const track = /&audio=([^&]+)/.exec(id)?.[1]
+        const photo = id.endsWith('&photo')
         const audio = track && resolve(dirname(file), decodeURIComponent(track))
         this.addWatchFile(file)
         if (audio) this.addWatchFile(audio)
@@ -207,7 +209,7 @@ export function assets() {
         encode ??= buildKeys(root, 'media.encode')
         const out = p
           ? await p.impl.build(
-              { file, bytes, audio },
+              { file, bytes, audio, ...(photo && { photo }) },
               {
                 root,
                 dev,

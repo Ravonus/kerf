@@ -163,6 +163,8 @@ where `keelGovernor()` holds scenes still.
 tier, the tier the fps cap (30 on low) and the widest canvas (3840, 1920 or 1280 px), and `quality` the level,
 its page levers (`quality.levers`) and a render scale it lowers while frames run slow:
 `<Stage governor={keelGovernor()}>`.
+`keelGovernor({ hold: '(max-width: 767px)' })` also holds scenes where a media query matches, so a phone stands
+at each scene's `hold` with no camera override of its own.
 
 `keelBlend()` from `@kerf-js/keel/blend` is the stage's blend: `<Stage blend={keelBlend()}>`. Every scene
 is drawn through `lit-finish`. A hand-over goes through `scene-blend`: the incoming scene arrives as line work
@@ -184,10 +186,14 @@ tracks: [
 
 `keelBlend({ finish, blend, post })` passes settings to each module: `blend: { seed: 7, lineColour: '#ffffff' }`.
 
+A page whose own panel is a column keeps the paper to it with `inset`, CSS px from the frame's left and right
+edges or a function of its size: `keelBlend({ inset: (width) => [width / 4, width / 4] })`. The strips beside
+the column show the scene with no panel, darkening or blur.
+
 ## Painted grounds
 
 A seeded surface can be painted at build time and served as ordinary media. Add `keelPaint()` before kerf's
-Vite plugin, and `media()` to `kerf.config.ts` for the AVIF ladder and the placeholder:
+Vite plugin, and `media()` to `kerf.config.ts` for the AVIF ladder, a JPEG fallback and the placeholder:
 
 ```json
 {
@@ -210,12 +216,14 @@ import floral from './floral.paint.json?paint'
 ```
 
 A recipe names a preset (`paper`, `knit`, `painted-floral`, `painted-cloth`) with `with` laid over it, or
-gives a whole `recipe`. The PNG is painted on the CPU in Node and kept in `.kerf/cache/paint` under the plan's
-digest and the module's version, so a rebuild with the recipe unchanged paints nothing. Add
+gives a whole `recipe`. The PNG is painted on the CPU, on worker threads so a page's recipes paint side by side
+(`keelPaint({ threads })`, default one fewer than the cores up to 4), and kept in `.kerf/cache/paint` under the
+plan's digest and the module's version, so a rebuild with the recipe unchanged paints nothing. Add
 `"@kerf-js/keel/client"` to `types` for the `?paint` declaration. `paper` and `knit` tile: `cssImage`
 from `paint-live` gives an `image-set` of each format's widest file, for `background-image`.
 
-A colour or seed known only at run time is painted in the page, on a WebGL2 `OffscreenCanvas` or the CPU:
+A colour or seed known only at run time is painted in a worker (see below), on a WebGL2 `OffscreenCanvas` or the
+CPU, and encoded here:
 
 ```ts
 import { paintLive } from '@kerf-js/keel/paint-live'
@@ -228,6 +236,33 @@ const themed = await paintLive({
 ```
 
 It gives a media record whose `src` is a blob URL; `themed.revoke()` frees it.
+
+## Generators off the main thread
+
+A portrait's bust takes a few hundred ms to mesh, and a plate a frame's worth of GPU work and a read-back.
+`generate` runs them in a worker and hands the result back with its buffers transferred:
+
+```ts
+import { generate } from '@kerf-js/keel/generate'
+
+const sitter = { seed: 7, face: 'A', detail: 'hero' } as const
+const bust = await generate('bust', sitter)
+const plate = await generate('plate', {
+  width: 1440,
+  height: 900,
+})
+const portrait = await import(
+  '@kerf-js/keel/modules/portrait'
+)
+const figure = portrait.createPortrait(lit, bust, bust.palette)
+```
+
+The jobs are `bust` (portrait's settings or a recipe), `plate` (plate-painter's plate at a size, as pixels) and
+`surface` (as `paintLive` takes it). A result is kept by its job and arguments, so asking again, from a page that
+asks early and a scene's `build` that asks later, gives the same promise. A bust or surface is also kept in Cache
+Storage under the worker's hashed file name, so a later visit reads it back (secure contexts, built pages);
+`{ keep: false }` shares one only while it runs, as plates are by default. The data comes back; geometry and
+textures are made here, on the renderer's thread. Without workers the job runs on this thread.
 
 ## Music
 
@@ -262,6 +297,9 @@ rebuilds with them, and captures the stage at three scroll stops.
 
 `demo/paint.html` shows two card grounds and a paper band painted at build, and a card painted in the page in
 a theme's colour. `node test/paint-e2e.mjs` checks them and prints each rung's bytes.
+
+`demo/sitter.html` builds a portrait and its plate in workers; `sitter.html?here` builds them on the main thread.
+`node test/generate-e2e.mjs` compares the long tasks of the two and reads the bust back from Cache Storage.
 
 ## Vendored code
 

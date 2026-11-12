@@ -70,10 +70,11 @@ export function createMediaBuild(input = {}) {
   }
   return {
     /**
-     * @param {{ file: string, bytes: Uint8Array }} source
+     * @param {{ file: string, bytes: Uint8Array, audio?: string, photo?: boolean }} source `photo`: encode as a photo
+     *   (a JPEG fallback) whatever the container says, for a lossless source of photographic pixels.
      * @param {{ cacheDir: string, dev?: boolean, encode?: Record<string, object> }} ctx
      */
-    async build({ file, bytes, audio }, { cacheDir, root, encode = {} }) {
+    async build({ file, bytes, audio, photo }, { cacheDir, root, encode = {} }) {
       const name = basename(file)
       const timed = VIDEO.test(file) || AUDIO.test(file)
       if (o.encoder === 'server' && !timed) {
@@ -92,8 +93,10 @@ export function createMediaBuild(input = {}) {
         }
       }
       const stem = basename(file, extname(file)).replace(/[^\w-]+/g, '-')
+      // The name too: the files are named after the source, so a renamed source must not get the old names back.
       const key = createHash('sha256')
         .update(bytes)
+        .update(`${name}\0${photo ? 'photo' : ''}`)
         .update(JSON.stringify(o))
         .update(String(VERSION))
         .update(audio ? readFileSync(audio) : '')
@@ -112,7 +115,7 @@ export function createMediaBuild(input = {}) {
         }
       }
 
-      const source = { bytes, name, stem, audio }
+      const source = { bytes, name, stem, audio, photo }
       const scorer = findScorer(o.quality.scorer)
       const out = await (/\.svg$/i.test(file)
         ? vector(name, stem, bytes)
@@ -220,7 +223,7 @@ async function animatedGif(
   }
 }
 
-async function raster({ bytes, name, stem, audio }, o, encode) {
+async function raster({ bytes, name, stem, audio, photo: hinted }, o, encode) {
   const meta = await sharp(bytes, { animated: true }).metadata()
   const turned = (meta.orientation ?? 1) >= 5
   const width = turned ? meta.height : meta.width
@@ -230,7 +233,7 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   if (meta.format === 'gif' && (meta.pages ?? 1) > 1)
     return animatedGif({ bytes, name, stem, audio, meta, width, height }, o, encode, diagnostics)
 
-  const photo = isPhoto(meta)
+  const photo = hinted === true || isPhoto(meta)
   const fallback = photo ? 'jpeg' : 'png'
   const formats = [...new Set(o.formats.filter((f) => f !== fallback)), fallback]
   const largest = Math.min(width, o.widths.at(-1))

@@ -96,8 +96,10 @@ export interface FrameOptions {
   /** CSS px per second; 0 stands still. Default 600. */
   speed?: number
   cpu?: number
-  /** Where the run starts, in px. Default 0. */
-  from?: number
+  /** Where the run starts: px, or a stop (`{ section: 'pay', at: 0 }`). Default 0. */
+  from?: Stop
+  /** The sections a stop names, for `from`. Default `section`. */
+  sections?: string
   /** `scroll` moves the page each frame; `wheel` sends wheel steps, so a smooth scroller runs. */
   driver?: 'scroll' | 'wheel'
 }
@@ -196,6 +198,8 @@ export declare function frames(
   speed: number
   cpu: number
   driver: 'scroll' | 'wheel'
+  /** The scroll offset the run started from, in px. */
+  from: number
   scrolled: number
   frames: FrameStats
   longTasks: number

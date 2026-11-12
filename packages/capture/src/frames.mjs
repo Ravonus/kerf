@@ -2,7 +2,8 @@
 // Headless Chrome caps frames at 60 Hz, so the median says little: p5 fps and the share over 33 ms carry it.
 import { cpus, loadavg } from 'node:os'
 import { gpuOf } from './browser.mjs'
-import { scrollAndSettle } from './settle.mjs'
+import { scrollAndSettle, sections } from './settle.mjs'
+import { resolveStop } from './stops.mjs'
 
 const at = (sorted, q) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))] ?? 0
 const round = (n, digits = 2) => Number(n.toFixed(digits))
@@ -70,12 +71,17 @@ const GLIDE = ([seconds, speed]) =>
   })
 
 // `wheel` sends wheel steps from outside the page, so a smooth scroller in it runs; `scroll` moves it directly.
-/** Frame times while the page scrolls at `speed` CSS px/s for `seconds`, with the CPU slowed `cpu` times. */
+/**
+ * Frame times while the page scrolls at `speed` CSS px/s for `seconds` from `from` (px or a stop), with the CPU slowed
+ * `cpu` times.
+ */
 export async function frames(page, options = {}) {
   const { seconds = 5, speed = 600, cpu = 1, from = 0, driver = 'scroll' } = options
+  const start =
+    typeof from === 'number' ? from : resolveStop(from, await sections(page, options.sections))
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpu })
-  await scrollAndSettle(page, from)
+  const begun = await scrollAndSettle(page, start)
   const loadBefore = loadavg()[0] ?? 0
   await page.evaluate(RECORD)
   if (driver === 'wheel') {
@@ -97,6 +103,7 @@ export async function frames(page, options = {}) {
     speed,
     cpu,
     driver,
+    from: begun,
     scrolled: Math.round(run.scrolled),
     frames: frameStats(run.gaps),
     longTasks: run.longTasks,

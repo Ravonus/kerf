@@ -10,6 +10,11 @@ export interface GovernorOptions {
   target?: number
   /** A recorded device instead of this browser's: a test, or a page that pins a tier. */
   signals?: DeviceSignals
+  /**
+   * A media query under which scenes hold too, whatever the tier: `'(max-width: 767px)'` stands a phone's scenes at
+   * their `hold` without a camera of their own for it. Read every frame, so turning a tablet moves it.
+   */
+  hold?: string
 }
 
 /** A governor for `<Stage governor={...}>`. */
@@ -19,7 +24,7 @@ export interface KeelGovernor {
   readonly levers: Levers
   readonly fps: number
   pixelRatio(width: number): number
-  /** True on a low tier: scenes with a `hold` stand there rather than move with the scroll. */
+  /** True on a low tier or under `hold`'s query: scenes with a `hold` stand there rather than move with the scroll. */
   readonly hold: boolean
   /** The device's tier once `start` resolved; `high` before. */
   readonly tier: DeviceTier
@@ -45,6 +50,7 @@ export function keelGovernor(options: GovernorOptions = {}): KeelGovernor {
   let quality: Quality | null = null
   let start = 1
   let levers = FULL
+  const narrow = options.hold && typeof matchMedia === 'function' ? matchMedia(options.hold) : null
   return {
     async start() {
       const [profile, governor] = await Promise.all([
@@ -74,7 +80,7 @@ export function keelGovernor(options: GovernorOptions = {}): KeelGovernor {
       return tier
     },
     get hold() {
-      return tier === 'low'
+      return tier === 'low' || !!narrow?.matches
     },
     pixelRatio: (width) => Math.min(device, 2, PACE[tier].widest / Math.max(width, 1)),
   }

@@ -10,6 +10,14 @@ declare module '*?media' {
   export default asset
 }
 
+/** `./painted.png?media&photo`: a lossless source encoded as a photo, with a JPEG fallback rather than PNG. */
+declare module '*?media&photo' {
+  import type { MediaAsset } from '@kerf-js/core/media'
+  const asset: MediaAsset
+  /** The processed asset, see `@kerf-js/core/media`. */
+  export default asset
+}
+
 /** `./loop.gif?media&audio=./beat.opus`: the audio muxed into the video at build. */
 declare module '*?media&audio=*' {
   import type { MediaAsset } from '@kerf-js/core/media'
