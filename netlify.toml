@@ -1,0 +1,9 @@
+# The site (site/), built on every push to main. `pnpm run setup` installs the workspace and builds the native
+# compiler (Rust, from each crate's rust-toolchain.toml); the site then builds with Nitro's netlify preset.
+[build]
+  command = "pnpm run setup && cd site && pnpm exec kerf build --preset netlify"
+  publish = "site/dist"
+  functions = "site/.netlify/functions-internal"
+
+[build.environment]
+  NODE_VERSION = "26"
