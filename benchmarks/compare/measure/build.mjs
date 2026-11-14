@@ -1,13 +1,27 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { createRequire } from 'node:module'
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 
 export const build = (dir) =>
-  execFileSync('pnpm', ['exec', 'vite', 'build', '--logLevel', 'error'], {
-    cwd: dir,
-    stdio: ['ignore', 'ignore', 'ignore'],
-  })
+  execFileSync(
+    process.execPath,
+    [
+      join(
+        dirname(createRequire(join(dir, 'package.json')).resolve('vite/package.json')),
+        'bin/vite.js',
+      ),
+      'build',
+      '--logLevel',
+      'error',
+    ],
+    {
+      cwd: dir,
+      stdio: ['ignore', 'ignore', 'ignore'],
+      timeout: 120000,
+    },
+  )
 export const br = (b) =>
   brotliCompressSync(b, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 export function sizes(dir) {

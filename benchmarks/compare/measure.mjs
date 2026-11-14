@@ -93,10 +93,7 @@ if (process.argv.includes('--long-list')) {
   // just this scenario, nothing written
   for (const stack of STACKS) {
     const dir = join(here, stack)
-    execFileSync('pnpm', ['exec', 'vite', 'build', '--logLevel', 'error'], {
-      cwd: join(dir, 'feed'),
-      stdio: ['ignore', 'ignore', 'inherit'],
-    })
+    build(join(dir, 'feed'))
     const f = await serve(join(dir, 'feed/dist'))
     console.log(
       stack,
@@ -120,10 +117,7 @@ for (const stack of STACKS) {
   r.parity = await parity(browser, url, stack)
   r.scale = await scale(browser, url, stack, META, ROWS)
   s.close()
-  execFileSync('pnpm', ['exec', 'vite', 'build', '--logLevel', 'error'], {
-    cwd: join(dir, 'feed'),
-    stdio: ['ignore', 'ignore', 'ignore'],
-  })
+  build(join(dir, 'feed'))
   const f = await serve(join(dir, 'feed/dist'))
   r.longList = listResult(dir, await longList(browser, `http://127.0.0.1:${f.address().port}/`))
   f.close()
