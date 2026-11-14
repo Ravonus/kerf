@@ -1,6 +1,7 @@
 // Independent image chunks bound seeking and decoded memory; optional native audio supplies the clock.
 import type { MediaAsset } from './media'
 import type { FrameChunk, FramePatch, FrameSequence, MediaPlayback } from './media-frame-types'
+import { FrameImages } from './media-frame-fetch'
 
 /** A frame player owns pending fetches, bitmaps, its clock and audio. */
 export interface FramePlayer extends MediaPlayback {
@@ -52,6 +53,7 @@ class ImagePlayback extends EventTarget implements FramePlayer {
   private readonly context: CanvasRenderingContext2D
   private readonly chunks = new Map<string, Promise<FrameChunk>>()
   private pending = new AbortController()
+  private images = new FrameImages(this.pending.signal)
   private generation = 0
   private closed = false
   private position = 0
@@ -67,6 +69,8 @@ class ImagePlayback extends EventTarget implements FramePlayer {
   private shown = -1
   private drawing: Promise<void> | undefined
   private audio: HTMLAudioElement | undefined
+  private starting: Promise<void> | undefined
+  private wanted = false
   readonly duration: number
 
   constructor(
@@ -107,6 +111,7 @@ class ImagePlayback extends EventTarget implements FramePlayer {
     this.generation++
     this.pending.abort()
     this.pending = new AbortController()
+    this.images = new FrameImages(this.pending.signal)
     this.chunks.clear()
     this.active = ''
     this.shown = -1
@@ -192,9 +197,7 @@ class ImagePlayback extends EventTarget implements FramePlayer {
   }
   private async image(frame: FramePatch, base: string, signal: AbortSignal) {
     const decode = async (source: string) => {
-      const response = await fetch(new URL(source, base), { signal })
-      if (!response.ok) throw new Error(`Frame unavailable (${response.status})`)
-      const bitmap = await createImageBitmap(await response.blob())
+      const bitmap = await createImageBitmap(await this.images.get(new URL(source, base).href))
       if (signal.aborted) {
         bitmap.close()
         signal.throwIfAborted()
@@ -222,7 +225,27 @@ class ImagePlayback extends EventTarget implements FramePlayer {
     }
     let target = chunk.frames.findIndex((frame) => time < frame.time + frame.duration)
     if (target < 0) target = chunk.frames.length - 1
+    for (let next = target; next > this.shown + 1; next--) {
+      const frame = chunk.frames[next]!
+      if (
+        frame.src &&
+        frame.x === 0 &&
+        frame.y === 0 &&
+        frame.width === this.asset.width &&
+        frame.height === this.asset.height
+      ) {
+        this.shown = next - 1
+        break
+      }
+    }
     for (let next = this.shown + 1; next <= target; next++) {
+      const until = this.running ? next + 6 : Math.min(target + 1, next + 6)
+      this.images.prefetch(
+        chunk.frames
+          .slice(next, until)
+          .filter((frame) => frame.src)
+          .map((frame) => new URL(frame.src!, loaded.url).href),
+      )
       const frame = chunk.frames[next]!
       if (frame.src) {
         const bitmap = await this.image(frame, loaded.url, this.pending.signal)
@@ -291,12 +314,19 @@ class ImagePlayback extends EventTarget implements FramePlayer {
       throw error
     }
   }
-  async play() {
-    if (this.closed) throw new Error('The media player was disposed')
-    if (this.running) return
+  play(): Promise<void> {
+    if (this.closed) return Promise.reject(new Error('The media player was disposed'))
+    this.wanted = true
+    if (this.running) return Promise.resolve()
+    return (this.starting ??= this.begin().finally(() => {
+      this.starting = undefined
+    }))
+  }
+  private async begin() {
     if (this.over) this.currentTime = 0
     await this.render(this.position)
     if (this.closed) throw new DOMException('Aborted', 'AbortError')
+    if (!this.wanted) return
     this.running = true
     this.over = false
     this.anchor = performance.now()
@@ -311,6 +341,7 @@ class ImagePlayback extends EventTarget implements FramePlayer {
     this.schedule()
   }
   pause() {
+    this.wanted = false
     if (!this.running) return
     this.position = this.currentTime
     this.running = false
@@ -331,7 +362,7 @@ class ImagePlayback extends EventTarget implements FramePlayer {
   }
 }
 
-/** Draw lossless image patches at authored times using standard image decoding, with no ImageDecoder requirement. */
+/** Draw image patches at authored times using standard image decoding, with no ImageDecoder requirement. */
 export function createFramePlayer(
   canvas: HTMLCanvasElement,
   asset: MediaAsset,

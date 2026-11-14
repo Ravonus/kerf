@@ -270,3 +270,5 @@ licence (LGPL or GPL, depending on how it was built).
 ## Image-frame delivery
 
 The provider also exposes `frames(file)` for `@kerf-js/media`'s frame build path. Its reader yields one complete RGBA frame with the source presentation time and duration, without writing an intermediate frame directory. The process lifetime, pixel dimensions and frame count are bounded. `copyAudio(file, codec)` retains an optional audio track's encoded samples independently of the image stream. Frame quality/selection remains the media plugin's decision.
+
+The optional `native` capability prepares native codec or stream-copy container candidates with unchanged encoded audio. It fingerprints encoded packets and every video frame timestamp/duration so the media plugin can reject altered timing, missing tracks or audio changes. Native automatic codec candidates use a bounded trial before final sampled quality checks. The AVIF frame reader selects the complete animation track instead of the primary still.

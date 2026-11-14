@@ -23,8 +23,10 @@ export interface MediaOptions {
   video?: {
     codecs?: ('av1' | 'vp9' | 'hevc')[]
     widths?: number[]
-    /** 'frames': stream verified lossless image patches. 'auto': keep them only when smaller. */
+    /** 'frames': stream verified image patches. 'auto': compare native codecs, containers and frames, retaining only a measured delivery-cost win. */
     delivery?: 'auto' | 'frames' | 'video'
+    /** Override quality.lossless for playback; false requires measured quality.target scores. */
+    lossless?: boolean
     /** Independent keyframes at most this many seconds apart; default 2. */
     chunkSeconds?: number
     /** Abort frame preparation before this output budget; default 256 MiB. */

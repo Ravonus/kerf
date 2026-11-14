@@ -6,6 +6,7 @@
 // build only stores the original: the variants are media.server@1's to encode.
 import { losslessRaster } from './lossless.mjs'
 import { frameVideo } from './frames.mjs'
+import { autoVideo } from './video-auto.mjs'
 import { execFile, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -21,7 +22,7 @@ import { unsafeSvg } from './svg.mjs'
 import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
 
 const run = promisify(execFile)
-const VERSION = 4 // bump when the output for the same input and options changes
+const VERSION = 6 // bump when the output for the same input and options changes
 
 export { DEFAULTS, FIXED, MIME, encoders, hex, isPhoto } from './shared.mjs'
 
@@ -122,9 +123,11 @@ export function createMediaBuild(input = {}) {
       const out = await (/\.svg$/i.test(file)
         ? vector(name, stem, bytes)
         : VIDEO.test(file)
-          ? o.video.delivery && o.video.delivery !== 'video'
-            ? frameVideo(source, o, encode)
-            : video(source, o, encode, scorer)
+          ? o.video.delivery === 'auto'
+            ? autoVideo(source, o, encode, scorer)
+            : o.video.delivery === 'frames'
+              ? frameVideo(source, { ...o, frameScorer: scorer }, encode)
+              : video(source, o, encode, scorer)
           : AUDIO.test(file)
             ? audioFile(source, o, encode)
             : o.quality.lossless

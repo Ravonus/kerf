@@ -121,3 +121,107 @@ it('abort disposes a pending frame request without drawing or starting audio', a
   await expect(pending).rejects.toThrow('Aborted')
   expect(signal?.aborted).toBe(true)
 })
+
+const film = (): MediaAsset => ({
+  kind: 'video',
+  src: '/original.mp4',
+  name: 'film.mp4',
+  type: 'video/mp4',
+  width: 4,
+  height: 4,
+  duration: 3,
+  sources: [],
+  frames: { version: 1, pixels: 'perceptual', chunks: [{ start: 0, end: 3, src: '/chunk.json' }] },
+})
+
+it('seeking skips obsolete complete frames and fetches only the latest reconstruction', async () => {
+  const painted = vi.fn(),
+    requested: string[] = []
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+    clearRect: vi.fn(),
+    drawImage: painted,
+  } as unknown as CanvasRenderingContext2D)
+  vi.stubGlobal(
+    'createImageBitmap',
+    vi.fn(() => Promise.resolve({ close: vi.fn() })),
+  )
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string | URL) => {
+      requested.push(String(url))
+      return Promise.resolve(
+        String(url).endsWith('.json')
+          ? Response.json({
+              start: 0,
+              end: 3,
+              frames: [0, 1, 2].map((time) => ({
+                time,
+                duration: 1,
+                x: 0,
+                y: 0,
+                width: 4,
+                height: 4,
+                src: `${time}.webp`,
+              })),
+            })
+          : new Response(new Blob(['image'])),
+      )
+    }),
+  )
+  const player = createFramePlayer(document.createElement('canvas'), film())
+  const seeked = new Promise((resolve) => {
+    player.addEventListener('seeked', resolve, { once: true })
+  })
+  player.currentTime = 2.2
+  await seeked
+  expect(requested.filter((url) => url.endsWith('.webp'))).toEqual([
+    expect.stringContaining('/2.webp'),
+  ])
+  expect(painted).toHaveBeenCalledTimes(1)
+  player.destroy()
+})
+
+it('a pause during the first network load prevents a delayed autoplay, and concurrent play calls share one start', async () => {
+  let finish!: () => void
+  const raf = vi.fn(() => 1)
+  vi.stubGlobal('requestAnimationFrame', raf)
+  vi.stubGlobal('cancelAnimationFrame', vi.fn())
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+    clearRect: vi.fn(),
+    drawImage: vi.fn(),
+  } as unknown as CanvasRenderingContext2D)
+  vi.stubGlobal(
+    'createImageBitmap',
+    vi.fn(() => Promise.resolve({ close: vi.fn() })),
+  )
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string | URL) =>
+      String(url).endsWith('.json')
+        ? Promise.resolve(
+            Response.json({
+              start: 0,
+              end: 3,
+              frames: [
+                { time: 0, duration: 3, x: 0, y: 0, width: 4, height: 4, src: 'image.webp' },
+              ],
+            }),
+          )
+        : new Promise<Response>((resolve) => {
+            finish = () => resolve(new Response(new Blob(['image'])))
+          }),
+    ),
+  )
+  const player = createFramePlayer(document.createElement('canvas'), film())
+  const first = player.play()
+  expect(player.play()).toBe(first)
+  await vi.waitFor(() => expect(finish).toBeDefined())
+  player.pause()
+  finish()
+  await first
+  expect(player.paused).toBe(true)
+  expect(raf).not.toHaveBeenCalled()
+  await player.play()
+  expect(raf).toHaveBeenCalledTimes(1)
+  player.destroy()
+})

@@ -23,7 +23,8 @@ export interface FrameSequence {
   version: 1
   chunks: { start: number; end: number; src: string }[]
   audio?: { src: string; type: string; offset: number }
-  pixels: 'exact'
+  pixels: 'exact' | 'perceptual'
+  quality?: { metric: 'ssimulacra2'; target: number; minimum: number }
 }
 
 /** The common control surface of a native element and a frame player. */

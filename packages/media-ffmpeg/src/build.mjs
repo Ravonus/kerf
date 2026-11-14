@@ -2,6 +2,7 @@
 //   Audio: Opus at 96 kbps, AAC-LC at 128 kbps; never dropped unless the recipe says so.
 //   Metadata is stripped (phones write GPS into videos), and MP4 gets `moov` first and WebM its cues first.
 import { frameReader } from './frames.mjs'
+import { nativeVideo } from './native.mjs'
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
@@ -279,6 +280,10 @@ export function createMediaEncode({ key, binary = 'system', probe, sha256, timeo
 
   return {
     key,
+    /** Packet-preserving audio, native container candidates and complete frame timing evidence. */
+    ...(key.startsWith('video/') && {
+      native: nativeVideo({ run, ffmpeg, ffprobe, input, output, spec, key, encoderName }),
+    }),
     /** Complete RGBA frames with their original presentation times, streamed one at a time. */
     frames: frameReader({ ffmpeg, ffprobe, run, timeout }),
     copyAudio: copyAudioTrack(output, input),

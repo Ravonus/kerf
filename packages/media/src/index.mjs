@@ -27,6 +27,8 @@ const fail = (path, message) => {
 function playbackOptions(input, out) {
   if (input.video !== undefined) {
     const { codecs, widths, delivery, chunkSeconds, maxFrameBytes } = input.video
+    if (input.video.lossless !== undefined && typeof input.video.lossless !== 'boolean')
+      fail('video.lossless', 'a boolean overriding quality.lossless for playback')
     if (delivery !== undefined && !['auto', 'frames', 'video'].includes(delivery))
       fail('video.delivery', "'auto', 'frames' or 'video'")
     if (chunkSeconds !== undefined && !(chunkSeconds >= 0.25 && chunkSeconds <= 10))
@@ -160,7 +162,7 @@ const CODES = [
   ['M019', 'ffmpeg missing, not the pinned binary, or without an encoder'],
   [
     'M020',
-    'Lossless frame delivery cannot be qualified, exceeds its output budget, or measured larger than the original',
+    'Frame delivery cannot be qualified, exceeds its output budget, or measured larger than the original',
   ],
 ]
 
@@ -208,7 +210,7 @@ export const media = definePlugin({
       text: [
         '- Import ?media; render Media from @kerf-js/core/media. It generates dimensions, responsive sources, posters and placeholders.',
         '- Only the LCP asset gets priority plus width/sizes. Describe images with alt; decoration uses alt="" decorative.',
-        '- quality.lossless true verifies decoded pixels. video.delivery frames streams independent image chunks plus optional audio; auto measures and retains the original when larger. Never promise unmeasured savings.',
+        '- quality.lossless verifies pixels. video.lossless false requires measured quality.target. delivery auto compares native codecs/containers with frames, including fallback, manifest and player bytes; native wins ties.',
         '- Galleries use encoder compatible, swap manual. Call prepareMediaSave(asset,{signal,onProgress}) only on right-click; show progress, then Save with result.url/name. Abort on cancel; release() on close. Never flatten motion.',
         '- Retained originals save exact files. Generated stills can encode PNG/JPEG in a disposable worker; JPEG is a re-encode. See kerf docs media.',
         '- Upload with ctx.media.ingest; store its record, type z.media(), render Media.',

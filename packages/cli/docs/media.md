@@ -11,11 +11,12 @@ export default defineConfig({
   plugins: [
     media({
       formats: ['avif', 'webp'],
-      quality: {lossless: true},
+      quality: {lossless: true, target: 90},
       encoder: 'compatible',
       swap: 'manual',
       video: {
         delivery: 'auto',
+        lossless: false,
         chunkSeconds: 2,
         maxFrameBytes: 268435456,
       },
@@ -30,10 +31,16 @@ export default defineConfig({
 For movies, `video.delivery` selects:
 
 - `video`: the existing native video codec ladder.
-- `frames`: independent lossless image chunks, with a full keyframe at each chunk boundary and exact replacement patches thereafter. Frames carry source presentation times and durations. Unchanged images reuse the same content-addressed file. Optional audio is stream-copied into a separate track. HDR, unsupported timing and output-budget exhaustion are explicit M020 failures.
-- `auto`: measure a complete initial chunk, then keep the unchanged movie when lossless image delivery is larger. This avoids claiming a size win from a different representation. Nothing silently substitutes a lossy recipe.
+- `frames`: independent image chunks, with a full keyframe at each chunk boundary and exact replacement patches thereafter. Frames carry source presentation times and durations. Unchanged images reuse the same content-addressed file. Optional audio is stream-copied into a separate track. HDR, unsupported timing and output-budget exhaustion are explicit M020 failures.
+- `auto`: compare the unchanged source, packet-preserving native container changes, qualified native codec encodes and image chunks. Native wins ties. Image chunks must have both fewer encoded bytes and a lower delivery byte cost than the actual native winner. Losing artifacts are discarded before publication. Frame preparation stops early when it exceeds the winning native payload budget.
 
-A frame record is rendered automatically by `<Media>`. Its player fetches only the current and next chunk records, releases decoded bitmaps immediately, seeks directly to an independent chunk, and uses standard image decoding rather than requiring `ImageDecoder`. `timeline(asset)` and the `playback` callback expose the same play, pause and current-time contract for native movies and image frames. `controls={false}` keeps an application's existing controls.
+The automatic delivery cost includes actual encoded files, image compatibility fallbacks, chunk manifests, the asset manifest and a conservative 64 KiB image-player allowance. Retained originals and posters are common to every path; they are excluded from added variant storage. The receipt reports encoded bytes, added storage, manifest bytes and the player allowance separately. This is a conservative byte comparison, not a measurement of device CPU, GPU, energy or cloud billing: decode CPU remains explicitly `unmeasured`.
+
+Native automatic candidates retain the source dimensions, every frame timestamp and duration, and unchanged encoded audio with its start time. Extra tracks, HDR and unsupported audio containers retain their source. Container changes also require identical encoded video packets. Codec search uses a bounded two-second trial, then the final full movie must pass five source-frame-aligned SSIMULACRA2 checks, each at or above the target. This is sampled perceptual qualification, not a claim that every native video frame was scored. An unsuccessful search or missing scorer never becomes a fixed-quality automatic winner.
+
+`video.lossless` overrides the image setting for playback. `true` verifies exact decoded pixels; `false` requires the configured SSIMULACRA2 tool and scores every complete reconstructed frame against `quality.target`. A missing scorer keeps the original in auto mode and fails forced frame delivery. Scores, target and mode are recorded. AVIF fallbacks decode to the same pixels as the selected image, preventing patch drift across browsers. Originals always keep their exact bytes for Save.
+
+A frame record is rendered automatically by `<Media>`. Its player fetches only the current and next chunk records, prefetches at most three compressed images concurrently with an 8 MiB cache, releases decoded bitmaps immediately, skips obsolete full frames, seeks directly to an independent chunk, and uses standard image decoding rather than requiring `ImageDecoder`. `timeline(asset)` and the `playback` callback expose the same play, pause and current-time contract for native movies and image frames. `controls={false}` keeps an application's existing controls.
 
 Exact pixels are different from a perceptual quality target. The existing `quality.target` mode searches measured quality when a scorer is installed and labels fixed settings when one is not. Re-encoding already compressed movie pixels as lossless still images can be larger than the original movie. Do not promise a compression ratio before measuring real sources.
 

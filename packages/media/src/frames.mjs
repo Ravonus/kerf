@@ -3,6 +3,7 @@ import sharp from 'sharp'
 import { extname } from 'node:path'
 import { onDisk } from './video/common.mjs'
 import { losslessImages, pixelHash } from './lossless.mjs'
+import { measuredFrame } from './frame-quality.mjs'
 
 function changed(previous, current, width, height) {
   if (!previous) return { x: 0, y: 0, width, height }
@@ -39,10 +40,13 @@ class FrameOutput {
   refused = ''
   previous = undefined
   chunk = undefined
+  reconstructed = undefined
+  minimum = 100
   constructor(files, source, o) {
     this.files = files
     this.source = source
     this.o = o
+    this.mode = (o.video.lossless ?? o.quality.lossless) ? 'exact' : 'perceptual'
   }
   add(file) {
     if (!this.files.has(file.name)) {
@@ -60,22 +64,36 @@ class FrameOutput {
     this.chunk = undefined
   }
   async patch(frame) {
-    const { width, height, stem } = this.source,
-      rect = changed(this.previous, frame.rgba, width, height)
+    const { width, height, stem } = this.source
+    let rect = changed(this.previous, frame.rgba, width, height)
     const entry = { time: frame.time, duration: frame.duration, x: 0, y: 0, width, height }
     if (!rect) return entry
     const raw = await sharp(frame.rgba, { raw: { width, height, channels: 4 } })
       .extract({ left: rect.x, top: rect.y, width: rect.width, height: rect.height })
       .raw()
       .toBuffer()
-    const candidates = await losslessImages(
-        raw,
-        rect.width,
-        rect.height,
-        this.o.formats,
-        `${stem}-frame`,
-      ),
-      selected = candidates[0]
+    let candidates = await (this.mode === 'exact'
+      ? losslessImages(raw, rect.width, rect.height, this.o.formats, `${stem}-frame`)
+      : Promise.resolve([]))
+    if (this.mode === 'perceptual') {
+      const output = await measuredFrame(
+        {
+          reference: frame.rgba,
+          previous: this.reconstructed,
+          rect,
+          width,
+          height,
+          stem: `${stem}-frame`,
+        },
+        { ...this.o.quality, formats: this.o.formats, scorer: this.o.frameScorer },
+        this.source.directory,
+      )
+      this.reconstructed = output.reconstructed
+      this.minimum = Math.min(this.minimum, output.score)
+      rect = output.rect
+      candidates = output.files
+    }
+    const selected = candidates[0]
     Object.assign(entry, rect, { src: selected.name, type: selected.type })
     if (selected.type === 'image/avif') {
       const fallback =
@@ -91,11 +109,16 @@ class FrameOutput {
     const { width, height, bytes, duration } = this.source,
       limit = this.o.video.maxFrameBytes ?? 256 * 1024 * 1024,
       seconds = this.o.video.chunkSeconds ?? 2
+    if (this.mode === 'perceptual' && !this.o.frameScorer) {
+      this.refused = 'measured perceptual frame playback requires the configured SSIMULACRA2 scorer'
+      return this
+    }
     for await (const frame of reader.read({ width, height })) {
       if (!this.chunk || frame.time >= this.chunk.start + seconds) {
         this.flush(frame.time)
         this.chunk = { start: frame.time, end: 0, frames: [] }
         this.previous = undefined
+        this.reconstructed = undefined
       }
       this.chunk.frames.push(await this.patch(frame))
       this.previous = frame.rgba
@@ -103,15 +126,15 @@ class FrameOutput {
       this.count++
       this.sampleEnd = frame.time + frame.duration
       if (this.spent > limit) {
-        this.refused = `the lossless frame output exceeds its ${limit}-byte budget`
+        this.refused = `the ${this.mode} frame output exceeds its ${limit}-byte budget`
         break
       }
       if (
         this.o.video.delivery === 'auto' &&
-        this.sampleEnd >= Math.min(seconds, duration) &&
-        this.spent > (bytes.length * this.sampleEnd) / duration
+        (this.sampleEnd >= Math.min(seconds, duration) || this.spent > bytes.length) &&
+        (this.spent > bytes.length || this.spent > (bytes.length * this.sampleEnd) / duration)
       ) {
-        this.refused = 'measured lossless frames are larger than the source at the same duration'
+        this.refused = `measured ${this.mode} frames are larger than the source at the same duration`
         break
       }
     }
@@ -121,7 +144,8 @@ class FrameOutput {
   }
 }
 
-function baselineVideo({ bytes, name, stem }, info, o) {
+/** Unchanged video with its exact source available to both native and image playback. */
+export function baselineVideo({ bytes, name, stem }, info, o) {
   const extension = extname(name).slice(1).toLowerCase(),
     type =
       extension === 'webm'
@@ -182,64 +206,69 @@ function refusedOutput(baseline, files, built, o) {
       frameBytes: built.spent,
       sampledSeconds: built.sampleEnd,
       originalBytes: baseline.original.bytes,
-      pixels: 'exact',
+      pixels: built.mode,
       selected: 'original',
     },
   }
 }
 
-/** Public media.build's frame path: exact image patches, source times and optional unchanged encoded audio. */
+/** Public media.build's frame path: measured image patches, source times and optional unchanged encoded audio. */
 export async function frameVideo(source, o, encode) {
   const provider = encode['video/h264']
   if (!provider?.frames)
-    return {
-      asset: null,
-      files: [],
-      diagnostics: [
-        {
-          code: 'M020',
-          severity: 'error',
-          message: `${source.name}: frame delivery needs the current mediaFfmpeg() provider with frames().`,
-        },
-      ],
-    }
-  return onDisk(source.name, source.bytes, async (file) => {
+    return frameProblem(
+      source.name,
+      'frame delivery needs the current mediaFfmpeg() provider with frames()',
+    )
+  return onDisk(source.name, source.bytes, async (file, directory) => {
     const info = await provider.info(file)
     if (!info.video || info.video.hdr)
-      return {
-        asset: null,
-        files: [],
-        diagnostics: [
-          {
-            code: 'M020',
-            severity: 'error',
-            message: `${source.name}: frame delivery cannot qualify HDR or an absent video track; the original is retained.`,
-          },
-        ],
-      }
+      return frameProblem(source.name, 'frame delivery cannot qualify HDR or an absent video track')
     const baseline = baselineVideo(source, info, o),
       files = new Map([[baseline.src, { name: baseline.src, bytes: source.bytes }]])
-    const posterBytes = await provider.still(file, { at: 0, width: Math.min(baseline.width, 960) }),
-      poster = `${source.stem}-poster-${pixelHash(posterBytes).slice(0, 20)}.png`
+    const still = await provider.still(file, { at: 0, width: Math.min(baseline.width, 640) })
+    const posterBytes = await sharp(still).webp({ quality: 80, effort: 4 }).toBuffer(),
+      poster = `${source.stem}-poster-${pixelHash(posterBytes).slice(0, 20)}.webp`
     files.set(poster, { name: poster, bytes: posterBytes })
     baseline.poster = poster
     const reader = await provider.frames(file),
-      built = await new FrameOutput(
+      output = new FrameOutput(
         files,
-        { ...source, width: baseline.width, height: baseline.height, duration: info.duration },
+        {
+          ...source,
+          width: baseline.width,
+          height: baseline.height,
+          duration: info.duration,
+          directory,
+        },
         o,
-      ).collect(reader)
+      )
+    const built = await output.collect(reader).catch((error) => {
+      output.refused = error.message
+      return output
+    })
     if (built.refused) return refusedOutput(baseline, files, built, o)
     const audio = await audioTrack(provider, file, info, source.stem, files)
     return {
       asset: {
         ...baseline,
-        frames: { version: 1, chunks: built.chunks, pixels: 'exact', ...(audio && { audio }) },
+        frames: {
+          version: 1,
+          chunks: built.chunks,
+          pixels: built.mode,
+          ...(built.mode === 'perceptual' && {
+            quality: { metric: 'ssimulacra2', target: o.quality.target, minimum: built.minimum },
+          }),
+          ...(audio && { audio }),
+        },
       },
       files: [...files.values()],
       diagnostics: [],
       verification: {
-        pixels: 'exact',
+        pixels: built.mode,
+        ...(built.mode === 'perceptual' && {
+          quality: { metric: 'ssimulacra2', target: o.quality.target, minimum: built.minimum },
+        }),
         frameCount: built.count,
         frameHashesSha256: pixelHash(built.proofs.join('\n')),
         frameBytes: built.spent,
@@ -248,4 +277,14 @@ export async function frameVideo(source, o, encode) {
       },
     }
   })
+}
+
+function frameProblem(name, reason) {
+  return {
+    asset: null,
+    files: [],
+    diagnostics: [
+      { code: 'M020', severity: 'error', message: `${name}: ${reason}; the original is retained.` },
+    ],
+  }
 }
