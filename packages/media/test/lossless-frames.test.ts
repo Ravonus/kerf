@@ -53,6 +53,57 @@ it('lossless rasters retain original bytes and every resized RGBA byte including
     }
 })
 
+it('every efficient picture format contains the complete responsive width ladder', async () => {
+  const bytes = await sharp({
+    create: { width: 64, height: 48, channels: 4, background: '#ff94b2' },
+  })
+    .png({ compressionLevel: 0 })
+    .toBuffer()
+  const built = await createMediaBuild({
+    formats: ['avif', 'webp'],
+    widths: [8, 16, 32],
+    quality: { lossless: true },
+  }).build({ file: '/ladder.png', bytes }, { cacheDir: folder() })
+  expect(built.verification.selected).toBe('raster')
+  expect(built.asset.sources.at(-1).srcset.split(' ').at(-1)).toBe('64w')
+  expect(
+    built.asset.sources[0].srcset
+      .split(', ')
+      .map((entry: string) => parseInt(entry.split(' ')[1]!)),
+  ).toEqual([8, 16, 32])
+  for (const entry of built.asset.sources[0].srcset.split(', ')) {
+    const [name, size] = entry.split(' ')
+    const encoded = built.files.find((file: { name: string }) => file.name === name)!.bytes
+    expect(await sharp(encoded).ensureAlpha().raw().toBuffer()).toEqual(
+      await sharp(bytes)
+        .resize({ width: parseInt(size) })
+        .ensureAlpha()
+        .raw()
+        .toBuffer(),
+    )
+  }
+})
+
+it('keeps an already compact original instead of delivering a larger exact raster', async () => {
+  let seed = 1
+  const pixels = Uint8Array.from({ length: 64 * 48 * 3 }, () => {
+    seed = Math.imul(seed, 1664525) + 1013904223
+    return seed >>> 24
+  })
+  const bytes = await sharp(pixels, { raw: { width: 64, height: 48, channels: 3 } })
+    .jpeg({ quality: 35 })
+    .toBuffer()
+  const built = await createMediaBuild({
+    formats: ['avif', 'webp'],
+    widths: [16, 32, 64],
+    quality: { lossless: true },
+  }).build({ file: '/compact.jpg', bytes }, { cacheDir: folder() })
+  expect(built.verification.selected).toBe('original')
+  expect(built.asset.sources).toEqual([
+    { type: 'image/jpeg', srcset: `${built.asset.original.src} 64w` },
+  ])
+})
+
 it('AVIF originals retain their real MIME type even when the decoder calls their container HEIF', async () => {
   const bytes = await sharp({
     create: { width: 4, height: 4, channels: 4, background: '#ff94b2' },

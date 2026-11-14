@@ -25,7 +25,7 @@ export default defineConfig({
 })
 ```
 
-`quality.lossless: true` verifies every emitted efficient raster by a complete RGBA decode, including invisible RGB. Each resized rung is checked against its canonical resized reference. Resizing changes resolution; it is not a claim that a smaller rendition contains the source's original pixel count. A format that changes pixels is discarded. The original file is retained for saving, with its real MIME type and name.
+`quality.lossless: true` verifies every emitted efficient raster by a complete RGBA decode, including invisible RGB. Each resized rung is checked against its canonical resized reference. Resizing changes resolution; it is not a claim that a smaller rendition contains the source's original pixel count. A format that changes pixels is discarded. Each offered format has a complete responsive width ladder. If the largest replacement would be bigger than the original, delivery keeps the original. The original file is retained for saving, with its real MIME type and name.
 
 For movies, `video.delivery` selects:
 

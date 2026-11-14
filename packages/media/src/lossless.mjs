@@ -54,37 +54,19 @@ export async function losslessRaster({ bytes, name, stem }, o) {
   const { width, height } = reference.info
   const largest = Math.min(width, o.widths.at(-1)),
     widths = [...new Set([...o.widths.filter((value) => value < largest), largest])]
-  const entries = new Map()
-  for (const size of widths) {
-    const resized = await sharp(reference.data, { raw: { width, height, channels: 4 } })
-      .resize({ width: size })
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true })
-    const candidates = await losslessImages(
-      resized.data,
-      resized.info.width,
-      resized.info.height,
-      o.formats,
-      `${stem}-${size}`,
-    )
-    // A larger candidate has no delivery advantage. Keep only the smallest exact-pixel format for this width.
-    const candidate = candidates[0]
-    files.push(candidate)
-    const set = entries.get(candidate.type) ?? []
-    set.push(`${candidate.name} ${size}w`)
-    entries.set(candidate.type, set)
-  }
-  const sources = [...entries].map(([type, srcset]) => ({ type, srcset: srcset.join(', ') }))
-  // The unchanged original is a format fallback and supplies the actual original on Save.
-  sources.push({ type: original.type, srcset: `${originalName} ${width}w` })
+  const delivery = exactSources(
+    await exactRungs(reference, widths, { formats: o.formats, stem }),
+    widths,
+    { ...original, width },
+  )
+  files.push(...delivery.files)
   const asset = {
     kind: metadata.format === 'jpeg' ? 'photo' : 'graphic',
     src: originalName,
     width,
     height,
     type: original.type,
-    sources,
+    sources: delivery.sources,
     name,
     quality: 'original',
     animated: false,
@@ -98,7 +80,63 @@ export async function losslessRaster({ bytes, name, stem }, o) {
     asset.dominant = hex((await sharp(bytes).stats()).dominant)
     await withPlaceholder(asset, files, sharp(bytes).rotate(), stem, o)
   }
-  return { asset, files, diagnostics: [], verification: { pixels: 'exact', widths } }
+  return {
+    asset,
+    files,
+    diagnostics: [],
+    verification: {
+      pixels: 'exact',
+      widths: delivery.efficient ? widths : [width],
+      selected: delivery.efficient ? 'raster' : 'original',
+    },
+  }
+}
+
+function exactSources(rungs, widths, original) {
+  const types = rungs[0]
+    .map((file) => file.type)
+    .filter((type) => rungs.every((candidates) => candidates.some((file) => file.type === type)))
+  const ladders = types
+    .map((type) => rungs.map((candidates) => candidates.find((file) => file.type === type)))
+    .sort(
+      (a, b) =>
+        a.reduce((sum, file) => sum + file.bytes.length, 0) -
+        b.reduce((sum, file) => sum + file.bytes.length, 0),
+    )
+  const selected = ladders[0]
+  const efficient = selected.at(-1).bytes.length <= original.bytes
+  const sources = efficient
+    ? [
+        {
+          type: selected[0].type,
+          srcset: selected.map((file, index) => `${file.name} ${widths[index]}w`).join(', '),
+        },
+      ]
+    : []
+  // A picture chooses a format before a width, so every offered format must have a complete ladder.
+  sources.push({ type: original.type, srcset: `${original.src} ${original.width}w` })
+  return { sources, efficient, files: efficient ? selected : [] }
+}
+
+async function exactRungs(reference, widths, { formats, stem }) {
+  const { width, height } = reference.info
+  const rungs = []
+  for (const size of widths) {
+    const resized = await sharp(reference.data, { raw: { width, height, channels: 4 } })
+      .resize({ width: size })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    const candidates = await losslessImages(
+      resized.data,
+      resized.info.width,
+      resized.info.height,
+      formats,
+      `${stem}-${size}`,
+    )
+    rungs.push(candidates)
+  }
+  return rungs
 }
 
 function animatedOriginal({ metadata, original, name, files, o }) {

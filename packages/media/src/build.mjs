@@ -21,7 +21,7 @@ import { unsafeSvg } from './svg.mjs'
 import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
 
 const run = promisify(execFile)
-const VERSION = 3 // bump when the output for the same input and options changes
+const VERSION = 4 // bump when the output for the same input and options changes
 
 export { DEFAULTS, FIXED, MIME, encoders, hex, isPhoto } from './shared.mjs'
 
