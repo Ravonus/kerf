@@ -248,7 +248,7 @@ it('media() validates options as P115 and provides media.build with the M namesp
     widths: [400, 800],
   })
   expect(m.diagnostics!.map((d: { code: string }) => d.code)).toEqual(
-    Array.from({ length: 19 }, (_, i) => `M${String(i + 1).padStart(3, '0')}`),
+    Array.from({ length: 20 }, (_, i) => `M${String(i + 1).padStart(3, '0')}`),
   )
   expect(p.namespace).toBe('M')
   expect(() => media({ formats: ['jxl'] })).toThrow(

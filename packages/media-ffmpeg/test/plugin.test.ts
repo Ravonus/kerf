@@ -6,11 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { createMediaEncode } from '../src/build.mjs'
 import { KEYS, mediaFfmpeg } from '../src/index.mjs'
 
-const encode = createMediaEncode as (options: {
-  key: string
-  binary?: string
-  sha256?: string
-}) => ReturnType<typeof createMediaEncode>
+const encode = createMediaEncode
 
 const ffmpeg = spawnSync('sh', ['-c', 'command -v ffmpeg'], { encoding: 'utf8' }).stdout.trim()
 

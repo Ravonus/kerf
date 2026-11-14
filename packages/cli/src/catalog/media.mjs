@@ -160,4 +160,13 @@ export const media = [
       "An upload refused: it isn't an image kerf can read, or it's over the size limit (422)",
     fix: 'Raise `media({ server: { maxBytes } })`, or check the file on the client first',
   },
+  {
+    code: 'M020',
+    severity: 'error',
+    by: 'plugin',
+    owner: '@kerf-js/media',
+    catches:
+      'Lossless frame delivery is unsupported or exceeds its budget; auto mode also reports when measured frames are larger',
+    fix: 'Keep the unchanged original with video.delivery auto, or explicitly raise maxFrameBytes after measuring available storage. Never silently switch to a lossy recipe.',
+  },
 ]

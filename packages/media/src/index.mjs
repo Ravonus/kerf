@@ -26,7 +26,13 @@ const fail = (path, message) => {
 
 function playbackOptions(input, out) {
   if (input.video !== undefined) {
-    const { codecs, widths } = input.video
+    const { codecs, widths, delivery, chunkSeconds, maxFrameBytes } = input.video
+    if (delivery !== undefined && !['auto', 'frames', 'video'].includes(delivery))
+      fail('video.delivery', "'auto', 'frames' or 'video'")
+    if (chunkSeconds !== undefined && !(chunkSeconds >= 0.25 && chunkSeconds <= 10))
+      fail('video.chunkSeconds', 'between .25 and 10 seconds')
+    if (maxFrameBytes !== undefined && !(Number.isSafeInteger(maxFrameBytes) && maxFrameBytes > 0))
+      fail('video.maxFrameBytes', 'a positive byte budget')
     if (codecs !== undefined) {
       if (!Array.isArray(codecs)) fail('video.codecs', 'expected an array')
       for (const [i, c] of codecs.entries())
@@ -82,8 +88,8 @@ function options(input) {
     out.encoder = input.encoder
   }
   if (input.swap !== undefined) {
-    if (!['intent', 'idle', 'never'].includes(input.swap))
-      fail('swap', `\`${input.swap}\`: 'intent', 'idle' or 'never'`)
+    if (!['intent', 'idle', 'never', 'manual'].includes(input.swap))
+      fail('swap', `\`${input.swap}\`: 'intent', 'idle', 'manual' or 'never'`)
     if (input.encoder !== 'compatible')
       fail('swap', "only means something with `encoder: 'compatible'`")
     out.swap = input.swap
@@ -109,7 +115,8 @@ function options(input) {
     out.widths = [...input.widths].sort((a, b) => a - b)
   }
   if (input.quality !== undefined) {
-    const { target = 80, scorer = 'ssimulacra2' } = input.quality
+    const { target = 80, scorer = 'ssimulacra2', lossless = false } = input.quality
+    if (typeof lossless !== 'boolean') fail('quality.lossless', 'a boolean')
     if (!(target > 0 && target <= 100))
       fail(
         'quality.target',
@@ -117,7 +124,7 @@ function options(input) {
       )
     if (typeof scorer !== 'string')
       fail('quality.scorer', "the SSIMULACRA2 command, or 'none' for fixed qualities")
-    out.quality = { target, scorer }
+    out.quality = { target, scorer, lossless }
   }
   if (input.placeholder !== undefined) {
     if (![true, false, 'inline', 'file'].includes(input.placeholder))
@@ -151,6 +158,10 @@ const CODES = [
   ['M017', 'Media requested with no media.server provider'],
   ['M018', 'An upload refused: not an image, or over the size limit'],
   ['M019', 'ffmpeg missing, not the pinned binary, or without an encoder'],
+  [
+    'M020',
+    'Lossless frame delivery cannot be qualified, exceeds its output budget, or measured larger than the original',
+  ],
 ]
 
 export const media = definePlugin({
@@ -195,11 +206,12 @@ export const media = definePlugin({
     agents: {
       title: 'Media (@kerf-js/media)',
       text: [
-        '- Import images with `?media` and render `<Media src={x} alt="…" />` from `@kerf-js/core/media`. Never hand-write srcset, sizes, width/height or blur placeholders.',
-        '- Mark the one hero image `priority` and give it `width` (`"1/2"`, `"480px"`) so its `sizes` is right (M010). Nothing else gets `priority` (M009).',
-        '- `alt` is required; use `alt="" decorative` for purely visual media (M007).',
-        '- Never reference files in public/ by string (M013) or render `?url` imports in `<img>` (M002).',
-        '- Uploads: `await ctx.media.ingest(file)` in a mutation returns a record. Store it, type the field `z.media()` (from `@kerf-js/start/media`), and pass it to `<Media src>` (M016).',
+        '- Import ?media; render Media from @kerf-js/core/media. It generates dimensions, responsive sources, posters and placeholders.',
+        '- Only the LCP asset gets priority plus width/sizes. Describe images with alt; decoration uses alt="" decorative.',
+        '- quality.lossless true verifies decoded pixels. video.delivery frames streams independent image chunks plus optional audio; auto measures and retains the original when larger. Never promise unmeasured savings.',
+        '- Galleries use encoder compatible, swap manual. Call prepareMediaSave(asset,{signal,onProgress}) only on right-click; show progress, then Save with result.url/name. Abort on cancel; release() on close. Never flatten motion.',
+        '- Retained originals save exact files. Generated stills can encode PNG/JPEG in a disposable worker; JPEG is a re-encode. See kerf docs media.',
+        '- Upload with ctx.media.ingest; store its record, type z.media(), render Media.',
       ].join('\n'),
     },
     catalog: [

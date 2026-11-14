@@ -266,3 +266,7 @@ encodes through this package.
 
 [MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE). ffmpeg itself is not part of this package and carries its own
 licence (LGPL or GPL, depending on how it was built).
+
+## Image-frame delivery
+
+The provider also exposes `frames(file)` for `@kerf-js/media`'s frame build path. Its reader yields one complete RGBA frame with the source presentation time and duration, without writing an intermediate frame directory. The process lifetime, pixel dimensions and frame count are bounded. `copyAudio(file, codec)` retains an optional audio track's encoded samples independently of the image stream. Frame quality/selection remains the media plugin's decision.

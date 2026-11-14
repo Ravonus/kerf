@@ -1,12 +1,14 @@
-// @kerf-js/core/media: <Media> and the record a `?media` import evaluates to (research 15 §7, research 26 §2). No encoder and
-// no IO here: @kerf-js/core/vite builds the record (with @kerf-js/media's `media.build` provider, or a header probe
-// without one), and this renders it with dimensions, a placeholder, `srcset` and `sizes`, so nothing shifts. Video and
-// audio records come from @kerf-js/media-ffmpeg. The swap runtime is a chunk only a compatible copy loads.
-
-import { onMount, untrack } from './index'
+// Render optimized media records with native layout, playback and original-file save metadata.
+import { onMount, onCleanup, untrack } from './index'
 import type { Timeline } from './media-timeline'
 
+import type { FrameSequence, MediaPlayback } from './media-frame-types'
+import { mediaStyle } from './media-style'
+import { framed } from './media-frame-view'
+export { mediaStyle } from './media-style'
 export { timeline, type Timeline, type TimelineOptions } from './media-timeline'
+export type { FrameSequence, FrameChunk, FramePatch, MediaPlayback } from './media-frame-types'
+export { prepareMediaSave, type PreparedMediaSave, type MediaSaveOptions } from './media-save'
 
 /** What `import x from './x.jpg?media'` gives you. */
 export interface MediaAsset {
@@ -17,11 +19,9 @@ export interface MediaAsset {
   /** Intrinsic size, after EXIF orientation. */
   width: number
   height: number
-  /** MIME type of `src`. */
   type: string
   /** Efficient formats first (image/avif), the fallback last. Empty when the original is the only file. */
   sources: { type: string; srcset: string }[]
-  /** #rrggbb */
   dominant?: string
   /** A tiny WebP shown until the image paints: a data: URL, or a file URL with `placeholder: 'file'`. */
   placeholder?: string
@@ -31,9 +31,7 @@ export interface MediaAsset {
   quality?: 'ssimulacra2' | 'fixed' | 'original'
   /** Video: the still shown until it plays. */
   poster?: string
-  /** Video and audio: seconds. */
   duration?: number
-  /** Video: it has a sound track. */
   audio?: boolean
   /** Video made from a GIF: it autoplays muted, as the GIF did. */
   animated?: boolean
@@ -41,7 +39,11 @@ export interface MediaAsset {
   loop?: number
   /** `encoder: 'compatible'`: the file a save should give. */
   copy?: { src: string; type: string; bytes?: number; ratio?: number }
-  swap?: 'intent' | 'idle' | 'never'
+  swap?: 'intent' | 'idle' | 'never' | 'manual'
+  /** The immutable source, requested only for original-file saving. */
+  original?: { src: string; type: string; name: string; bytes: number }
+  /** Independent image chunks, decoded just ahead of the current frame. */
+  frames?: FrameSequence
 }
 
 /** `<Media>`'s props: the asset, how it's described and framed, and anything else for the element. */
@@ -61,6 +63,8 @@ export interface MediaProps {
   fit?: 'cover' | 'contain'
   /** Video and audio: sync code to it with `timeline()`. */
   timeline?: Timeline
+  /** Native media and image-frame playback expose the same control contract. */
+  playback?: (player: MediaPlayback) => void
   /** Video: 'always' keeps a GIF moving under `prefers-reduced-motion`. */
   motion?: 'auto' | 'always'
   [attr: string]: unknown
@@ -69,10 +73,7 @@ export interface MediaProps {
 /** Veneer's phone breakpoint: under 600 px a fractional width is the full viewport. */
 const PHONE = '(max-width: 599px)'
 
-/**
- * The `sizes` attribute: an explicit one, else from `width`, else `auto` for lazy images (the browser uses the
- * laid-out width; `100vw` where `auto` isn't supported) and `100vw` for eager ones (M010 flags that case).
- */
+/** Responsive sizes from an explicit width, or native lazy-image measurement. */
 export function mediaSizes(
   width: string | undefined,
   sizes: string | undefined,
@@ -89,27 +90,9 @@ export function mediaSizes(
   return lazy ? 'auto, 100vw' : '100vw'
 }
 
-/** Inline style: the box (aspect ratio), the placeholder behind a photo, the focal point. */
-export function mediaStyle(
-  a: MediaAsset,
-  focus?: [number, number],
-  fit?: 'cover' | 'contain',
-): string {
-  let s = `aspect-ratio:${a.width}/${a.height};max-inline-size:100%;block-size:auto`
-  // Only photos: a placeholder would show through a transparent graphic once it loads.
-  if (a.kind === 'photo' && (a.placeholder || a.dominant))
-    s += `;background:${a.dominant ?? ''}${a.placeholder ? ` url(${a.placeholder})` : ''} center/cover no-repeat`
-  if (fit) s += `;object-fit:${fit}`
-  if (focus) s += `;object-position:${Math.round(focus[0] * 100)}% ${Math.round(focus[1] * 100)}%`
-  return s
-}
-
 const fallbackSrcset = (a: MediaAsset) => a.sources.at(-1)?.srcset
 
-/**
- * `<source>` has no `srcset` on `<video>`: one per codec and width, efficient codecs first, each width behind a `media`
- * query at half its pixels (a 2× screen), the largest with none. The browser plays the first it can and that matches.
- */
+/** Native timed sources select codecs and widths through standard media queries. */
 export function timedSources(
   a: MediaAsset,
 ): { src: string; type: string; media?: string | undefined }[] {
@@ -131,13 +114,15 @@ function timed({
   focus,
   fit,
   timeline,
+  playback,
   motion,
   controls,
   ...rest
 }: MediaProps) {
   let el!: HTMLVideoElement
   onMount(() => {
-    if (timeline) timeline.bind(el)
+    if (timeline) onCleanup(timeline.bind(el))
+    playback?.(el)
     if (
       src.animated &&
       motion !== 'always' &&
@@ -197,13 +182,14 @@ function timed({
   )
 }
 
-/**
- * One source, everything automatic: `<Media src={hero} alt="…" />`. Renders `<picture>` with the efficient formats
- * when the asset has them (AVIF isn't in every engine Kerf targets: iOS 15), else one `<img>`.
- */
+/** Render the complete optimized asset, including its optional frame stream. */
 export function Media(props: MediaProps) {
   return untrack(() =>
-    props.src.kind === 'video' || props.src.kind === 'audio' ? timed(props) : still(props),
+    props.src.frames
+      ? framed(props)
+      : props.src.kind === 'video' || props.src.kind === 'audio'
+        ? timed(props)
+        : still(props),
   )
 }
 

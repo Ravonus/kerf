@@ -1,0 +1,88 @@
+# Media delivery and original-file saving
+
+Install `@kerf-js/media`; add `@kerf-js/media-ffmpeg` when the source includes movies or audio. Import local sources with `?media` and render `<Media>` from `@kerf-js/core/media`. The plugin supplies dimensions, responsive widths, a tiny first-paint placeholder, posters and efficient formats. Source files remain immutable.
+
+```ts
+import {defineConfig} from '@kerf-js/core/config'
+import {media} from '@kerf-js/media'
+import {mediaFfmpeg} from '@kerf-js/media-ffmpeg'
+
+export default defineConfig({
+  plugins: [
+    media({
+      formats: ['avif', 'webp'],
+      quality: {lossless: true},
+      encoder: 'compatible',
+      swap: 'manual',
+      video: {
+        delivery: 'auto',
+        chunkSeconds: 2,
+        maxFrameBytes: 268435456,
+      },
+    }),
+    mediaFfmpeg(),
+  ],
+})
+```
+
+`quality.lossless: true` verifies every emitted efficient raster by a complete RGBA decode, including invisible RGB. Each resized rung is checked against its canonical resized reference. Resizing changes resolution; it is not a claim that a smaller rendition contains the source's original pixel count. A format that changes pixels is discarded. The original file is retained for saving, with its real MIME type and name.
+
+For movies, `video.delivery` selects:
+
+- `video`: the existing native video codec ladder.
+- `frames`: independent lossless image chunks, with a full keyframe at each chunk boundary and exact replacement patches thereafter. Frames carry source presentation times and durations. Unchanged images reuse the same content-addressed file. Optional audio is stream-copied into a separate track. HDR, unsupported timing and output-budget exhaustion are explicit M020 failures.
+- `auto`: measure a complete initial chunk, then keep the unchanged movie when lossless image delivery is larger. This avoids claiming a size win from a different representation. Nothing silently substitutes a lossy recipe.
+
+A frame record is rendered automatically by `<Media>`. Its player fetches only the current and next chunk records, releases decoded bitmaps immediately, seeks directly to an independent chunk, and uses standard image decoding rather than requiring `ImageDecoder`. `timeline(asset)` and the `playback` callback expose the same play, pause and current-time contract for native movies and image frames. `controls={false}` keeps an application's existing controls.
+
+Exact pixels are different from a perceptual quality target. The existing `quality.target` mode searches measured quality when a scorer is installed and labels fixed settings when one is not. Re-encoding already compressed movie pixels as lossless still images can be larger than the original movie. Do not promise a compression ratio before measuring real sources.
+
+## Background versus intent preparation
+
+`encoder: 'compatible'` enables the compatibility-copy record. `swap: 'intent'` quietly prepares/swaps a compatible copy around hover, right-click, long-press or drag; `idle` permits background work; `never` disables swaps. Existing native-save restrictions on large movies still apply. A canvas frame player requires an explicit original-file download action to save the entire movie; its native image context menu can only save the displayed frame.
+
+For a gallery with many animations, use **`swap: 'manual'`** and open the application's small progress dialog only on right-click. Call the shared API then, not once per artwork on mount:
+
+```ts
+import {
+  prepareMediaSave,
+  type MediaAsset,
+  type PreparedMediaSave,
+} from '@kerf-js/core/media'
+
+export function saveController(
+  asset: MediaAsset,
+  link: HTMLAnchorElement,
+  status: HTMLElement,
+) {
+  let controller: AbortController | undefined
+  let result: PreparedMediaSave | undefined
+  return {
+    async prepare() {
+      controller?.abort()
+      result?.release()
+      controller = new AbortController()
+      result = await prepareMediaSave(asset, {
+        signal: controller.signal,
+        onProgress(phase) { status.textContent = phase },
+      })
+      link.href = result.url
+      link.download = result.name
+      link.hidden = false
+    },
+    close() {
+      controller?.abort()
+      result?.release()
+      link.hidden = true
+    },
+  }
+}
+```
+
+`prepareMediaSave` checks the retained original before exposing its URL; the actual file is fetched by the browser when Save is clicked. This preserves original bytes, metadata, type and name without wasting CPU reconstructing a file that already exists. A missing original fails explicitly. It never substitutes an optimized image or flattens a movie/GIF to one frame.
+
+Generated stills without a retained source can be encoded to PNG or explicitly requested JPEG in a disposable browser worker. The worker is terminated on completion, cancel or failure. Browsers without worker canvas support use their native canvas encoder. A result owns its object URL until `release()`; no encode starts until this API is called. PNG preserves the browser-decoded raster. JPEG is a compatible re-encode, not a promise of original bytes. Keep the original whenever exact-file recovery matters.
+
+## Provenance
+
+The pre-rename WEFT request and research are preserved in [the original asset design](https://github.com/Ravonus/kerf/blob/archive/evals-2026-11/docs/research/15-assets.md). That historical document describes intent and measured experiments; this reference describes implemented API behavior. The original implementation supplied native video ladders and prebuilt compatibility copies. Frame chunks, exact-pixel raster mode, manual save preparation and the disposable browser encode worker are subsequent additions and must be tested as such.

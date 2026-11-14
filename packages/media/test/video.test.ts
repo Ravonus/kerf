@@ -12,7 +12,7 @@ import { createMediaBuild, findScorer } from '../src/build.mjs'
 import { createMediaServer } from '../src/server.mjs'
 
 const hasFfmpeg = !spawnSync('ffmpeg', ['-version']).error
-const encoder = createMediaEncode as (opts: { key: string }) => ReturnType<typeof createMediaEncode>
+const encoder = createMediaEncode
 const encode = Object.fromEntries(KEYS.map((key) => [key, encoder({ key })]))
 const options = { quality: { scorer: 'none' }, video: { widths: [160, 320] } }
 let dir: string
