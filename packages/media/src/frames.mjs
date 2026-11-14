@@ -243,6 +243,19 @@ export async function frameVideo(source, o, encode) {
         },
         o,
       )
+    if (info.tracks && (info.tracks.video !== 1 || info.tracks.audio > 1 || info.tracks.other)) {
+      output.refused = 'image playback cannot qualify additional source tracks'
+      return refusedOutput(baseline, files, output, o)
+    }
+    if (
+      info.audio &&
+      (!Number.isFinite(info.audio.start) ||
+        !Number.isFinite(reader.start) ||
+        Math.abs(info.audio.start - reader.start) > 0.00051)
+    ) {
+      output.refused = 'image playback cannot qualify the source audio/video start offset'
+      return refusedOutput(baseline, files, output, o)
+    }
     const built = await output.collect(reader).catch((error) => {
       output.refused = error.message
       return output

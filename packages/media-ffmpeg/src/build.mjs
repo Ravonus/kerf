@@ -126,6 +126,11 @@ function createInfo({ run, ffprobe }) {
     const turned = Math.abs(side) % 180 === 90
     return {
       format: format.format_name,
+      tracks: {
+        video: streams.filter((stream) => stream.codec_type === 'video').length,
+        audio: streams.filter((stream) => stream.codec_type === 'audio').length,
+        other: streams.filter((stream) => !['video', 'audio'].includes(stream.codec_type)).length,
+      },
       duration: Number(format.duration) || 0,
       video: v && {
         codec: v.codec_name,
@@ -142,6 +147,7 @@ function createInfo({ run, ffprobe }) {
       audio: a && {
         codec: a.codec_name,
         channels: a.channels,
+        start: Number(a.start_time) || 0,
         bitrate: Number(a.bit_rate) || undefined,
         string: codecString(a),
       },

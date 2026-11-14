@@ -137,7 +137,7 @@ async function evaluate(enc, ctx) {
 
 async function candidates({ source, file, info, out, encode, o, scorer }) {
   const probe = encode['video/h264']
-  if (info.video.hdr || /yuva|rgba|bgra|gbrap/.test(info.video.pix) || !probe.native) return out
+  if (info.video.hdr || !probe.native) return out
   const reference = await probe.native.fingerprint(file),
     recipes = [
       { key: `video/${info.video.codec}`, copy: true },
@@ -146,6 +146,7 @@ async function candidates({ source, file, info, out, encode, o, scorer }) {
       ),
     ],
     assessments = []
+  if (/yuva|rgba|bgra|gbrap/.test(info.video.pix)) return out
   let best
   for (const { key, copy } of recipes) {
     try {

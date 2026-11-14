@@ -219,6 +219,50 @@ it('automatic frame delivery reports measured growth and keeps the exact origina
   expect(built.diagnostics[0].code).toBe('M020')
 })
 
+it('keeps native playback when image delivery cannot preserve an authored audio start offset', async () => {
+  const root = folder(),
+    input = join(root, 'offset.mp4')
+  execFileSync('ffmpeg', [
+    '-v',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    'color=s=32x24:r=4:d=1',
+    '-itsoffset',
+    '0.5',
+    '-f',
+    'lavfi',
+    '-i',
+    'sine=frequency=440:duration=1',
+    '-c:v',
+    'libx264',
+    '-c:a',
+    'aac',
+    '-threads',
+    '2',
+    input,
+  ])
+  const bytes = new Uint8Array(readFileSync(input)),
+    encoder = createMediaEncode({ key: 'video/h264' })
+  expect((await encoder.info(input)).audio.start).toBeGreaterThan(0.4)
+  const built = await createMediaBuild({
+    formats: ['webp'],
+    quality: { lossless: true },
+    video: { delivery: 'auto', codecs: [] },
+  }).build(
+    { file: input, bytes },
+    { cacheDir: join(root, 'cache'), encode: { 'video/h264': encoder } },
+  )
+  expect(built.asset.frames).toBeUndefined()
+  expect(
+    built.diagnostics.some((item: { message: string }) => item.message.includes('start offset')),
+  ).toBe(true)
+  expect(
+    built.files.find((file: { name: string }) => file.name === built.asset.original.src)?.bytes,
+  ).toEqual(bytes)
+})
+
 async function verifyReconstruction(
   chunks: { src: string }[],
   files: Map<string, Uint8Array>,
