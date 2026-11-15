@@ -192,3 +192,5 @@ export {
   type SideNavOptions,
 } from './sidenav'
 export { interact, type Flag, type Interactive } from './interact'
+
+export { scrollPage } from './page-scroll'

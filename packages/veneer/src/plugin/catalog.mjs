@@ -103,7 +103,7 @@ const components = [
   ],
   [
     'ScrollRail',
-    'The page scrollbar drawn from below a sticky header (--veneer-scroll-rail-top); fine pointers only, touch keeps native',
+    'The page scrollbar below a sticky header; smooth track clicks by default, behavior="instant" for immediate jumps; dragging stays direct',
   ],
   [
     'ScrollView',

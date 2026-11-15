@@ -1,3 +1,4 @@
+import { scrollPage } from '@kerf-js/veneer-core/page-scroll'
 import { onCleanup, onMount } from '@kerf-js/core'
 import './styles'
 import '@kerf-js/veneer-core/styles/layout/scroll-rail.css'
@@ -8,17 +9,15 @@ type Size = { track: number; total: number; h: number }
 function dragThumb(
   e: PointerEvent,
   { rail, thumb }: { rail: HTMLElement; thumb: HTMLElement },
-  { track, total, h }: Size,
+  { track, total, h, start = scrollY, defer = false }: Size & { start?: number; defer?: boolean },
 ) {
   const from = e.clientY
-  const start = scrollY
   thumb.setPointerCapture(e.pointerId)
   rail.setAttribute('data-dragging', '')
-  const move = (m: PointerEvent) =>
-    scrollTo({
-      top: start + ((m.clientY - from) * total) / Math.max(1, track - h),
-      behavior: 'instant',
-    })
+  const move = (m: PointerEvent) => {
+    if (defer && Math.abs(m.clientY - from) < 3) return
+    scrollPage(start + ((m.clientY - from) * total) / Math.max(1, track - h), 'instant')
+  }
   const up = () => {
     rail.removeAttribute('data-dragging')
     thumb.removeEventListener('pointermove', move)
@@ -37,11 +36,16 @@ function dragThumb(
  * the thumb to that spot and keeps dragging; on a touch screen the thumb always shows and always takes a finger, and
  * the rest of the rail never takes a swipe. Put one in the root layout.
  *
+ * Track clicks ease by default; `behavior="instant"` restores an immediate jump. Dragging stays direct.
+ * Reduced motion makes track clicks instant.
+ *
  * `below` names the sticky header (a CSS selector). The rail then starts at that header's bottom edge wherever it is:
  * under a banner that scrolls away, at a height that changes with the width, or as it shrinks on scroll. Without it,
  * the rail starts at `--veneer-scroll-rail-top`.
  */
-export function ScrollRail(props: { below?: string } = {}) {
+export function ScrollRail(
+  props: { below?: string; behavior?: 'smooth' | 'instant' | undefined } = {},
+) {
   let rail!: HTMLElement
   let thumb!: HTMLElement
   onMount(() => {
@@ -81,15 +85,18 @@ export function ScrollRail(props: { below?: string } = {}) {
       if (e.button !== 0) return
       e.preventDefault()
       const s = size()
-      if (e.target !== thumb) {
+      let destination = scrollY
+      const fromTrack = e.target !== thumb
+      if (fromTrack) {
         const span = Math.max(1, s.track - s.h)
         const at = Math.min(
           span,
           Math.max(0, e.clientY - rail.getBoundingClientRect().top - s.h / 2),
         )
-        scrollTo({ top: (at * s.total) / span, behavior: 'instant' })
+        destination = (at * s.total) / span
+        scrollPage(destination, props.behavior ?? 'smooth')
       }
-      dragThumb(e, { rail, thumb }, s)
+      dragThumb(e, { rail, thumb }, { ...s, start: destination, defer: fromTrack })
     }
     const grows = new ResizeObserver(moved)
     grows.observe(document.body)

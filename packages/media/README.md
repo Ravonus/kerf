@@ -499,3 +499,17 @@ See [the media reference](https://kerfjs.netlify.app/reference/media) for the AP
 ### Browser starts
 
 Import `initialMediaLevel`, `mediaBandwidth`, `mediaConnection` and `warmMediaStarts` from `@kerf-js/media/browser` for connection-aware initial quality and a bounded background queue of first HLS fragments. It fills the browser's ordinary HTTP cache, pauses for hidden tabs or buffering foreground players, respects data saver, and exposes `cancel()` for route cleanup. Full policy and limits: the CLI `media` reference.
+
+`observeMediaViewport(element, callback, minimumVisible?)` shares one scroll read
+batch across a page. The callback receives `visible`, `intersecting`, `preparing`
+and `anticipating`. Use preparation to attach an upcoming source and eagerly load
+its sharp poster; muted playback can begin on anticipation. The horizon follows
+scroll velocity and direction, with at most two speculative works (one on slow
+links), while data saver disables speculation. Visible playback remains separate.
+Dispose the returned callback when an artwork or route is removed.
+
+Scrollbar controllers can announce their destination before scrolling with
+`kerf:scroll-target`, a window CustomEvent whose detail contains `top`. Veneer's
+`scrollPage` already does this. A distant target prepares its destination rather
+than all intervening artwork. Native scrollbar jumps are handled from actual scroll
+positions; future arbitrary input cannot be known in advance.

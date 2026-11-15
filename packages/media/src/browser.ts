@@ -8,3 +8,5 @@ export {
 export type { MediaConnection } from './media-network'
 export { warmMediaStarts } from './media-warm'
 export type { MediaWarmTarget, MediaWarmOptions } from './media-warm'
+export { observeMediaViewport } from './media-viewport'
+export type { MediaViewportState } from './media-viewport'

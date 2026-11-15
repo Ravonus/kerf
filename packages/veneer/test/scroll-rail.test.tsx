@@ -1,6 +1,6 @@
 // ScrollRail's `below`: the rail starts at the sticky header's bottom edge wherever that edge is, so it never runs
 // through the header (a banner above it that scrolls away moves the edge; so does a header that wraps on a narrow page).
-import { render } from '@kerf-js/core/test'
+import { flush, render } from '@kerf-js/core/test'
 import { ScrollRail } from '../src/ScrollRail'
 
 beforeAll(() => {
@@ -76,3 +76,30 @@ test('a press on the track jumps the thumb to that spot, and the press keeps dra
     else delete (root as { scrollHeight?: number }).scrollHeight
   }
 })
+
+for (const behavior of [undefined, 'instant'] as const) {
+  test(`track clicks ${behavior ?? 'smooth by default'}; dragging remains direct`, async () => {
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      configurable: true,
+      value: 8000,
+    })
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 })
+    const native = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    vi.stubGlobal('matchMedia', () => ({ matches: false }))
+    const { container } = render(() => <ScrollRail behavior={behavior} />)
+    await flush()
+    const rail = container.querySelector<HTMLElement>('[data-scope="scroll-rail"]')!
+    const thumb = rail.firstElementChild as HTMLElement
+    Object.defineProperty(rail, 'clientHeight', { configurable: true, value: 800 })
+    thumb.setPointerCapture = vi.fn()
+    rail.dispatchEvent(
+      new PointerEvent('pointerdown', { button: 0, clientY: 400, bubbles: true, pointerId: 1 }),
+    )
+    expect(native).toHaveBeenLastCalledWith({ top: 3600, behavior: behavior ?? 'smooth' })
+    thumb.dispatchEvent(new PointerEvent('pointermove', { clientY: 420, pointerId: 1 }))
+    expect(native).toHaveBeenLastCalledWith({ top: 3800, behavior: 'instant' })
+    thumb.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1 }))
+    native.mockRestore()
+    vi.unstubAllGlobals()
+  })
+}
