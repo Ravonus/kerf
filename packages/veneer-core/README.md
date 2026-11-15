@@ -813,3 +813,5 @@ Keep `src/` free of framework imports and JSX; `test/agnostic.test.ts` enforces 
 ## License
 
 [MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)
+
+`@kerf-js/veneer-core/nav` exports the framework-independent `navIndicator` behavior without importing the editor, code or chart modules. It follows hovered, keyboard-focused and current links with one indicator, including wrapped rows.
