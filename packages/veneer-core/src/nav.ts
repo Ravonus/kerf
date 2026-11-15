@@ -82,13 +82,21 @@ function geometry(nav: HTMLElement, face: HTMLElement, axis: 'x' | 'y') {
     const a = item.getBoundingClientRect()
     const box = nav.getBoundingClientRect()
     return axis === 'x'
-      ? { start: a.left - box.left - nav.clientLeft + nav.scrollLeft, size: a.width }
-      : { start: a.top - box.top - nav.clientTop + nav.scrollTop, size: a.height }
+      ? {
+          start: a.left - box.left - nav.clientLeft + nav.scrollLeft,
+          size: a.width,
+          cross: a.bottom - box.bottom,
+        }
+      : {
+          start: a.top - box.top - nav.clientTop + nav.scrollTop,
+          size: a.height,
+          cross: 0,
+        }
   }
   /** Without a transition: the next change is what moves. */
-  const jump = (start: number, size: number) => {
+  const jump = (start: number, size: number, cross = 0) => {
     face.setAttribute('data-instant', '')
-    write(start, size)
+    write(start, size, cross)
     void face.offsetWidth
     face.removeAttribute('data-instant')
   }
@@ -109,12 +117,12 @@ function motion(
   let phase: Phase = 'idle'
   let pendingOut = false
   const grow = (item: HTMLElement) => {
-    const { start, size } = place(item)
-    if (phase === 'idle') jump(start, 0)
+    const { start, size, cross } = place(item)
+    if (phase === 'idle') jump(start, 0, cross)
     phase = 'in'
     pendingOut = false
     face.dataset.phase = 'in'
-    write(start, size)
+    write(start, size, cross)
   }
   const shrink = () => {
     if (phase !== 'in') return
@@ -131,7 +139,7 @@ function motion(
     const size = axis === 'x' ? m.m11 : m.m22
     phase = 'out'
     face.dataset.phase = 'out'
-    write(start + size, 0)
+    write(start + size, 0, axis === 'x' ? m.m42 : m.m41)
   }
   const settle = () => {
     const item = target()
@@ -151,8 +159,8 @@ function motion(
   const start = () => {
     const now = current()
     if (now) {
-      const { start: at, size } = place(now)
-      jump(at, size)
+      const { start: at, size, cross } = place(now)
+      jump(at, size, cross)
       phase = 'in'
       face.dataset.phase = 'in'
     }
@@ -223,8 +231,8 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
       ? new win.ResizeObserver(() => {
           const t = target()
           if (t) {
-            const { start: at, size } = geo.place(t)
-            geo.jump(at, size)
+            const { start: at, size, cross } = geo.place(t)
+            geo.jump(at, size, cross)
           }
         })
       : undefined
@@ -233,8 +241,8 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
     win.requestAnimationFrame(() => {
       const t = current()
       if (t) {
-        const { start: at, size } = geo.place(t)
-        geo.jump(at, size)
+        const { start: at, size, cross } = geo.place(t)
+        geo.jump(at, size, cross)
       }
     })
   doc.addEventListener('veneer:dial', onDial)

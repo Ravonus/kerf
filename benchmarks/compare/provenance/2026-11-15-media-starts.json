@@ -1,0 +1,9 @@
+{
+  "recordedAt": "2026-11-15T05:44:41.733492+00:00",
+  "sourceRevision": "48b2c7f5",
+  "measurementHistory": "evals/results/compare-history.jsonl",
+  "host": "macOS-15.8.3-arm64-arm-64bit-Mach-O",
+  "node": "v26.13.0",
+  "sourceCleanAtMeasurementStart": true,
+  "concurrencyNote": "Local app package installation occurred during the comparison; no speedup claim is made."
+}
