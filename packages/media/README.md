@@ -495,3 +495,7 @@ browsers; it needs Linux, Xvfb and `xdotool`, and its header says how to run it.
 For a dense gallery, `encoder: 'compatible', swap: 'manual'` leaves save work until right-click. Use `prepareMediaSave(asset, {signal,onProgress})` from `@kerf-js/core/media` to drive a themed loading dialog and a Save link with the original name/type. Retained originals are preferred to reconstruction. Generated stills can use a disposable browser PNG/JPEG encoder worker. Cancel and unmount own their work; close releases any object URL.
 
 See [the media reference](https://kerfjs.netlify.app/reference/media) for the API, exact versus perceptual quality, frame seeking, and original-file semantics.
+
+### Browser starts
+
+Import `initialMediaLevel`, `mediaBandwidth`, `mediaConnection` and `warmMediaStarts` from `@kerf-js/media/browser` for connection-aware initial quality and a bounded background queue of first HLS fragments. It fills the browser's ordinary HTTP cache, pauses for hidden tabs or buffering foreground players, respects data saver, and exposes `cancel()` for route cleanup. Full policy and limits: the CLI `media` reference.
