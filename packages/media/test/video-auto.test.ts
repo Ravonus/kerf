@@ -194,11 +194,11 @@ it.runIf(!!findScorer('ssimulacra2') && !spawnSync('ffmpeg', ['-version']).error
     ])
     const enc = createMediaEncode({ key: 'video/h264' })
     if (!enc.native) throw new Error('Missing native capability')
-    const native = enc.native.encode,
+    const native = enc.native.encode.bind(enc.native),
       starts: number[] = []
-    enc.native.encode = async (file, recipe = {}) => {
-      if (recipe.start) starts.push(recipe.start)
-      return native(file, recipe)
+    enc.native.encode = async (input, recipe) => {
+      if (recipe?.start) starts.push(recipe.start)
+      return native(input, recipe)
     }
     const built = await createMediaBuild({
       formats: ['webp'],
