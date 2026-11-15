@@ -5,10 +5,13 @@ afterEach(() => vi.unstubAllGlobals())
 it('overlaps requests within a three-request limit and deduplicates compressed frames', async () => {
   const releases: (() => void)[] = [],
     abort = new AbortController()
+  const started = Promise.withResolvers<void>()
   let active = 0,
-    peak = 0
+    peak = 0,
+    requests = 0
   const fetcher = vi.fn(() => {
     active++
+    if (++requests === 6) started.resolve()
     peak = Math.max(peak, active)
     return new Promise<Response>((resolve) => {
       releases.push(() => {
@@ -23,7 +26,8 @@ it('overlaps requests within a three-request limit and deduplicates compressed f
   expect(fetcher).toHaveBeenCalledTimes(3)
   expect(frames.get('a')).toBe(pending[0])
   releases.splice(0).forEach((done) => done())
-  await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(6))
+  await started.promise
+  expect(fetcher).toHaveBeenCalledTimes(6)
   releases.splice(0).forEach((done) => done())
   await Promise.all(pending)
   expect(peak).toBe(3)

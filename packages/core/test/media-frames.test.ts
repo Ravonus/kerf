@@ -183,6 +183,7 @@ it('seeking skips obsolete complete frames and fetches only the latest reconstru
 
 it('a pause during the first network load prevents a delayed autoplay, and concurrent play calls share one start', async () => {
   let finish!: () => void
+  const requested = Promise.withResolvers<void>()
   const raf = vi.fn(() => 1)
   vi.stubGlobal('requestAnimationFrame', raf)
   vi.stubGlobal('cancelAnimationFrame', vi.fn())
@@ -209,13 +210,14 @@ it('a pause during the first network load prevents a delayed autoplay, and concu
           )
         : new Promise<Response>((resolve) => {
             finish = () => resolve(new Response(new Blob(['image'])))
+            requested.resolve()
           }),
     ),
   )
   const player = createFramePlayer(document.createElement('canvas'), film())
   const first = player.play()
   expect(player.play()).toBe(first)
-  await vi.waitFor(() => expect(finish).toBeDefined())
+  await requested.promise
   player.pause()
   finish()
   await first
