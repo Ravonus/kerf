@@ -1,0 +1,19 @@
+{
+  "sourceRevision": "888528a186b4424029115021ed606a222ed7df7c",
+  "sourceDirty": false,
+  "node": "v26.13.0",
+  "pnpm": "12.15.0",
+  "machine": {
+    "platform": "darwin",
+    "release": "24.6.0",
+    "arch": "arm64",
+    "cpu": "Apple M4 Max"
+  },
+  "lockSha256": "53ad53ffec2b86392de2293f576f6bca216241274a5a96e8d3eb133821c7e56d",
+  "comparisonSha256": "d3efa970a9d0d8239a9a9bce631239c03eb9c8711dc62402c9643fcbfdf350cd",
+  "compiler": {
+    "kind": "native",
+    "file": "/Users/ravonus/Documents/Codex/2026-10-17/i-x20/work/kerf-media/packages/core/native/kerf-compiler.darwin-arm64.node"
+  },
+  "note": "All six dashboard stacks and design apps measured. These comparisons do not measure prediction startup latency; separate WAAMBAT browser observations verify pre-entry playback and scrollbar landing behavior."
+}
