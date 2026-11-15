@@ -3,8 +3,41 @@
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
 import { fnId } from '../src/vite.mjs'
+import { z } from '../src/media'
 
 const url = inject('url')
+test('CMS media records retain exact previews, original Save metadata and frame streams', () => {
+  const firstFrame = {
+    src: '/first.webp',
+    type: 'image/webp',
+    width: 960,
+    height: 540,
+    sources: [{ type: 'image/webp', srcset: '/first.webp 960w' }],
+    pixels: 'exact',
+    time: 0,
+  }
+  const original = {
+    src: '/original.mov',
+    type: 'video/quicktime',
+    name: 'source.mov',
+    bytes: 4000,
+  }
+  const frames = { version: 1, chunks: [{ start: 0, end: 2, src: '/chunk.json' }], pixels: 'exact' }
+  const asset = {
+    kind: 'video',
+    src: '/play.mp4',
+    type: 'video/mp4',
+    width: 960,
+    height: 540,
+    name: 'source',
+    sources: [],
+    firstFrame,
+    original,
+    frames,
+    swap: 'manual',
+  }
+  expect(z.media().parse(asset)).toMatchObject({ firstFrame, original, frames, swap: 'manual' })
+})
 const sharp = createRequire(new URL('../../media/package.json', import.meta.url))('sharp')
 const png = (color = { r: 200, g: 60, b: 20 }) =>
   sharp({ create: { width: 200, height: 100, channels: 3, background: color } })

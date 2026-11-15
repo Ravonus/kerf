@@ -13,6 +13,7 @@ function mountFrameView(
     muted: boolean
     loop: boolean
     priority: boolean
+    warm: boolean
     bind: (player: FramePlayer) => void
     update: () => void
     error: () => void
@@ -22,6 +23,17 @@ function mountFrameView(
   onMount(() => {
     const el = element(),
       controller = new AbortController()
+    let stopWarm: (() => void) | undefined
+    if (options.warm && src.frames?.chunks[0])
+      void import('./media-auto-warm').then(({ registerMediaStart }) => {
+        if (!controller.signal.aborted)
+          stopWarm = registerMediaStart(el, {
+            url: src.frames!.chunks[0]!.src,
+            width: src.width,
+            height: src.height,
+            kind: 'frames',
+          })
+      })
     let player: FramePlayer | undefined, unbind: (() => void) | undefined
     for (const event of ['play', 'pause', 'timeupdate', 'volumechange'])
       el.addEventListener(event, update)
@@ -46,6 +58,7 @@ function mountFrameView(
     onCleanup(() => {
       unbind?.()
       controller.abort()
+      stopWarm?.()
       player?.destroy()
       for (const event of ['play', 'pause', 'timeupdate', 'volumechange'])
         el.removeEventListener(event, update)
@@ -66,6 +79,7 @@ export function framed({
   controls = true,
   autoplay,
   autoPlay,
+  warm = true,
   muted = true,
   loop,
   ref,
@@ -84,6 +98,7 @@ export function framed({
     muted: !!muted,
     loop: !!loop,
     priority: !!priority,
+    warm,
     bind(value) {
       player = value
     },

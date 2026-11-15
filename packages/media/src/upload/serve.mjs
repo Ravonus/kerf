@@ -3,6 +3,23 @@ import { join } from 'node:path'
 
 export function createServe(dir, sourceOf, rung, TYPES) {
   return async function serve(hash, meta, width, format) {
+    if (format === 'source' && width === 0 && meta.asset.original)
+      return {
+        bytes: readFileSync(sourceOf(hash)),
+        type: meta.asset.original.type,
+        width,
+        format,
+        negotiated: false,
+      }
+    const first = meta.firstFrames?.[`${width}.${format}`]
+    if (first)
+      return {
+        bytes: readFileSync(join(dir, hash, first.name)),
+        type: first.type,
+        width,
+        format,
+        negotiated: false,
+      }
     if (format === 'webp' && width === 0)
       return {
         bytes: readFileSync(join(dir, hash, 'poster.webp')),

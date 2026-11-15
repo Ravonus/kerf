@@ -22,6 +22,7 @@ The snapshots cover export paths, targets and conditions, not names or signature
 - `@kerf-js/core/style`: Style groups and styling helpers.
 - `@kerf-js/core/ds`: Design system primitives.
 - `@kerf-js/core/media`: Media components and helpers.
+- `@kerf-js/core/media-browser`: Shared sharp-start selection, viewport prediction and bounded playback caching for custom browser players.
 - `@kerf-js/core/shape`: Shape components and helpers.
 - `@kerf-js/core/text`: Text components and helpers.
 - `@kerf-js/core/surface`: Surface components and helpers.

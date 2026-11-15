@@ -8,6 +8,52 @@ import {
 } from '../src/media-warm-fetch'
 import { warmMediaStarts } from '../src/media-warm'
 
+it('automatically warmed frame starts fetch the manifest and complete first-frame images only', async () => {
+  browser()
+  const requests: string[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string) => {
+      requests.push(url)
+      return Promise.resolve(
+        new Response(
+          url.endsWith('.json')
+            ? JSON.stringify({
+                frames: [{ src: 'first.avif', fallback: 'first.webp' }, { src: 'later.webp' }],
+              })
+            : 'image bytes',
+        ),
+      )
+    }),
+  )
+  await warmMediaStarts([{ url: '/chunks/0.json', width: 640, height: 360, kind: 'frames' }], {
+    intervalMs: 0,
+  }).done
+  expect(requests.map((url) => new URL(url).pathname)).toEqual([
+    '/chunks/0.json',
+    '/chunks/first.avif',
+    '/chunks/first.webp',
+  ])
+})
+it('warms bounded native files without interpreting them as playlists', async () => {
+  browser()
+  const getReader = vi.fn(() => new Response('native movie').body!.getReader())
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'video/mp4', 'content-length': '12' }),
+        body: { getReader },
+      }),
+    ),
+  )
+  await warmMediaStarts([{ url: '/small.mp4', width: 640, height: 360, kind: 'file' }], {
+    intervalMs: 0,
+  }).done
+  expect(getReader).toHaveBeenCalledOnce()
+})
+
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.useRealTimers()

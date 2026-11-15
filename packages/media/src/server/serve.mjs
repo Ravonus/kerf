@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import sharp from 'sharp'
 import { FIXED, encoders, MIME } from '../shared.mjs'
 
-const FORMATS_TIMED = new Set(['mp4', 'webm', 'm4a', 'gif', 'webp'])
+const FORMATS_TIMED = new Set(['mp4', 'webm', 'm4a', 'gif', 'webp', 'avif', 'png', 'source'])
 const EXT = { avif: 'avif', webp: 'webp', jpeg: 'jpg', png: 'png' }
 const FORMAT = { avif: 'avif', webp: 'webp', jpg: 'jpeg', png: 'png' }
 

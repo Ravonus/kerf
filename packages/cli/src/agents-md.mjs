@@ -139,6 +139,7 @@ function pageIntro({ root, info, core, missing }) {
       : []),
     '',
     '**Leave props untyped**: `kerf docs props`.',
+    'Media: install media + media-ffmpeg; render ?media records with Core Media for automatic sharp previews and bounded caching. See `kerf docs media`.',
     '',
     `## API in kerf@${info.kerf.version}`,
     '',

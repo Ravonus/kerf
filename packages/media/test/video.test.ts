@@ -1,7 +1,7 @@
 // Video, audio and GIF-to-video on real encodes through @kerf-js/media-ffmpeg: the ladder, what's kept, GIF delays,
 // the keep-the-GIF rule, audio muxing and the compatible copy. Skipped where ffmpeg isn't installed.
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
@@ -158,6 +158,22 @@ describe.skipIf(!hasFfmpeg)('video', () => {
     expect([a.nb_read_frames, a.bit_rate]).toEqual([b.nb_read_frames, b.bit_rate])
   })
 
+  it('automatically emits exact frame-zero stills from the original rather than the playback encode', async () => {
+    const out = await build('web.mp4'),
+      { asset, files } = out
+    expect(asset.firstFrame).toMatchObject({ pixels: 'exact', time: 0, width: 320 })
+    expect(asset.placeholder).toBeUndefined()
+    const still = files.find((file: { name: string }) => file.name === asset.firstFrame.src)!
+    const reference = await encode['video/h264']!.still(join(dir, 'web.mp4'), { at: 0 })
+    expect(await sharp(still.bytes).ensureAlpha().raw().toBuffer()).toEqual(
+      await sharp(reference).resize({ width: 320 }).ensureAlpha().raw().toBuffer(),
+    )
+    expect(out.verification.firstFrame.pixels).toBe('exact')
+    expect(files.find((file: { name: string }) => file.name === asset.original.src)!.bytes).toEqual(
+      read('web.mp4'),
+    )
+  })
+
   it('refuses without a provider, naming the fix', async () => {
     const out = await createMediaBuild(options).build(
       { file: join(dir, 'clip.mov'), bytes: read('clip.mov') },
@@ -312,6 +328,15 @@ describe.skipIf(!hasFfmpeg)('audio', () => {
   })
 })
 
+function makeLegacyUpload(store: string, src: string) {
+  const hash = /\/m\/(\w+)\//.exec(src)![1]!,
+    metaFile = join(store, hash, 'meta.json'),
+    legacy = JSON.parse(readFileSync(metaFile, 'utf8'))
+  delete legacy.asset.firstFrame
+  delete legacy.asset.original
+  delete legacy.firstFrames
+  writeFileSync(metaFile, JSON.stringify(legacy))
+}
 // Needs a real `ffmpeg` on PATH: uploads go through the real media.encode@1 provider.
 describe.skipIf(!hasFfmpeg)('uploads', () => {
   const upload = (opts: Record<string, unknown> = {}) =>
@@ -330,6 +355,13 @@ describe.skipIf(!hasFfmpeg)('uploads', () => {
     expect(asset).toMatchObject({ kind: 'video', width: 320, height: 180, audio: false })
     expect(asset.poster).toMatch(/\/0\.webp$/)
     expect((await want(m, asset.poster)).type).toBe('image/webp')
+    expect(asset.firstFrame.pixels).toBe('exact')
+    for (const source of asset.firstFrame.sources)
+      for (const rung of source.srcset.split(', '))
+        expect((await want(m, rung)).type).toBe(source.type)
+    expect(Buffer.from((await want(m, asset.original.src)).bytes)).toEqual(
+      Buffer.from(read('web.mp4')),
+    )
     const small = asset.sources.at(-1).srcset.split(', ')[0]
     const early = await want(m, small)
     expect(early.temporary).toBe(true)
@@ -345,7 +377,14 @@ describe.skipIf(!hasFfmpeg)('uploads', () => {
     const first = createMediaServer({ ...options, server: { dir: s } }).at('/unused', encode)
     const asset = await first.ingest(read('clip.mov'), { name: 'clip.mov' })
     await first.settled()
+    makeLegacyUpload(s, asset.src)
     const again = createMediaServer({ ...options, server: { dir: s } }).at('/unused', encode)
+    const upgraded = await again.ingest(read('clip.mov'), { name: 'clip.mov' })
+    expect(upgraded.src).toBe(asset.src)
+    expect(upgraded.firstFrame.pixels).toBe('exact')
+    expect(Buffer.from((await want(again, upgraded.original.src)).bytes)).toEqual(
+      Buffer.from(read('clip.mov')),
+    )
     const out = await want(again, asset.src)
     expect(out.temporary).toBeUndefined()
     expect(

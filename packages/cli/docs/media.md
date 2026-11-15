@@ -94,6 +94,45 @@ Generated stills without a retained source can be encoded to PNG or explicitly r
 
 The pre-rename WEFT request and research are preserved in [the original asset design](https://github.com/Ravonus/kerf/blob/archive/evals-2026-11/docs/research/15-assets.md). That historical document describes intent and measured experiments; this reference describes implemented API behavior. The original implementation supplied native video ladders and prebuilt compatibility copies. Frame chunks, exact-pixel raster mode, manual save preparation and the disposable browser encode worker are subsequent additions and must be tested as such.
 
+## Automatic sharp starts
+
+With `media()` + `mediaFfmpeg()`, import a video with `?media` and render
+`<Media src={clip} alt="…" />`. No site preparation script, warm component or
+per-video effect is required. Build imports and `ctx.media.ingest` generate
+responsive frame-zero images from the acquired source, independently of any
+lossy playback encoding. Each resized frame is verified pixel-exact, with AVIF
+when its ladder is cheaper and a compatible WebP/PNG fallback. No video blur
+placeholder is emitted. The record carries `firstFrame`, its poster URL and an
+immutable `original` for intent-only Save; warming uses the playback source.
+
+Core chooses one supported rendition large enough for the element and capped
+pixel ratio before playback starts. Browser bandwidth hints do not choose a
+blurry starting file. A lazy placement prepares its clear still as it approaches
+view; a priority placement has a sharp server-rendered poster. A scroll return,
+pause or loop keeps the selected source. Native controls and the original Save
+metadata keep their existing roles. Autoplaying converted GIFs respect reduced
+motion, Save Data and visibility; user-initiated playback remains available.
+
+Every mounted standard video or frame player joins one shared background queue.
+It prioritizes the current viewport, prepares exact stills, and serially fills
+the ordinary HTTP cache with complete eligible native files or the first frame
+chunk and its first images. HLS targets cache the selected playlist, init and
+first complete fragment. Existing caps apply: 8 MiB per response and 32 MiB per
+route minute, 16 MiB on slow connections. A larger native whole file is skipped,
+not partially fetched and mislabeled as a reusable cache hit. Save Data disables
+speculation; hidden tabs and foreground buffering interrupt it. Unmount disposes
+registrations. `warm={false}` opts a placement out; `video:{firstFrame:false}`
+explicitly opts out of generated video previews.
+
+After upgrading, rebuild imports. Re-ingesting an existing retained video upgrades
+its stored preview; persist the returned `z.media()` record in the CMS. Existing
+deployed bundles and old database records require that upgrade/migration. No
+framework package can rewrite an unrelated site's deployment or database.
+`kerf agents-md` includes the installed media contract; new scaffolds also direct
+agents here. Custom native players may use `attachMediaStartup(video, asset)`;
+custom HLS players use the shared browser helpers below, preserving a clear still
+until a selected-resolution frame has actually painted.
+
 ## Sharp first frames
 
 `createFirstFrameBuild()` from `@kerf-js/media/build` prepares a movie's first decoded frame as a responsive AVIF/WebP still. Call `build({file}, {cacheDir, encode})` with the same FFmpeg provider bindings. The default widths are 384, 640, 960 and 1600, capped by the source. The default preserves every decoded pixel of each resized first frame. A target below 100 explicitly enables SSIMULACRA2-qualified perceptual encoding; a missing scorer still uses verified exact pixels. AVIF is offered only when its complete ladder is smaller at every rung than the compatible fallback. No enlarged blur placeholder is emitted. Cache identity includes the actual source bytes, encoder and image library versions. These generated stills are previews; Save continues to use the movie's retained original.

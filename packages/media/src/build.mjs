@@ -7,6 +7,7 @@
 import { losslessRaster } from './lossless.mjs'
 import { frameVideo } from './frames.mjs'
 import { autoVideo } from './video-auto.mjs'
+import { videoFirstFrame } from './video-first-frame.mjs'
 import { execFile, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -22,7 +23,7 @@ import { unsafeSvg } from './svg.mjs'
 import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
 
 const run = promisify(execFile)
-const VERSION = 10 // bump when the output for the same input and options changes
+const VERSION = 12 // bump when the output for the same input and options changes
 
 export { DEFAULTS, FIXED, MIME, encoders, hex, isPhoto } from './shared.mjs'
 export { createFirstFrameBuild } from './first-frame.mjs'
@@ -121,7 +122,7 @@ export function createMediaBuild(input = {}) {
 
       const source = { bytes, name, stem, audio, photo }
       const scorer = findScorer(o.quality.scorer)
-      const out = await (/\.svg$/i.test(file)
+      let out = await (/\.svg$/i.test(file)
         ? vector(name, stem, bytes)
         : VIDEO.test(file)
           ? o.video.delivery === 'auto'
@@ -135,6 +136,7 @@ export function createMediaBuild(input = {}) {
               ? losslessRaster(source, o)
               : raster(source, o, encode))
       if (out.diagnostics?.some((d) => d.severity === 'error')) return out
+      out = await videoFirstFrame(source, out, o, { cacheDir, encode })
       mkdirSync(join(cacheDir, key), { recursive: true })
       for (const f of out.files) writeFileSync(join(cacheDir, key, f.name), f.bytes)
       writeFileSync(cached, JSON.stringify({ ...out, files: out.files.map((f) => f.name) }))

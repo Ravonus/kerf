@@ -145,6 +145,8 @@ export function agentsFile({ ui, db, layer, shipped, auth }) {
         ]
       : []),
     '',
+    'For media, add media + media-ffmpeg and use ?media with Core Media: sharp frame-zero previews and bounded start caching are automatic. Read `kerf docs media`.',
+    '',
     '## Where things go',
     '',
     "- `src/routes/`: pages, by file path. `_layout.tsx` wraps what's beside it.",
