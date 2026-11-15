@@ -18,10 +18,43 @@ const record = () =>
     name: zod.string(),
     quality: zod.enum(['ssimulacra2', 'fixed', 'original']).optional(),
     poster: zod.string().optional(),
+    firstFrame: zod
+      .object({
+        src: zod.string(),
+        type: zod.string(),
+        width: zod.number(),
+        height: zod.number(),
+        sources: zod.array(zod.object({ type: zod.string(), srcset: zod.string() })),
+        pixels: zod.literal('exact'),
+        time: zod.literal(0),
+      })
+      .optional(),
     duration: zod.number().optional(),
     audio: zod.boolean().optional(),
     animated: zod.boolean().optional(),
     loop: zod.number().optional(),
+    original: zod
+      .object({ src: zod.string(), type: zod.string(), name: zod.string(), bytes: zod.number() })
+      .optional(),
+    frames: zod
+      .object({
+        version: zod.literal(1),
+        chunks: zod.array(
+          zod.object({ start: zod.number(), end: zod.number(), src: zod.string() }),
+        ),
+        pixels: zod.enum(['exact', 'perceptual']),
+        audio: zod
+          .object({ src: zod.string(), type: zod.string(), offset: zod.number() })
+          .optional(),
+        quality: zod
+          .object({
+            metric: zod.literal('ssimulacra2'),
+            target: zod.number(),
+            minimum: zod.number(),
+          })
+          .optional(),
+      })
+      .optional(),
     copy: zod
       .object({
         src: zod.string(),
@@ -30,7 +63,7 @@ const record = () =>
         ratio: zod.number().optional(),
       })
       .optional(),
-    swap: zod.enum(['intent', 'idle', 'never']).optional(),
+    swap: zod.enum(['intent', 'idle', 'never', 'manual']).optional(),
   })
 
 /** Zod's API plus `media()`, the record of an upload. */

@@ -274,6 +274,15 @@ function mediaOutput(ctx, out, store) {
     })),
   }
   if (asset.poster) asset.poster = store.url(asset.poster)
+  if (asset.firstFrame)
+    asset.firstFrame = {
+      ...asset.firstFrame,
+      src: store.url(asset.firstFrame.src),
+      sources: asset.firstFrame.sources.map((s) => ({
+        ...s,
+        srcset: s.srcset.replace(/(^|,\s*)([^\s,]+)/g, (_, sep, n) => sep + store.url(n)),
+      })),
+    }
   // `placeholder: 'file'` names a file; the default is a data: URL, which stays as it is.
   if (asset.placeholder && !asset.placeholder.startsWith('data:'))
     asset.placeholder = store.url(asset.placeholder)

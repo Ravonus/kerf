@@ -4,6 +4,7 @@
 // otherwise waits for that encode. A queue lost to a restart costs nothing: the first request for a rung encodes it.
 // No quality search here: fixed CRFs, and H.264 already at its width is kept (re-encoding can't win, research 15 §3.4).
 import { join } from 'node:path'
+import { createUpgrade } from './upload/upgrade.mjs'
 import { ladderOf } from './video.mjs'
 import { createIngest } from './upload/ingest.mjs'
 import { createRecord } from './upload/record.mjs'
@@ -119,5 +120,6 @@ export function uploads({ o, dir, encode, url, store, refuse }) {
 
   const serve = createServe(dir, sourceOf, rung, TYPES)
 
-  return { ingest, gif, serve, settled: () => line }
+  const upgrade = createUpgrade({ sourceOf, dir, o, encode, url, store })
+  return { ingest, gif, serve, upgrade, settled: () => line }
 }

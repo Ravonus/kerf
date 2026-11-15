@@ -31,6 +31,16 @@ export interface MediaAsset {
   quality?: 'ssimulacra2' | 'fixed' | 'original'
   /** Video: the still shown until it plays. */
   poster?: string
+  /** Responsive, exact-pixel frame zero; generated automatically by the media plugin. */
+  firstFrame?: {
+    src: string
+    type: string
+    width: number
+    height: number
+    sources: { type: string; srcset: string }[]
+    pixels: 'exact'
+    time: 0
+  }
   duration?: number
   audio?: boolean
   /** Video made from a GIF: it autoplays muted, as the GIF did. */
@@ -67,6 +77,11 @@ export interface MediaProps {
   playback?: (player: MediaPlayback) => void
   /** Video: 'always' keeps a GIF moving under `prefers-reduced-motion`. */
   motion?: 'auto' | 'always'
+  /** Disable speculative cache fills for this placement; sharp playback remains enabled. */
+  warm?: boolean
+  /** Start muted media through the shared viewport and preference lifecycle. */
+  autoplay?: boolean
+  autoPlay?: boolean
   [attr: string]: unknown
 }
 
@@ -98,6 +113,7 @@ export function timedSources(
 ): { src: string; type: string; media?: string | undefined }[] {
   return a.sources.flatMap((s) => {
     const rungs = s.srcset.split(', ').map((r) => r.split(' '))
+    if (a.firstFrame) return [{ src: rungs.at(-1)![0]!, type: s.type }]
     return rungs.map(([src, w], i) =>
       i < rungs.length - 1
         ? { src: src!, type: s.type, media: `(max-width: ${Math.round(parseInt(w!) / 2)}px)` }
@@ -106,37 +122,26 @@ export function timedSources(
   })
 }
 
-function timed({
-  src,
-  alt,
-  decorative,
-  priority,
-  focus,
-  fit,
-  timeline,
-  playback,
-  motion,
-  controls,
-  ...rest
-}: MediaProps) {
+function timed(props: MediaProps) {
+  const {
+    src,
+    alt,
+    decorative,
+    priority,
+    focus,
+    fit,
+    timeline: _timeline,
+    playback: _playback,
+    motion: _motion,
+    controls,
+    warm: _warm,
+    autoplay,
+    autoPlay,
+    ...rest
+  } = props
+
   let el!: HTMLVideoElement
-  onMount(() => {
-    if (timeline) onCleanup(timeline.bind(el))
-    playback?.(el)
-    if (
-      src.animated &&
-      motion !== 'always' &&
-      matchMedia('(prefers-reduced-motion: reduce)').matches
-    )
-      el.pause()
-    if (src.loop && src.loop > 1) {
-      let left = src.loop - 1
-      el.addEventListener('ended', () => {
-        if (left-- > 0) void el.play()
-      })
-    }
-    if (src.copy) void import('./media-swap').then((m) => m.attach(el, src))
-  })
+  onMount(() => mountTimed(el, props))
   const sources = timedSources(src).map((s) => (
     <source key={s.src} src={s.src} type={s.type} media={s.media} />
   ))
@@ -156,19 +161,19 @@ function timed({
   const video = (
     <video
       ref={(n: HTMLVideoElement) => (el = n)}
-      poster={src.poster}
+      poster={src.firstFrame && !priority ? undefined : src.poster}
       width={src.width}
       height={src.height}
       role={moving ? 'img' : undefined}
       aria-label={decorative ? undefined : alt}
       aria-hidden={decorative ? 'true' : undefined}
-      autoplay={moving}
+      autoplay={!src.firstFrame && (autoplay ?? autoPlay ?? moving)}
       muted={moving}
       loop={moving && !src.loop}
       playsinline
       disablepictureinpicture={moving}
       controls={controls ?? (!moving || (src.duration ?? 0) > 5)}
-      preload={priority || moving ? 'auto' : 'none'}
+      preload={src.firstFrame ? 'none' : priority || moving ? 'auto' : 'none'}
       style={mediaStyle({ ...src, kind: 'photo' }, focus, fit)}
       {...rest}
     >
@@ -231,4 +236,50 @@ function still({ src, alt, decorative, priority, width, sizes, focus, fit, ...re
       )}
     </>
   )
+}
+
+function mountTimed(
+  el: HTMLVideoElement,
+  {
+    src,
+    timeline,
+    playback,
+    motion,
+    warm,
+    autoplay,
+    autoPlay,
+    priority,
+  }: Pick<
+    MediaProps,
+    'src' | 'timeline' | 'playback' | 'motion' | 'warm' | 'autoplay' | 'autoPlay' | 'priority'
+  >,
+) {
+  if (src.kind === 'video' && src.firstFrame) {
+    let detach: (() => void) | undefined,
+      disposed = false
+    void import('./media-startup').then((module) => {
+      if (!disposed)
+        detach = module.attachMediaStartup(el, src, {
+          autoplay: !!(autoplay ?? autoPlay ?? src.animated),
+          warm: warm !== false,
+          priority: !!priority,
+          motion,
+        })
+    })
+    onCleanup(() => {
+      disposed = true
+      detach?.()
+    })
+  }
+  if (timeline) onCleanup(timeline.bind(el))
+  playback?.(el)
+  if (src.animated && motion !== 'always' && matchMedia('(prefers-reduced-motion: reduce)').matches)
+    el.pause()
+  if (src.loop && src.loop > 1) {
+    let left = src.loop - 1
+    el.addEventListener('ended', () => {
+      if (left-- > 0) void el.play()
+    })
+  }
+  if (src.copy) void import('./media-swap').then((m) => m.attach(el, src))
 }

@@ -5,15 +5,15 @@
   "keywords": [
     "kerf"
   ],
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/kerf/issues"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/core"
-  },
-  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/core#readme",
-  "bugs": {
-    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "files": [
     "src",
@@ -84,7 +84,8 @@
       "default": "./src/config.mjs"
     },
     "./vite": "./vite.mjs",
-    "./compiler": "./compiler.cjs"
+    "./compiler": "./compiler.cjs",
+    "./media-browser": "./src/media-browser.ts"
   },
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,8 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { poster } from '../video.mjs'
+import { uploadFirstFrame } from './first-frame.mjs'
+import { originalVideo } from '../video-original.mjs'
 
 export function createVideo({
   videoRungs,
@@ -41,6 +43,7 @@ export function createVideo({
       type: 'video/mp4',
       sources: record(hash, plan.rungs, types),
       name,
+      original: originalVideo({ name, bytes }, url(hash, 0, 'source')),
       quality: 'fixed',
       duration: info.duration,
       audio: !!info.audio,
@@ -50,6 +53,13 @@ export function createVideo({
       ...extra.asset,
     })
     const meta = { kind: 'video', timed: true, ...plan, playable: playable(info) }
+    if (o.video.firstFrame !== false) {
+      const frame = await uploadFirstFrame({ file: sourceOf(hash), dir, hash, o, encode, url })
+      delete asset.placeholder
+      delete asset.dominant
+      Object.assign(asset, frame.asset)
+      meta.firstFrames = frame.firstFrames
+    }
     return { asset, meta }
   }
 }

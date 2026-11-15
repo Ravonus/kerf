@@ -17,7 +17,7 @@ export function imageIngest({ limit, metaOf, dir, encode, timed, url, store, ref
       )
     const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 32)
     const known = metaOf(hash)
-    if (known) return { ...known.asset, name }
+    if (known) return { ...(await timed.upgrade(hash, known)), name }
     const kind = sniff(bytes)
     if (kind) {
       if (!encode['video/h264'])

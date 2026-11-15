@@ -27,6 +27,8 @@ const fail = (path, message) => {
 function playbackOptions(input, out) {
   if (input.video !== undefined) {
     const { codecs, widths, delivery, chunkSeconds, maxFrameBytes } = input.video
+    if (input.video.firstFrame !== undefined && typeof input.video.firstFrame !== 'boolean')
+      fail('video.firstFrame', 'a boolean; sharp frame-zero previews are enabled by default')
     if (input.video.lossless !== undefined && typeof input.video.lossless !== 'boolean')
       fail('video.lossless', 'a boolean overriding quality.lossless for playback')
     if (delivery !== undefined && !['auto', 'frames', 'video'].includes(delivery))
@@ -208,12 +210,13 @@ export const media = definePlugin({
     agents: {
       title: 'Media (@kerf-js/media)',
       text: [
-        '- Import ?media; render Media from @kerf-js/core/media. It generates dimensions, responsive sources, posters and placeholders.',
-        '- Only the LCP asset gets priority plus width/sizes. Describe images with alt; decoration uses alt="" decorative.',
-        '- quality.lossless verifies pixels. video.lossless false requires measured quality.target. delivery auto compares native codecs/containers with frames, including fallback, manifest and player bytes; native wins ties.',
-        '- Galleries use encoder compatible, swap manual. Call prepareMediaSave(asset,{signal,onProgress}) only on right-click; show progress, then Save with result.url/name. Abort on cancel; release() on close. Never flatten motion.',
-        '- Retained originals save exact files. Generated stills can encode PNG/JPEG in a disposable worker; JPEG is a re-encode. See kerf docs media.',
-        '- Upload with ctx.media.ingest; store its record, type z.media(), render Media.',
+        '- Use ?media + mediaFfmpeg(); render Media from @kerf-js/core/media. Video imports/uploads get exact-pixel responsive frame-zero stills automatically; no blur posters.',
+        '- Media pins display quality and warms starts automatically. Preserve source across pause, return and loop. warm={false} opts out; Save Data stops speculation. Cache caps apply; large whole files are skipped.',
+        '- Custom/HLS players use @kerf-js/media/browser: pin before startLoad, reveal a presented full-size frame, warm playback URLs. Read kerf docs media.',
+        '- Only LCP gets priority + sizes. Describe alt; decoration uses alt="" decorative.',
+        '- delivery:auto compares native codecs/containers and frames; native wins ties. video.lossless:false needs measured quality.target.',
+        '- Save retains exact originals. Galleries: encoder:compatible, swap:manual; prepareMediaSave on intent, show progress, release on close. Never flatten motion.',
+        '- ctx.media.ingest -> z.media() -> Media. Re-ingest legacy video records after upgrading.',
       ].join('\n'),
     },
     catalog: [

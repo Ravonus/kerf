@@ -513,3 +513,14 @@ Scrollbar controllers can announce their destination before scrolling with
 `scrollPage` already does this. A distant target prepares its destination rather
 than all intervening artwork. Native scrollbar jumps are handled from actual scroll
 positions; future arbitrary input cannot be known in advance.
+
+### Automatic site defaults
+
+Use `media()` + `mediaFfmpeg()`, import a video with `?media`, and render Core's
+`Media`. Builds and uploads generate exact-pixel responsive frame-zero previews.
+Core selects display quality before playback and automatically registers bounded
+background caching; sites do not need their own warm component. Native files
+above the 8 MiB response cap are skipped; HLS and frame streams warm their starts.
+Save Data, foreground buffering, visibility and route disposal remain authoritative.
+`warm={false}` and `video.firstFrame:false` are explicit opt-outs. See `kerf docs media`
+for migration of old records, generated agent guidance and browser verification.
