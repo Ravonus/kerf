@@ -1,5 +1,6 @@
 // Automatic playback candidates retain encoded audio and qualify timing before the build compares bytes.
 import { createHash } from 'node:crypto'
+import { streamCopy } from './stream-copy.mjs'
 
 const audioIn = {
   mp4: new Set(['aac', 'mp3', 'alac']),
@@ -9,6 +10,7 @@ const audioIn = {
 /** Optional provider capability for measured native playback and packet-preserving container changes. */
 export function nativeVideo({ run, ffmpeg, ffprobe, input, output, spec, key, encoderName }) {
   const ext = key === 'video/vp9' ? 'webm' : 'mp4'
+  const inspect = fingerprint({ run, ffmpeg, ffprobe, input })
   return {
     ext,
     type: `video/${ext}`,
@@ -53,7 +55,8 @@ export function nativeVideo({ run, ffmpeg, ffprobe, input, output, spec, key, en
         ext,
       ])
     },
-    fingerprint: fingerprint({ run, ffmpeg, ffprobe, input }),
+    fingerprint: inspect,
+    stream: streamCopy({ run, ffmpeg, input, fingerprint: inspect }),
   }
 }
 
@@ -111,6 +114,8 @@ function fingerprint({ run, ffmpeg, ffprobe, input }) {
     if (!timeline.length || timeline.some((frame) => !frame.every(Number.isFinite)))
       throw new Error('The native video has incomplete frame timing')
     return {
+      codec: video[0].codec_name,
+      audioCodec: audio[0]?.codec_name ?? null,
       video: await packets('v'),
       audio: audio.length ? await packets('a') : null,
       width: video[0].width,

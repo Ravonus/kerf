@@ -52,6 +52,14 @@ runs is the app's choice. `kerf add` prints that note when it installs this plug
   delays survive.
 - **A timeout per run.** 10 minutes by default, so a stuck encode doesn't hold a build forever.
 
+`createMediaEncode({key: 'video/h264'}).native.stream(file, {directory, seconds: 2})` prepares a
+finite fMP4 HLS playlist in an empty local directory, copying H.264 and optional AAC packets. It reads
+back every frame timestamp, dimensions and both encoded sample hashes before returning a file list
+and a verification receipt. Segment boundaries follow existing keyframes; `seconds` is a target, not
+a maximum. Unsupported tracks or changes to relative audio timing (including container priming
+differences) reject the stream. Keep the progressive source as fallback and the exact original for
+Save. The browser can then fetch a short forward buffer and stop loading when playback pauses.
+
 ## Install
 
 ```bash
