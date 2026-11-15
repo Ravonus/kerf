@@ -22,9 +22,10 @@ import { unsafeSvg } from './svg.mjs'
 import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
 
 const run = promisify(execFile)
-const VERSION = 7 // bump when the output for the same input and options changes
+const VERSION = 8 // bump when the output for the same input and options changes
 
 export { DEFAULTS, FIXED, MIME, encoders, hex, isPhoto } from './shared.mjs'
+export { createFirstFrameBuild } from './first-frame.mjs'
 
 /** The range the quality search walks. */
 const RANGE = { avif: [20, 90], webp: [40, 95], jpeg: [40, 95] }

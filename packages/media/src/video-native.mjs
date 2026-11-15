@@ -45,9 +45,13 @@ async function search(enc, source, ctx) {
   const sample = { ...ctx, duration: Math.min(ctx.duration, 2) }
   for (let index = 0; index < 5 && lo <= hi; index++) {
     const knob = Math.floor((lo + hi) / 2),
-      bytes = await enc.native.encode(source, { knob, seconds: sample.duration })
-    if ((await quality(enc, bytes, { ...sample, source })).passed) {
-      best = knob
+      bytes = await enc.native.encode(source, {
+        knob,
+        ...(ctx.duration > 2 && { seconds: sample.duration }),
+      }),
+      measured = await quality(enc, bytes, { ...sample, source })
+    if (measured.passed) {
+      best = { knob, bytes, quality: measured, seconds: sample.duration }
       lo = knob + 1
     } else hi = knob - 1
   }
@@ -118,14 +122,34 @@ async function evaluate(enc, ctx) {
       duration: info.duration,
       timeline: reference.timeline,
     },
-    knob = copy ? undefined : await search(enc, file, target)
-  if (!copy && knob === undefined)
-    return { assessment: { ...assessment, status: 'quality search failed' } }
-  const bytes = await enc.native.encode(file, { copy, knob })
+    trial = copy ? undefined : await search(enc, file, target)
+  if (!copy && !trial) return { assessment: { ...assessment, status: 'quality search failed' } }
+  if (
+    trial &&
+    info.duration > trial.seconds &&
+    trial.bytes.length / trial.seconds >= ceiling / info.duration
+  )
+    return {
+      assessment: {
+        ...assessment,
+        status: 'trial does not project a delivery saving',
+        trialBytes: trial.bytes.length,
+        trialSeconds: trial.seconds,
+        projectedBytes: Math.round((trial.bytes.length / trial.seconds) * info.duration),
+      },
+    }
+  const bytes =
+    trial && info.duration <= trial.seconds
+      ? trial.bytes
+      : await enc.native.encode(file, { copy, knob: trial?.knob })
   assessment.bytes = bytes.length
   if (bytes.length + 1024 >= ceiling)
     return { assessment: { ...assessment, status: 'no delivery byte saving' } }
-  const measured = copy ? undefined : await quality(enc, bytes, { ...target, source: file })
+  const measured = copy
+    ? undefined
+    : info.duration <= trial.seconds
+      ? trial.quality
+      : await quality(enc, bytes, { ...target, source: file })
   if (measured && !measured.passed)
     return { assessment: { ...assessment, status: 'final quality failed', quality: measured } }
   const proof = await qualify(enc, bytes, { reference, copy })

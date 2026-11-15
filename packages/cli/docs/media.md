@@ -93,3 +93,9 @@ Generated stills without a retained source can be encoded to PNG or explicitly r
 ## Provenance
 
 The pre-rename WEFT request and research are preserved in [the original asset design](https://github.com/Ravonus/kerf/blob/archive/evals-2026-11/docs/research/15-assets.md). That historical document describes intent and measured experiments; this reference describes implemented API behavior. The original implementation supplied native video ladders and prebuilt compatibility copies. Frame chunks, exact-pixel raster mode, manual save preparation and the disposable browser encode worker are subsequent additions and must be tested as such.
+
+## Sharp first frames
+
+`createFirstFrameBuild()` from `@kerf-js/media/build` prepares a movie's first decoded frame as a responsive AVIF/WebP still. Call `build({file}, {cacheDir, encode})` with the same FFmpeg provider bindings. The default widths are 384, 640, 960 and 1600, capped by the source. Every perceptual rung meets the requested SSIMULACRA2 target; a missing scorer uses verified exact pixels. AVIF is offered only when its complete ladder is smaller at every rung than the compatible fallback. No enlarged blur placeholder is emitted. Cache identity includes the actual source bytes, encoder and image library versions. These generated stills are previews; Save continues to use the movie's retained original.
+
+Show this still before starting the movie, and replace it only after the first live frame is presented. Keep preview loading separate from intent-only original preparation. Automatic movie comparisons can reject a costly candidate from a bounded trial's projected byte rate; that is recorded as a projection. A selected replacement still requires actual full-output byte savings and quality/timing/audio qualification.

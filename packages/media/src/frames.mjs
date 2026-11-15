@@ -131,10 +131,10 @@ class FrameOutput {
       }
       if (
         this.o.video.delivery === 'auto' &&
-        (this.sampleEnd >= Math.min(seconds, duration) || this.spent > bytes.length) &&
+        (this.sampleEnd >= Math.min(0.25, duration) || this.spent > bytes.length) &&
         (this.spent > bytes.length || this.spent > (bytes.length * this.sampleEnd) / duration)
       ) {
-        this.refused = `measured ${this.mode} frames are larger than the source at the same duration`
+        this.refused = `the measured ${this.mode} frame sample projects larger delivery at the same duration`
         break
       }
     }
