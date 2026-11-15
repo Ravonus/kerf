@@ -15,14 +15,26 @@ async function quality(enc, encoded, ctx) {
   const { source } = ctx
   return onDisk(`candidate.${enc.native.ext}`, encoded, async (file, dir) => {
     const scores = []
-    const times = ctx.timeline.filter((frame) => frame[0] < ctx.duration)
-    for (const at of fractions.map(
-      (fraction) => times[Math.min(times.length - 1, Math.floor(fraction * times.length))][0],
+    const times = ctx.timeline.filter(
+        (frame) => frame[0] >= (ctx.start ?? 0) && frame[0] < (ctx.start ?? 0) + ctx.duration,
+      ),
+      decoded = ctx.start ? await enc.frames(file) : undefined,
+      count = Math.min(times.length, decoded?.timeline.length ?? times.length)
+    if (!count) throw new Error('The codec trial contains no comparable frames')
+    for (const index of fractions.map((fraction) =>
+      Math.min(count - 1, Math.floor(fraction * count)),
     )) {
+      const at = times[index][0],
+        candidateAt = decoded ? decoded.start + decoded.timeline[index].time : at
       const ref = join(dir, 'reference.png'),
         out = join(dir, 'decoded.png')
-      writeFileSync(ref, await enc.still(source, { at }))
-      writeFileSync(out, await enc.still(file, { at }))
+      let reference = ctx.references?.get(at)
+      if (!reference) {
+        reference = await enc.still(source, { at: Math.max(0, at - 0.00001) })
+        ctx.references?.set(at, reference)
+      }
+      writeFileSync(ref, reference)
+      writeFileSync(out, await enc.still(file, { at: Math.max(0, candidateAt - 0.00001) }))
       scores.push(
         parseFloat((await run(ctx.scorer, [ref, out], { timeout: 30000, maxBuffer: 4096 })).stdout),
       )
@@ -42,12 +54,19 @@ async function search(enc, source, ctx) {
   let lo = 0,
     hi = enc.knob.max,
     best
-  const sample = { ...ctx, duration: Math.min(ctx.duration, 0.25) }
+  const sample = {
+    ...ctx,
+    duration: Math.min(ctx.duration, 0.25),
+    start:
+      ctx.duration > 0.25
+        ? Math.max(0, ctx.timeline[Math.floor(ctx.timeline.length / 2)][0] - 0.000001)
+        : 0,
+  }
   for (let index = 0; index < 5 && lo <= hi; index++) {
     const knob = Math.floor((lo + hi) / 2),
       bytes = await enc.native.encode(source, {
         knob,
-        ...(ctx.duration > sample.duration && { seconds: sample.duration }),
+        ...(ctx.duration > sample.duration && { seconds: sample.duration, start: sample.start }),
       }),
       measured = await quality(enc, bytes, { ...sample, source })
     if (measured.passed) {
@@ -121,6 +140,7 @@ async function evaluate(enc, ctx) {
       target: o.quality.target,
       duration: info.duration,
       timeline: reference.timeline,
+      references: (reference.images ??= new Map()),
     },
     trial = copy ? undefined : await search(enc, file, target)
   if (!copy && !trial) return { assessment: { ...assessment, status: 'quality search failed' } }

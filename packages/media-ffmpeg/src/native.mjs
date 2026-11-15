@@ -14,11 +14,12 @@ export function nativeVideo({ run, ffmpeg, ffprobe, input, output, spec, key, en
     type: `video/${ext}`,
     acceptsAudio: (codec) => !codec || audioIn[ext].has(codec),
     /** @param {string} file
-     * @param {{ knob?: number, copy?: boolean, seconds?: number }} recipe */
-    async encode(file, { knob, copy = false, seconds } = {}) {
+     * @param {{ knob?: number, copy?: boolean, seconds?: number, start?: number }} recipe */
+    async encode(file, { knob, copy = false, seconds, start } = {}) {
       const name = await encoderName()
       if (!copy && !name) throw new Error(`No encoder for ${key}`)
       return output(ext, [
+        ...(start ? ['-ss', String(start)] : []),
         ...input(file),
         '-map',
         '0:v:0',

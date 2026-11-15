@@ -169,3 +169,50 @@ it.runIf(!!findScorer('ssimulacra2') && !spawnSync('ffmpeg', ['-version']).error
   },
   60000,
 )
+
+// Real sample alignment must follow the authored frames when a trial seeks into the middle of a movie.
+it.runIf(!!findScorer('ssimulacra2') && !spawnSync('ffmpeg', ['-version']).error)(
+  'uses a representative middle trial and still qualifies the complete encoded movie',
+  async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'kerf-middle-trial-'))
+    folders.push(dir)
+    const file = join(dir, 'source.mov')
+    execFileSync('ffmpeg', [
+      '-v',
+      'error',
+      '-f',
+      'lavfi',
+      '-i',
+      'testsrc2=s=64x48:r=8:d=4',
+      '-c:v',
+      'ffv1',
+      '-metadata',
+      'comment=' + 'original'.repeat(10000),
+      '-threads',
+      '2',
+      file,
+    ])
+    const enc = createMediaEncode({ key: 'video/h264' })
+    if (!enc.native) throw new Error('Missing native capability')
+    const native = enc.native.encode,
+      starts: number[] = []
+    enc.native.encode = async (file, recipe = {}) => {
+      if (recipe.start) starts.push(recipe.start)
+      return native(file, recipe)
+    }
+    const built = await createMediaBuild({
+      formats: ['webp'],
+      quality: { lossless: true, target: 80 },
+      video: { delivery: 'auto', lossless: false, codecs: [], maxFrameBytes: 1 },
+    }).build(
+      { file, bytes: new Uint8Array(readFileSync(file)) },
+      { cacheDir: join(dir, 'cache'), encode: { 'video/h264': enc } },
+    )
+    expect(starts.length).toBeGreaterThan(0)
+    expect(starts.every((start) => start > 1.5 && start < 2.1)).toBe(true)
+    expect(built.verification.selected).toBe('native')
+    expect(built.verification.quality).toMatchObject({ target: 80, passed: true, samples: 5 })
+    expect(built.verification.timing).toBe('complete')
+  },
+  30000,
+)
