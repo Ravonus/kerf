@@ -121,8 +121,8 @@ async function prepare(file, ctx) {
 /** Shared build provider for sharp AVIF/WebP movie first frames, with no enlarged blur placeholder. */
 export function createFirstFrameBuild({
   widths = [384, 640, 960, 1600],
-  target = 90,
-  scorer = 'ssimulacra2',
+  target = 100,
+  scorer = target === 100 ? 'none' : 'ssimulacra2',
 } = {}) {
   if (
     !Array.isArray(widths) ||

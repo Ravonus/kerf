@@ -1,11 +1,21 @@
 import { initialMediaLevel, mediaConnection, slowMediaConnection } from './media-network'
-import { playlistLevels, playlistStarts, warmFetch, warmUrl } from './media-warm-fetch'
+import {
+  playlistLevels,
+  playlistStarts,
+  warmFetch,
+  warmUrl,
+  WarmLimitError,
+} from './media-warm-fetch'
 
 /** A playlist for one artwork, with its displayed size for rendition selection. */
 export interface MediaWarmTarget {
   url: string
   width: number
   height: number
+  /** Re-evaluated before each artwork so the current viewport stays first. */
+  priority?: () => number
+  /** Prepare the responsive sharp still before warming its movie. */
+  prepare?: () => Promise<void>
 }
 /** Deliberately small background work; foreground playback keeps its own independent loader. */
 export interface MediaWarmOptions {
@@ -35,6 +45,9 @@ class WarmQueue {
   bytes = 0
   windowStarted = Date.now()
   readonly done: Promise<void>
+  readonly waiting = () => {
+    if (this.buffering()) this.request?.abort()
+  }
   readonly visibility = () => {
     if (document.hidden) this.request?.abort()
   }
@@ -44,15 +57,29 @@ class WarmQueue {
     readonly options: MediaWarmOptions,
   ) {
     document.addEventListener('visibilitychange', this.visibility)
-    this.done = this.run().finally(() =>
-      document.removeEventListener('visibilitychange', this.visibility),
-    )
+    document.addEventListener('waiting', this.waiting, true)
+    this.done = this.run().finally(() => this.removeListeners())
   }
 
   cancel() {
     this.lifetime.abort()
     this.request?.abort()
+    this.removeListeners()
+  }
+
+  removeListeners() {
     document.removeEventListener('visibilitychange', this.visibility)
+    document.removeEventListener('waiting', this.waiting, true)
+  }
+
+  buffering() {
+    return [...document.querySelectorAll('video')].some(
+      (video) => !video.paused && video.readyState < 3,
+    )
+  }
+
+  resourceLimit() {
+    return this.options.maxResourceBytes ?? 8 * 1024 * 1024
   }
 
   remaining() {
@@ -61,13 +88,13 @@ class WarmQueue {
       this.bytes = 0
     }
     return (
-      (this.options.windowBytes ?? (slowMediaConnection(mediaConnection()) ? 128 : 512) * 1024) -
-      this.bytes
+      (this.options.windowBytes ??
+        (slowMediaConnection(mediaConnection()) ? 16 : 32) * 1024 * 1024) - this.bytes
     )
   }
 
   async read(url: string) {
-    const limit = Math.min(this.remaining(), this.options.maxResourceBytes ?? 256 * 1024)
+    const limit = Math.min(this.remaining(), this.resourceLimit())
     if (limit <= 0) throw new Error('Media warm window exhausted')
     return warmFetch(url, this.request!.signal, limit, (bytes) => {
       this.bytes += bytes
@@ -100,16 +127,13 @@ class WarmQueue {
   }
 
   async run() {
-    await pause(this.options.startDelayMs ?? 6000, this.lifetime.signal)
-    const seen = new Set<string>()
-    for (const target of this.targets) {
-      if (seen.has(target.url)) continue
-      seen.add(target.url)
+    await pause(this.options.startDelayMs ?? 0, this.lifetime.signal)
+    const pending = new Map(this.targets.map((target) => [target.url, target]))
+    const retried = new Set<string>()
+    while (pending.size) {
       while (!this.lifetime.signal.aborted) {
         if (mediaConnection().saveData) return
-        const buffering = [...document.querySelectorAll('video')].some(
-          (video) => !video.paused && video.readyState < 3,
-        )
+        const buffering = this.buffering()
         const painting = [
           ...document.querySelectorAll<HTMLImageElement>('img[fetchpriority="high"]'),
         ].some((image) => !image.complete)
@@ -117,14 +141,34 @@ class WarmQueue {
         await pause(2000, this.lifetime.signal)
       }
       if (this.lifetime.signal.aborted) return
+      const target = [...pending.values()].sort(
+        (a, b) => (a.priority?.() ?? 0) - (b.priority?.() ?? 0),
+      )[0]!
       this.request = new AbortController()
       try {
+        await target.prepare?.()
+        if (this.lifetime.signal.aborted) return
+        if (this.buffering()) continue
         await this.start(target)
-      } catch {
-        /* Playback retries independently on user intent. */
+        pending.delete(target.url)
+      } catch (error) {
+        if (this.request.signal.aborted && !this.lifetime.signal.aborted) continue
+        if (
+          error instanceof WarmLimitError &&
+          this.remaining() < this.resourceLimit() &&
+          !retried.has(target.url)
+        ) {
+          retried.add(target.url)
+          await pause(
+            Math.max(1, (this.options.windowMs ?? 60000) - (Date.now() - this.windowStarted)),
+            this.lifetime.signal,
+          )
+          continue
+        }
+        pending.delete(target.url)
       }
       await pause(
-        this.options.intervalMs ?? (slowMediaConnection(mediaConnection()) ? 15_000 : 4000),
+        this.options.intervalMs ?? (slowMediaConnection(mediaConnection()) ? 5000 : 250),
         this.lifetime.signal,
       )
     }

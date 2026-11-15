@@ -498,7 +498,7 @@ See [the media reference](https://kerfjs.netlify.app/reference/media) for the AP
 
 ### Browser starts
 
-Import `initialMediaLevel`, `mediaBandwidth`, `mediaConnection` and `warmMediaStarts` from `@kerf-js/media/browser` for connection-aware initial quality and a bounded background queue of first HLS fragments. It fills the browser's ordinary HTTP cache, pauses for hidden tabs or buffering foreground players, respects data saver, and exposes `cancel()` for route cleanup. Full policy and limits: the CLI `media` reference.
+Import `initialMediaLevel`, `mediaBandwidth`, `mediaConnection` and `warmMediaStarts` from `@kerf-js/media/browser` for display-quality starts and a bounded background queue of first HLS fragments. First-frame images are pixel-exact by default; perceptual encoding is opt-in. It fills the browser's ordinary HTTP cache, pauses for hidden tabs or buffering foreground players, respects data saver, and exposes `cancel()` for route cleanup. Full policy and limits: the CLI `media` reference.
 
 `observeMediaViewport(element, callback, minimumVisible?)` shares one scroll read
 batch across a page. The callback receives `visible`, `intersecting`, `preparing`
