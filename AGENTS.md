@@ -7,7 +7,14 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, source and test conventions, 
 Use `media()` and `mediaFfmpeg()` with `?media` imports or `ctx.media.ingest`, then render
 `Media` from `@kerf-js/core/media`. The standard path generates verified, exact-pixel,
 responsive frame-zero previews and automatically registers bounded background caching.
-Keep controls and original-file Save behavior separate from playback. Do not implement
+Keep controls and original-file Save behavior separate from playback.
+For an artist-approved visually lossless display policy, configure
+`video.firstFrameQuality: {target: 90}` (SSIMULACRA2) and a suitable `video.widths`
+ladder. The default remains pixel-exact. Standard imports and uploads use the same
+Kerf quality search; unavailable scoring falls back to exact pixels. Rebuild legacy
+records with `createFirstFrameBuild({target: 90})`, retain exact original Save files,
+and verify the selected width and payload. Do not lock a measured-display site to
+pixel-exact poster delivery or introduce a blurry preview that later sharpens. Do not implement
 site-owned blur posters, delayed warm timers or bandwidth-first starting quality.
 
 Core owns the browser policy, re-exported by `@kerf-js/media/browser`. Custom/HLS players

@@ -261,3 +261,15 @@ it('media() validates options as P115 and provides media.build with the M namesp
     expect.objectContaining({ code: 'P115', path: 'placeholder' }),
   )
 })
+
+// Preview policy is explicit; accidental invalid targets must not silently widen delivery quality.
+it('validates the standard first-frame quality policy', () => {
+  expect(() => media({ video: { firstFrameQuality: { target: 90 } } })).not.toThrow()
+  for (const target of [-1, 0, 101, Number.NaN, Number.POSITIVE_INFINITY])
+    expect(() => media({ video: { firstFrameQuality: { target } } })).toThrow(
+      expect.objectContaining({ path: 'video.firstFrameQuality.target' }),
+    )
+  expect(() => media({ video: { firstFrameQuality: { scorer: 4 as never } } })).toThrow(
+    expect.objectContaining({ path: 'video.firstFrameQuality.scorer' }),
+  )
+})

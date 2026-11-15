@@ -534,3 +534,16 @@ and output names; `verification.frameTime` reports the selected source time.
 Use this for a source with a measured black opening, keep its exact frame-zero
 record separately, and hold the preview until playback presents visible content.
 It does not seek, trim, or change the saved original movie.
+
+### Measured sharp opening frames
+
+The default opening frame is pixel-exact. When the artist approves visually lossless
+display, `video.firstFrameQuality: {target: 90}` uses Kerf's SSIMULACRA2 search for
+every responsive opening frame, for both imports and uploads. `video.widths` controls
+the ladder; choose widths close to the actual rendered size and device pixel ratio.
+The emitted `firstFrame.pixels` and `target` describe the verified mode. Without the
+scorer the encoder retains exact pixels. Originals and Save remain byte-identical.
+Rebuild imports or re-ingest legacy records after changing the policy. Do not use
+a low resolution blur followed by a quality ramp. Measure the actual mobile LCP
+element, selected file and bytes; accessibility and metadata audits are separate
+from Lighthouse performance.

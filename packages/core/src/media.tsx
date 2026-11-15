@@ -31,14 +31,15 @@ export interface MediaAsset {
   quality?: 'ssimulacra2' | 'fixed' | 'original'
   /** Video: the still shown until it plays. */
   poster?: string
-  /** Responsive, exact-pixel frame zero; generated automatically by the media plugin. */
+  /** Responsive sharp frame zero; exact by default, or explicitly measured by the media plugin. */
   firstFrame?: {
     src: string
     type: string
     width: number
     height: number
     sources: { type: string; srcset: string }[]
-    pixels: 'exact'
+    pixels: 'exact' | 'perceptual'
+    target?: number
     time: 0
   }
   duration?: number

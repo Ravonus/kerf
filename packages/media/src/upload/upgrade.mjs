@@ -5,11 +5,12 @@ import { originalVideo } from '../video-original.mjs'
 export function createUpgrade({ sourceOf, dir, o, encode, url, store }) {
   return async (hash, known) => {
     if (known.asset.kind !== 'video') return known.asset
-    if (known.asset.original && (known.asset.firstFrame || o.video.firstFrame === false))
-      return known.asset
+    const target = o.video.firstFrameQuality?.target ?? 100
+    const matches = known.asset.firstFrame && (known.asset.firstFrame.target ?? 100) === target
+    if (known.asset.original && (matches || o.video.firstFrame === false)) return known.asset
     const source = readFileSync(sourceOf(hash))
     const frame =
-      !known.asset.firstFrame && o.video.firstFrame !== false
+      !matches && o.video.firstFrame !== false
         ? await uploadFirstFrame({ file: sourceOf(hash), dir, hash, o, encode, url })
         : { asset: {}, firstFrames: known.firstFrames }
     const asset = {

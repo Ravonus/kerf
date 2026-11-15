@@ -4,10 +4,10 @@ import { createFirstFrameBuild } from '../first-frame.mjs'
 
 /** Persist upload previews in the same public media route as their native playback rungs. */
 export async function uploadFirstFrame({ file, dir, hash, o, encode, url }) {
-  const built = await createFirstFrameBuild({ widths: o.video.widths }).build(
-    { file },
-    { cacheDir: join(dir, '.first-frames'), encode },
-  )
+  const built = await createFirstFrameBuild({
+    widths: o.video.widths,
+    ...o.video.firstFrameQuality,
+  }).build({ file }, { cacheDir: join(dir, '.first-frames'), encode })
   const files = new Map(built.files.map((output) => [output.name, output.bytes])),
     firstFrames = {}
   const sources = built.asset.sources.map((source) => ({
@@ -32,7 +32,16 @@ export async function uploadFirstFrame({ file, dir, hash, o, encode, url }) {
   return {
     asset: {
       poster: url(hash, 0, format),
-      firstFrame: { src, type, width, height, sources, pixels: 'exact', time: 0 },
+      firstFrame: {
+        src,
+        type,
+        width,
+        height,
+        sources,
+        pixels: built.verification.pixels,
+        target: built.verification.target,
+        time: 0,
+      },
     },
     firstFrames,
   }

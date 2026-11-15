@@ -8,7 +8,10 @@ export async function videoFirstFrame(source, out, o, context) {
   retainVideoOriginal(source, out)
   if (o.video.firstFrame === false) return out
   const frame = await onDisk(source.name, source.bytes, (file) =>
-    createFirstFrameBuild({ widths: o.video.widths }).build({ file }, context),
+    createFirstFrameBuild({ widths: o.video.widths, ...o.video.firstFrameQuality }).build(
+      { file },
+      context,
+    ),
   )
   const old = out.asset.poster,
     placeholder = out.asset.placeholder
@@ -17,7 +20,16 @@ export async function videoFirstFrame(source, out, o, context) {
   delete out.asset.dominant
   const { src, type, width, height, sources } = frame.asset
   out.asset.poster = src
-  out.asset.firstFrame = { src, type, width, height, sources, pixels: 'exact', time: 0 }
+  out.asset.firstFrame = {
+    src,
+    type,
+    width,
+    height,
+    sources,
+    pixels: frame.verification.pixels,
+    target: frame.verification.target,
+    time: 0,
+  }
   out.files.push(...frame.files)
   out.verification = { ...out.verification, firstFrame: frame.verification }
   return out

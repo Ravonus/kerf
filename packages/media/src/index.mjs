@@ -29,6 +29,18 @@ function playbackOptions(input, out) {
     const { codecs, widths, delivery, chunkSeconds, maxFrameBytes } = input.video
     if (input.video.firstFrame !== undefined && typeof input.video.firstFrame !== 'boolean')
       fail('video.firstFrame', 'a boolean; sharp frame-zero previews are enabled by default')
+    const preview = input.video.firstFrameQuality
+    if (preview !== undefined) {
+      if (!preview || typeof preview !== 'object' || Array.isArray(preview))
+        fail('video.firstFrameQuality', 'a target and optional scorer')
+      if (
+        preview.target !== undefined &&
+        !(Number.isFinite(preview.target) && preview.target > 0 && preview.target <= 100)
+      )
+        fail('video.firstFrameQuality.target', 'a finite score greater than 0 and at most 100')
+      if (preview.scorer !== undefined && typeof preview.scorer !== 'string')
+        fail('video.firstFrameQuality.scorer', 'a scorer command or none')
+    }
     if (input.video.lossless !== undefined && typeof input.video.lossless !== 'boolean')
       fail('video.lossless', 'a boolean overriding quality.lossless for playback')
     if (delivery !== undefined && !['auto', 'frames', 'video'].includes(delivery))

@@ -23,6 +23,8 @@ export interface MediaOptions {
   video?: {
     /** Generate exact-pixel responsive frame-zero previews automatically. Default true. */
     firstFrame?: boolean
+    /** Explicit sharp preview quality, independent of exact Save originals. Default target 100. */
+    firstFrameQuality?: { target?: number; scorer?: string }
     codecs?: ('av1' | 'vp9' | 'hevc')[]
     widths?: number[]
     /** 'frames': stream verified image patches. 'auto': compare native codecs, containers and frames, retaining only a measured delivery-cost win. */
