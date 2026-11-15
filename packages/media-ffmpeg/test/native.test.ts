@@ -49,6 +49,9 @@ it.runIf(hasFfmpeg)(
     expect(readFileSync(candidate).indexOf('moov')).toBeLessThan(
       readFileSync(candidate).indexOf('mdat'),
     )
+    await expect(enc.native.stream(source, { directory: join(dir, 'stream') })).rejects.toThrow(
+      'presentation timing',
+    )
   },
 )
 
