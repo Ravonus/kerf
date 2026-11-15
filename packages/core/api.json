@@ -44,6 +44,7 @@
       "default": "./src/config.mjs"
     },
     "./vite": "./vite.mjs",
-    "./compiler": "./compiler.cjs"
+    "./compiler": "./compiler.cjs",
+    "./media-browser": "./src/media-browser.ts"
   }
 }
