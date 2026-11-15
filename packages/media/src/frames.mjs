@@ -37,6 +37,7 @@ class FrameOutput {
   spent = 0
   sampleEnd = 0
   count = 0
+  fullTrialFrames = 0
   refused = ''
   previous = undefined
   chunk = undefined
@@ -120,7 +121,16 @@ class FrameOutput {
         this.previous = undefined
         this.reconstructed = undefined
       }
-      this.chunk.frames.push(await this.patch(frame))
+      const patch = await this.patch(frame)
+      this.chunk.frames.push(patch)
+      this.fullTrialFrames =
+        patch.src &&
+        patch.x === 0 &&
+        patch.y === 0 &&
+        patch.width === width &&
+        patch.height === height
+          ? this.fullTrialFrames + 1
+          : 0
       this.previous = frame.rgba
       this.proofs.push(pixelHash(frame.rgba))
       this.count++
@@ -131,7 +141,10 @@ class FrameOutput {
       }
       if (
         this.o.video.delivery === 'auto' &&
-        (this.sampleEnd >= Math.min(0.25, duration) || this.spent > bytes.length) &&
+        (this.sampleEnd >= Math.min(0.25, duration) ||
+          this.spent > bytes.length ||
+          (this.fullTrialFrames >= 2 &&
+            this.spent > ((bytes.length * this.sampleEnd) / duration) * 4)) &&
         (this.spent > bytes.length || this.spent > (bytes.length * this.sampleEnd) / duration)
       ) {
         this.refused = `the measured ${this.mode} frame sample projects larger delivery at the same duration`

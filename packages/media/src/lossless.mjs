@@ -3,6 +3,7 @@ import sharp from 'sharp'
 import { createHash } from 'node:crypto'
 import { extname } from 'node:path'
 import { withPlaceholder, hex } from './shared.mjs'
+import { animatedLossless } from './animated-lossless.mjs'
 
 /** A content digest binds encoded files and decoded-frame verification. */
 export const pixelHash = (bytes) => createHash('sha256').update(bytes).digest('hex')
@@ -44,7 +45,17 @@ export async function losslessRaster({ bytes, name, stem }, o) {
     bytes: bytes.length,
   }
   const files = [{ name: originalName, bytes }]
-  if ((metadata.pages ?? 1) > 1) return animatedOriginal({ metadata, original, name, files, o })
+  if ((metadata.pages ?? 1) > 1)
+    return animatedLossless(
+      {
+        bytes,
+        stem,
+        metadata,
+        original,
+        baseline: animatedOriginal({ metadata, original, name, files, o }),
+      },
+      o,
+    )
 
   const reference = await sharp(bytes)
     .rotate()
@@ -151,6 +162,7 @@ function animatedOriginal({ metadata, original, name, files, o }) {
       name,
       quality: 'original',
       original,
+      animated: true,
       ...(o.encoder === 'compatible' && {
         copy: { src: original.src, type: original.type, bytes: original.bytes },
         swap: o.swap ?? 'intent',

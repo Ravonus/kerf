@@ -309,3 +309,43 @@ async function verifyReconstruction(
   }
   expect(index).toBe(8)
 }
+
+it('optimizes an animated GIF only with complete frame/timing verification and retains exact original bytes', async () => {
+  const raw = Buffer.alloc(16 * 16 * 3 * 3)
+  for (let frame = 0; frame < 3; frame++)
+    for (let pixel = 0; pixel < 16 * 16; pixel++) raw[(frame * 16 * 16 + pixel) * 3 + frame] = 255
+  const gif = await sharp(raw, { raw: { width: 16, height: 48, channels: 3, pageHeight: 16 } })
+    .gif({ delay: [40, 80, 120], loop: 2 })
+    .toBuffer()
+  // Legal GIF comments model source overhead without changing any frame.
+  const blocks = Array.from({ length: 12 }, () =>
+    Buffer.concat([Buffer.from([255]), Buffer.alloc(255, 65)]),
+  )
+  const bytes = Buffer.concat([
+    gif.subarray(0, -1),
+    Buffer.from([0x21, 0xfe]),
+    ...blocks,
+    Buffer.from([0, 0x3b]),
+  ])
+  const built = await createMediaBuild({
+    quality: { lossless: true },
+    video: { lossless: false },
+    encoder: 'compatible',
+    swap: 'manual',
+  }).build({ file: '/animation.gif', bytes }, { cacheDir: folder() })
+  expect(built.verification).toMatchObject({
+    selected: 'animated-webp',
+    pixels: 'visible-rgba',
+    frameCount: 3,
+    timing: 'unchanged',
+  })
+  expect(built.verification.playbackBytes).toBeLessThan(bytes.length)
+  expect(
+    built.files.find((file: { name: string }) => file.name === built.asset.original.src)?.bytes,
+  ).toEqual(bytes)
+  const webp = built.files.find((file: { name: string }) => file.name.endsWith('.webp'))!
+  const meta = await sharp(webp.bytes, { animated: true }).metadata()
+  expect(meta.pages).toBe(3)
+  expect(meta.delay).toEqual([40, 80, 120])
+  expect(meta.loop).toBe(2)
+})

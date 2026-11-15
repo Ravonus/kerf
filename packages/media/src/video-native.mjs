@@ -42,12 +42,12 @@ async function search(enc, source, ctx) {
   let lo = 0,
     hi = enc.knob.max,
     best
-  const sample = { ...ctx, duration: Math.min(ctx.duration, 2) }
+  const sample = { ...ctx, duration: Math.min(ctx.duration, 0.25) }
   for (let index = 0; index < 5 && lo <= hi; index++) {
     const knob = Math.floor((lo + hi) / 2),
       bytes = await enc.native.encode(source, {
         knob,
-        ...(ctx.duration > 2 && { seconds: sample.duration }),
+        ...(ctx.duration > sample.duration && { seconds: sample.duration }),
       }),
       measured = await quality(enc, bytes, { ...sample, source })
     if (measured.passed) {
