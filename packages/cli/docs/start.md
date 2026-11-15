@@ -60,8 +60,19 @@ and animates the actual incoming elements, without cloning the logo or delaying 
 This applies to links, programmatic navigation and browser Back/Forward.
 
 ```tsx
-<span data-kerf-shared="artist-name" data-kerf-shared-fit="text">Your artist</span>
-<img data-kerf-shared="artist-sigil" src="/sigil.svg" alt="" />
+<>
+  <span
+    data-kerf-shared="artist-name"
+    data-kerf-shared-fit="text"
+  >
+    Your artist
+  </span>
+  <img
+    data-kerf-shared="artist-sigil"
+    src="/sigil.svg"
+    alt=""
+  />
+</>
 ```
 
 Use `data-kerf-shared-fit="text"` for a text-only wrapper: its ink stays proportional
