@@ -223,6 +223,7 @@ export const media = definePlugin({
       title: 'Media (@kerf-js/media)',
       text: [
         '- Use ?media + mediaFfmpeg(); render Media from @kerf-js/core/media. Video imports/uploads get exact-pixel responsive frame-zero stills automatically; no blur posters.',
+        '- Artist-approved measured previews: video.firstFrameQuality:{target:90}. Kerf scores each size; exact originals remain separate. Default previews stay pixel-exact.',
         '- Media pins display quality and warms starts automatically. Preserve source across pause, return and loop. warm={false} opts out; Save Data stops speculation. Cache caps apply; large whole files are skipped.',
         '- Custom/HLS players use @kerf-js/media/browser: pin before startLoad, reveal a presented full-size frame, warm playback URLs. Read kerf docs media.',
         '- Only LCP gets priority + sizes. Describe alt; decoration uses alt="" decorative.',
