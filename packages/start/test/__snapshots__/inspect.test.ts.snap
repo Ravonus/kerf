@@ -69,6 +69,22 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
     },
     {
       "code": "H011",
+      "file": "src/routes/shared/large.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/shared/large",
+      "severity": "warning",
+      "why": "\`meta\` sets no description: the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/shared/small.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/shared/small",
+      "severity": "warning",
+      "why": "\`meta\` sets no description: the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
       "file": "src/routes/boom.tsx",
       "help": "export const meta: Meta = { title: "What this page is", description: "One sentence on what this page gives the reader." }",
       "route": "/boom",
@@ -301,11 +317,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
     },
     {
       "code": "H013",
-      "file": "src/routes/chat.tsx",
+      "file": "src/routes/shared/large.tsx",
       "help": "Give each page its own description in \`meta\`, from what is on it.",
-      "route": "/chat",
+      "route": "/shared/large",
       "severity": "warning",
-      "why": "25 routes share this description (the site default): /chat, /cover, /gate, /held, and 21 more ("Tools for builders.").",
+      "why": "27 routes share this description (the site default): /shared/large, /shared/small, /chat, /cover, and 23 more ("Tools for builders.").",
     },
   ],
   "ok": false,
@@ -780,6 +796,322 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
       ],
       "url": "/meta/plain",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/shared/large.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+        "src/routes/shared/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Large mark · Acme",
+            "height": 630,
+            "url": "/_kerf/og/shared/large.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Large mark · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/shared/large",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "route",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Large mark · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/shared/large",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Large mark · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/shared/large",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/shared/large.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Large mark · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/shared/large",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/shared/small.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+        "src/routes/shared/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Small mark · Acme",
+            "height": 630,
+            "url": "/_kerf/og/shared/small.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Small mark · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/shared/small",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "route",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Small mark · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/shared/small",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Small mark · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/shared/small",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/shared/small.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Small mark · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/shared/small",
     },
     {
       "card": "built-in",
