@@ -1,0 +1,25 @@
+{
+  "sourceRevision": "423f2710dda73e70628beade56363b6837e15c4f",
+  "dirtySource": [
+    {
+      "path": "packages/core/src/egg.ts",
+      "sha256": "b3eb3aad38196a3403b8c3402130c0b2db08223bacc732863352da406cdaaa59"
+    },
+    {
+      "path": "packages/veneer-core/src/nav.ts",
+      "sha256": "511205d5abf52e3ce5d7dc73e3c6e0c04ba3ea97764af937b2634c3ba83c027c"
+    }
+  ],
+  "node": "v26.13.0",
+  "pnpm": "12.15.0",
+  "machine": {
+    "platform": "darwin",
+    "release": "24.6.0",
+    "arch": "arm64",
+    "cpu": "Apple M4 Max"
+  },
+  "lockSha256": "53ad53ffec2b86392de2293f576f6bca216241274a5a96e8d3eb133821c7e56d",
+  "comparisonSha256": "6d9a50bceb31dee6d45e8c1a1a63db58c4377a57aec2562211a2d6822ae47cfe",
+  "compiler": "{\"kind\":\"native\",\"file\":\"/Users/ravonus/Documents/Codex/2026-10-17/i-x20/work/kerf-media/packages/core/native/kerf-compiler.darwin-arm64.node\"}",
+  "note": "All six stacks measured by measure.mjs. The documented egg padding is retuned to the unchanged 13691 byte Brotli cap; no runtime speedup is claimed."
+}

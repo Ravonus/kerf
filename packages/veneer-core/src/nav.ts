@@ -90,7 +90,7 @@ function geometry(nav: HTMLElement, face: HTMLElement, axis: 'x' | 'y') {
       : {
           start: a.top - box.top - nav.clientTop + nav.scrollTop,
           size: a.height,
-          cross: a.right - box.right,
+          cross: 0,
         }
   }
   /** Without a transition: the next change is what moves. */
