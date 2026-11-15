@@ -4,6 +4,7 @@ import type { Scope } from '../exec'
 import { bodyLimit, echoed, limited, withHeaders } from './request'
 import type { HandlerOptions } from './types'
 import { functionFault } from './function-fault'
+import { externalOrigin } from './origin'
 export function makeForm(
   options: HandlerOptions,
   page: (url: URL, request: Request, scope: Scope) => Promise<Response>,
@@ -13,12 +14,12 @@ export function makeForm(
    * errors and what was typed. A form can't send `x-kerf`, so the CSRF proof is the browser's own origin headers.
    */
   return async function form(url: URL, request: Request, scope: Scope): Promise<Response> {
+    const expected = externalOrigin(request, options.site?.trustProxy)
     const origin = request.headers.get('origin')
     const from = request.headers.get('sec-fetch-site')
     if (
-      !(origin
-        ? origin === url.origin && (!from || from === 'same-origin')
-        : from === 'same-origin')
+      !expected ||
+      !(origin ? origin === expected && (!from || from === 'same-origin') : from === 'same-origin')
     ) {
       options.onDiagnostic?.({
         code: 'F002',

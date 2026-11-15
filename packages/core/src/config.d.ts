@@ -89,9 +89,10 @@ export interface SiteConfig {
    */
   security?: false | Record<string, string | false>
   /**
-   * Behind a load balancer, CDN or reverse proxy: `true` for one, or how many sit in front. The client's address then
-   * comes from `X-Forwarded-For` (that many entries from the right), so auth's rate limit isn't one bucket for everyone.
-   * Leave it off when nothing sits in front: a client could write the header itself.
+   * `true` for one trusted proxy, or a hop count from the right of `X-Forwarded-For` for client addresses.
+   * Mutation/form CSRF uses the same hop's paired `X-Forwarded-Proto` and optional `X-Forwarded-Host`; without it,
+   * preserve the public Host. Proxies must overwrite/append these headers. Malformed/short chains or HTTPS-to-HTTP
+   * downgrades are refused. Leave it off without a proxy: a client could write these headers itself.
    */
   trustProxy?: boolean | number
   /** The server log: Readable text in development and JSON lines in production. Set a format to override. */

@@ -10,6 +10,7 @@ import { ERROR_HEADER } from '../failure'
 import { admitValue, errorFrameStatus, peerStatus, shellResponse, tags } from '../shell/operation'
 import { isSchema, validOperationId } from '../shell/wire'
 import type { Answer, Fn } from '../data/types'
+import { externalOrigin } from './origin'
 
 /** `/_kerf/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
 export async function serverFunction(
@@ -61,7 +62,7 @@ export async function serverFunction(
     const type = request.headers.get('content-type') ?? ''
     const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-kerf` still forces a preflight
     if (
-      crossOrigin(options, request, url) ||
+      crossOrigin(options, request) ||
       request.headers.get('x-kerf') !== '1' ||
       !(multipart || type.startsWith('application/json'))
     )
@@ -156,7 +157,9 @@ function functionResponses(scope: Scope, options: HandlerOptions, id: string) {
   return { out, fail }
 }
 
-function crossOrigin(options: HandlerOptions, request: Request, url: URL) {
+function crossOrigin(options: HandlerOptions, request: Request) {
+  const expected = externalOrigin(request, options.site?.trustProxy)
+  if (!expected) return true
   const origin = request.headers.get('origin')
   const from = request.headers.get('sec-fetch-site')
   // Naming an origin permits its mutation; CORS separately decides whether the browser can read it.
@@ -164,6 +167,6 @@ function crossOrigin(options: HandlerOptions, request: Request, url: URL) {
   const trusted = !!origin && !!named && (named === '*' || named.includes(origin))
   return (
     !trusted &&
-    ((origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none'))
+    ((origin && origin !== expected) || (from && from !== 'same-origin' && from !== 'none'))
   )
 }

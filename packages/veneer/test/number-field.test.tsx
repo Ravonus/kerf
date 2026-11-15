@@ -4,15 +4,38 @@ import userEvent from '@testing-library/user-event'
 import { NumberField } from '../src/NumberField'
 
 const tick = () => new Promise<void>((resolve) => queueMicrotask(resolve))
-afterEach(() => { document.body.innerHTML = '' })
+afterEach(() => {
+  document.body.innerHTML = ''
+})
 
 function mount() {
-  const value = state<number | null>(12), heard: (number | null)[] = []
-  const { container } = render(() => <NumberField label="Size" min={4} max={144} step={.5}
-    value={value.value} onValueChange={(next) => { value.value = next; heard.push(next) }} />)
-  return { value, heard, container, input: container.querySelector<HTMLInputElement>('[role="spinbutton"]')! }
+  const value = state<number | null>(12),
+    heard: (number | null)[] = []
+  const { container } = render(() => (
+    <NumberField
+      label="Size"
+      min={4}
+      max={144}
+      step={0.5}
+      value={value.value}
+      onValueChange={(next) => {
+        value.value = next
+        heard.push(next)
+      }}
+    />
+  ))
+  return {
+    value,
+    heard,
+    container,
+    input: container.querySelector<HTMLInputElement>('[role="spinbutton"]')!,
+  }
 }
-async function replace(input: HTMLInputElement, user: ReturnType<typeof userEvent.setup>, text: string) {
+async function replace(
+  input: HTMLInputElement,
+  user: ReturnType<typeof userEvent.setup>,
+  text: string,
+) {
   input.focus()
   input.select()
   await user.keyboard(text)
@@ -21,7 +44,8 @@ async function replace(input: HTMLInputElement, user: ReturnType<typeof userEven
 
 describe('NumberField drafts', () => {
   test('human digit input18 stays18 with min4 and primitive controlled props', async () => {
-    const { value, heard, input } = mount(), user = userEvent.setup()
+    const { value, heard, input } = mount(),
+      user = userEvent.setup()
     await tick()
     await replace(input, user, '18')
     expect(input.value).toBe('18')
@@ -31,7 +55,8 @@ describe('NumberField drafts', () => {
     expect(input.getAttribute('aria-valuenow')).toBe('18')
   })
   test('partial decimals and repeated focused edits preserve the raw draft', async () => {
-    const { value, heard, input } = mount(), user = userEvent.setup()
+    const { value, heard, input } = mount(),
+      user = userEvent.setup()
     await tick()
     await replace(input, user, '8.')
     expect(input.value).toBe('8.')
@@ -47,7 +72,8 @@ describe('NumberField drafts', () => {
     expect(document.activeElement).toBe(input)
   })
   test('out-of-range drafts emit no invalid values and clamp on Enter or blur', async () => {
-    const { value, heard, input } = mount(), user = userEvent.setup()
+    const { value, heard, input } = mount(),
+      user = userEvent.setup()
     await tick()
     await replace(input, user, '1')
     expect(input.value).toBe('1')
@@ -63,11 +89,15 @@ describe('NumberField drafts', () => {
     await tick()
     expect(input.value).toBe('144')
     expect(value.value).toBe(144)
-    expect(heard.every(next => next === null || next >= 4 && next <= 144)).toBe(true)
+    expect(heard.every((next) => next === null || (next >= 4 && next <= 144))).toBe(true)
   })
   test('Escape discards an invalid draft before the event reaches its parent', async () => {
-    const { value, heard, container, input } = mount(), user = userEvent.setup(), bubbled: string[] = []
-    container.addEventListener('keydown', event => { if (event.key === 'Escape') bubbled.push(input.value) })
+    const { value, heard, container, input } = mount(),
+      user = userEvent.setup(),
+      bubbled: string[] = []
+    container.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') bubbled.push(input.value)
+    })
     await tick()
     await replace(input, user, '-')
     expect(input.value).toBe('-')
@@ -78,7 +108,8 @@ describe('NumberField drafts', () => {
     expect(bubbled).toEqual(['12'])
   })
   test('arrows, page keys, Home/End and steppers keep bounded draft-aware behavior', async () => {
-    const { value, container, input } = mount(), user = userEvent.setup()
+    const { value, container, input } = mount(),
+      user = userEvent.setup()
     await tick()
     await replace(input, user, '8.5')
     await user.keyboard('{ArrowUp}')
