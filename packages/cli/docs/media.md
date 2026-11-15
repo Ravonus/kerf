@@ -105,3 +105,15 @@ Show this still before starting the movie, and replace it only after the first l
 `@kerf-js/media/browser` is framework-independent. `mediaConnection()`, `mediaBandwidth()` and `initialMediaLevel(levels, width, height, connection, pixelRatio)` choose a rendition that fits the display and connection. The lowest rung is reserved for data saver, 2G or a measured downlink below 0.75 Mbps; missing network hints use an ordinary-quality estimate. Keep the exact first-frame picture visible until playback paints, without a crossfade. A tiny still is an optional fallback for very slow networks.
 
 `warmMediaStarts([{url: '/streams/work/master.m3u8', width: 640, height: 360}])` starts a cancellable background queue. It waits six seconds, fetches one same-origin start at a time with low priority, and warms only the chosen playlist, initialization fragment and first complete HLS fragment into the ordinary HTTP cache. It never warms the complete movie. The default response-body allowance is 512 KiB per minute (128 KiB on slow connections), with a 256 KiB limit per response and four seconds between artworks (15 on slow links). Oversized, encrypted and byte-range playlists are skipped. Save-data mode disables speculation. Hidden tabs pause and abort in-flight work; buffering foreground videos defer the next start. Cancel the returned handle when the route unmounts. Unavailable media keeps its normal playback error path; warming never substitutes another artwork.
+
+### Predict media before it enters the viewport
+
+Import `observeMediaViewport` from `@kerf-js/media/browser`. It reports
+`{ visible, intersecting, preparing, anticipating }` and returns a disposer.
+`preparing` is the point to attach a source and load its sharp first frame;
+`anticipating` permits a muted player to start shortly before entry. Keep manual
+pause, reduced motion, menu state and document visibility in the player's lifecycle.
+At most two offscreen works prepare at once, one on slow connections, none with
+Save Data. The lead follows real scroll speed, reversals and known scrollbar
+intent. A scrollbar may dispatch `kerf:scroll-target` on window with `{ top }` in
+its detail before moving; Veneer's `scrollPage` emits this automatically.

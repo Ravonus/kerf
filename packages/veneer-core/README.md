@@ -815,3 +815,9 @@ Keep `src/` free of framework imports and JSX; `test/agnostic.test.ts` enforces 
 [MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)
 
 `@kerf-js/veneer-core/nav` exports the framework-independent `navIndicator` behavior without importing the editor, code or chart modules. It follows hovered, keyboard-focused and current links with one indicator, including wrapped rows.
+
+`scrollPage(top, behavior = 'smooth')` from `@kerf-js/veneer-core/page-scroll`
+scrolls the document smoothly, announces its destination for predictive media,
+and honors reduced motion. Pass `'instant'` for a direct jump. `ScrollRail` uses
+this for track clicks and exposes `behavior="instant"`; thumb dragging remains
+direct so the thumb follows the pointer.
