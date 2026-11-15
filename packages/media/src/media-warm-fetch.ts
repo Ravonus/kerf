@@ -1,3 +1,4 @@
+import { initialMediaLevel } from './media-network'
 // Public, same-origin HLS responses enter the ordinary HTTP cache, shared with playback.
 /** Refuse speculative requests outside the public site origin. */
 export function warmUrl(value: string, base: string): string {
@@ -5,6 +6,13 @@ export function warmUrl(value: string, base: string): string {
   if (url.origin !== new URL(location.href).origin || !/^https?:$/.test(url.protocol))
     throw new Error('Media warming requires a same-origin HTTP resource')
   return url.href
+}
+
+/** A byte-window limit may be retried after refill; an oversized resource is skipped. */
+export class WarmLimitError extends Error {
+  constructor() {
+    super('Media warm response exceeds budget')
+  }
 }
 
 /** Fill the ordinary HTTP cache while bounding each response body. */
@@ -23,7 +31,8 @@ export async function warmFetch(
   })
   if (!response.ok || Number(response.headers.get('content-length')) > limit) {
     await response.body?.cancel()
-    throw new Error('Media warm response unavailable or over budget')
+    if (response.ok) throw new WarmLimitError()
+    throw new Error('Media warm response unavailable')
   }
   const reader = response.body?.getReader()
   if (!reader) return ''
@@ -36,7 +45,7 @@ export async function warmFetch(
       if (next.done) return text
       consume(next.value.length)
       bytes += next.value.length
-      if (bytes > limit) throw new Error('Media warm response exceeds budget')
+      if (bytes > limit) throw new WarmLimitError()
       if (/mpegurl/i.test(response.headers.get('content-type') ?? '') || /\.m3u8(?:\?|$)/.test(url))
         text += decoder.decode(next.value, { stream: true })
     }
@@ -75,4 +84,17 @@ export function playlistLevels(text: string, base: string) {
         ]
       : []
   })
+}
+
+/** Pin native HLS to the same display-quality rendition warmed for MSE playback. */
+export async function mediaStartPlaylist(
+  url: string,
+  width: number,
+  height: number,
+  pixelRatio = 1,
+): Promise<string> {
+  const source = warmUrl(url, location.href)
+  const text = await warmFetch(source, AbortSignal.timeout(10000), 128 * 1024, () => {})
+  const levels = playlistLevels(text, source)
+  return levels[initialMediaLevel(levels, width, height, {}, pixelRatio)]?.url ?? source
 }

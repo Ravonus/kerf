@@ -1,6 +1,11 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import { initialMediaLevel, slowMediaConnection } from '../src/media-network'
-import { playlistLevels, playlistStarts, warmFetch } from '../src/media-warm-fetch'
+import {
+  playlistLevels,
+  playlistStarts,
+  warmFetch,
+  mediaStartPlaylist,
+} from '../src/media-warm-fetch'
 import { warmMediaStarts } from '../src/media-warm'
 
 afterEach(() => {
@@ -18,7 +23,7 @@ function browser() {
     removeEventListener: vi.fn(),
   })
 }
-it('starts normal connections at the displayed quality and reserves the lowest rung for slow links', () => {
+it('starts at displayed quality unless bandwidth-first delivery is explicitly requested', () => {
   const levels = [
     { width: 480, height: 270, bitrate: 100_000 },
     { width: 960, height: 540, bitrate: 400_000 },
@@ -26,8 +31,24 @@ it('starts normal connections at the displayed quality and reserves the lowest r
   ]
   expect(initialMediaLevel(levels, 800, 450)).toBe(1)
   expect(initialMediaLevel(levels, 800, 450, {}, 1.5)).toBe(2)
-  expect(initialMediaLevel(levels, 1280, 720, { effectiveType: '2g' })).toBe(0)
-  expect(initialMediaLevel(levels, 1280, 720, { saveData: true })).toBe(0)
+  expect(
+    initialMediaLevel(
+      levels,
+      1280,
+      720,
+      { effectiveType: '2g' },
+      { pixelRatio: 1, quality: 'bandwidth' },
+    ),
+  ).toBe(0)
+  expect(
+    initialMediaLevel(
+      levels,
+      1280,
+      720,
+      { saveData: true },
+      { pixelRatio: 1, quality: 'bandwidth' },
+    ),
+  ).toBe(0)
   expect(slowMediaConnection({ downlink: 0.5 })).toBe(true)
 })
 it('resolves only the first HLS start and refuses cross-origin resources', () => {
@@ -175,4 +196,101 @@ it('defers speculative work until the foreground poster has settled', async () =
   await vi.runAllTimersAsync()
   await queue.done
   expect(fetcher).toHaveBeenCalledOnce()
+})
+
+it('does not turn a low browser bandwidth estimate into a blurry startup frame', () => {
+  const levels = [
+    { width: 384, height: 384, bitrate: 669216 },
+    { width: 640, height: 640, bitrate: 3216562 },
+    { width: 960, height: 960, bitrate: 6182127 },
+  ]
+  expect(initialMediaLevel(levels, 960, 960, { effectiveType: '4g', downlink: 1.45 }, 1.5)).toBe(2)
+  expect(initialMediaLevel(levels, 960, 960, { effectiveType: '2g' }, 1.5)).toBe(2)
+  expect(
+    initialMediaLevel(
+      levels,
+      960,
+      960,
+      { effectiveType: '4g', downlink: 1.45 },
+      { pixelRatio: 1.5, quality: 'bandwidth' },
+    ),
+  ).toBe(0)
+})
+it('fully consumes clear first fragments larger than the old 256 KiB ceiling', async () => {
+  browser()
+  const fragment = new Response(new Uint8Array(1024 * 1024), {
+    headers: { 'Content-Length': String(1024 * 1024) },
+  })
+  const reader = vi.spyOn(fragment.body!, 'getReader')
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string) =>
+      Promise.resolve(
+        url.endsWith('.m3u8') ? new Response('#EXTM3U\n#EXTINF:2,\n0.m4s') : fragment,
+      ),
+    ),
+  )
+  await warmMediaStarts([{ url: 'https://art.example/a.m3u8', width: 960, height: 960 }], {
+    intervalMs: 0,
+  }).done
+  expect(reader).toHaveBeenCalledOnce()
+})
+it('prepares sharp stills and reprioritizes the current viewport before other starts', async () => {
+  browser()
+  const order: string[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string) => {
+      order.push(url)
+      return Promise.resolve(new Response('#EXTM3U\n'))
+    }),
+  )
+  await warmMediaStarts(
+    [
+      {
+        url: 'https://art.example/top.m3u8',
+        width: 960,
+        height: 960,
+        priority: () => 100,
+        prepare: () => {
+          order.push('top still')
+          return Promise.resolve()
+        },
+      },
+      {
+        url: 'https://art.example/current.m3u8',
+        width: 960,
+        height: 960,
+        priority: () => 0,
+        prepare: () => {
+          order.push('current still')
+          return Promise.resolve()
+        },
+      },
+    ],
+    { intervalMs: 0 },
+  ).done
+  expect(order).toEqual([
+    'current still',
+    'https://art.example/current.m3u8',
+    'top still',
+    'https://art.example/top.m3u8',
+  ])
+})
+
+it('native HLS selects the same sharp playlist instead of its adaptive master', async () => {
+  browser()
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          '#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=400000,RESOLUTION=384x384\n384.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=6000000,RESOLUTION=960x960\n960.m3u8',
+        ),
+      ),
+    ),
+  )
+  expect(await mediaStartPlaylist('/streams/master.m3u8', 960, 960, 1.5)).toBe(
+    'https://art.example/streams/960.m3u8',
+  )
 })

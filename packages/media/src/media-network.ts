@@ -26,19 +26,24 @@ export function mediaBandwidth(connection: MediaConnection): number {
   return connection.downlink && connection.downlink > 0 ? connection.downlink * 700_000 : 5_000_000
 }
 
-/** Choose a rendition that fits the displayed artwork and the available connection. */
+/** Choose display-sized starts by default; bandwidth-first playback is an explicit opt-in. */
 export function initialMediaLevel(
   levels: readonly { width?: number; height?: number; bitrate?: number }[],
   width: number,
   height: number,
   connection: MediaConnection = {},
-  pixelRatio = 1,
+  pixelRatio: number | { pixelRatio?: number; quality?: 'display' | 'bandwidth' } = 1,
 ): number {
-  if (slowMediaConnection(connection) || !levels.length) return 0
-  const scale = Math.min(1.75, Math.max(1, pixelRatio))
+  const quality = typeof pixelRatio === 'number' ? 'display' : (pixelRatio.quality ?? 'display')
+  const ratio = typeof pixelRatio === 'number' ? pixelRatio : (pixelRatio.pixelRatio ?? 1)
+  if (!levels.length || (quality === 'bandwidth' && slowMediaConnection(connection))) return 0
+  const scale = Math.min(1.75, Math.max(1, ratio))
   const affordable = levels
     .map((level, index) => ({ level, index }))
-    .filter(({ level }) => !level.bitrate || level.bitrate <= mediaBandwidth(connection))
+    .filter(
+      ({ level }) =>
+        quality === 'display' || !level.bitrate || level.bitrate <= mediaBandwidth(connection),
+    )
   const choices = affordable.length ? affordable : [{ level: levels[0]!, index: 0 }]
   return (choices.find(
     ({ level }) => (level.width ?? 0) >= width * scale && (level.height ?? 0) >= height * scale,

@@ -57,7 +57,7 @@ it.runIf(!spawnSync('ffmpeg', ['-version']).error)(
       reads++
       return original(...args)
     }
-    const builder = createFirstFrameBuild({ widths: [32, 64], scorer: 'none' }),
+    const builder = createFirstFrameBuild({ widths: [32, 64] }),
       ctx = { cacheDir: join(dir, 'cache'), encode: { 'video/h264': enc } }
     const built = await builder.build({ file }, ctx),
       cached = await builder.build({ file }, ctx)
