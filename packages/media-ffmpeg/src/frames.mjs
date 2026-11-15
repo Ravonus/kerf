@@ -49,7 +49,9 @@ function rawProcess({ ffmpeg, file, timeout, signal, stream }) {
     { stdio: ['ignore', 'pipe', 'pipe'] },
   )
   let errorText = '',
-    finished = false
+    finished = false,
+    stopping = false,
+    killTimer
   child.stderr.on('data', (value) => {
     errorText = (errorText + value).slice(-2048)
   })
@@ -57,12 +59,20 @@ function rawProcess({ ffmpeg, file, timeout, signal, stream }) {
     child.once('error', reject)
     child.once('close', (code) => {
       finished = true
+      clearTimeout(killTimer)
       if (code === 0) resolve()
       else reject(new Error(`Frame decode failed: ${errorText}`))
     })
   })
   void done.catch(() => {})
-  const stop = () => child.kill('SIGTERM'),
+  const stop = () => {
+      if (finished || stopping) return
+      stopping = true
+      child.stdout.destroy()
+      child.kill('SIGTERM')
+      killTimer = setTimeout(() => child.kill('SIGKILL'), 250)
+      killTimer.unref()
+    },
     timer = setTimeout(stop, timeout)
   signal?.addEventListener('abort', stop, { once: true })
   return {
