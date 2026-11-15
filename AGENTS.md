@@ -24,6 +24,15 @@ video records; an old deployed bundle or CMS record does not acquire new fields 
 Verify real first-frame dimensions, scroll return, a loop and a cache hit in a fresh
 browser. An audit score or successful fetch alone does not establish clear playback.
 
+## Shared layout motion
+
+For a logo or other shared layout mark, use matching `data-kerf-shared` keys and
+`data-kerf-shared-fit="text"` on text. Start captures before its optimistic path swap;
+do not wrap `navigate` in an app-owned clone, delayed transition or post-navigation capture.
+Respect reduced motion and `data-kerf-motion="off"`. `navigate(href,{shared:false})` opts out.
+Verify a delayed response, Back and rapid reversal in a real browser; matching only the
+later page commit can report an animation while both ends already show the destination.
+
 ## Stack comparisons
 
 Every new eval scenario, benchmark, or size or speed claim is measured across all the stacks in `benchmarks/compare`, not only Kerf:

@@ -183,6 +183,8 @@ export interface NavigateOptions {
   replace?: boolean | undefined
   /** Keep the scroll position (default: top, or the URL's #hash). */
   scroll?: false
+  /** Animate matching data-kerf-shared marks; false disables the opt-in handoff. */
+  shared?: false | { duration?: number; easing?: string }
 }
 
 /** This tab's line to the app's other tabs: a list of tags a write invalidated, or `0` when the session changed. */

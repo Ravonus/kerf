@@ -52,6 +52,31 @@ Set `meta` on every page as part of building it: a title and one plain sentence 
 route build it from `data` and `params`. `kerf docs meta` has the rest.
 Links are `<Link href>`; code navigates with `navigate(href)`.
 
+### Shared layout marks
+
+Give corresponding persistent layout marks the same `data-kerf-shared` value.
+Start captures their visible positions **before** the optimistic `currentPath()` update
+and animates the actual incoming elements, without cloning the logo or delaying the URL.
+This applies to links, programmatic navigation and browser Back/Forward.
+
+```tsx
+<span data-kerf-shared="artist-name" data-kerf-shared-fit="text">Your artist</span>
+<img data-kerf-shared="artist-sigil" src="/sigil.svg" alt="" />
+```
+
+Use `data-kerf-shared-fit="text"` for a text-only wrapper: its ink stays proportional
+when the destination font size or line height differs. Keys must identify one visible
+element on each side; duplicate visible keys are skipped. Put a marker on an untransformed
+wrapper for rotated, skewed or scaled content; authored translation is retained.
+
+The default handoff is 480ms. `navigate(href,{shared:{duration:520,easing:'ease-out'}})`
+customizes it; `shared:false` opts out. Duration is bounded to 0–2000ms and an invalid
+easing falls back to the default. Reduced motion, hidden documents and an ancestor's
+`data-kerf-motion="off"` disable it. A resize cancels safely. Rapid navigation cancels
+the previous effect using its current position; no stale transform or opacity is retained.
+Unmatched or more than 800ms-late targets simply render normally. A shared handoff replaces
+the native page crossfade for that navigation, keeping the artwork live underneath.
+
 Navigation is instant: the URL and `aria-current` change on click, kept layouts stay, and the level that changes shows a
 skeleton made from its markup until its data arrives. Never build a loading state for a route change yourself. When the
 made one doesn't fit (a page that is one big component, a hero), name a function of plain markup and export it:

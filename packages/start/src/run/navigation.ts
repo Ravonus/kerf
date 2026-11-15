@@ -16,6 +16,7 @@ import { retainSourceContext, type SourceContext } from './source-context'
 import { RouteCache, type Read } from './cache'
 import { Prefetch } from './prefetch'
 import { CachePresentation, retryDelay } from './cache-presentation'
+import { captureSharedElements } from './shared-elements'
 
 const RETRY = 1000,
   RETRIES = 30_000
@@ -48,6 +49,7 @@ export class Navigation {
   source: SourceContext | undefined
   committedURL = location.href
   committedBase = document.baseURI
+  shared: ReturnType<typeof captureSharedElements>
 
   constructor(
     readonly routes: ClientRoutes,
@@ -128,6 +130,7 @@ export class Navigation {
         if (target) target.scrollIntoView({ behavior: 'instant' })
         else window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
       }
+      this.shared?.arrive()
     }
   }
 
@@ -162,6 +165,7 @@ export class Navigation {
 
   /** No navigation is out any more: what it left owed is for the page now showing. */
   settle() {
+    this.shared?.finish()
     // Every way a navigation ends comes through here, so its cached-presentation timer stops here too.
     if (this.current) this.presentation.stop(this.current)
     this.clearShape()
@@ -182,6 +186,7 @@ export class Navigation {
   }
 
   dispose = () => {
+    this.shared?.cancel()
     this.cache.clear()
     this.prefetch.stop()
     if (this.current) this.presentation.stop(this.current)
@@ -216,12 +221,16 @@ export class Navigation {
       this.source ??=
         retainSourceContext(document, this.committedURL, this.committedBase) ?? undefined
       if (!this.source) return opts.pop ? location.replace(url.href) : location.assign(url.href)
+      const shared = captureSharedElements(opts.shared)
+      this.shared?.cancel()
+      this.shared = shared
       if (!opts.pop && url.href !== location.href)
         history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
       this.at = path
       this.route.path.value = path
       current_(url.pathname)
       flush()
+      this.shared?.arrive()
       const speculative = this.prefetch.claim(url, ctrl.signal)
       this.prefetch.cancel()
       const cached = opts.pop ? this.cache.peek(url, !!client.seed) : undefined
@@ -307,7 +316,8 @@ export class Navigation {
       if (ctrl.signal.aborted || this.current !== ctrl || this.cache.version !== version) return
       this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)()
     }
-    await crossfade(this, swap, () => swapped)
+    if (this.shared?.active) swap()
+    else await crossfade(this, swap, () => swapped)
     if (!ctrl.signal.aborted && this.current === ctrl && this.cache.version !== version)
       await this.travel(url, ctrl, opts, shown)
   }
