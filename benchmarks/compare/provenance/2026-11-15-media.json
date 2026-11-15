@@ -1,0 +1,22 @@
+{
+  "recordedAt": "2026-11-15T04:35:59.973Z",
+  "platform": "darwin",
+  "release": "24.6.0",
+  "cpu": "Apple M4 Max",
+  "memoryGiB": 36,
+  "node": "v26.13.0",
+  "pnpm": "12.15.0",
+  "revision": "046e19d50809253fa3d43e854cdaaebf3fcf8ee3",
+  "packageDirty": false,
+  "compiler": {
+    "kind": "native",
+    "sha256": "a2ff7148b58eab878475b6df8824258f7338f739f516b4be81adf1a22abb8609",
+    "sourceStamp": "854c376f9c83e3a129070988039acf19f86530a201f3df3f9fa7f7ccb5735a78"
+  },
+  "lock": "e490c8569f2afeca080d5d224171193db6a6c54472469c1139403745540c30bc",
+  "loadAverage": [
+    5.00732421875,
+    7.02294921875,
+    7.7958984375
+  ]
+}

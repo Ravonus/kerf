@@ -52,6 +52,14 @@ runs is the app's choice. `kerf add` prints that note when it installs this plug
   delays survive.
 - **A timeout per run.** 10 minutes by default, so a stuck encode doesn't hold a build forever.
 
+`createMediaEncode({key: 'video/h264'}).native.stream(file, {directory, seconds: 2})` prepares a
+finite fMP4 HLS playlist in an empty local directory, copying H.264 and optional AAC packets. It reads
+back every frame timestamp, dimensions and both encoded sample hashes before returning a file list
+and a verification receipt. Segment boundaries follow existing keyframes; `seconds` is a target, not
+a maximum. Unsupported tracks or changes to relative audio timing (including container priming
+differences) reject the stream. Keep the progressive source as fallback and the exact original for
+Save. The browser can then fetch a short forward buffer and stop loading when playback pauses.
+
 ## Install
 
 ```bash
@@ -266,3 +274,9 @@ encodes through this package.
 
 [MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE). ffmpeg itself is not part of this package and carries its own
 licence (LGPL or GPL, depending on how it was built).
+
+## Image-frame delivery
+
+The provider also exposes `frames(file)` for `@kerf-js/media`'s frame build path. Its reader yields one complete RGBA frame with the source presentation time and duration, without writing an intermediate frame directory. The process lifetime, pixel dimensions and frame count are bounded. `copyAudio(file, codec)` retains an optional audio track's encoded samples independently of the image stream. Frame quality/selection remains the media plugin's decision.
+
+The optional `native` capability prepares native codec or stream-copy container candidates with unchanged encoded audio. It fingerprints encoded packets and every video frame timestamp/duration so the media plugin can reject altered timing, missing tracks or audio changes. Native automatic codec candidates use a bounded trial before final sampled quality checks. The AVIF frame reader selects the complete animation track instead of the primary still.

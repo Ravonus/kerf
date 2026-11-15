@@ -4,6 +4,9 @@
 //   and animated GIFs; without one, a GIF stays as it is and video is P101.
 // Cached by content hash under `cacheDir`, so dev restarts and rebuilds don't re-encode. With `encoder: 'server'` the
 // build only stores the original: the variants are media.server@1's to encode.
+import { losslessRaster } from './lossless.mjs'
+import { frameVideo } from './frames.mjs'
+import { autoVideo } from './video-auto.mjs'
 import { execFile, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -19,9 +22,10 @@ import { unsafeSvg } from './svg.mjs'
 import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
 
 const run = promisify(execFile)
-const VERSION = 2 // bump when the output for the same input and options changes
+const VERSION = 10 // bump when the output for the same input and options changes
 
 export { DEFAULTS, FIXED, MIME, encoders, hex, isPhoto } from './shared.mjs'
+export { createFirstFrameBuild } from './first-frame.mjs'
 
 /** The range the quality search walks. */
 const RANGE = { avif: [20, 90], webp: [40, 95], jpeg: [40, 95] }
@@ -120,10 +124,16 @@ export function createMediaBuild(input = {}) {
       const out = await (/\.svg$/i.test(file)
         ? vector(name, stem, bytes)
         : VIDEO.test(file)
-          ? video(source, o, encode, scorer)
+          ? o.video.delivery === 'auto'
+            ? autoVideo(source, o, encode, scorer)
+            : o.video.delivery === 'frames'
+              ? frameVideo(source, { ...o, frameScorer: scorer }, encode)
+              : video(source, o, encode, scorer)
           : AUDIO.test(file)
             ? audioFile(source, o, encode)
-            : raster(source, o, encode))
+            : o.quality.lossless
+              ? losslessRaster(source, o)
+              : raster(source, o, encode))
       if (out.diagnostics?.some((d) => d.severity === 'error')) return out
       mkdirSync(join(cacheDir, key), { recursive: true })
       for (const f of out.files) writeFileSync(join(cacheDir, key, f.name), f.bytes)

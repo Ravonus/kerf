@@ -1,4 +1,4 @@
-// timeline() (research 15 §3.4, §7.3): a video or audio element as boxes. `currentTime` and `playing` are state, and a
+// timeline(): a video or audio element as boxes. `currentTime` and `playing` are state, and a
 // write is a command (seek, play, pause). `currentTime` updates once per presented frame, through
 // requestVideoFrameCallback, or rAF on audio and where it's missing. A cue fires when playback crosses it, not on a seek.
 
@@ -13,6 +13,7 @@ import {
   type State,
 } from './index'
 import type { MediaAsset } from './media'
+import type { MediaPlayback } from './media-frame-types'
 
 /** A timeline's named moments and how it follows its element. */
 export interface TimelineOptions<C extends string> {
@@ -35,7 +36,7 @@ export interface Timeline<C extends string = string> {
   /** Runs when playback crosses the cue, cleaned up with the owner. */
   on(cue: C, run: () => void): () => void
   /** `<Media timeline={t}>` calls this. */
-  bind(element: HTMLMediaElement): () => void
+  bind(element: MediaPlayback): () => void
 }
 
 function bindTimeline({
@@ -50,9 +51,9 @@ function bindTimeline({
   over,
   length,
 }: {
-  el: HTMLMediaElement
+  el: MediaPlayback
   options: TimelineOptions<string>
-  setMedia: (el: HTMLMediaElement | undefined) => void
+  setMedia: (el: MediaPlayback | undefined) => void
   getLast: () => number
   setLast: (t: number) => void
   getShown: () => boolean
@@ -128,7 +129,7 @@ function watchTimeline({
   currentTime: State<number>
   playing: State<boolean>
   failure: State<Error | null>
-  getMedia: () => HTMLMediaElement | undefined
+  getMedia: () => MediaPlayback | undefined
   getSeen: () => number
   setShown: (on: boolean) => void
 }) {
@@ -180,7 +181,7 @@ export function timeline<C extends string = never>(
     number,
   ][]
   const listeners = new Map<C, Set<() => void>>()
-  let media: HTMLMediaElement | undefined
+  let media: MediaPlayback | undefined
   let seen = 0
   let shown = false
   let last = -1

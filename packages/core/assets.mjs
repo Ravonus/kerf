@@ -118,6 +118,7 @@ const TYPES = {
   mp4: 'video/mp4',
   webm: 'video/webm',
   m4a: 'audio/mp4',
+  json: 'application/json',
 }
 
 /** No provider: the original file, its header dimensions, nothing else. */
@@ -276,6 +277,15 @@ function mediaOutput(ctx, out, store) {
   // `placeholder: 'file'` names a file; the default is a data: URL, which stays as it is.
   if (asset.placeholder && !asset.placeholder.startsWith('data:'))
     asset.placeholder = store.url(asset.placeholder)
+  if (asset.original) asset.original = { ...asset.original, src: store.url(asset.original.src) }
+  if (asset.frames)
+    asset.frames = {
+      ...asset.frames,
+      chunks: asset.frames.chunks.map((c) => ({ ...c, src: store.url(c.src) })),
+      ...(asset.frames.audio && {
+        audio: { ...asset.frames.audio, src: store.url(asset.frames.audio.src) },
+      }),
+    }
   if (asset.copy) asset.copy = { ...asset.copy, src: store.url(asset.copy.src) }
   return `export default ${JSON.stringify(asset)}\n`
 }

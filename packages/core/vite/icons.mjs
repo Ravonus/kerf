@@ -74,7 +74,7 @@ export function icons() {
       transform: {
         filter: {
           id: /\.[jt]sx?(\?|$)/,
-          code: /@kerf-js\/(veneer-icons|veneer)|\/\*#__PURE__\*\/ icon\(|export default pack|export \* from '\.\/all-/,
+          code: /@kerf-js\/(veneer-icons|veneer)[/'"]|\/\*#__PURE__\*\/ icon\(|export default pack|export \* from '\.\/all-/,
         },
         async handler(code, id) {
           const path = id.replace(/\?.*$/, '').replaceAll('\\', '/')
@@ -142,6 +142,8 @@ function iconResolve(state, drawings) {
       filter: { id: /^(@kerf-js\/veneer-icons(\/[\w.-]+)?$|\0kerf:icon\/)/ },
       async handler(source, importer) {
         if (source.startsWith(ONE)) return source
+        // The loader's own Node entry must not await the icon pass that is resolving it.
+        if (source === '@kerf-js/veneer-icons/compile') return null
         if (!importer) return null
         const from = await nearIcons(this, importer)
         if (state.config.command === 'build') {

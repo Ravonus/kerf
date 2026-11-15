@@ -1,13 +1,5 @@
-// The swap runtime of `encoder: 'compatible'` (research 15 §5), a lazy chunk nothing loads without a compatible copy.
-// The page shows the efficient file; a save has to get one that opens anywhere.
-//
-// Measured with real right-clicks in headed Chromium and Firefox (packages/media/test/save.headful.mjs): Chromium
-// saves what the handler sets inside `contextmenu`, but Firefox only saves a URL that has finished loading, so a swap at
-// the click is too late for it. Intent therefore starts at a 150 ms hover, and the click and long-press are the backstop.
-//   Stills: drop the `<source>`s, and the `<img>` is already the fallback at the same widths and size.
-//   GIF as video: a near-transparent `<img>` of the GIF over the video. Right-click lands on the image and saves it.
-//   Video: a second `<video>` parked ahead on the copy flips in on a presented frame, up to 2 MB of copy.
-// A copy the HTTP cache already holds swaps in at mount: nothing to fetch, and no hover to wait for.
+// Compatible files replace efficient delivery only when requested. Firefox needs the saved URL fully loaded.
+// Intent preparation starts on hover; manual mode leaves progress and Save to the application.
 
 import type { MediaAsset } from './media'
 
@@ -73,7 +65,7 @@ function gifOverlay(video: HTMLVideoElement, copy: NonNullable<MediaAsset['copy'
   }
 }
 
-/** Research 15 §5.3: B parks on the frame A reaches in `lead` seconds, and they flip on B's first presented frame. */
+/** Park B on the frame A reaches in `lead` seconds, then flip on B's first presented frame. */
 function videoSwap(a: HTMLVideoElement, url: string, lead = 0.6) {
   let done = false
   return async () => {
@@ -115,7 +107,7 @@ function videoSwap(a: HTMLVideoElement, url: string, lead = 0.6) {
   }
 }
 
-/** The best declared source this client decodes, preferring power-efficient (research 15 §5.1). Only before playback. */
+/** The best declared source this client decodes, preferring power-efficient. Only before playback. */
 async function choose(v: HTMLVideoElement, asset: MediaAsset) {
   const list = navigator.mediaCapabilities
   if (!list || v.currentTime > 0 || !v.paused) return
@@ -145,7 +137,7 @@ export function attach(el: HTMLImageElement | HTMLVideoElement, asset: MediaAsse
   if (!copy) return
   const mode = saving() ? 'never' : (asset.swap ?? 'intent')
   if (el instanceof HTMLVideoElement) void choose(el, asset)
-  if (mode === 'never') return
+  if (mode === 'never' || mode === 'manual') return
   let run: () => unknown
   if (el instanceof HTMLImageElement) run = () => stillSwap(el)
   else if (copy.type === 'image/gif') run = gifOverlay(el, copy)

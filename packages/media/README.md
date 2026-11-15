@@ -487,3 +487,11 @@ browsers; it needs Linux, Xvfb and `xdotool`, and its header says how to run it.
 ## License
 
 [MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)
+
+## Exact-pixel frame delivery and gallery saves
+
+`quality: {lossless: true}` verifies efficient raster output against complete decoded RGBA. `video: {delivery: 'frames'}` uses independent image chunks with exact timing, replacement patches and optional stream-copied audio. `delivery: 'auto'` compares native codec/container candidates against those image bytes, compatibility fallbacks, manifests and a conservative player allowance. Native wins ties; rejected frame artifacts are not published. `video.lossless: false` requires measured perceptual quality while keeping the exact original for Save. Lossless frames are not assumed smaller than an already compressed movie.
+
+For a dense gallery, `encoder: 'compatible', swap: 'manual'` leaves save work until right-click. Use `prepareMediaSave(asset, {signal,onProgress})` from `@kerf-js/core/media` to drive a themed loading dialog and a Save link with the original name/type. Retained originals are preferred to reconstruction. Generated stills can use a disposable browser PNG/JPEG encoder worker. Cancel and unmount own their work; close releases any object URL.
+
+See [the media reference](https://kerfjs.netlify.app/reference/media) for the API, exact versus perceptual quality, frame seeking, and original-file semantics.

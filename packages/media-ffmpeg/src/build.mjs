@@ -1,6 +1,8 @@
 //   Video: yuv420p, even dimensions, frames passed through with their own timestamps, so a GIF's delays survive.
 //   Audio: Opus at 96 kbps, AAC-LC at 128 kbps; never dropped unless the recipe says so.
 //   Metadata is stripped (phones write GPS into videos), and MP4 gets `moov` first and WebM its cues first.
+import { frameReader } from './frames.mjs'
+import { nativeVideo } from './native.mjs'
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
@@ -124,6 +126,11 @@ function createInfo({ run, ffprobe }) {
     const turned = Math.abs(side) % 180 === 90
     return {
       format: format.format_name,
+      tracks: {
+        video: streams.filter((stream) => stream.codec_type === 'video').length,
+        audio: streams.filter((stream) => stream.codec_type === 'audio').length,
+        other: streams.filter((stream) => !['video', 'audio'].includes(stream.codec_type)).length,
+      },
       duration: Number(format.duration) || 0,
       video: v && {
         codec: v.codec_name,
@@ -140,6 +147,7 @@ function createInfo({ run, ffprobe }) {
       audio: a && {
         codec: a.codec_name,
         channels: a.channels,
+        start: Number(a.start_time) || 0,
         bitrate: Number(a.bit_rate) || undefined,
         string: codecString(a),
       },
@@ -246,7 +254,10 @@ function createOutput(ffmpeg, run) {
   return output
 }
 
-/** The media.encode@1 provider for one codec key: `encode` runs ffmpeg on a file and a recipe, and gives the bytes back. */
+/**
+ * The media.encode@1 provider for one codec key.
+ * @param {{key:string,binary?:string,probe?:string,sha256?:string,timeout?:number}} options
+ */
 export function createMediaEncode({ key, binary = 'system', probe, sha256, timeout = 600_000 }) {
   const spec = CODECS[key]
   if (!spec) throw new Error(`media.encode: no ffmpeg recipe for ${key}`)
@@ -275,6 +286,13 @@ export function createMediaEncode({ key, binary = 'system', probe, sha256, timeo
 
   return {
     key,
+    /** Packet-preserving audio, native container candidates and complete frame timing evidence. */
+    ...(key.startsWith('video/') && {
+      native: nativeVideo({ run, ffmpeg, ffprobe, input, output, spec, key, encoderName }),
+    }),
+    /** Complete RGBA frames with their original presentation times, streamed one at a time. */
+    frames: frameReader({ ffmpeg, ffprobe, run, timeout }),
+    copyAudio: copyAudioTrack(output, input),
     /** Lowest and highest knob, and the setting used with no quality search. Lower is better. */
     knob: { min: spec.min, max: spec.max, fixed: spec.fixed, higherIsBetter: false },
     ext: spec.ext,
@@ -308,5 +326,37 @@ export function createMediaEncode({ key, binary = 'system', probe, sha256, timeo
      *   `copy`: remux without re-encoding. `audio`: a file to mux in, or false to drop the source's own.
      */
     encode: createEncode({ encoderName, ffmpeg, spec, key, output, input, scale }),
+  }
+}
+
+/** Retain encoded audio samples independently of the image frame stream. */
+function copyAudioTrack(output, input) {
+  return async (file, codec) => {
+    const formats = {
+      aac: ['m4a', 'mp4', 'audio/mp4'],
+      mp3: ['mp3', 'mp3', 'audio/mpeg'],
+      opus: ['ogg', 'ogg', 'audio/ogg'],
+      vorbis: ['ogg', 'ogg', 'audio/ogg'],
+      flac: ['flac', 'flac', 'audio/flac'],
+      pcm_s16le: ['wav', 'wav', 'audio/wav'],
+    }
+    const format = formats[codec]
+    if (!format)
+      throw new Error(
+        `Frame audio has no lossless browser container for ${codec}; original retained`,
+      )
+    const [ext, mux, type] = format
+    const bytes = await output(ext, [
+      ...input(file),
+      '-map',
+      '0:a:0',
+      '-vn',
+      '-c:a',
+      'copy',
+      ...(mux === 'mp4' ? ['-movflags', '+faststart'] : []),
+      '-f',
+      mux,
+    ])
+    return { bytes, ext, type }
   }
 }
