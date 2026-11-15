@@ -72,7 +72,7 @@ async function prepare(file, ctx) {
     throw new Error('A sharp first frame requires a supported SDR video track')
   const top = Math.min(info.video.width, ctx.widths.at(-1)),
     widths = [...new Set([...ctx.widths.filter((width) => width < top), top])],
-    png = await ctx.provider.still(file, { at: 0, width: top }),
+    png = await ctx.provider.still(file, { at: ctx.at, width: top }),
     rungs = []
   for (const width of widths) rungs.push(await rendition(png, width, ctx))
   const fallback = rungs.every((rung) => rung.files.webp) ? 'webp' : 'png',
@@ -107,7 +107,7 @@ async function prepare(file, ctx) {
     },
     files,
     verification: {
-      frameTime: 0,
+      frameTime: ctx.at,
       sourceSha256: ctx.sourceHash,
       target: ctx.scorer ? ctx.target : 100,
       pixels: ctx.scorer ? 'perceptual' : 'exact',
@@ -118,10 +118,11 @@ async function prepare(file, ctx) {
   }
 }
 
-/** Shared build provider for sharp AVIF/WebP movie first frames, with no enlarged blur placeholder. */
+/** Sharp AVIF/WebP stills from frame zero, or an explicit build-time preview timestamp. */
 export function createFirstFrameBuild({
   widths = [384, 640, 960, 1600],
   target = 100,
+  at = 0,
   scorer = target === 100 ? 'none' : 'ssimulacra2',
 } = {}) {
   if (
@@ -132,6 +133,8 @@ export function createFirstFrameBuild({
     throw new TypeError('First-frame widths must be positive integers')
   if (!(target > 0 && target <= 100) || typeof scorer !== 'string')
     throw new TypeError('First-frame quality needs a target from 1 to 100 and a scorer command')
+  if (!Number.isFinite(at) || at < 0)
+    throw new TypeError('Preview timestamp must be a finite, nonnegative number of seconds')
   widths = [...new Set(widths)].sort((a, b) => a - b)
   const available = scorer !== 'none' && !spawnSync(scorer, [], { encoding: 'utf8' }).error
   return {
@@ -144,6 +147,7 @@ export function createFirstFrameBuild({
             JSON.stringify({
               version: 1,
               sourceHash,
+              ...(at ? { at } : {}),
               widths,
               target,
               scorer: available ? scorer : null,
@@ -168,9 +172,12 @@ export function createFirstFrameBuild({
           widths,
           target,
           sourceHash,
+          at,
           scorer: available ? scorer : null,
           dir: temporary,
-          stem: `first-${sourceHash.slice(0, 20)}`,
+          stem: at
+            ? `preview-${sourceHash.slice(0, 20)}-${String(at).replaceAll('.', '_')}`
+            : `first-${sourceHash.slice(0, 20)}`,
         })
         mkdirSync(dir, { recursive: true })
         for (const output of out.files) writeFileSync(join(dir, output.name), output.bytes)

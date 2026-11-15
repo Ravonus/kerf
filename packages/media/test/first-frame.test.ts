@@ -8,48 +8,53 @@ import { createFirstFrameBuild } from '../src/build.mjs'
 import { createMediaEncode } from '@kerf-js/media-ffmpeg/build'
 const folders: string[] = []
 afterEach(() => folders.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true })))
+async function colorMovie(dir: string) {
+  for (const [name, color] of [
+    ['one', 'red'],
+    ['two', 'blue'],
+  ])
+    writeFileSync(
+      join(dir, name + '.png'),
+      await sharp({ create: { width: 64, height: 48, channels: 4, background: color! } })
+        .png()
+        .toBuffer(),
+    )
+  const file = join(dir, 'source.mp4')
+  execFileSync('ffmpeg', [
+    '-v',
+    'error',
+    '-loop',
+    '1',
+    '-t',
+    '1',
+    '-i',
+    join(dir, 'one.png'),
+    '-loop',
+    '1',
+    '-t',
+    '1',
+    '-i',
+    join(dir, 'two.png'),
+    '-filter_complex',
+    '[0:v][1:v]concat=n=2:v=1:a=0',
+    '-c:v',
+    'libx264',
+    '-pix_fmt',
+    'yuv420p',
+    '-threads',
+    '2',
+    file,
+  ])
+  return file
+}
+
 // Actual source-frame identity and cache behavior need the optional FFmpeg provider.
 it.runIf(!spawnSync('ffmpeg', ['-version']).error)(
   'uses the actual first frame, emits sharp responsive stills and caches them without blur',
   async () => {
     const dir = mkdtempSync(join(tmpdir(), 'kerf-first-frame-test-'))
     folders.push(dir)
-    for (const [name, color] of [
-      ['one', 'red'],
-      ['two', 'blue'],
-    ])
-      writeFileSync(
-        join(dir, name + '.png'),
-        await sharp({ create: { width: 64, height: 48, channels: 4, background: color! } })
-          .png()
-          .toBuffer(),
-      )
-    const file = join(dir, 'source.mp4')
-    execFileSync('ffmpeg', [
-      '-v',
-      'error',
-      '-loop',
-      '1',
-      '-t',
-      '1',
-      '-i',
-      join(dir, 'one.png'),
-      '-loop',
-      '1',
-      '-t',
-      '1',
-      '-i',
-      join(dir, 'two.png'),
-      '-filter_complex',
-      '[0:v][1:v]concat=n=2:v=1:a=0',
-      '-c:v',
-      'libx264',
-      '-pix_fmt',
-      'yuv420p',
-      '-threads',
-      '2',
-      file,
-    ])
+    const file = await colorMovie(dir)
     const enc = createMediaEncode({ key: 'video/h264' }),
       original = enc.still
     let reads = 0
@@ -121,6 +126,46 @@ it.runIf(!spawnSync('ffmpeg', ['-version']).error && !spawnSync('ssimulacra2', [
       ))
         if (format !== 'png') expect(rung[format]).toBeGreaterThanOrEqual(90)
     expect(out.asset.placeholder).toBeUndefined()
+  },
+  30000,
+)
+
+// Invalid timestamps must fail before touching media or creating cache output.
+it('rejects invalid preview timestamps', () => {
+  for (const at of [-1, Number.NaN, Number.POSITIVE_INFINITY])
+    expect(() => createFirstFrameBuild({ at })).toThrow(/timestamp/)
+})
+
+it.runIf(!spawnSync('ffmpeg', ['-version']).error)(
+  'extracts a requested preview without replacing the exact frame-zero cache',
+  async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'kerf-preview-time-test-'))
+    folders.push(dir)
+    const file = await colorMovie(dir)
+    const enc = createMediaEncode({ key: 'video/h264' }),
+      original = enc.still
+    let reads = 0
+    enc.still = (...args: Parameters<typeof original>) => {
+      reads++
+      return original(...args)
+    }
+    const ctx = { cacheDir: join(dir, 'cache'), encode: { 'video/h264': enc } }
+    const builder = createFirstFrameBuild({ widths: [32, 64] })
+    const zero = await builder.build({ file }, ctx)
+    const later = await createFirstFrameBuild({ widths: [32, 64], at: 1.2 }).build({ file }, ctx)
+    expect(later.verification.frameTime).toBe(1.2)
+    expect(later.asset.src).not.toBe(zero.asset.src)
+    const output = later.files.find(
+      (candidate: { name: string }) => candidate.name === later.asset.src,
+    )!
+    expect(await sharp(output.bytes).ensureAlpha().raw().toBuffer()).toEqual(
+      await sharp(await original(file, { at: 1.2 }))
+        .ensureAlpha()
+        .raw()
+        .toBuffer(),
+    )
+    expect((await builder.build({ file }, ctx)).asset).toEqual(zero.asset)
+    expect(reads).toBe(2)
   },
   30000,
 )

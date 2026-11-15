@@ -18,6 +18,12 @@ authoritative. `warm={false}` and `video.firstFrame:false` are explicit opt-outs
 routine optimization fixes. Native whole files above the cache cap are skipped; HLS and
 frame streams cache only their starts. Never request an original merely to warm playback.
 
+A movie may legitimately begin with a black slate. Retain the exact frame-zero record,
+then use `createFirstFrameBuild({at: seconds})` to encode a separate lossless visible
+preview after measuring the opening. Record its source timestamp and reveal playback
+only when a presented frame reaches it. Do not substitute an enlarged thumbnail, skip
+content in the original movie, or change a black scene later in the artwork.
+
 Read `kerf docs media` and regenerate an app's installed plugin guidance with
 `kerf agents-md`. After upgrading, rebuild imports and re-ingest/migrate persisted legacy
 video records; an old deployed bundle or CMS record does not acquire new fields by itself.

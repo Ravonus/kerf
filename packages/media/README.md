@@ -524,3 +524,13 @@ above the 8 MiB response cap are skipped; HLS and frame streams warm their start
 Save Data, foreground buffering, visibility and route disposal remain authoritative.
 `warm={false}` and `video.firstFrame:false` are explicit opt-outs. See `kerf docs media`
 for migration of old records, generated agent guidance and browser verification.
+
+### Explicit sharp preview frames
+
+`createFirstFrameBuild({ widths: [384, 640, 960], at: 1.2 })` from
+`@kerf-js/media/build` extracts a preview at that timestamp in seconds. The
+default remains frame zero. The timestamp participates in the cache identity
+and output names; `verification.frameTime` reports the selected source time.
+Use this for a source with a measured black opening, keep its exact frame-zero
+record separately, and hold the preview until playback presents visible content.
+It does not seek, trim, or change the saved original movie.
