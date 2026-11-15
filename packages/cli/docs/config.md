@@ -63,7 +63,7 @@ export default defineConfig({
 | `site.card` | The generated share card's colours and fonts. P007 a colour that isn't `#rrggbb`, a font family that isn't a name. `kerf docs meta` has the rest |
 | `site.headers` | Response headers by route pattern |
 | `site.security` | Headers every Start response gets unless it sets its own (`nosniff`, `Referrer-Policy`, `X-Frame-Options: SAMEORIGIN`, COOP, HSTS on https). Name a header to change it, `false` to drop it, or `security: false` for none |
-| `site.trustProxy` | `true` or a number: proxies in front of the server. The client's address comes from that many entries from the right of `X-Forwarded-For`, so auth's rate limit sees real clients. Leave it off with nothing in front |
+| `site.trustProxy` | `true` (one proxy) or a positive integer: trusted hops in front of the server. The client's address comes from that many entries from the right of `X-Forwarded-For`. Mutation/form CSRF uses the same hop from `X-Forwarded-Proto` (`http`/`https`) and optional `X-Forwarded-Host`; both lists must align and cover every configured hop. Without forwarded Host, preserve the public Host. Proxies must overwrite or append these headers. Malformed/short chains and forwarding an HTTPS request as HTTP are refused; direct requests without forwarding work as before. Leave trust off with nothing in front |
 | `site.log` | `'text'` (default) or `'json'`: the server log's lines, readable or as JSON objects with `time`, `level`, `code`, `message`, `route` and `requestId` |
 | `site.limits` | `{ body, upload }` in bytes: the largest JSON (1 MB) and multipart (25 MB) request body. Past it, 413 (Q018) |
 | `runtime` | `node`, `bun` or `deno`: what `kerf build` targets (`kerf docs start`) |

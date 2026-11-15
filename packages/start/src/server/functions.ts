@@ -4,6 +4,7 @@ import * as exec from '../exec'
 import type { Scope } from '../exec'
 import { bodyLimit, limited, multipartBody, withHeaders } from './request'
 import type { HandlerOptions } from './types'
+import { externalOrigin } from './origin'
 
 /** `/_kerf/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
 export async function serverFunction(
@@ -50,10 +51,7 @@ export async function serverFunction(
       return out({ v: e.v, t: e.tags })
     }
     if (request.method !== 'POST') return fail('Q010', `Q010: mutation \`${id}\` needs POST`, 405)
-    const origin = request.headers.get('origin')
-    const from = request.headers.get('sec-fetch-site')
-    const cross =
-      (origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none')
+    const cross = crossOrigin(request, options.site?.trustProxy)
     const type = request.headers.get('content-type') ?? ''
     const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-kerf` still forces a preflight
     if (
@@ -129,5 +127,16 @@ function functionError(
       e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' },
     },
     500,
+  )
+}
+
+function crossOrigin(request: Request, trustProxy?: boolean | number) {
+  const expected = externalOrigin(request, trustProxy)
+  const origin = request.headers.get('origin')
+  const from = request.headers.get('sec-fetch-site')
+  return (
+    !expected ||
+    (origin && origin !== expected) ||
+    (from && from !== 'same-origin' && from !== 'none')
   )
 }

@@ -32,7 +32,7 @@ export interface Site {
   limits?: { body?: number | undefined; upload?: number | undefined } | undefined
   /** Default security headers on Start's responses: override one by name, `false` drops one, `false` drops all. */
   security?: false | Record<string, string | false> | undefined
-  /** Behind a load balancer or CDN: `true` (one proxy) or how many, so rate limits read the client from `X-Forwarded-For`. */
+  /** Trusted proxy hops: `true` for one. Rate limits use `X-Forwarded-For`; mutation/form CSRF uses paired `X-Forwarded-Proto`/`Host` entries from that hop. */
   trustProxy?: boolean | number | undefined
   /** The server log's lines (Start): `'text'` (default) for people, `'json'` for a log collector. */
   log?: 'text' | 'json' | undefined
