@@ -222,14 +222,14 @@ export const media = definePlugin({
     agents: {
       title: 'Media (@kerf-js/media)',
       text: [
-        '- Use ?media + mediaFfmpeg(); render Media from @kerf-js/core/media. Video imports/uploads get exact-pixel responsive frame-zero stills automatically; no blur posters.',
-        '- Artist-approved measured previews: video.firstFrameQuality:{target:90}. Kerf scores each size; exact originals remain separate. Default previews stay pixel-exact.',
-        '- Media pins display quality and warms starts automatically. Preserve source across pause, return and loop. warm={false} opts out; Save Data stops speculation. Cache caps apply; large whole files are skipped.',
-        '- Custom/HLS players use @kerf-js/media/browser: pin before startLoad, reveal a presented full-size frame, warm playback URLs. Read kerf docs media.',
+        '- Use ?media + mediaFfmpeg() and Core Media. Sharp responsive frame-zero stills are automatic; no blur.',
+        '- video.firstFrameQuality:{target:90} opts into measured previews; defaults stay exact. Re-ingest old records.',
+        '- Pin display quality before loading; reveal a presented full-size frame. Preserve source on pause, return and loop.',
+        '- Media warms starts automatically. Save Data, hidden tabs, buffering and cache caps stop speculation; warm={false} opts out.',
+        '- Custom/HLS: use @kerf-js/media/browser for viewport prediction and bounded warming of playback URLs.',
         '- Only LCP gets priority + sizes. Describe alt; decoration uses alt="" decorative.',
-        '- delivery:auto compares native codecs/containers and frames; native wins ties. video.lossless:false needs measured quality.target.',
-        '- Save retains exact originals. Galleries: encoder:compatible, swap:manual; prepareMediaSave on intent, show progress, release on close. Never flatten motion.',
-        '- ctx.media.ingest -> z.media() -> Media. Re-ingest legacy video records after upgrading.',
+        '- delivery:auto compares codecs, containers and frames; native wins ties. video.lossless:false needs quality.target.',
+        '- Save stays exact: encoder:compatible, swap:manual; prepareMediaSave on intent, release on close. Never flatten motion.',
       ].join('\n'),
     },
     catalog: [

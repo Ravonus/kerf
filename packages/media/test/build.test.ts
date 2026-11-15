@@ -251,6 +251,7 @@ it('media() validates options as P115 and provides media.build with the M namesp
     Array.from({ length: 20 }, (_, i) => `M${String(i + 1).padStart(3, '0')}`),
   )
   expect(p.namespace).toBe('M')
+  expect(Buffer.byteLength(m.agents!.text)).toBeLessThanOrEqual(1024)
   expect(() => media({ formats: ['jxl'] })).toThrow(
     expect.objectContaining({ code: 'P115', path: 'formats.0' }),
   )
