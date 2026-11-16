@@ -1,5 +1,5 @@
 import { DownIcon } from '@kerf-js/veneer-icons'
-import { derived, untrack } from '@kerf-js/core'
+import { derived, state, untrack } from '@kerf-js/core'
 import { bindable, type Bindable } from './bind'
 import { Field, type FieldShell } from './Field'
 import '@kerf-js/veneer-core/styles/inputs/text.css'
@@ -30,15 +30,37 @@ type NumberOptions = {
 function numberModel(opts: NumberOptions) {
   const v = bindable<number | null>(opts.value, opts.initial, null, opts.onChange)
   const fit = (n: number) => Math.min(opts.max() ?? Infinity, Math.max(opts.min() ?? -Infinity, n))
-  const shown = derived(() => (v.value === null ? '' : String(v.value)))
+  const draft = state<string | null>(null)
+  const shown = derived(() => draft.value ?? (v.value === null ? '' : String(v.value)))
+  const number = (text: string) => {
+    const n = Number(text.trim())
+    return text.trim() !== '' && Number.isFinite(n) ? n : undefined
+  }
   let input: HTMLInputElement | undefined
   const write = (n: number | null) => {
+    draft.value = null
     if (n !== untrack(() => v.value)) v.set(n, 'keyboard')
     if (input) input.value = n === null ? '' : String(n)
   }
-  const nudge = (by: number) => write(fit((untrack(() => v.value) ?? opts.min() ?? 0) + by))
+  const discard = () => {
+    draft.value = null
+    if (input) input.value = untrack(() => shown.value)
+  }
+  const commit = () => {
+    const raw = untrack(() => draft.value)
+    if (raw === null) return discard()
+    const n = number(raw)
+    write(raw.trim() === '' ? null : n === undefined ? untrack(() => v.value) : fit(n))
+  }
+  const nudge = (by: number) => {
+    const raw = untrack(() => draft.value)
+    const n = raw === null ? undefined : number(raw)
+    write(fit((n ?? untrack(() => v.value) ?? opts.min() ?? 0) + by))
+  }
   const onKey = (e: KeyboardEvent) => {
     if (opts.disabled() || opts.readonly()) return
+    if (e.key === 'Escape') return discard()
+    if (e.key === 'Enter') return commit()
     const by = (
       {
         ArrowUp: opts.step(),
@@ -62,14 +84,18 @@ function numberModel(opts: NumberOptions) {
   }
 
   const onInput = (e: Event) => {
-    const text = (e.currentTarget as HTMLInputElement).value.trim()
-    const n = Number(text)
-    if (text === '') v.set(null, 'keyboard')
-    else if (Number.isFinite(n)) v.set(fit(n), 'keyboard')
+    if (opts.disabled() || opts.readonly()) return
+    const raw = (e.currentTarget as HTMLInputElement).value
+    draft.value = raw
+    const n = number(raw)
+    if (raw.trim() === '') {
+      if (untrack(() => v.value) !== null) v.set(null, 'keyboard')
+    } else if (n !== undefined && fit(n) === n && n !== untrack(() => v.value)) v.set(n, 'keyboard')
   }
 
   const onBlur = () => {
-    if (input) input.value = untrack(() => shown.value)
+    if (opts.disabled() || opts.readonly()) discard()
+    else commit()
   }
   return [v, shown, nudge, onKey, onInput, onBlur, (n: HTMLInputElement) => (input = n)] as const
 }
@@ -77,7 +103,8 @@ function numberModel(opts: NumberOptions) {
 /**
  * A number in the field shell (03: `inputmode` over `type="number"`, which changes on a wheel, takes "e" and has its own
  * locale bugs). The input stays real text, so editing, paste and the numeric keypad are the OS's; Veneer adds APG spinbutton
- * keys (↑/↓, Page keys, Home/End with a bound) and two steppers. Text that isn't a number leaves the value alone until blur.
+ * keys (↑/↓, Page keys, Home/End with a bound) and two steppers. A raw draft preserves partial input; only in-range values
+ * are emitted while typing. Blur/Enter clamp a numeric draft; Escape discards it before bubbling.
  */
 export function NumberField({
   value,
@@ -147,7 +174,7 @@ export function NumberField({
           aria-describedby={p.describedby}
           aria-invalid={p.invalid ? 'true' : undefined}
           onInput={onInput}
-          onKeyDown={onKey}
+          onKeyDownCapture={onKey}
           onBlur={onBlur}
         />
       )}

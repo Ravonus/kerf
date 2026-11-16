@@ -207,7 +207,7 @@ describe('NumberField', () => {
     expect(v.value).toBe(1)
   })
 
-  test('typing clamps, junk waits for blur, and the steppers stop at the bound', async () => {
+  test('typing keeps an out-of-range draft until blur, junk reverts, and steppers stop at the bound', async () => {
     const v = state<number | null>(8)
     const { container: c } = render(() => <NumberField label="Seats" min={1} max={9} value={v} />)
     await tick()
@@ -217,6 +217,9 @@ describe('NumberField', () => {
       i.dispatchEvent(new Event('input', { bubbles: true }))
     }
     type('12')
+    expect(v.value).toBe(8)
+    expect(i.value).toBe('12')
+    i.dispatchEvent(new FocusEvent('blur'))
     expect(v.value).toBe(9)
     type('abc')
     expect(v.value).toBe(9)
