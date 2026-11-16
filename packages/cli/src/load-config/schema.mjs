@@ -11,6 +11,7 @@ function serverSite(z) {
       .union([z.literal(false), z.record(z.string(), z.union([z.string(), z.literal(false)]))])
       .optional(),
     trustProxy: z.union([z.boolean(), z.int().positive()]).optional(),
+    mutationOrigins: z.union([z.literal('*'), z.array(z.string().min(1))]).optional(),
     log: z.enum(['text', 'json']).optional(),
   }
 }

@@ -52,8 +52,13 @@ export async function serverFunction(
     if (request.method !== 'POST') return fail('Q010', `Q010: mutation \`${id}\` needs POST`, 405)
     const origin = request.headers.get('origin')
     const from = request.headers.get('sec-fetch-site')
+    // Another origin is refused unless the app named it (`site.mutationOrigins`): an app whose pages are served
+    // from one origin and answered by another. The `x-kerf` header below still forces the browser's preflight.
+    const named = options.site?.mutationOrigins
+    const trusted = !!origin && !!named && (named === '*' || named.includes(origin))
     const cross =
-      (origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none')
+      !trusted &&
+      ((origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none'))
     const type = request.headers.get('content-type') ?? ''
     const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-kerf` still forces a preflight
     if (
