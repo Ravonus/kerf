@@ -201,17 +201,7 @@ export async function routesMeta({ root, site = {}, preset }) {
       version: 1,
       ok: !diagnostics.some((d) => d.severity === 'error'),
       site,
-      routes: [
-        ...out,
-        ...scanRoutes(root).http.map(({ path, file, methods, params }) => ({
-          path,
-          file,
-          methods,
-          params,
-          kind: 'http',
-          layouts: [],
-        })),
-      ],
+      routes: [...out, ...httpEntries(root)],
       diagnostics,
     }
   } finally {
@@ -249,4 +239,15 @@ export function h006(code, file, report) {
         file,
       )
   }
+}
+
+function httpEntries(root) {
+  return scanRoutes(root).http.map(({ path, file, methods, params }) => ({
+    path,
+    file,
+    methods,
+    params,
+    kind: 'http',
+    layouts: [],
+  }))
 }
