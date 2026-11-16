@@ -134,12 +134,15 @@ to application or framework code.
 ```ts
 import { defineConfig } from '@kerf-js/core/config'
 
+const policy = [
+  "default-src 'self'",
+  "script-src 'nonce-{kerf}' 'strict-dynamic'",
+  "style-src 'self' 'unsafe-inline'",
+  "object-src 'none'; base-uri 'none'; frame-ancestors 'self'",
+].join('; ')
+
 export default defineConfig({
-  site: {
-    security: {
-      'Content-Security-Policy': "default-src 'self'; script-src 'nonce-{kerf}' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'"
-    }
-  }
+  site: { security: { 'Content-Security-Policy': policy } },
 })
 ```
 
