@@ -175,6 +175,24 @@ export const addTodo = mutation({
 
 A table a function touches must be in its `tags`/`invalidates` (Q011): a tag named after the table, or `table:…`.
 
+**Another server for the browser's requests.** `clientFetch((path, init) => Promise<Response>)` from `@kerf-js/start`,
+called once before `start()` in `src/entry.client.ts`, replaces `fetch` on the page's origin for every query and
+mutation called in the browser (`/_kerf/fn/<id>`) and for route data (`/_kerf/data/<path>`: a client navigation, a
+prefetch, a deferred field). `init` is what `fetch` would get: method, headers, body, and a signal when the request
+can be given up. The cache, dedupe, tags and invalidation are unchanged. Not covered: the first page load,
+`/_kerf/rt`, assets, the server. Kerf's server answers a mutation only from its own origin (Q010).
+
+```ts
+// src/entry.client.ts
+import { clientFetch } from '@kerf-js/start'
+import { start } from '@kerf-js/start/client'
+import * as routes from 'virtual:kerf/routes'
+
+const api = 'https://api.example.com'
+clientFetch((path, init) => fetch(new URL(path, api), init))
+start(routes)
+```
+
 **`auth: 'user'` says who is calling, not what they may touch.** A `run` taking a row's id must check that row belongs
 to `ctx.user`. `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))` in the `where` is the usual way.
 

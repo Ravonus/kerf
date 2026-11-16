@@ -497,6 +497,34 @@ export const removeTodo = mutation({
 A query created inside a `<Boundary pending={…}>` streams from the server; created outside one, the first byte waits for
 it. Read results in JSX as `(q().value ?? []).map(…)`; never copy query results into `state`.
 
+### Sending them somewhere else
+
+By default the browser sends a query, a mutation and a navigation's route data to the page's own origin. An app
+whose page origin only serves the first load (a gateway in front of several servers, say) gives Start its own
+sender, once, before `start()`:
+
+```ts
+// src/entry.client.ts
+import { clientFetch } from '@kerf-js/start'
+import { start } from '@kerf-js/start/client'
+import * as routes from 'virtual:kerf/routes'
+import { fastest } from './lib/network'
+
+clientFetch((path, init) =>
+  fetch(new URL(path, fastest()), init),
+)
+start(routes)
+```
+
+`path` is `/_kerf/fn/<id>` (with `?i=` for a query's input) or `/_kerf/data/<page path>`; `init` is what `fetch`
+would get: the method, the headers and body Start's server expects, and a signal for a navigation or prefetch that
+can be given up. Return the server's `Response`. Only the wire changes: the query cache, dedupe, tags, invalidation
+and prefetching work as before. It covers every query and mutation called in the browser and the route data of a
+client navigation, a prefetch and a deferred field. It does not cover the first page load, realtime (`/_kerf/rt`),
+assets, or anything on the server, where a query runs in process. Another origin has to allow the request (CORS),
+and Start's own server answers a mutation only from its own origin (Q010), so mutations sent elsewhere need a
+server or proxy that accepts them. `clientFetch(undefined)` restores the default.
+
 ### Options
 
 | Option        | On                | What it does                                                                                           |
@@ -1375,6 +1403,7 @@ from the environment only: one written into the config or a host file is E008. A
 | `invalidate(...tags)`, `cache`, `skip`, `stale`                | Drop tags; the client cache; skip a tracked input; "a newer build is running"  |
 | `listInput(spec)`                                              | A query `input` for paged, sorted, filtered lists                              |
 | `Link`, `currentPath()`, `navigate(href, options?)`            | Links with `aria-current`, the current path, and code navigation               |
+| `clientFetch(send)`                                            | The app's own sender for the browser's function and route-data requests        |
 | `Form`                                                         | A form that posts to a mutation, with or without JavaScript                    |
 | Types: `LoadArgs`, `RouteProps`, `Meta`, `OgProps`, `Prerender`, `ParamsOf`, `Context`, `Query`, `Mutation`, `LiveQuery`, `ListSource`, … | Typing routes, cards and functions |
 
