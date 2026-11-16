@@ -49,6 +49,9 @@ describe('a crawler fetching a param route sees every tag in the first response'
       'meta property=og:image:alt content=Alan Turing · Acme',
       'meta name=twitter:card content=summary_large_image',
       'meta name=twitter:site content=@acme',
+      'meta name=twitter:title content=Alan Turing · Acme',
+      'meta name=twitter:description content=Computable numbers.',
+      image!.replace('property=og:image', 'name=twitter:image'),
       'meta name=theme-color content=#0b0b0f',
     ])
     // Escaped values, and the body is server-rendered too.
