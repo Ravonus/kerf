@@ -75,3 +75,8 @@ subdomains/preload are owner choices. Trace layout work and decoder/analytics
 loading before changing behavior; silent video artwork needs a truthful
 accessible description rather than fake captions. Social metadata and JSON-LD
 must describe the current published artist and page.
+
+Canvas scrollbar palettes must cache by colour values, not frame-object identity.
+Batch colour probes before style reads and refresh on real theme changes. Keep
+scroll animation frames free of probe DOM writes and repeated layout reads;
+verify live theme edits, pointer dragging, reduced motion and renderer cleanup.

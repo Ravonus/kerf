@@ -22,6 +22,8 @@ interface Painted {
   bar: BarFrame['bar'] | null
   dark: boolean
   colors: BarFrame['bar'] | null
+  changes: MutationObserver | null
+  stop: (() => void) | undefined
 }
 const canvases = new WeakMap<HTMLElement, Painted>()
 const COLORS = ['color', 'hoverColor', 'activeColor', 'track', 'hoverTrack'] as const
@@ -32,21 +34,70 @@ const dark = () =>
 
 /** A CSS colour as the canvas can take it: `color-mix()`, `currentColor` and `var()` resolve against `el`. */
 export function cssColor(el: HTMLElement, css: string) {
-  const probe = el.ownerDocument.createElement('i')
-  probe.style.cssText = `position:absolute;display:none`
-  probe.style.color = css
-  el.append(probe)
-  const out = getComputedStyle(probe).color || css
-  probe.remove()
-  return out
+  return cssColors(el, [css])[0]!
 }
 
-/** The bar's colours resolved once per options and colour scheme; the stylesheet's custom properties win. */
+// Append every probe before reading any style, then remove them after all reads.
+function cssColors(el: HTMLElement, values: string[]) {
+  const probes = values.map((css) => {
+    const probe = el.ownerDocument.createElement('i')
+    probe.style.cssText = 'position:absolute;display:none'
+    probe.style.color = css
+    return probe
+  })
+  el.append(...probes)
+  try {
+    return probes.map((probe, i) => getComputedStyle(probe).color || values[i]!)
+  } finally {
+    for (const probe of probes) probe.remove()
+  }
+}
+
+function changed(track: HTMLElement, records: MutationRecord[]) {
+  return records.some((m) => m.target instanceof Element && m.target.contains(track))
+}
+
+function observePalette(track: HTMLElement, p: Painted) {
+  const invalidate = () => {
+    p.colors = null
+  }
+  const observer =
+    typeof MutationObserver === 'undefined'
+      ? null
+      : new MutationObserver((records) => {
+          if (changed(track, records)) invalidate()
+        })
+  observer?.observe(track.ownerDocument.documentElement, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['style', 'class', 'data-theme', 'data-expression', 'data-motion'],
+  })
+  const loaded = (event: Event) => {
+    if (event.target instanceof HTMLLinkElement && event.target.rel === 'stylesheet') invalidate()
+  }
+  track.ownerDocument.addEventListener('load', loaded, true)
+  p.changes = observer
+  p.stop = () => {
+    observer?.disconnect()
+    track.ownerDocument.removeEventListener('load', loaded, true)
+  }
+}
+
+/** Cache by colour values, including fresh frame objects; theme changes invalidate the palette. */
 function colors(track: HTMLElement, p: Painted, bar: BarFrame['bar']) {
-  if (p.colors && p.bar === bar && p.dark === dark()) return p.colors
+  if (changed(track, p.changes?.takeRecords() ?? [])) p.colors = null
+  if (p.colors && COLORS.every((k) => p.bar?.[k] === bar[k]) && p.dark === dark()) {
+    const out = { ...bar }
+    for (const k of COLORS) out[k] = p.colors[k]
+    return out
+  }
   const out = { ...bar }
-  for (const k of COLORS) out[k] = cssColor(track, `var(${BAR_VARS[k]}, ${bar[k]})`)
-  p.bar = bar
+  const resolved = cssColors(
+    track,
+    COLORS.map((k) => `var(${BAR_VARS[k]}, ${bar[k]})`),
+  )
+  for (const [i, k] of COLORS.entries()) out[k] = resolved[i]!
+  p.bar = { ...bar }
   p.dark = dark()
   p.colors = out
   return out
@@ -83,7 +134,19 @@ export function canvas(o: CanvasOptions = {}): Renderer {
       track.querySelector('[data-part="thumb"]')?.setAttribute('hidden', '')
       track.append(c)
       const ctx = c.getContext('2d')
-      if (ctx) canvases.set(track, { canvas: c, ctx, bar: null, dark: false, colors: null })
+      if (ctx) {
+        const painted: Painted = {
+          canvas: c,
+          ctx,
+          bar: null,
+          dark: false,
+          colors: null,
+          changes: null,
+          stop: undefined,
+        }
+        observePalette(track, painted)
+        canvases.set(track, painted)
+      }
     },
     draw(track, f) {
       const got = canvases.get(track)
@@ -103,6 +166,7 @@ export function canvas(o: CanvasOptions = {}): Renderer {
       else paintBar(ctx, frame)
     },
     unmount(track) {
+      canvases.get(track)?.stop?.()
       canvases.get(track)?.canvas.remove()
       canvases.delete(track)
       track.querySelector('[data-part="thumb"]')?.removeAttribute('hidden')
