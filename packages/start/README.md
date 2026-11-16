@@ -516,6 +516,9 @@ clientFetch((path, init) =>
 start(routes)
 ```
 
+An app with its own `src/entry.client.ts` adds `"@kerf-js/start/virtual"` to its tsconfig `types`, for the type of
+`virtual:kerf/routes`.
+
 `path` is `/_kerf/fn/<id>` (with `?i=` for a query's input) or `/_kerf/data/<page path>`; `init` is what `fetch`
 would get: the method, the headers and body Start's server expects, and a signal for a navigation or prefetch that
 can be given up. Return the server's `Response`. Only the wire changes: the query cache, dedupe, tags, invalidation
