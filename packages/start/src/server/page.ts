@@ -63,7 +63,8 @@ export function makePage(deps: PageDeps) {
       r.status === 200 &&
       (leftToPage(r.source!.title) || leftToPage(r.source!.description))
     // Only a render slow enough to wait on sends its remembered head first.
-    if (known && known.ms >= EARLY_MS && !worded) return warmPage(p, known, cold, kept)
+    if (known && known.ms >= EARLY_MS && !worded && !known.media)
+      return warmPage(p, known, cold, kept)
     return coldPage(p, known, cold, kept)
   }
 }

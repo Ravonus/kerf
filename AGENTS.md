@@ -34,6 +34,10 @@ content in the original movie, or change a black scene later in the artwork.
 Read `kerf docs media` and regenerate an app's installed plugin guidance with
 `kerf agents-md`. After upgrading, rebuild imports and re-ingest/migrate persisted legacy
 video records; an old deployed bundle or CMS record does not acquire new fields by itself.
+Priority images in the rendered shell get responsive preloads before module preloads.
+Keep `fetchpriority="high"` for actual first-view media; art-directed pictures keep
+complementary media queries. Media heads render current content before emitting hints,
+so a remembered route cannot preload an artwork replaced through the CMS.
 Verify real first-frame dimensions, scroll return, a loop and a cache hit in a fresh
 browser. An audit score or successful fetch alone does not establish clear playback.
 

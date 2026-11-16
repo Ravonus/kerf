@@ -17,6 +17,7 @@ import {
   withLevels,
 } from './render'
 import { esc, json } from './text'
+import { imagePreloads } from './image-preloads'
 import type { PageState } from './page-types'
 
 /** Cache entries the client hasn't got. */
@@ -95,19 +96,23 @@ export function shaped(p: PageState) {
   const streaming = Object.values(p.stream.data()?.b ?? {}).includes('p')
   const now = !parts.lazy.length || payload.m.some((m) => !m.s) || !!payload.i?.length
   // The entry's own script tag already fetches it; preloads go above the styles.
-  const preloads = modulepreloads(
-    [
-      ...(p.assets.js ?? []),
-      ...pageChunks(payload, p.options.chunks, saveData(p.request) ? [] : parts.fold, now),
-    ],
-    p.assets,
-  )
+  const images = imagePreloads(p.stream.shell)
+  const preloads =
+    images +
+    modulepreloads(
+      [
+        ...(p.assets.js ?? []),
+        ...pageChunks(payload, p.options.chunks, saveData(p.request) ? [] : parts.fold, now),
+      ],
+      p.assets,
+    )
   return {
     payload,
     parts,
     streaming,
     now,
     preloads,
+    media: !!images,
     sheets: pageSheets(p.assets.css, parts, p.options.chunks),
   }
 }

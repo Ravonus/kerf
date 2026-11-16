@@ -13,6 +13,8 @@ export interface Head {
   ms: number
   sheets: { href: string }[]
   preloads: string
+  /** Media URLs depend on current content; never reuse them from a remembered head. */
+  media?: boolean
   now: boolean
   capture: boolean
   fold: boolean

@@ -676,3 +676,12 @@ It keeps its room, stays hidden until the sheet lands, and shows anyway after 3 
 
 **Deploying.** A page cached before a deploy links the sheets it was built with, so `kerf build` keeps old combined sheets for 30 days in `.kerf/sheets`. Keep that folder between builds, or the old files go: a cached page then paints from its own `<style>`, without hover and focus styles until it is cached again. The folder is copied into the build's assets, so a preset that serves those assets needs nothing else.
 
+
+### Critical media requests
+
+The server promotes up to two eager `fetchpriority="high"` images from the current
+rendered shell into responsive image preloads before module preloads. Pictures use
+their first format and preserve `srcset`, `sizes` and art-direction media conditions.
+Lazy images and inert markup do not create hints. Routes with media hints render
+their current shell before sending the head, rather than caching an artwork URL
+across later content publications. A streamed image beyond the shell is not hinted.
