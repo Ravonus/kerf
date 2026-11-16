@@ -9,6 +9,7 @@ import { tableToolbar } from './Table-toolbar'
 import { tableSortbar } from './Table-sortbar'
 import { tableBulk, tableFooter } from './Table-actions'
 import type { TableRender } from './Table-model'
+import { contained } from './Table-base'
 
 /** Render the table under the caller's owner. */
 export const tableView: TableRender = (m) => {
@@ -23,6 +24,7 @@ export const tableView: TableRender = (m) => {
       ref={(n) => (refs.el = n)}
       data-scope="table"
       data-phone={shape.value}
+      data-contain={contained(input)}
       data-state={phase.value}
       data-density={input.density}
       id={id}
