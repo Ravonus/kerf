@@ -195,6 +195,28 @@ describe('AGENTS.md', () => {
     expect((await agentsMd(project())).text).not.toContain('## Full stack')
   })
 
+  it('large project task tables defer to tasks JSON without dropping release rules', async () => {
+    const many = Object.fromEntries(
+      Array.from({ length: 30 }, (_, i) => [
+        `task${i}`,
+        {
+          run: 'node task.mjs',
+          description: 'Project-specific maintenance task. '.repeat(12),
+          sideEffects: ['fs:output'],
+        },
+      ]),
+    )
+    const dir = project({
+      'src/routes/index.tsx': 'export default () => <h1>Hi</h1>\n',
+      'kerf.config.ts': `export default ${JSON.stringify({ tasks: many })}`,
+    })
+    const { text, overLimit } = await agentsMd(dir)
+    expect(overLimit).toBe(false)
+    expect(text).toContain('`kerf tasks --json`')
+    expect(text).toContain('nonce-{kerf}')
+    expect(text).toContain('forms, media and Save under enforcement')
+  })
+
   it('writes the file, then --check reports current until something changes', async () => {
     const dir = project()
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false)

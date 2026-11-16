@@ -98,17 +98,18 @@ export async function agentsMd(root) {
     .filter((e) => e.code.startsWith('T') && info.status[e.code]?.implemented)
     .map((e) => e.code)
 
-  const text = page({ root, info, core, missing, tcodes, startApp, styled, dcodes, list }, sections)
+  const args = { root, info, core, missing, tcodes, startApp, styled, dcodes, list }
+  // Project task tables are discoverable through tasks --json; never squeeze release rules out to fit them.
+  if (Buffer.byteLength(page(args, [])) > limit)
+    args.list = { ...list, tasks: list.tasks.filter((t) => t.kind !== 'project') }
+  const text = page(args, sections)
   const bytes = Buffer.byteLength(text)
   // the limit is kerf's own text: plugin sections have their own 1 KB each (P112) on top
   return {
     path: join(root, 'AGENTS.md'),
     text,
     bytes,
-    overLimit:
-      Buffer.byteLength(
-        page({ root, info, core, missing, tcodes, startApp, styled, dcodes, list }, []),
-      ) > limit,
+    overLimit: Buffer.byteLength(page(args, [])) > limit,
   }
 }
 
