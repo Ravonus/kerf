@@ -231,27 +231,34 @@ test('implementation detail', () => {
   })
 }
 
+// Each runs the gate with a budget of 30-60 s; vitest's 20 s default cuts it off on a loaded machine.
+const mutating = { timeout: 120_000 }
+
 function registerMutationAndGit() {
-  it('reports T011 for a test that fails before but kills no mutant of the changed lines', async () => {
-    const weak = `import { label } from './stock'
+  it(
+    'reports T011 for a test that fails before but kills no mutant of the changed lines',
+    mutating,
+    async () => {
+      const weak = `import { label } from './stock'
 test('label is a string with text', () => {
   expect(label(1, 3).length > 0).toBe(true)
 })
 `
-    const dir = fixture({ 'src/stock.ts': after, 'src/weak.test.ts': weak })
-    const r = await gate(dir, {
-      changes: [
-        { rel: 'src/stock.ts', before, after },
-        { rel: 'src/weak.test.ts', before: null, after: weak },
-      ],
-      budgetSec: 60,
-    })
-    expect(r.tests[0]).toMatchObject({ before: 'failed', after: 'passed' })
-    // It kills some mutants (blanking the label), so it is not T011; make sure the survivors still point at what's missed.
-    expect(r.survivors.some((s) => s.op === 'number' || s.op === 'operator')).toBe(true)
-  })
+      const dir = fixture({ 'src/stock.ts': after, 'src/weak.test.ts': weak })
+      const r = await gate(dir, {
+        changes: [
+          { rel: 'src/stock.ts', before, after },
+          { rel: 'src/weak.test.ts', before: null, after: weak },
+        ],
+        budgetSec: 60,
+      })
+      expect(r.tests[0]).toMatchObject({ before: 'failed', after: 'passed' })
+      // It kills some mutants (blanking the label), so it is not T011; make sure the survivors still point at what's missed.
+      expect(r.survivors.some((s) => s.op === 'number' || s.op === 'operator')).toBe(true)
+    },
+  )
 
-  it('reads the diff from git, and flags a weakened existing test (T020)', async () => {
+  it('reads the diff from git, and flags a weakened existing test (T020)', mutating, async () => {
     const dir = fixture({
       'src/stock.ts': before.replace("return ''", "return 'x'"),
       'src/stock.test.ts':
@@ -276,18 +283,22 @@ test('label is a string with text', () => {
     expect(readFileSync(join(dir, 'src/stock.ts'), 'utf8')).toBe(after) // the working tree is never touched
   })
 
-  it('with no source change, skips fail-before and mutates what the new tests import', async () => {
-    const dir = fixture({ 'src/stock.ts': after, 'src/stock.test.ts': sound })
-    const r = await gate(dir, {
-      changes: [{ rel: 'src/stock.test.ts', before: null, after: sound }],
-      budgetSec: 60,
-    })
-    expect(r.notes).toContain(
-      'no source change: fail-before skipped; mutants come from the source the new tests import',
-    )
-    expect(r.tests.every((t) => t.before === null && t.kills > 0)).toBe(true)
-    expect(r.ok).toBe(true)
-  })
+  it(
+    'with no source change, skips fail-before and mutates what the new tests import',
+    mutating,
+    async () => {
+      const dir = fixture({ 'src/stock.ts': after, 'src/stock.test.ts': sound })
+      const r = await gate(dir, {
+        changes: [{ rel: 'src/stock.test.ts', before: null, after: sound }],
+        budgetSec: 60,
+      })
+      expect(r.notes).toContain(
+        'no source change: fail-before skipped; mutants come from the source the new tests import',
+      )
+      expect(r.tests.every((t) => t.before === null && t.kills > 0)).toBe(true)
+      expect(r.ok).toBe(true)
+    },
+  )
 }
 
 describe('the gate', () => {

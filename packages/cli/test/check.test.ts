@@ -22,7 +22,9 @@ describe('kerf check on evals/reference-v3/kerf', () => {
     ])
     expect(r.diagnostics).toEqual([])
     expect(r.config).toBeNull()
-    expect(r.kerf.version).toBe('0.1.0')
+    expect(r.kerf.version).toBe(
+      JSON.parse(readFileSync(new URL('../../core/package.json', import.meta.url), 'utf8')).version,
+    )
   })
 
   it('reports slot bindings: defaults are named, never silent', async () => {
