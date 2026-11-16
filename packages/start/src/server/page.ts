@@ -9,6 +9,7 @@ import { coldPage } from './page-cold'
 import { leftToPage } from './head'
 import { warmPage } from './page-warm'
 import { EARLY_MS, type PageDeps, type PageState } from './page-types'
+import { scriptNonce } from './security'
 
 /** The page renderer for one handler and its remembered heads. */
 export function makePage(deps: PageDeps) {
@@ -50,6 +51,7 @@ export function makePage(deps: PageDeps) {
         : '',
       status: r.status === 200 && scope.form ? scope.form.status : r.status,
       enc: new TextEncoder(),
+      nonce: scriptNonce(request, deps.options),
     }
     // A browser with the page's sheets gets the remembered link-only head. A table has no separate head.
     const cold = `${p.status} ${saveData(request) ? 1 : 0} ${r.levels.map((l) => l.id).join()}`

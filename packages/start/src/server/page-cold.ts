@@ -1,3 +1,4 @@
+import { nonceScripts } from './security'
 // Render first when no remembered head can be sent yet.
 import { LAYER_ORDER, pageStyles, type keptSheets } from '../inline.mjs'
 import { capture, speculate } from '../capture'
@@ -21,17 +22,24 @@ function coldHead(
 ) {
   return (
     top(p) +
-    shape.preloads +
+    nonceScripts(shape.preloads, p.nonce) +
     // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
     (p.assets.entry && (shape.streaming || shape.media)
-      ? `<link rel="modulepreload" href="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}>\n`
+      ? nonceScripts(
+          `<link rel="modulepreload" href="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}>\n`,
+          p.nonce,
+        )
       : '') +
     (t
       ? `<style>${LAYER_ORDER}${p.assets.pieces!.layers}${t.rules(p.stream.shell)}</style>\n`
-      : styles!.head) +
-    (capturing ? `<script>${capture(shape.now)}</script>\n` + speculate(shape) : '') +
-    p.dev +
-    (p.assets.entry && !shape.streaming ? entryScript(p.assets.entry, shape.media) : '') +
+      : nonceScripts(styles!.head, p.nonce)) +
+    (capturing
+      ? nonceScripts(`<script>${capture(shape.now)}</script>\n` + speculate(shape), p.nonce)
+      : '') +
+    nonceScripts(p.dev, p.nonce) +
+    (p.assets.entry && !shape.streaming
+      ? nonceScripts(entryScript(p.assets.entry, shape.media), p.nonce)
+      : '') +
     '</head>\n<body>\n' +
     pageShell(p, shape, t ? t.links : '')
   )

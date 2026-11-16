@@ -1,3 +1,4 @@
+import { trustedMarkup } from './trusted-markup'
 // The claiming halves of `tpl` and `child`, for hydratable output only (research 19 §2.4, §5.6). While keys are on,
 // each template instance takes the next key; while `keys.hydrating`, `htpl` claims the server's element with that
 // key instead of cloning, `first`/`next` step over the server's marked hole ranges, and `hchild` adopts the nodes in
@@ -25,7 +26,7 @@ export function htpl(html: string, svg?: boolean, where?: string): () => Node {
     if (!node) {
       const t = document.createElement('template')
       // oxlint-disable-next-line kerf/no-html-sink -- `html` is a template the compiler wrote from static markup, never a runtime value
-      t.innerHTML = svg ? `<svg>${html}</svg>` : html
+      t.innerHTML = trustedMarkup(svg ? `<svg>${html}</svg>` : html)
       node = svg ? t.content.firstChild!.firstChild! : t.content.firstChild!
     }
     return node.cloneNode(true)

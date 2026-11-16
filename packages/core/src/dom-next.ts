@@ -1,3 +1,4 @@
+import { trustedMarkup } from './trusted-markup'
 // The helpers kerf's own back end emits (research 19 §3): one job each, named for it. Hydratable output uses the
 // claiming versions of `tpl` and `child` from claim.ts (`htpl`, `hchild`), so client-only apps don't ship them.
 // Bindings here write, on their first run while hydrating, only what the claimed element doesn't already show: the
@@ -26,7 +27,7 @@ export function tpl(html: string, svg?: boolean): () => Node {
     if (!node) {
       const t = document.createElement('template')
       // oxlint-disable-next-line kerf/no-html-sink -- `html` is a template the compiler wrote from static markup, never a runtime value
-      t.innerHTML = svg ? `<svg>${html}</svg>` : html
+      t.innerHTML = trustedMarkup(svg ? `<svg>${html}</svg>` : html)
       node = svg ? t.content.firstChild!.firstChild! : t.content.firstChild!
     }
     return node.cloneNode(true)

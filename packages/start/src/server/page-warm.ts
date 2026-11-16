@@ -1,3 +1,4 @@
+import { nonceScripts } from './security'
 // A known head can go out before the new render finishes.
 import { LAYER_ORDER, pageStyles, type keptSheets } from '../inline.mjs'
 import { capture, speculate } from '../capture'
@@ -37,16 +38,22 @@ async function warmContent(
     .join('')
   const rules = t && t.rules(p.stream.shell)
   const lead =
-    (t ? (rules ? `<style>${rules}</style>\n` : '') : styles!.late(shape.sheets, p.stream.shell)) +
+    (t
+      ? rules
+        ? `<style>${rules}</style>\n`
+        : ''
+      : nonceScripts(styles!.late(shape.sheets, p.stream.shell), p.nonce)) +
     more +
     (capturing && !known.capture
-      ? `<script>${capture(shape.now)}</script>\n` + speculate(shape)
+      ? nonceScripts(`<script>${capture(shape.now)}</script>\n` + speculate(shape), p.nonce)
       : '')
   controller.enqueue(
     p.enc.encode(
       lead +
         pageShell(p, shape, t ? t.links : '') +
-        (p.assets.entry && !shape.streaming ? entryScript(p.assets.entry, shape.media) : ''),
+        (p.assets.entry && !shape.streaming
+          ? nonceScripts(entryScript(p.assets.entry, shape.media), p.nonce)
+          : ''),
     ),
   )
   // A render that set a header after they went can't use this: the route goes back to rendering first.
@@ -92,13 +99,20 @@ export async function warmPage(
   // With a table, the rules come with the shell; here there is only the layer order.
   const head =
     top(p) +
-    known.preloads +
+    nonceScripts(known.preloads, p.nonce) +
     (p.assets.entry
-      ? `<link rel="modulepreload" href="${esc(p.assets.entry)}"${known.media ? ' fetchpriority="low"' : ''}>\n`
+      ? nonceScripts(
+          `<link rel="modulepreload" href="${esc(p.assets.entry)}"${known.media ? ' fetchpriority="low"' : ''}>\n`,
+          p.nonce,
+        )
       : '') +
-    (styles ? styles.head : `<style>${LAYER_ORDER}${p.assets.pieces!.layers}</style>\n`) +
-    (known.capture ? `<script>${capture(known.now)}</script>\n` + speculate(known) : '') +
-    p.dev +
+    (styles
+      ? nonceScripts(styles.head, p.nonce)
+      : `<style>${LAYER_ORDER}${p.assets.pieces!.layers}</style>\n`) +
+    (known.capture
+      ? nonceScripts(`<script>${capture(known.now)}</script>\n` + speculate(known), p.nonce)
+      : '') +
+    nonceScripts(p.dev, p.nonce) +
     '</head>\n<body>\n'
   const init = {
     status: p.status,

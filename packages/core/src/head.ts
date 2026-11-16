@@ -193,14 +193,14 @@ export function headTags(m: Merged, path: string): Tag[] {
     meta('property', 'og:image:height', image.height)
     meta('property', 'og:image:alt', image.alt)
   }
-  // twitter:* falls back to og:*, so only what differs is written.
+  // Write complete cards for crawlers that do not implement the Open Graph fallback.
   const tw = m.twitter
   meta('name', 'twitter:card', tw.card ?? (image ? 'summary_large_image' : 'summary'))
   meta('name', 'twitter:site', tw.site)
   meta('name', 'twitter:creator', tw.creator)
-  if (tw.title !== title) meta('name', 'twitter:title', tw.title)
-  if (tw.description !== description) meta('name', 'twitter:description', tw.description)
-  meta('name', 'twitter:image', tw.image && abs(tw.image))
+  meta('name', 'twitter:title', tw.title ?? title)
+  meta('name', 'twitter:description', tw.description ?? description)
+  meta('name', 'twitter:image', tw.image ? abs(tw.image) : image && abs(image.url))
   for (const e of m.extra) tags.push('rel' in e ? ['link', { ...e }] : ['meta', { ...e }])
   return tags
 }
