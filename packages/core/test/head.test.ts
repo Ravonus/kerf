@@ -42,7 +42,10 @@ describe('metaTags', () => {
       <meta property="og:image:width" content="1200" data-wm>
       <meta property="og:image:height" content="630" data-wm>
       <meta name="twitter:card" content="summary_large_image" data-wm>
-      <meta name="twitter:site" content="@acme" data-wm>"
+      <meta name="twitter:site" content="@acme" data-wm>
+      <meta name="twitter:title" content="Acme" data-wm>
+      <meta name="twitter:description" content="Tools for builders." data-wm>
+      <meta name="twitter:image" content="https://acme.dev/og/default.png" data-wm>"
     `)
   })
 
@@ -69,7 +72,14 @@ describe('metaTags', () => {
     const tags = headTags(mergeMeta({ name: 'Acme', image: 'auto' }), '/x').map(
       (t) => t[1].name ?? t[1].property ?? t[1].rel ?? t[0],
     )
-    expect(tags).toEqual(['title', 'og:type', 'og:site_name', 'og:title', 'twitter:card'])
+    expect(tags).toEqual([
+      'title',
+      'og:type',
+      'og:site_name',
+      'og:title',
+      'twitter:card',
+      'twitter:title',
+    ])
   })
 })
 
@@ -105,13 +115,18 @@ describe('mergeMeta', () => {
     expect(mergeMeta({ title: '%s · Acme' }, { title: 'A' }).title).toBe('A · Acme')
   })
 
-  it('twitter:* falls back to og:*: only what differs is written', () => {
+  it('twitter:* emits complete cards and respects explicit overrides', () => {
     const tags = metaTags(
       mergeMeta(site, { twitter: { title: 'Short', description: 'Tools for builders.' } }),
       '/',
     )
     expect(tags).toContain('<meta name="twitter:title" content="Short" data-wm>')
-    expect(tags).not.toContain('twitter:description')
+    expect(tags).toContain(
+      '<meta name="twitter:description" content="Tools for builders." data-wm>',
+    )
+    expect(tags).toContain(
+      '<meta name="twitter:image" content="https://acme.dev/og/default.png" data-wm>',
+    )
   })
 })
 
@@ -186,6 +201,9 @@ describe('renderToString head option', () => {
       '<meta property="og:image:height" content="630" data-wm>',
       '<meta name="twitter:card" content="summary_large_image" data-wm>',
       '<meta name="twitter:site" content="@acme" data-wm>',
+      '<meta name="twitter:title" content="Pricing · Acme" data-wm>',
+      '<meta name="twitter:description" content="Plans &amp; prices." data-wm>',
+      '<meta name="twitter:image" content="https://acme.dev/og/default.png" data-wm>',
     ]
     for (const tag of expected) expect(head).toContain(tag)
     expect(head.match(/data-wm/g)).toHaveLength(expected.length)
@@ -210,7 +228,7 @@ describe('setHead (client navigation)', () => {
       'Read me.',
     )
     expect(document.head.lastElementChild!.getAttribute('href')).toBe('/a.css')
-    expect(document.head.querySelectorAll('[data-wm]')).toHaveLength(14)
+    expect(document.head.querySelectorAll('[data-wm]')).toHaveLength(17)
     document.head.innerHTML = ''
   })
 })

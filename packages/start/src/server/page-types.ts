@@ -50,4 +50,5 @@ export interface PageState extends PageDeps {
   dev: string
   status: number
   enc: TextEncoder
+  nonce: string | undefined
 }

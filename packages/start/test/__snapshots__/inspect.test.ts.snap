@@ -476,6 +476,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Bad card · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "A page with a card that has a bad colour and an image that cannot load.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/meta/badcard.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -633,6 +654,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Changing · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "The same words on every request, whatever the loader returned.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/meta/changing.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -785,6 +827,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Harvest & storage notes · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Harvest when 5 < 7 and the "tonnes" & crates are in: every mark here is escaped wherever it lands.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/meta/plain.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -948,6 +1011,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Large mark · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/shared/large.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -1106,6 +1190,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Small mark · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/shared/small.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -1257,6 +1362,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "</title><script>alert("<data.name>")</script> · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": ""><img src=x onerror=alert(1)> <data.name> & co",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/meta/<name>.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -1399,6 +1525,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#<tag> · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Posts tagged <tag>.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/tags/<tag>.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -1591,6 +1738,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "<data.name> · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "<data.bio>",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/users/<id>.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -1748,6 +1916,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "About · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Who we are.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/about.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -1866,6 +2055,20 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Something broke · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
           },
         ],
         [
@@ -2028,6 +2231,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/chat.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -2185,6 +2409,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Cover · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/cover.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -2303,6 +2548,20 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Something broke · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
           },
         ],
         [
@@ -2465,6 +2724,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Gate · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/gate.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -2617,6 +2897,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/held.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -2779,6 +3080,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/held-island.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -2931,6 +3253,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/island-bad.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -3093,6 +3436,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Mostly static · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/islands.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -3245,6 +3609,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/islands-top.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -3407,6 +3792,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/late-css.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -3559,6 +3965,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Lazy · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/lazy.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -3721,6 +4148,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/lazy-early.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -3839,6 +4287,20 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Something broke · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
           },
         ],
         [
@@ -4001,6 +4463,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/live.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -4153,6 +4636,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/miss.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -4315,6 +4819,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/mixed.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -4467,6 +4992,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Notes · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/notes.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -4646,6 +5192,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Preferences · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/prefs.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -4798,6 +5365,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Slow page · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/slow.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -4960,6 +5548,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/stream-sheet.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -5112,6 +5721,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Styled · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/styled.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -5274,6 +5904,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/tabs.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -5426,6 +6077,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Todos (3) · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/todos.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -5588,6 +6260,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/together.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -5740,6 +6433,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Left pane · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/ui-state.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -5898,6 +6612,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Users · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/users.png?v=<hash>",
+            "name": "twitter:image",
           },
         ],
         [
@@ -6067,6 +6802,27 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/index.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -6185,6 +6941,20 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Page not found · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "There is nothing here.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "#0b0b0f",
             "name": "theme-color",
           },
@@ -6298,6 +7068,20 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "@acme",
             "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Something broke · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "twitter:description",
           },
         ],
         [

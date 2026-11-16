@@ -1,5 +1,6 @@
 import { rt } from '../index/graph'
 import { type SsrData } from '../index'
+import { escape } from './attrs'
 import type { RenderOptions, Stream } from '../ssr'
 
 export type PassArgs = {
@@ -150,7 +151,7 @@ async function* streamChunks({
       if (content === undefined) continue
       open.delete(k)
       const id = encodeURIComponent(k)
-      out += `<template>${content}</template><script>${defined ? '' : SWAP + ';'}${first ? (options.landing?.() ?? '') : ''}$wb(${JSON.stringify(id)})</script>`
+      out += `<template>${content}</template><script${options.nonce ? ` nonce="${escape(options.nonce, true)}"` : ''}>${defined ? '' : SWAP + ';'}${first ? (options.landing?.() ?? '') : ''}$wb(${JSON.stringify(id)})</script>`
       defined = true
       first = false
     }
@@ -162,5 +163,5 @@ async function* streamChunks({
     }
   }
   if (open.size)
-    yield `<script>${defined ? '' : SWAP + ';'}${options.landing?.() ?? ''}$wb()</script>` // what's left keeps its fallback
+    yield `<script${options.nonce ? ` nonce="${escape(options.nonce, true)}"` : ''}>${defined ? '' : SWAP + ';'}${options.landing?.() ?? ''}$wb()</script>` // what's left keeps its fallback
 }

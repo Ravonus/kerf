@@ -202,7 +202,7 @@ function registerBuildAPageEveryTagHashedClientAssets(getServer: GetServer) {
     const res = await fetch(getServer().url + '/users/42')
     const text = await res.text()
     expect(res.status).toBe(200)
-    expect(text.match(/ data-wm>/g)).toHaveLength(16)
+    expect(text.match(/ data-wm>/g)).toHaveLength(19)
     expect(text).toMatch(
       /<script type="module" src="\/assets\/entry\.client-[\w-]+\.js"><\/script>/,
     )
@@ -692,7 +692,7 @@ test('bun preset builds and serves', async () => {
   try {
     const res = await fetch(server.url + '/users/42')
     expect(res.status).toBe(200)
-    expect((await res.text()).match(/ data-wm>/g)).toHaveLength(16)
+    expect((await res.text()).match(/ data-wm>/g)).toHaveLength(19)
     const card = await fetch(server.url + '/_kerf/og/users/2.png')
     expect(card.headers.get('content-type')).toBe('image/png')
   } finally {

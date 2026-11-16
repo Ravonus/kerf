@@ -20,6 +20,7 @@ import { esc, json } from './text'
 import { imagePreloads } from './image-preloads'
 import { entryScript } from './image-boot'
 import type { PageState } from './page-types'
+import { nonceScripts } from './security'
 
 /** Cache entries the client hasn't got. */
 function news(p: PageState) {
@@ -50,6 +51,7 @@ function since(p: PageState) {
 export function render(p: PageState) {
   return renderToStream(() => <App route={p.route} />, {
     ...p.timing,
+    nonce: p.nonce,
     passes: p.passes,
     shown: (e) => exec.shown(e, p.scope),
     stalled: () =>
@@ -76,10 +78,13 @@ const REVEAL = `<script>(f=>{["pagereveal","pageswap"].forEach(n=>addEventListen
 export function top(p: PageState) {
   return (
     `<!doctype html>\n<html${p.lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
-    (p.assets.entry ? REVEAL : '') +
+    (p.nonce ? `<meta property="csp-nonce" nonce="${p.nonce}">\n` : '') +
+    (p.assets.entry ? nonceScripts(REVEAL, p.nonce) : '') +
     metaTags(p.r.head, p.url.pathname) +
     '\n' +
-    (p.site.head ? p.site.head + '\n' : '') +
+    (p.site.head
+      ? p.site.head.replaceAll('nonce="{kerf}"', `nonce="${p.nonce ?? ''}"`) + '\n'
+      : '') +
     (p.assets.fonts ?? [])
       .map(
         (f) =>
@@ -137,7 +142,9 @@ export function pageShell(p: PageState, shape: ReturnType<typeof shaped>, after 
     (shape.streaming
       ? (since(p), dataTags({ ...pageData(p.stream.data(), p.scope)!, w: 1 }, news(p)))
       : '') +
-    (p.assets.entry && shape.streaming ? entryScript(p.assets.entry, shape.media, true) : '')
+    (p.assets.entry && shape.streaming
+      ? nonceScripts(entryScript(p.assets.entry, shape.media, true), p.nonce)
+      : '')
   )
 }
 
@@ -154,7 +161,10 @@ export async function finish(p: PageState, streaming: boolean) {
     ? '<script>["kerf-data","kerf-cache"].forEach(function(i){(i=document.getElementById(i))&&i.remove()})</script>\n'
     : ''
   return (
-    stale + dataTags(pageData(p.stream.data(), p.scope), cached) + liveScript + '</body>\n</html>\n'
+    nonceScripts(stale, p.nonce) +
+    dataTags(pageData(p.stream.data(), p.scope), cached) +
+    liveScript +
+    '</body>\n</html>\n'
   )
 }
 
@@ -175,7 +185,12 @@ export async function rest(
     for await (const chunk of p.stream.chunks)
       controller.enqueue(
         p.enc.encode(
-          styles.late(pageSheets([], islandsOf(chunk), p.options.chunks), chunk) + chunk + '\n',
+          nonceScripts(
+            styles.late(pageSheets([], islandsOf(chunk), p.options.chunks), chunk),
+            p.nonce,
+          ) +
+            chunk +
+            '\n',
         ),
       )
   } catch (e) {

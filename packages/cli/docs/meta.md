@@ -90,3 +90,11 @@ prerendered page has no request, so it stays relative: crawlers don't resolve th
 
 Never slice raw markdown or code into `description`: `body.slice(0, 155)` is how a page's card ends up reading
 `- xs.map(x = <Row`. Write the sentence, or leave it out and let the page speak.
+
+
+Social cards emit complete Twitter title, description and image tags, falling
+back to the current Open Graph values. Set `site.twitter.site` and `.creator`
+only to verified artist/owner handles. Give public pages truthful page-level
+JSON-LD and explicit robots through `meta.extra`; retain private noindex routes.
+Author, creator and publisher belong to the actual owner, never framework
+branding. Keywords are optional and are not a Google ranking requirement.

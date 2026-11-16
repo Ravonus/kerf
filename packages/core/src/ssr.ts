@@ -60,6 +60,8 @@ function headway(first: number) {
 
 /** How a server render runs: its deadline, its head, whether it's hydratable. */
 export interface RenderOptions {
+  /** The request's CSP nonce for framework-owned Boundary scripts. App markup is never automatically trusted. */
+  nonce?: string | undefined
   /** Emit hydration keys for `hydrate()` (default true). */
   hydratable?: boolean
   /** The request's app: each render pass gets its own defineState instances (seeded from `state`), never a shared one. */

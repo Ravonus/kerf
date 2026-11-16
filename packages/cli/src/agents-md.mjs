@@ -98,17 +98,18 @@ export async function agentsMd(root) {
     .filter((e) => e.code.startsWith('T') && info.status[e.code]?.implemented)
     .map((e) => e.code)
 
-  const text = page({ root, info, core, missing, tcodes, startApp, styled, dcodes, list }, sections)
+  const args = { root, info, core, missing, tcodes, startApp, styled, dcodes, list }
+  // Project task tables are discoverable through tasks --json; never squeeze release rules out to fit them.
+  if (Buffer.byteLength(page(args, [])) > limit)
+    args.list = { ...list, tasks: list.tasks.filter((t) => t.kind !== 'project') }
+  const text = page(args, sections)
   const bytes = Buffer.byteLength(text)
   // the limit is kerf's own text: plugin sections have their own 1 KB each (P112) on top
   return {
     path: join(root, 'AGENTS.md'),
     text,
     bytes,
-    overLimit:
-      Buffer.byteLength(
-        page({ root, info, core, missing, tcodes, startApp, styled, dcodes, list }, []),
-      ) > limit,
+    overLimit: Buffer.byteLength(page(args, [])) > limit,
   }
 }
 
@@ -199,6 +200,10 @@ function page({ root, info, core, missing, tcodes, startApp, styled, dcodes, lis
     'Before a change is done, see it work (`kerf browser snapshot|act|assert`, or `__kerf__.agent` in your own browser) and run `kerf test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). `kerf build` audits its pages at phone and desktop width (L-codes) and fails on an error. More: `kerf docs verify`.',
     '',
     'Before publishing, set `build.audit.indexing` (`public` or `private`) and audit the deployed URL: `kerf audit --url <url> --indexing public`. Never drop a private noindex for a score.',
+    '',
+    "Before release, configure a source-specific `site.security` CSP with `script-src 'nonce-{kerf}' 'strict-dynamic'`. Trusted Types uses `kerf-html` plus narrowly validated app policies. Never nonce arbitrary page HTML, add unsafe-eval or a permissive default policy. Test live headers, navigation, streaming, forms, media and Save under enforcement. HSTS subdomains/preload need owner-approved HTTPS scope. Read `kerf docs config`.",
+    '',
+    'Trace layout before changing it: batch reads before writes, defer decoders until preparation/playback and third parties until after paint. Verify complete social cards, published page JSON-LD, robots and sitemap. Describe silent artwork; captions must match actual audio. Never add empty tracks or remove content for a score.',
     '',
     ...(startApp ? ['## Full stack', '', fullStack(root), ''] : []),
     ...(styled
