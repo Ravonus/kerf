@@ -1,12 +1,16 @@
-// Types for the modules Start's Vite plugin makes up, for an app that writes its own `src/entry.client.ts`.
-// Name it in tsconfig: "types": ["@kerf-js/core/client", "@kerf-js/start/virtual"].
-
+// Types for generated route modules, named in tsconfig's types for custom client entries.
 declare module 'virtual:kerf/routes' {
-  type Routes = import('@kerf-js/start/client').ClientRoutes
-  export const build: Routes['build']
-  export const table: Routes['table']
-  export const load: Routes['load']
-  export const shapes: Routes['shapes']
-  export const shapeStyles: Routes['shapeStyles']
-  export const islands: Routes['islands']
+  import type { ClientRoutes } from '@kerf-js/start/client'
+  /** The server build whose route modules this client table loads. */
+  export const build: ClientRoutes['build']
+  /** Paths and layout ancestry used for client navigation. */
+  export const table: ClientRoutes['table']
+  /** Lazy page and layout module imports. */
+  export const load: ClientRoutes['load']
+  /** Navigation skeletons by route level. */
+  export const shapes: ClientRoutes['shapes']
+  /** Styles needed to present navigation skeletons. */
+  export const shapeStyles: ClientRoutes['shapeStyles']
+  /** Deferred client islands and their import functions. */
+  export const islands: ClientRoutes['islands']
 }

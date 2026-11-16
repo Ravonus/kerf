@@ -3,6 +3,7 @@ import * as exec from '../exec'
 import type { Scope } from '../exec'
 import { hub } from '../hub'
 import { compressed } from './compression'
+import { rawResponses } from './http'
 import { stamped } from './request'
 import { secured } from './security'
 import { requestIdOf } from './log'
@@ -17,14 +18,26 @@ export function makeHandler(
   services: ReturnType<typeof makeServices>,
   route: (request: Request, scope: Scope) => Promise<Response>,
 ) {
-  return async (incoming: Request): Promise<Response> =>
-    secured(await handle(incoming), incoming, options)
-  async function handle(incoming: Request): Promise<Response> {
+  return async (incoming: Request): Promise<Response> => {
     const request = stamped(incoming, options.site?.trustProxy)
+    let routed: Response | undefined
+    const next = async (replacement = request) => (routed = await handle(replacement))
+    const response = options.handle ? await options.handle(request, next) : await next()
+    // Nitro's upgrade hooks travel beside the Response. A header-only wrapper must retain them; a refusal must not.
+    if (
+      routed &&
+      response.body === routed.body &&
+      response.status === routed.status &&
+      Reflect.has(routed, 'crossws')
+    )
+      Object.assign(response, { crossws: Reflect.get(routed, 'crossws') })
+    return secured(response, request, options)
+  }
+  async function handle(request: Request): Promise<Response> {
     await services.loadExtensions()
     services.check()
     const scope = exec.createScope(request, services.scopeOptions)
-    scope.requestId = requestIdOf(incoming, options.site)
+    scope.requestId = requestIdOf(request, options.site)
     const { pathname } = new URL(request.url)
     if (pathname === '/_kerf/health') return health(options.dev)
     // The build's prerender only lists cards: it holds no secrets and may have no database.
@@ -48,7 +61,8 @@ export function makeHandler(
       void exec.finishScope(scope)
       throw e
     }
-    const out = await compressed(request, exec.finishing(response, scope))
+    const finished = exec.finishing(response, scope)
+    const out = rawResponses.has(response) ? finished : await compressed(request, finished)
     try {
       out.headers.set('x-request-id', scope.requestId)
     } catch {} // a response with fixed headers goes without it

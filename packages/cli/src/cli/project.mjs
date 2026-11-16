@@ -235,7 +235,12 @@ export async function commandRoutes({ formatHuman, metaTable, routesCommand, arg
     say(
       args.flags.meta
         ? metaTable(result)
-        : result.routes.map((r) => `${r.path.padEnd(24)} ${r.file}`).join('\n'),
+        : result.routes
+            .map(
+              (r) =>
+                `${r.path.padEnd(24)} ${r.file}${r.methods ? ` [${r.methods.join(', ')}]` : ''}`,
+            )
+            .join('\n'),
     )
   say(formatHuman(result.diagnostics))
   return result.ok ? 0 : 1

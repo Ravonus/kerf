@@ -15,6 +15,8 @@ src/db/index.server.ts   the database client
 src/auth.server.ts       auth provider (Better Auth by default),
                          mounted at /api/auth/*
 src/context.server.ts    what `ctx` holds
+src/routes/**/*.http.ts  raw HTTP method handlers (server only)
+src/hooks.server.ts      named handle(request, next) request hook
 ```
 
 Any auth provider works: `defineAuth` from `@kerf-js/start/auth` takes a `handler(request)` for `/api/auth/*` and a
@@ -51,6 +53,85 @@ A layout's `params` are its page's, a `[...rest]` included, so a layout can mark
 Set `meta` on every page as part of building it: a title and one plain sentence from what is on the page. On a param
 route build it from `data` and `params`. `kerf docs meta` has the rest.
 Links are `<Link href>`; code navigates with `navigate(href)`.
+
+### Raw HTTP routes
+
+Use `name.http.ts` (or `.http.js`) under `src/routes`. An
+`index.http.ts` handles its directory root. These modules never
+enter the client bundle; Node imports and other server code are fine.
+Export named `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD` or
+`OPTIONS` handlers. Named re-exports work too.
+
+```ts
+// src/routes/api/agent/[id].http.ts
+import type { HttpHandler } from '@kerf-js/start/server'
+
+export const POST: HttpHandler = async (request, { params, ctx }) => {
+  const input: unknown = await request.json()
+  const context = await ctx()
+  return Response.json({ id: params.id, input,
+    authenticated: Boolean(context.user) })
+}
+```
+
+The signature is `(request: Request, { params, ctx }) => Response`
+(or a promise). `ctx()` lazily loads the normal request context.
+`[id]` is a decoded string; `[...path]` is a decoded slash-joined
+string and requires at least one segment; `[[...path]]` also matches
+the directory root and gives `''` there. Catch-alls must be last.
+Static segments outrank params, then catch-alls. Dot directories work:
+`src/routes/.well-known/agent.http.ts` serves `/.well-known/agent`.
+`/_kerf/` remains reserved. Tests and `_` helper files are ignored.
+
+Request bodies are untouched: read JSON, multipart, raw bytes or the
+stream yourself. Responses retain their status, bytes and headers;
+Kerf does not compress them or buffer SSE. Default security headers
+only fill missing values. `GET` supplies `HEAD` unless explicitly
+exported; HEAD sends no body. Unsupported methods return 405 with
+`Allow`; implement `OPTIONS` explicitly for your own preflights.
+
+A page and HTTP module can share a path when the HTTP module exports
+only non-GET/HEAD methods. Duplicate HTTP paths or a page/HTTP
+GET/HEAD collision fail dev/build with H018. Invalid HTTP declarations
+fail with H019. `kerf routes` (including `--meta`) lists HTTP methods;
+`kerf build` records them in `.kerf/contract.json` under `http`.
+The same handlers run in dev and Node, Bun and Deno builds.
+
+**Security:** Q010 and `site.mutationOrigins` protect Kerf mutations,
+not raw HTTP handlers. Apps own authorization, body limits, CORS and
+CSRF protection here. Cookie-authorized handlers must check the
+request origin or a CSRF token before changing state. Browser CORS
+alone is not CSRF protection.
+
+### Request hook
+
+```ts
+// src/hooks.server.ts
+import type { RequestHook } from '@kerf-js/start/server'
+
+export const handle: RequestHook = async (request, next) => {
+  const start = performance.now()
+  if (new URL(request.url).pathname === '/old-api')
+    return new Response(null, { status: 307,
+      headers: { location: '/api' } })
+  const response = await next(request)
+  const out = new Response(response.body, response)
+  out.headers.set('server-timing',
+    `app;dur=${(performance.now() - start).toFixed(1)}`)
+  return out
+}
+```
+
+The named `handle` export runs before Kerf dispatch, including its
+internal endpoints and unmatched paths. Return a Response to stop,
+or await `next(request)` and wrap its streaming body without reading
+it. `next()` reuses the incoming request; a replacement Request is
+used for routing and its lazy context. Database setup guards can
+redirect HTML GETs to `/setup` here (exclude `/setup` itself).
+Use this hook to implement CORS for your raw HTTP routes, including
+short-circuiting OPTIONS. `site.cors` covers only Kerf's protocol
+endpoints; see `kerf docs config`. Static assets answered directly
+by the host/CDN are outside Kerf's handler.
 
 ### Shared layout marks
 

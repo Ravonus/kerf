@@ -74,10 +74,13 @@ export function createState(options) {
   s.id = (v) => (v.startsWith('virtual:') ? '\0' + v : v)
   s.scan = () => {
     s.serverModules = scanServerModules(s.root)
-    return (s.manifest = scanRoutes(
+    s.manifest = scanRoutes(
       s.root,
       options.routesDir ? resolve(s.root, options.routesDir) : undefined,
-    ))
+    )
+    const problem = s.manifest.problems.find((p) => p.code)
+    if (problem) throw new Error(`${problem.code}: ${problem.message}`)
+    return s.manifest
   }
   s.hydration = (ctx) => hydration(s, ctx)
   s.shapeTable = (ctx) => shapeTable(s, ctx)

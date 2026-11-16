@@ -36,3 +36,34 @@ export function routeDiagnostics(root, found) {
     }
   })
 }
+
+/** The page and raw HTTP route table, with declaration diagnostics, without executing handlers. */
+export function routeTable(manifest, filePath) {
+  return {
+    version: 1,
+    ok: !manifest.problems.some((p) => p.code),
+    problems: manifest.problems,
+    routes: [
+      ...manifest.http.map((r) => ({
+        path: r.path,
+        kind: 'http',
+        file: r.file,
+        methods: r.methods,
+        params: r.params,
+        layouts: [],
+        card: null,
+      })),
+      ...manifest.routes.map((r) => ({
+        path: r.kind === 'page' ? filePath(manifest, r) : r.kind,
+        kind: r.kind,
+        file: r.file,
+        layouts: r.layouts,
+        params: r.params,
+        card: r.card ?? null,
+      })),
+    ],
+    diagnostics: manifest.problems
+      .filter((p) => p.code)
+      .map((p) => ({ code: p.code, severity: 'error', file: p.file, why: p.message })),
+  }
+}

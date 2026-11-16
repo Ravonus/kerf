@@ -73,7 +73,10 @@ function metaSnippet(route, title, description) {
  */
 export function staticRouteChecks(root) {
   const manifest = scanRoutes(root)
-  const out = []
+  /** @type {{ code: string, severity: string, file: string, why: string, route?: string, help?: string }[]} */
+  const out = manifest.problems
+    .filter((p) => p.code)
+    .map((p) => ({ code: p.code ?? 'H019', severity: 'error', file: p.file, why: p.message }))
   for (const route of manifest.routes) {
     if (route.kind !== 'page') continue
     const { present, reads } = metaExport(readFileSync(join(root, route.file), 'utf8'), route.file)
@@ -198,7 +201,7 @@ export async function routesMeta({ root, site = {}, preset }) {
       version: 1,
       ok: !diagnostics.some((d) => d.severity === 'error'),
       site,
-      routes: out,
+      routes: [...out, ...httpEntries(root)],
       diagnostics,
     }
   } finally {
@@ -236,4 +239,15 @@ export function h006(code, file, report) {
         file,
       )
   }
+}
+
+function httpEntries(root) {
+  return scanRoutes(root).http.map(({ path, file, methods, params }) => ({
+    path,
+    file,
+    methods,
+    params,
+    kind: 'http',
+    layouts: [],
+  }))
 }

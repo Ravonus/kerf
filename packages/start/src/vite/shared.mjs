@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url'
 export const here = dirname(fileURLToPath(new URL('../vite.mjs', import.meta.url)))
 export const V = {
   routes: 'virtual:kerf/routes',
+  http: 'virtual:kerf/http',
+  hooks: 'virtual:kerf/hooks',
   app: 'virtual:kerf/app',
   server: 'virtual:kerf/entry-server',
   client: 'virtual:kerf/entry-client',

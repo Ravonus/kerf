@@ -26,6 +26,7 @@ export const configureServer = (s) =>
     const shape = () =>
       JSON.stringify([
         s.manifest.routes.map((r) => r.file),
+        s.manifest.http,
         s.manifest.layouts.map((l) => l.file),
         s.serverModules,
       ])
@@ -37,7 +38,7 @@ export const configureServer = (s) =>
       s.scan()
       if (shape() === before) return
       for (const env of Object.values(server.environments)) {
-        for (const v of [V.routes, V.fns, V.context]) {
+        for (const v of [V.routes, V.fns, V.context, V.http, V.hooks]) {
           const m = env.moduleGraph.getModuleById('\0' + v)
           if (m) env.moduleGraph.invalidateModule(m)
         }
@@ -65,6 +66,11 @@ export const hotUpdate = (s) =>
   async function ({ file, modules }) {
     const rel = relative(s.root, file).split('\\').join('/')
     if (this.environment.config.consumer === 'server') {
+      if (/\.http\.[jt]s$/.test(rel)) {
+        s.scan()
+        const http = this.environment.moduleGraph.getModuleById('\0' + V.http)
+        if (http) this.environment.moduleGraph.invalidateModule(http)
+      }
       // An edit can add or drop a stylesheet import: the next server load of the routes walks the graph again.
       const m = this.environment.moduleGraph.getModuleById('\0' + V.routes)
       if (m) this.environment.moduleGraph.invalidateModule(m)
