@@ -99,8 +99,9 @@
 html:has(dialog:modal) { overflow: hidden; }
 html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
-/* visually hidden (live regions, labels) */
+/* visually hidden (live regions, labels). `.vh` is the class form: Link's "(opens in a new tab)", ScrollGrid's help. */
 :where([data-part="sr-only"]),
+:where(.vh),
 :where([data-scope="announcer"]) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }

@@ -181,3 +181,16 @@ test('a closed accordion panel takes no height, whichever order the sheets come 
     ).toEqual(['grid', 0])
   }
 })
+
+test('`.vh` text is in the page for a screen reader and takes no room on screen', async () => {
+  const p = await browser.newPage()
+  await p.setContent(
+    `<!doctype html><style>${read('veneer.css')}${read('components/base.css')}</style><a id="a" href="https://example.com" target="_blank">Docs<span class="vh"> (opens in a new tab)</span></a>`,
+  )
+  const box = await p.$eval('.vh', (n) => {
+    const r = n.getBoundingClientRect()
+    return { width: r.width, height: r.height, position: getComputedStyle(n).position }
+  })
+  expect(box).toEqual({ width: 1, height: 1, position: 'absolute' })
+  expect(await p.getByRole('link', { name: 'Docs (opens in a new tab)' }).count()).toBe(1)
+})
