@@ -35,6 +35,7 @@ export interface Manifest {
   routes: RouteEntry[]
   layouts: LayoutEntry[]
   defaultCard?: string
+  http?: HttpEntry[]
 }
 
 /** What a route file exports. */
@@ -59,6 +60,30 @@ export interface RouteModule {
   size?: { width: number; height: number }
 }
 
+/** A raw HTTP route, kept out of the page and client tables. */
+export interface HttpEntry {
+  file: string
+  path: string
+  pattern: string
+  params: string[]
+  methods: string[]
+}
+
+/** A web handler's request parameters and lazy request context. */
+export interface HttpArgs {
+  params: Record<string, string>
+  ctx: () => Promise<Context>
+}
+
+/** A server-only HTTP method export. */
+export type HttpHandler = (request: Request, args: HttpArgs) => Response | Promise<Response>
+
+/** A request hook may replace the request, wrap the response, or answer without routing. */
+export type RequestHook = (
+  request: Request,
+  next: (request?: Request) => Promise<Response>,
+) => Response | Promise<Response>
+
 /** A font for generated cards. */
 export interface Font {
   name: string
@@ -70,6 +95,10 @@ export interface Font {
 /** `createHandler`: the app as the build describes it, and how to serve it. */
 export interface HandlerOptions {
   manifest: Manifest
+  /** Named HTTP method exports by route file. */
+  httpModules?: Record<string, Partial<Record<string, HttpHandler>>>
+  /** The named `handle` export of `src/hooks.server.ts`. */
+  handle?: RequestHook | undefined
   /** Route, layout and card modules by manifest file. */
   modules: Record<string, RouteModule>
   site?: Site

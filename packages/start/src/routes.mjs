@@ -15,6 +15,7 @@
 
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
+import { httpRoutes } from './http-routes.mjs'
 
 const EXT = /\.(tsx|jsx|ts|js)$/
 const posix = (p) => p.split('\\').join('/')
@@ -22,20 +23,27 @@ const posix = (p) => p.split('\\').join('/')
 /**
  * @typedef {{ id: string, file: string, layouts: string[], path: string, pattern: string, params: string[], splat?: string, rank: number[], card?: string, kind: 'page' | '404' | 'error' }} RouteEntry
  * @typedef {{ id: string, file: string, dir: string, parent?: string }} LayoutEntry
- * @typedef {{ root: string, dir: string, routes: RouteEntry[], layouts: LayoutEntry[], defaultCard?: string, problems: { file: string, message: string }[] }} Manifest
+ * @typedef {{ root: string, dir: string, routes: RouteEntry[], layouts: LayoutEntry[], defaultCard?: string, http: import('./http-routes.mjs').HttpEntry[], problems: { file: string, message: string, code?: string }[] }} Manifest
  */
 
 /** Scan `<root>/src/routes` (or `dir`). Paths in the manifest are relative to `root`, POSIX-style. */
 export function scanRoutes(root, dir = join(root, 'src', 'routes')) {
   /** @type {Manifest} */
-  const out = { root, dir: posix(relative(root, dir)), routes: [], layouts: [], problems: [] }
+  const out = {
+    root,
+    dir: posix(relative(root, dir)),
+    routes: [],
+    layouts: [],
+    http: [],
+    problems: [],
+  }
   if (!existsSync(dir)) return out
   const files = []
   const walk = (d) => {
     for (const name of readdirSync(d).sort()) {
       const abs = join(d, name)
       if (statSync(abs).isDirectory()) {
-        if (!name.startsWith('_') && !name.startsWith('.')) walk(abs)
+        if (!name.startsWith('_') && name !== '.git') walk(abs)
       } else if (EXT.test(name) && !/\.(test|spec)\.|\.d\.ts$/.test(name))
         files.push(posix(relative(dir, abs)))
     }
@@ -66,7 +74,14 @@ export function scanRoutes(root, dir = join(root, 'src', 'routes')) {
     else cards.set(m[1], rel(f))
   }
 
-  appendRoutes(files, out, rel, layoutOf, cards)
+  appendRoutes(
+    files.filter((f) => !f.includes('/.') && !f.startsWith('.')),
+    out,
+    rel,
+    layoutOf,
+    cards,
+  )
+  out.http = httpRoutes(files, out, rel)
   out.routes.sort((a, b) => cmpRank(a.rank, b.rank) || a.id.localeCompare(b.id))
   for (const [b, file] of cards)
     if (!out.routes.some((r) => r.card === file))
@@ -78,7 +93,8 @@ function appendRoutes(files, out, rel, layoutOf, cards) {
   for (const f of files) {
     const base = f.replace(EXT, '')
     const name = base.split('/').pop()
-    if (base.endsWith('.og') || name === '_layout' || name === '_default') continue
+    if (base.endsWith('.http') || base.endsWith('.og') || name === '_layout' || name === '_default')
+      continue
     const d = base.includes('/') ? base.slice(0, base.lastIndexOf('/')) : ''
     if (name === '404' || name === '_error') {
       if (d) {

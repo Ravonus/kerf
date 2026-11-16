@@ -6,6 +6,8 @@ import { rtRoute } from '../hub'
 import { socketRoute } from '../socket'
 import { serverFunction } from './functions'
 import type { HandlerOptions } from './types'
+import { makeHttp } from './http'
+import { makeCors } from './cors'
 
 interface Dispatch {
   options: HandlerOptions
@@ -31,6 +33,9 @@ export function makeDispatch({
   prerenderList,
   page,
 }: Dispatch) {
+  const http = makeHttp(options)
+  const cors = makeCors(options.site)
+
   /** Everything under `/_kerf/x/<key>/`, for the extension with that key. Nothing else reaches it. */
   async function extensionRoute(url: URL, request: Request, scope: Scope) {
     const [key = '', ...rest] = url.pathname.slice(EXTENSION.length).split('/')
@@ -44,12 +49,16 @@ export function makeDispatch({
     })
   }
 
-  return (request: Request, scope: Scope): Promise<Response> => {
+  const dispatch = async (request: Request, scope: Scope): Promise<Response> => {
     const url = new URL(request.url)
     if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/')))
       return Promise.resolve(options.auth.handler(request))
     if (url.pathname.startsWith('/_kerf/fn/')) return serverFunction(options, url, request, scope)
     if (url.pathname.startsWith(EXTENSION)) return extensionRoute(url, request, scope)
+    if (!url.pathname.startsWith('/_kerf/')) {
+      const response = await http(request, scope)
+      if (response) return response
+    }
     if (
       request.method === 'POST' &&
       !url.pathname.startsWith('/_kerf/') &&
@@ -70,4 +79,5 @@ export function makeDispatch({
     if (url.pathname === '/_kerf/og-routes') return prerenderList(request, url)
     return page(url, request, scope)
   }
+  return (request: Request, scope: Scope) => cors(request, () => dispatch(request, scope))
 }

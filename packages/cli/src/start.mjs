@@ -10,7 +10,7 @@ import { pathToFileURL } from 'node:url'
 import { parseEnv } from 'node:util'
 import { dbLayer } from './db-layer.mjs'
 import { diagnostic } from './diag.mjs'
-import { routeDiagnostics } from './start/routes.mjs'
+import { routeDiagnostics, routeTable } from './start/routes.mjs'
 import { finishBuild, startBuildSidecars, buildPreset } from './start/build.mjs'
 import { writeMap } from './map.mjs'
 
@@ -376,19 +376,6 @@ export async function routesCommand(root, { meta, preset } = {}) {
     }
   }
   const { scanRoutes, filePath } = await start(root, 'routes')
-  const manifest = scanRoutes(root)
-  return {
-    version: 1,
-    ok: true,
-    problems: manifest.problems,
-    routes: manifest.routes.map((r) => ({
-      path: r.kind === 'page' ? filePath(manifest, r) : r.kind,
-      kind: r.kind,
-      file: r.file,
-      layouts: r.layouts,
-      params: r.params,
-      card: r.card ?? null,
-    })),
-    diagnostics: config.diagnostics,
-  }
+  const table = routeTable(scanRoutes(root), filePath)
+  return { ...table, diagnostics: [...config.diagnostics, ...table.diagnostics] }
 }

@@ -17,6 +17,7 @@ export const site = {
   twitter: { card: 'summary_large_image', site: '@acme' },
   // One other origin whose pages may call this server's mutations (fn.test.ts).
   mutationOrigins: ['https://partner.example'],
+  cors: { origins: ['https://partner.example'], credentials: true, headers: ['x-agorix-grant'] },
 }
 
 /**

@@ -2,6 +2,7 @@
 // scope. `kerf build` writes it; the OpenAPI export, the MCP server and Rust codegen read it. The server modules are
 // loaded through Vite, never run: creating a database client connects to nothing.
 
+import { scanRoutes } from './routes.mjs'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -254,6 +255,14 @@ export function writeContract({ root, site = {}, preset, rust, live, verify }) {
   root = resolve(root)
   return withFns({ root, site }, async (fns, server) => {
     const { diagnostics, ...contract } = describe(fns, rust)
+    const manifest = scanRoutes(root)
+    if (manifest.http.length)
+      contract.http = manifest.http.map(({ file, path, methods, params }) => ({
+        file,
+        path,
+        methods,
+        params,
+      }))
     const mod = await server.ssrLoadModule('virtual:kerf/realtime')
     const socket = [...fns.values()].find((f) => f.kind === 'channel' || f.kind === 'shared')
     // a channel needs the socket itself: on a function host no bus helps, so R024 says where it can run instead of R002

@@ -6310,11 +6310,99 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       ],
       "url": null,
     },
+    {
+      "file": "src/routes/about.http.ts",
+      "kind": "http",
+      "layouts": [],
+      "methods": [
+        "POST",
+      ],
+      "params": [],
+      "path": "/about",
+    },
+    {
+      "file": "src/routes/bytes.http.ts",
+      "kind": "http",
+      "layouts": [],
+      "methods": [
+        "GET",
+      ],
+      "params": [],
+      "path": "/bytes",
+    },
+    {
+      "file": "src/routes/events.http.ts",
+      "kind": "http",
+      "layouts": [],
+      "methods": [
+        "GET",
+      ],
+      "params": [],
+      "path": "/events",
+    },
+    {
+      "file": "src/routes/.well-known/agent.http.ts",
+      "kind": "http",
+      "layouts": [],
+      "methods": [
+        "GET",
+      ],
+      "params": [],
+      "path": "/.well-known/agent",
+    },
+    {
+      "file": "src/routes/api/echo/[id].http.ts",
+      "kind": "http",
+      "layouts": [],
+      "methods": [
+        "POST",
+      ],
+      "params": [
+        "id",
+      ],
+      "path": "/api/echo/[id]",
+    },
+    {
+      "file": "src/routes/optional/[[...path]].http.ts",
+      "kind": "http",
+      "layouts": [],
+      "methods": [
+        "GET",
+      ],
+      "params": [
+        "path",
+      ],
+      "path": "/optional/[[...path]]",
+    },
+    {
+      "file": "src/routes/r/[...path].http.ts",
+      "kind": "http",
+      "layouts": [],
+      "methods": [
+        "GET",
+      ],
+      "params": [
+        "path",
+      ],
+      "path": "/r/[...path]",
+    },
   ],
   "site": {
+    "cors": {
+      "credentials": true,
+      "headers": [
+        "x-agorix-grant",
+      ],
+      "origins": [
+        "https://partner.example",
+      ],
+    },
     "description": "Tools for builders.",
     "image": "auto",
     "locale": "en_US",
+    "mutationOrigins": [
+      "https://partner.example",
+    ],
     "name": "Acme",
     "title": "%s · Acme",
     "twitter": {

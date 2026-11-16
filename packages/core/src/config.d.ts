@@ -63,6 +63,10 @@ export interface SiteConfig {
    * answer the CORS preflight for those origins.
    */
   mutationOrigins?: readonly string[] | '*'
+  /** Browser access to /_kerf/fn/* and /_kerf/data/*. Extra request header names supplement content-type, x-kerf and accept. */
+  cors?:
+    | { origins: '*'; credentials?: false; headers?: readonly string[] }
+    | { origins: readonly string[]; credentials?: boolean; headers?: readonly string[] }
   /**
    * Headers every server response gets unless it set its own: `nosniff`, `Referrer-Policy`, framing only by this site,
    * `Cross-Origin-Opener-Policy` and, on https, HSTS. Name a header to change it, `false` to drop it, or `false` for none.
