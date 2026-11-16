@@ -170,8 +170,11 @@ test('labels low and zero stock', () => {
 })
 `
 
+// Each test here and in registerMutationAndGit runs the gate with a budget of 30-60 s; vitest's 20 s default cuts it off on a loaded machine.
+const mutating = { timeout: 120_000 }
+
 function registerSoundAndJunk() {
-  it('accepts sound tests: they fail before, pass after, and kill mutants', async () => {
+  it('accepts sound tests: they fail before, pass after, and kill mutants', mutating, async () => {
     const dir = fixture({ 'src/stock.ts': after, 'src/stock.test.ts': sound })
     const r = await gate(dir, {
       changes: [
@@ -191,8 +194,11 @@ function registerSoundAndJunk() {
     expect(r.survivors.every((s) => s.suggestion.startsWith('src/stock.ts:'))).toBe(true)
   })
 
-  it('catches junk: a tautology (T002), a test that passes before (T010), one that kills nothing (T011), an implementation query (T005)', async () => {
-    const junk = `import { canAdd, label } from './stock'
+  it(
+    'catches junk: a tautology (T002), a test that passes before (T010), one that kills nothing (T011), an implementation query (T005)',
+    mutating,
+    async () => {
+      const junk = `import { canAdd, label } from './stock'
 test('tautology', () => {
   expect(true).toBe(true)
 })
@@ -206,33 +212,31 @@ test('implementation detail', () => {
   expect(document.querySelector('.stock-label')).toBeNull()
 })
 `
-    const dir = fixture({ 'src/stock.ts': after, 'src/junk.test.ts': junk })
-    const r = await gate(dir, {
-      changes: [
-        { rel: 'src/stock.ts', before, after },
-        { rel: 'src/junk.test.ts', before: null, after: junk },
-      ],
-      budgetSec: 60,
-    })
-    expect(r.ok).toBe(false)
-    const found = r.diagnostics.map((d) => `${d.code}:${d.span[0]}:${d.severity}`)
-    expect(found).toEqual(
-      expect.arrayContaining([
-        'T002:3:error',
-        'T010:2:error',
-        'T010:5:error',
-        'T010:8:error',
-        'T005:12:error',
-      ]),
-    )
-    expect(r.tests.find((t) => t.name === 'implementation detail')).toMatchObject({
-      after: 'failed',
-    }) // no DOM here: it can't even run
-  })
+      const dir = fixture({ 'src/stock.ts': after, 'src/junk.test.ts': junk })
+      const r = await gate(dir, {
+        changes: [
+          { rel: 'src/stock.ts', before, after },
+          { rel: 'src/junk.test.ts', before: null, after: junk },
+        ],
+        budgetSec: 60,
+      })
+      expect(r.ok).toBe(false)
+      const found = r.diagnostics.map((d) => `${d.code}:${d.span[0]}:${d.severity}`)
+      expect(found).toEqual(
+        expect.arrayContaining([
+          'T002:3:error',
+          'T010:2:error',
+          'T010:5:error',
+          'T010:8:error',
+          'T005:12:error',
+        ]),
+      )
+      expect(r.tests.find((t) => t.name === 'implementation detail')).toMatchObject({
+        after: 'failed',
+      }) // no DOM here: it can't even run
+    },
+  )
 }
-
-// Each runs the gate with a budget of 30-60 s; vitest's 20 s default cuts it off on a loaded machine.
-const mutating = { timeout: 120_000 }
 
 function registerMutationAndGit() {
   it(
