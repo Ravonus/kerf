@@ -40,6 +40,10 @@ Priority images in the rendered shell get responsive preloads before module prel
 Keep `fetchpriority="high"` for actual first-view media; art-directed pictures keep
 complementary media queries. Media heads render current content before emitting hints,
 so a remembered route cannot preload an artwork replaced through the CMS.
+Priority-media pages prefetch their entry, then let the SSR artwork decode and
+paint before hydration. Captured intent wakes startup immediately; a five-second
+failed-resource deadline prevents a stalled image from blocking the app. Keep
+this in Start rather than adding site-owned hydration timers.
 Verify real first-frame dimensions, scroll return, a loop and a cache hit in a fresh
 browser. An audit score or successful fetch alone does not establish clear playback.
 

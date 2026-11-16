@@ -4,6 +4,7 @@ import { capture, speculate } from '../capture'
 import { whole } from './compression'
 import { withHeaders } from './request'
 import { esc } from './text'
+import { entryScript } from './image-boot'
 import { finish, pageShell, render, rest, shaped, table, top } from './page-stream'
 import { HOLD, type Head, type PageState } from './page-types'
 
@@ -22,7 +23,7 @@ function coldHead(
     top(p) +
     shape.preloads +
     // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
-    (p.assets.entry && shape.streaming
+    (p.assets.entry && (shape.streaming || shape.media)
       ? `<link rel="modulepreload" href="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}>\n`
       : '') +
     (t
@@ -30,9 +31,7 @@ function coldHead(
       : styles!.head) +
     (capturing ? `<script>${capture(shape.now)}</script>\n` + speculate(shape) : '') +
     p.dev +
-    (p.assets.entry && !shape.streaming
-      ? `<script type="module" src="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}></script>\n`
-      : '') +
+    (p.assets.entry && !shape.streaming ? entryScript(p.assets.entry, shape.media) : '') +
     '</head>\n<body>\n' +
     pageShell(p, shape, t ? t.links : '')
   )
@@ -60,7 +59,7 @@ export async function coldPage(
         have: kept,
         keep: p.request.headers.has('cookie'),
       })
-  const capturing = !!p.options.lazy || shape.streaming
+  const capturing = !!p.options.lazy || shape.streaming || shape.media
   if (known !== null && !p.options.dev)
     p.remember(styles?.links ? cold + ' w' : cold, {
       ...shape,

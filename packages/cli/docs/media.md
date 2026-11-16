@@ -164,3 +164,8 @@ buffer limits. The shared config starts loading only after rendition selection,
 targets two seconds ahead and caps the target at four seconds. A whole segment
 may exceed the one MiB byte target. Keep native HLS and the qualified native
 file as failure fallbacks. No quality reset is needed when pausing or returning.
+
+Start prefetches the code for priority-image pages and starts it after the
+server-rendered artwork decodes and paints. User interaction wakes startup
+immediately; a five-second deadline bounds a stalled-image wait. Other pages
+keep their ordinary eager startup. No app-owned loading timer is needed.

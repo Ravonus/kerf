@@ -3,6 +3,7 @@ import { LAYER_ORDER, pageStyles, type keptSheets } from '../inline.mjs'
 import { capture, speculate } from '../capture'
 import { withHeaders } from './request'
 import { esc } from './text'
+import { entryScript } from './image-boot'
 import { pageShell, render, rest, shaped, table, top } from './page-stream'
 import { HOLD, type Head, type PageState } from './page-types'
 
@@ -27,7 +28,7 @@ async function warmContent(
   const ms = performance.now() - t0
   const shape = shaped(p)
   const t = table(p, shape)
-  const capturing = !!p.options.lazy || shape.streaming
+  const capturing = !!p.options.lazy || shape.streaming || shape.media
   // What this page has beyond the head: sheets, rules, and chunks that render didn't reach.
   const have = new Set(known.preloads.split(/(?=<link )/))
   const more = shape.preloads
@@ -45,9 +46,7 @@ async function warmContent(
     p.enc.encode(
       lead +
         pageShell(p, shape, t ? t.links : '') +
-        (p.assets.entry && !shape.streaming
-          ? `<script type="module" src="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}></script>\n`
-          : ''),
+        (p.assets.entry && !shape.streaming ? entryScript(p.assets.entry, shape.media) : ''),
     ),
   )
   // A render that set a header after they went can't use this: the route goes back to rendering first.

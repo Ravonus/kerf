@@ -18,6 +18,7 @@ import {
 } from './render'
 import { esc, json } from './text'
 import { imagePreloads } from './image-preloads'
+import { entryScript } from './image-boot'
 import type { PageState } from './page-types'
 
 /** Cache entries the client hasn't got. */
@@ -136,9 +137,7 @@ export function pageShell(p: PageState, shape: ReturnType<typeof shaped>, after 
     (shape.streaming
       ? (since(p), dataTags({ ...pageData(p.stream.data(), p.scope)!, w: 1 }, news(p)))
       : '') +
-    (p.assets.entry && shape.streaming
-      ? `<script type="module" async src="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}></script>\n`
-      : '')
+    (p.assets.entry && shape.streaming ? entryScript(p.assets.entry, shape.media, true) : '')
   )
 }
 
