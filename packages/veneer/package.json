@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/veneer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "veneer, the UI toolkit for kerf: components over @kerf-js/veneer-core",
   "keywords": [
     "kerf"

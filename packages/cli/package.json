@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The kerf command: dev, build, check, the agent layer and the MCP server",
   "license": "MIT",
   "repository": {
