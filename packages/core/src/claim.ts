@@ -153,6 +153,7 @@ const isSeparator = (n: Node) => n.nodeType === 8 && (n as Comment).data === ','
  * `child` for hydratable output. `marker`: the `<!>` it goes before, or none when the hole is the element's only content. `root` and
  * `slot` name the hole's scope (its template's key and its index). `once`: `value` builds static content (a
  * component, an element) and runs once, untracked (`2`: `marker` is the page's data script, not a hole); otherwise a function value is read reactively.
+ * Returns the hole it made, when the value is one that can change.
  */
 export function hchild(
   parent: Element,
@@ -161,8 +162,8 @@ export function hchild(
   root?: Keyed,
   slot?: number,
   once?: 1 | 2,
-) {
-  const claim = () => {
+): Hold | undefined {
+  const claim = (): Hold | undefined => {
     const hydrating = keys.hydrating
     let v = once ? untrack(value as () => unknown) : value
     if (!hydrating) return insert(parent, v, marker)
@@ -178,7 +179,7 @@ export function hchild(
         })
       } else if (v !== marker && v instanceof Node) parent.replaceChild(v, marker)
       keys.hydrating = true
-      return
+      return undefined
     }
     // Claim the server's nodes on the first run; later runs place values as usual.
     const current = range(parent, marker ?? undefined)
@@ -197,9 +198,10 @@ export function hchild(
     const done = typeof v !== 'function' ? (put(v), true) : hole(v as () => unknown, put)
     keys.hydrating = true
     if (done && marker?.nodeType === 8) hydration.trash.push(marker as ChildNode) // nothing comes back here
+    return done ? undefined : h
   }
   const miss = keys.miss // a miss inside this hole ends with it: the template around it goes on as it was
-  if (keys.on && root?.$k !== undefined) under(`${root.$k}.${slot}/`, claim)
-  else claim()
+  const h = keys.on && root?.$k !== undefined ? under(`${root.$k}.${slot}/`, claim) : claim()
   keys.miss = miss
+  return h
 }

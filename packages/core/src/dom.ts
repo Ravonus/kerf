@@ -42,7 +42,7 @@ export {
 } from './dom-next'
 export { first, hchild, htpl, next } from './claim'
 export { hydrate, hydration } from './hydrate'
-export { drain, enter, level, settled, wake } from './island'
+export { drain, enter, level, park, settled, wake } from './island'
 export { egg } from './egg'
 
 type Mountable = Element | DocumentFragment
@@ -194,9 +194,10 @@ export function place(parent: Node, value: unknown, current: Node[], marker: Nod
 
 /**
  * `marker` undefined: the value is the parent's only dynamic content, appended at the end.
- * `marker` null: append at the end after static children. A node: insert before it.
+ * `marker` null: append at the end after static children. A node: insert before it. Returns the hole it made, when
+ * the value is one that can change.
  */
-export function insert(parent: Mountable, value: unknown, marker?: Node | null) {
+export function insert(parent: Mountable, value: unknown, marker?: Node | null): Hold | undefined {
   const current = EMPTY
   const at = marker ?? null
   // Dev: hot-swappable components (@kerf-js/core/hmr) are accessors, so a static array of them (`<><A /><B /></>`) is live.
@@ -206,11 +207,12 @@ export function insert(parent: Mountable, value: unknown, marker?: Node | null) 
   }
   if (typeof value !== 'function') {
     place(parent, value, current, at)
-    return
+    return undefined
   }
   const h: Hold = { p: parent, m: at, c: current, t: undefined }
   if (RECORD) hole(value as () => unknown, write, h)
   else hole(value as () => unknown, (v, was) => write(v, was, h))
+  return h
 }
 
 /** A hole: its parent, its marker, its nodes, and its one text node when that's all it holds (then `c` may lag). */
