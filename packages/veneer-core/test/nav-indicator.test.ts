@@ -48,3 +48,43 @@ test('one nav indicator follows hover and selection across wrapped rows', () => 
   links[1]!.dispatchEvent(new MouseEvent('pointerover', { bubbles: true }))
   expect(face.style.transform).toBe('translate(0px, 0px) scaleX(70)')
 })
+
+test('of two bars under one view-transition name, the later one in the page gives it up', () => {
+  const frames: FrameRequestCallback[] = []
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+    frames.push(callback)
+    return frames.length
+  })
+  // jsdom computes no view-transition-name: answer as a browser does, the inline value over the stylesheet's default.
+  const real = window.getComputedStyle.bind(window)
+  vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+    const style = real(el)
+    const own = (el as HTMLElement).dataset.name
+    style.getPropertyValue = (prop: string) =>
+      prop === 'view-transition-name'
+        ? (el as HTMLElement).style.getPropertyValue(prop) || own || 'veneer-nav-x'
+        : ''
+    return style
+  })
+  const make = (name?: string) => {
+    const nav = document.createElement('nav')
+    nav.dataset.scope = 'nav'
+    const face = document.createElement('span')
+    face.dataset.part = 'indicator'
+    if (name) face.dataset.name = name
+    nav.append(face)
+    document.body.append(nav)
+    return { nav, face }
+  }
+  const site = make()
+  const tabs = make()
+  const named = make('veneer-nav-sections')
+  // Made in any order: the first in the page keeps the name.
+  const bindings = [tabs, named, site].map(({ nav }) => navIndicator(nav))
+  for (const frame of frames.splice(0)) frame(0)
+  const name = (face: HTMLElement) => face.style.getPropertyValue('view-transition-name')
+  expect(name(site.face)).toBe('')
+  expect(name(tabs.face)).toBe('none')
+  expect(name(named.face)).toBe('')
+  for (const binding of bindings) binding.destroy()
+})
