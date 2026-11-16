@@ -35,9 +35,16 @@ export const configHook = (s) =>
         exclude: ['@kerf-js/start', '@kerf-js/veneer', '@kerf-js/veneer-icons', '@kerf-js/core'],
       }, // they ship TSX for the kerf plugin
       // The runtime files of @kerf-js/start, kerf and Nitro are served from wherever they're installed (a linked package
-      // sits outside the app's root).
+      // sits outside the app's root, and its own dependencies sit in the workspace it is linked from).
       server: {
-        fs: { allow: [searchForWorkspaceRoot(s.root), join(here, '..'), ...packageDirs(s.root)] },
+        fs: {
+          allow: [
+            searchForWorkspaceRoot(s.root),
+            join(here, '..'),
+            searchForWorkspaceRoot(join(here, '..')),
+            ...packageDirs(s.root),
+          ],
+        },
       },
       // One copy of the router: the app's route files and the generated entries import the same module.
       resolve: {
