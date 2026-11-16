@@ -46,7 +46,7 @@ async function warmContent(
       lead +
         pageShell(p, shape, t ? t.links : '') +
         (p.assets.entry && !shape.streaming
-          ? `<script type="module" src="${esc(p.assets.entry)}"></script>\n`
+          ? `<script type="module" src="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}></script>\n`
           : ''),
     ),
   )
@@ -94,7 +94,9 @@ export async function warmPage(
   const head =
     top(p) +
     known.preloads +
-    (p.assets.entry ? `<link rel="modulepreload" href="${esc(p.assets.entry)}">\n` : '') +
+    (p.assets.entry
+      ? `<link rel="modulepreload" href="${esc(p.assets.entry)}"${known.media ? ' fetchpriority="low"' : ''}>\n`
+      : '') +
     (styles ? styles.head : `<style>${LAYER_ORDER}${p.assets.pieces!.layers}</style>\n`) +
     (known.capture ? `<script>${capture(known.now)}</script>\n` + speculate(known) : '') +
     p.dev +

@@ -23,7 +23,7 @@ function coldHead(
     shape.preloads +
     // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
     (p.assets.entry && shape.streaming
-      ? `<link rel="modulepreload" href="${esc(p.assets.entry)}">\n`
+      ? `<link rel="modulepreload" href="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}>\n`
       : '') +
     (t
       ? `<style>${LAYER_ORDER}${p.assets.pieces!.layers}${t.rules(p.stream.shell)}</style>\n`
@@ -31,7 +31,7 @@ function coldHead(
     (capturing ? `<script>${capture(shape.now)}</script>\n` + speculate(shape) : '') +
     p.dev +
     (p.assets.entry && !shape.streaming
-      ? `<script type="module" src="${esc(p.assets.entry)}"></script>\n`
+      ? `<script type="module" src="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}></script>\n`
       : '') +
     '</head>\n<body>\n' +
     pageShell(p, shape, t ? t.links : '')

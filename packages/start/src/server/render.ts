@@ -107,10 +107,16 @@ export function islandsOf(html: string) {
 export function modulepreloads(
   chunks: { href: string }[],
   assets: NonNullable<HandlerOptions['assets']>,
+  imagePriority = false,
 ) {
   const hrefs = new Set(chunks.map((c) => c.href))
   hrefs.delete(assets.entry!)
-  return [...hrefs].map((href) => `<link rel="modulepreload" href="${esc(href)}">`).join('')
+  return [...hrefs]
+    .map(
+      (href) =>
+        `<link rel="modulepreload" href="${esc(href)}"${imagePriority ? ' fetchpriority="low"' : ''}>`,
+    )
+    .join('')
 }
 
 /** What a render's HTML says about its levels, worked out as asked and kept by the exact text. */

@@ -19,7 +19,9 @@ site-owned blur posters, delayed warm timers or bandwidth-first starting quality
 
 Core owns the browser policy, re-exported by `@kerf-js/media/browser`. Custom/HLS players
 must use that policy, select display quality before loading and reveal only a presented
-frame at that resolution. A pause, scroll return or loop must not reset the source.
+frame at that resolution. Use `supportsMediaStreaming` and `mediaHlsConfig` for
+bounded HLS before native fallback: native capability alone does not enforce a
+short buffer. Segment size may exceed the byte target. A pause, scroll return or loop must not reset the source.
 Save Data, hidden documents, foreground buffering, byte limits and route disposal remain
 authoritative. `warm={false}` and `video.firstFrame:false` are explicit opt-outs, never
 routine optimization fixes. Native whole files above the cache cap are skipped; HLS and

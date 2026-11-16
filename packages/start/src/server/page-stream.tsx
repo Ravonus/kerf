@@ -105,6 +105,7 @@ export function shaped(p: PageState) {
         ...pageChunks(payload, p.options.chunks, saveData(p.request) ? [] : parts.fold, now),
       ],
       p.assets,
+      !!images,
     )
   return {
     payload,
@@ -136,7 +137,7 @@ export function pageShell(p: PageState, shape: ReturnType<typeof shaped>, after 
       ? (since(p), dataTags({ ...pageData(p.stream.data(), p.scope)!, w: 1 }, news(p)))
       : '') +
     (p.assets.entry && shape.streaming
-      ? `<script type="module" async src="${esc(p.assets.entry)}"></script>\n`
+      ? `<script type="module" async src="${esc(p.assets.entry)}"${shape.media ? ' fetchpriority="low"' : ''}></script>\n`
       : '')
   )
 }

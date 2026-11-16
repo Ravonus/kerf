@@ -156,3 +156,11 @@ At most two offscreen works prepare at once, one on slow connections, none with
 Save Data. The lead follows real scroll speed, reversals and known scrollbar
 intent. A scrollbar may dispatch `kerf:scroll-target` on window with `{ top }` in
 its detail before moving; Veneer's `scrollPage` emits this automatically.
+
+For custom HLS players, import `supportsMediaStreaming` and `mediaHlsConfig`
+from `@kerf-js/media/browser`. Prefer controlled MSE/managed streaming when
+available, even if native HLS is advertised; native HLS ignores JavaScript
+buffer limits. The shared config starts loading only after rendition selection,
+targets two seconds ahead and caps the target at four seconds. A whole segment
+may exceed the one MiB byte target. Keep native HLS and the qualified native
+file as failure fallbacks. No quality reset is needed when pausing or returning.

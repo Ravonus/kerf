@@ -42,6 +42,8 @@ test('each response preloads its current image before modules, never a remembere
       head = html.slice(0, html.indexOf('</head>'))
     expect(head).toContain(`as="image" fetchpriority="high" href="${image}"`)
     expect(head.indexOf('as="image"')).toBeLessThan(head.indexOf('rel="modulepreload"'))
+    expect(head).toContain('rel="modulepreload" href="/runtime.js" fetchpriority="low"')
+    expect(head).toContain('src="/client.js" fetchpriority="low"')
     for (const old of ['/first.avif', '/second.avif', '/third.avif'].filter((p) => p !== image))
       expect(head).not.toContain(old)
   }

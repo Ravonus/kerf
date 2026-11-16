@@ -226,7 +226,7 @@ export const media = definePlugin({
         '- video.firstFrameQuality:{target:90} opts into measured previews; defaults stay exact. Re-ingest old records.',
         '- Pin display quality before loading; reveal a presented full-size frame. Preserve source on pause, return and loop.',
         '- Media warms starts automatically. Save Data, hidden tabs, buffering and cache caps stop speculation; warm={false} opts out.',
-        '- Custom/HLS: use @kerf-js/media/browser for viewport prediction and bounded warming of playback URLs.',
+        '- HLS: use mediaHlsConfig + supportsMediaStreaming from @kerf-js/media/browser before native fallback.',
         '- Only LCP gets priority + sizes. Describe alt; decoration uses alt="" decorative.',
         '- delivery:auto compares codecs, containers and frames; native wins ties. video.lossless:false needs quality.target.',
         '- Save stays exact: encoder:compatible, swap:manual; prepareMediaSave on intent, release on close. Never flatten motion.',
