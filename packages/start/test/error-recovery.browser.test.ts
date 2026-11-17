@@ -96,9 +96,14 @@ test('retries a loader once per click and preserves the document, layout counter
 })
 
 test('shows an SSR render failure and recovers the outlet', async () => {
-  const { tab, response } = await open(address('render'))
+  const path = address('render')
+  const { tab, response } = await open(path)
   try {
     expect(response.status()).toBe(500)
+    const renderedPath = await tab
+      .locator('#kerf-route')
+      .evaluate((payload) => (JSON.parse(payload.textContent) as { p: string }).p)
+    expect(renderedPath).toBe(path)
     expect(await reference(tab)).toBe(await response.headerValue('x-kerf-error'))
     await tab.locator('#retry-route').click()
     await ready(tab, 2)

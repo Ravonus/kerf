@@ -221,6 +221,9 @@ test('Back before the reloaded runtime boots renders the history entry', async (
         }),
     )
     expect(new URL(page.url()).pathname).toBe('/')
+    expect(await page.evaluate(() => performance.getEntriesByType('navigation')[0]?.name)).toBe(
+      url + '/about',
+    )
     expect(await page.getByRole('heading', { name: 'About us' }).isVisible()).toBe(true)
     expect(await page.evaluate(() => window.__kerf?.hydrated)).toBeUndefined()
 

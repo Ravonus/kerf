@@ -150,7 +150,7 @@ export function preload(nav: Navigation) {
 
 /** Follow history and catch a traversal that happened before the runtime could listen. */
 export function listenHistory(nav: Navigation, renderedPath: string, shell?: boolean) {
-  nav.at = renderedPath
+  const path = (nav.at = location.pathname + location.search)
   addEventListener('popstate', () => {
     // An in-page anchor fires popstate too; only a changed path needs a navigation.
     if (location.pathname + location.search !== nav.at)
@@ -160,15 +160,16 @@ export function listenHistory(nav: Navigation, renderedPath: string, shell?: boo
       nav.settle()
     }
   })
-  const path = location.pathname + location.search
-  if (path === renderedPath) return
-  // The shell has its own arrival; its rendered path doesn't describe this history entry.
-  if (shell) {
-    nav.at = path
-    return
-  }
-  // Retained controls and pending shapes still belong to the rendered address until the traversal lands.
-  nav.committedURL = location.origin + renderedPath
+  if (path === renderedPath || shell) return
+  // A rewrite can change the rendered path. The browser's navigation entry names the document it loaded.
+  const requested = performance.getEntriesByType('navigation')[0]?.name
+  if (!requested) return
+  const original = new URL(requested)
+  const from = original.pathname + original.search
+  if (original.origin !== location.origin || from === path) return
+  // Retained controls still resolve against the document's old address until the traversal lands.
+  nav.at = from
+  nav.committedURL = original.href
   if (!document.querySelector('base[href]')) nav.committedBase = nav.committedURL
   void nav.go(location.href, { pop: true })
 }
