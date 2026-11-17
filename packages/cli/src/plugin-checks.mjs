@@ -4,7 +4,8 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { entry } from './catalog.mjs'
+import { diagnosticDefaults } from './catalog.mjs'
+import { reservedDiagnosticOwner } from './contributions.mjs'
 import { diagnostic, positions } from './diag.mjs'
 import { discover, matcher } from './files.mjs'
 import { importOf, scanJsx } from './jsx-scan.mjs'
@@ -16,6 +17,9 @@ import { importOf, scanJsx } from './jsx-scan.mjs'
  */
 export async function pluginChecks(root, loaded, { files, exclude = [] }) {
   const out = []
+  const owners = new Map()
+  for (const c of loaded.contributions)
+    for (const d of c.manifest.diagnostics ?? []) owners.set(d.code.toUpperCase(), c.name)
   const texts = new Map(files.map((f) => [f.rel, f.text]))
   const read = (rel) => {
     if (!texts.has(rel))
@@ -71,12 +75,12 @@ export async function pluginChecks(root, loaded, { files, exclude = [] }) {
       )
       continue
     }
-    appendFindings({ found, c, out, declared, read })
+    appendFindings({ found, c, out, declared, read, owners })
   }
   return out
 }
 
-function appendFindings({ found, c, out, declared, read }) {
+function appendFindings({ found, c, out, declared, read, owners }) {
   for (const d of found) {
     if (!d.code.startsWith(c.namespace)) {
       out.push(
@@ -88,6 +92,19 @@ function appendFindings({ found, c, out, declared, read }) {
       )
       continue
     }
+    const key = d.code.toUpperCase()
+    const owner = reservedDiagnosticOwner(c.name, key) ?? owners.get(key)
+    if (owner && owner !== c.name) {
+      out.push(
+        diagnostic({
+          code: 'P111',
+          file: 'kerf.config.ts',
+          why: `\`${c.name}\`'s check reported \`${d.code}\`, already registered by \`${owner}\`.`,
+        }),
+      )
+      continue
+    }
+    owners.set(key, c.name)
     const text = read(d.file)
     const pos = positions(text)
     const [start, end] = [d.start ?? 0, d.end ?? d.start ?? 0]
@@ -101,7 +118,7 @@ function appendFindings({ found, c, out, declared, read }) {
         span: pos.span(start, end),
         offset: [start, end],
         why: d.why,
-        help: d.help ?? (entry(d.code) ? undefined : meta?.fix), // a catalog code keeps the catalog's fix text
+        help: d.help ?? (diagnosticDefaults(d.code) ? undefined : meta?.fix),
         fix: d.fix && {
           description: d.fix.description,
           safe: d.fix.safe === true,

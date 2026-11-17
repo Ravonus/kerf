@@ -37,14 +37,20 @@ const examples = async (slug: string) => {
 }
 
 export const load = async ({ params }: LoadArgs<'/reference/[...slug]'>) => {
-  const page = all[params.slug] ?? notFound()
+  const slug = params.slug.replace(/^diagnostics\//, 'codes/')
+  const page = all[slug] ?? notFound()
   return { ...page, examples: await examples(params.slug) }
 }
 export const meta: Meta<typeof load> = ({ data }) => ({
   title: data.title,
   description: data.description,
 })
-export const prerender = () => Object.keys(all).map((slug) => ({ slug }))
+export const prerender = () =>
+  Object.keys(all).flatMap((slug) =>
+    slug.startsWith('codes/')
+      ? [{ slug }, { slug: slug.replace(/^codes\//, 'diagnostics/') }]
+      : [{ slug }],
+  )
 
 /** Between pages, the doc article's outline, so the page lands where its bars were. */
 export const skeleton = DocSkeleton

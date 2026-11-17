@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { docs as kerfDocs } from '../../../packages/cli/src/docs.mjs'
-import { catalog } from '../../../packages/cli/src/catalog.mjs'
+import { diagnosticPage, installed } from '../../../packages/cli/src/docs.mjs'
+import { diagnosticPath } from '../../../packages/cli/src/diag.mjs'
 import {
   cleanText,
   decode,
@@ -9,7 +9,7 @@ import {
   truncate,
 } from '../../../packages/start/src/derive.mjs'
 import { highlight, markdownToHtml, site, pub } from './context.mjs'
-import { slugify, SUMMARIES, LEADS, SECTIONS } from './docs-catalog.mjs'
+import { slugify, SUMMARIES, LEADS, SECTIONS, referenceDiagnostics } from './docs-catalog.mjs'
 
 const plain = (md) =>
   md
@@ -52,8 +52,7 @@ function summary(md) {
   }
   return ''
 }
-const CODE = /\b[WDTPHQSFIACRXM]\d{3}\b/g
-const known = new Set(catalog.map((e) => e.code))
+const CODE = /\b(?:E_[A-Z]+(?:_[A-Z]+)*|[A-Z]{1,5}\d{3})\b/g
 const REPO = 'https://github.com/Ravonus/kerf/blob/main/'
 
 const copyButton = `<button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-act="copy" data-copy="" aria-label="Copy code"><span data-part="indicator">${readIcon('copy')}${readIcon('check')}</span></button>`
@@ -80,7 +79,9 @@ function linkify(html, slugs) {
         return part
       }
       return part
-        .replace(CODE, (c) => (known.has(c) ? `<a href="/reference/codes/${c}">${c}</a>` : c))
+        .replace(CODE, (c) =>
+          referenceDiagnostics.has(c) ? `<a href="${diagnosticPath(c)}">${c}</a>` : c,
+        )
         .replace(/kerf docs ([a-z-]+)/g, (m, t) =>
           slugs.has(t) ? `<a href="/reference/${t}">${m}</a>` : m,
         )
@@ -149,13 +150,15 @@ async function buildReference() {
       next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title },
     }
   })
-  for (const e of catalog) {
-    const { text } = await kerfDocs(site, e.code)
-    pages[`codes/${e.code}`] = {
-      ...render(`codes/${e.code}`, e.code, 'Diagnostics', text),
+  const info = installed(site)
+  for (const [code, e] of referenceDiagnostics) {
+    const text = diagnosticPage(code, info, e)
+    const slug = `codes/${code}`
+    pages[slug] = {
+      ...render(slug, code, 'Diagnostics', text),
       description:
         opening(unmark(`${e.catches}.`)) ||
-        `${e.code}: what this kerf diagnostic means and how to fix it.`,
+        `${code}: what this kerf diagnostic means and how to fix it.`,
       parent: { slug: 'diagnostics', title: 'Diagnostics' },
     }
   }

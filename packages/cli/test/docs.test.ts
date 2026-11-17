@@ -2,9 +2,12 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { agentsMd, limit, writeAgentsMd } from '../src/agents-md.mjs'
-import { catalog, probe } from '../src/catalog.mjs'
-import { docs, installed, topics } from '../src/docs.mjs'
+import { aliases, catalog, entry, probe } from '../src/catalog.mjs'
+import { diagnosticPath } from '../src/diag.mjs'
+import { diagnosticPage, docs, installed, topics } from '../src/docs.mjs'
+import { loadConfig } from '../src/load-config.mjs'
 import { loadCompiler, resolveKerf } from '../src/kerf.mjs'
+import { referenceDiagnostics } from '../../../scripts/lib/diagnostic-providers.mjs'
 import { fixture, project } from './helpers.mjs'
 
 const status = probe(loadCompiler(resolveKerf(fixture)))
@@ -58,6 +61,36 @@ describe('catalog probe', () => {
     const codes = catalog.map((e) => e.code)
     expect(new Set(codes).size).toBe(codes.length)
     for (let n = 100; n <= 120; n++) expect(codes).toContain(`P${n}`)
+  })
+})
+
+describe('diagnostic lookup', () => {
+  it('uses the same diagnostic page for runtime, reserved, plugin and alias lookups', async () => {
+    const info = installed(fixture)
+    for (const code of ['E_STREAM', 'E_HEAD', 'E_ROUTE', 'H001', 'Q019', 'J004', 'J005']) {
+      expect((await docs(fixture, code)).text).toBe(
+        diagnosticPage(code, info, referenceDiagnostics.get(code)),
+      )
+      expect(diagnosticPath(code)).toBe(`/reference/diagnostics/${code}`)
+    }
+    for (const [code, primary] of Object.entries(aliases)) {
+      expect(entry(code)).toBe(entry(primary))
+      const page = await docs(fixture, code.toLowerCase())
+      expect(page.text).toContain(`Lookup alias for \`${primary}\`.`)
+      expect(page.text).toBe(diagnosticPage(code, info, referenceDiagnostics.get(code)))
+    }
+    for (const code of ['E_REQUEST', 'E_CHUNK', 'E_STARTUP', 'E_PROCESS', 'E_SHUTDOWN', 'J005'])
+      expect((await docs(fixture, code)).text).toContain('reserved')
+    expect((await docs(fixture, 'E_STREAM')).text).toMatch(/stalled between passes.*chunk loop/)
+    expect((await docs(fixture, 'E_HEAD')).text).toMatch(/header count changed.*rendering threw/)
+    expect((await docs(fixture, 'Q019')).text).toMatch(
+      /rate limit.*429.*could not be resolved.*404/,
+    )
+    expect((await docs(fixture, 'J004')).text).toMatch(/exhausted its attempts.*queue operation/)
+    for (const code of ['D010', 'AGENT005', 'PAY030'])
+      expect(diagnosticPage(code, info, referenceDiagnostics.get(code))).toContain(
+        'diagnostic manifest',
+      )
   })
 })
 
@@ -215,6 +248,35 @@ describe('AGENTS.md', () => {
 })
 
 describe('a plugin in the docs', () => {
+  it('excludes claims against core codes, aliases and another configured provider', async () => {
+    const dir = project({
+      'kerf.config.ts': `
+        import { definePlugin } from '@kerf-js/core/plugin'
+        const plugin = (name, namespace, codes) => definePlugin({
+          name, namespace, contribute: () => ({
+            diagnostics: codes.map((code) => ({ code, catches: name, fix: 'Correct it' })),
+          }),
+        })()
+        export default { plugins: [
+          plugin('z-kit', 'KIT', ['KIT001']),
+          plugin('a-kit', 'KIT', ['KIT001']),
+          plugin('claimed', 'W', ['W001', 'W021']),
+          plugin('scoped', 'scoped/', ['scoped/A001']),
+        ] }
+      `,
+    })
+    const loaded = await loadConfig(dir)
+    expect(loaded.diagnostics).toMatchObject([
+      { code: 'P111', why: '`claimed` declares `W001`, already registered by `core`.' },
+      { code: 'P111', why: '`claimed` declares `W021`, already registered by `core`.' },
+      { code: 'P111', why: '`z-kit` declares `KIT001`, already registered by `a-kit`.' },
+    ])
+    expect((await docs(dir, 'KIT001')).text).toContain('from the `a-kit` diagnostic manifest')
+    expect((await docs(dir, 'W021')).text).toContain('Lookup alias for `W020`.')
+    expect((await docs(dir, 'scoped/A001')).topic).toBe('scoped/A001')
+    expect((await docs(dir, 'diagnostics')).text.match(/\| KIT001 \|/g)).toHaveLength(1)
+  })
+
   const app = () => {
     const dir = project({
       'kit.mjs':

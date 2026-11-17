@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { docs as kerfDocs } from '../../../packages/cli/src/docs.mjs'
 import { catalog } from '../../../packages/cli/src/catalog.mjs'
+import { referenceDiagnostics } from '../../../scripts/lib/diagnostic-providers.mjs'
 import { markdownToHtml, site, repo, out } from './context.mjs'
 
 /** veneer's three areas of the site, by the group's file. Everything else is core components. */
@@ -256,9 +257,12 @@ function diagnosticsIndex() {
   const families = {
     W: 'Compiler',
     D: 'Design',
+    E: 'Deployment and runtime failures',
     T: 'Tests',
     P: 'Plugins and config',
     H: 'Head and metadata',
+    J: 'Jobs and cron',
+    L: 'Audits',
     Q: 'Queries',
     S: 'State',
     F: 'Forms',
@@ -266,21 +270,27 @@ function diagnosticsIndex() {
     A: 'Auth',
     C: 'Contracts',
     R: 'Realtime',
+    U: 'Shared UI state',
     X: 'Surfaces and fonts',
     M: 'Media',
   }
   const lines = [
     '# Diagnostics',
     '',
-    `Every code kerf reports, ${catalog.length} in all. \`kerf docs <code>\` prints the same page.`,
+    `The framework and bundled plugin registry has ${referenceDiagnostics.size} lookup codes. \`kerf docs <code>\` prints the same page when its plugin is installed.`,
     '',
   ]
-  for (const [letter, name] of Object.entries(families)) {
-    const list = catalog.filter((e) => e.code[0] === letter)
+  const familyOf = (code) => code.match(/^[A-Z]+/)[0]
+  for (const [letter, name] of [
+    ...Object.entries(families),
+    ['AGENT', 'Agent'],
+    ['PAY', 'Payments'],
+  ]) {
+    const list = [...referenceDiagnostics].filter(([code]) => familyOf(code) === letter)
     if (!list.length) continue
     lines.push(`## ${name}`, '', '| Code | Catches |', '|---|---|')
-    for (const e of list)
-      lines.push(`| \`${e.code}\` | ${e.catches.replace(/\|/g, '\\|').replace(/\n/g, ' ')} |`)
+    for (const [code, e] of list)
+      lines.push(`| \`${code}\` | ${e.catches.replace(/\|/g, '\\|').replace(/\n/g, ' ')} |`)
     lines.push('')
   }
   return lines.join('\n')
@@ -307,6 +317,7 @@ export {
   SUMMARIES,
   LEADS,
   SECTIONS,
+  referenceDiagnostics,
   LEARN,
   overviewOf,
   MOVED,

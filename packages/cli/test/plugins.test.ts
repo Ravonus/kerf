@@ -238,24 +238,36 @@ describe('build-side slots and check hooks (research 26 §2.5, §3.1)', () => {
     const kit = `check: {
       include: ['src/**/*.tsx'],
       run: (ctx) => ctx.files.flatMap(file => ctx.jsx(file).elements.filter(e => e.name === 'button' && !e.attr('type')).map(e => ({
-        code: 'D011', file, start: e.start, end: e.tagEnd, why: 'A <button> without a type submits forms.',
+        code: 'D099', file, start: e.start, end: e.tagEnd, why: 'A <button> without a type submits forms.',
         fix: { description: 'Add type', safe: true, edits: [{ start: e.tagEnd, end: e.tagEnd, text: ' type="button"' }] },
-      }))).concat([{ code: 'X999', file: 'src/main.tsx', start: 0, end: 0, why: 'not mine' }]),
+      }))).concat([
+        { code: 'X999', file: 'src/main.tsx', start: 0, end: 0, why: 'not mine' },
+        { code: 'D011', file: 'src/main.tsx', start: 0, end: 0, why: 'already owned by core' },
+      ]),
     },
-    diagnostics: [{ code: 'D011', catches: 'Untyped button', fix: 'Add type="button"', severity: 'warning' }],`
+    diagnostics: [{ code: 'D099', catches: 'Untyped button', fix: 'Add type="button"', severity: 'warning' }],`
     const dir = project({ 'kerf.config.ts': config({ kit }) }) // its `diagnostics` comes after the fixture's, so it wins
     const r = await check(dir)
-    const d011 = r.diagnostics.filter((d) => d.code === 'D011')
-    expect(d011.length).toBeGreaterThan(0)
-    expect(d011[0]).toMatchObject({
+    const fixtureFindings = r.diagnostics.filter((d) => d.code === 'D099')
+    expect(fixtureFindings.length).toBeGreaterThan(0)
+    expect(fixtureFindings[0]).toMatchObject({
       owner: '@acme/kit',
       severity: 'warning',
       fix: { safe: true, description: 'Add type' },
     })
-    const text = readFileSync(join(dir, d011[0].file), 'utf8')
-    expect(text.slice(...d011[0].offset)).toBe('<button')
+    const text = readFileSync(join(dir, fixtureFindings[0].file), 'utf8')
+    expect(text.slice(...fixtureFindings[0].offset)).toBe('<button')
     expect(r.diagnostics.find((d) => d.code === 'P111').why).toContain(
       '`X999`, outside its namespace `D`',
+    )
+    expect(r.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: 'P111',
+        why: expect.stringContaining('`D011`, already registered by `core`'),
+      }),
+    )
+    expect(r.diagnostics).not.toContainEqual(
+      expect.objectContaining({ code: 'D011', owner: '@acme/kit' }),
     )
   })
 })

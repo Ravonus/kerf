@@ -68,9 +68,9 @@ export function installed(root) {
   return { kerf, exports: exportsOf(kerf), status: probes.get(kerf.compilerPath) }
 }
 
-function status(code, info) {
-  const e = entry(code)
+function status(e, info) {
   const st = info.status[e.code]
+  if (e.plugin) return `from the \`${e.plugin}\` diagnostic manifest`
   if (e.by === 'compiler')
     return st?.implemented
       ? `reported${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}`
@@ -89,22 +89,33 @@ function status(code, info) {
     return e.proposed
       ? 'reported by kerf check (proposed code, research 17)'
       : 'reported by kerf check'
-  if (e.by === 'runtime') return 'reported in dev by the runtime (a console warning)'
+  if (e.by === 'runtime')
+    return e.surface
+      ? `reported on the ${e.surface} surface during ${e.phase}`
+      : 'reported in dev by the runtime (a console warning)'
   if (e.by === 'plugin') return `reported by kerf check when \`${e.owner}\` is in \`plugins\``
   return 'reserved'
 }
 
-function codePage(code, info) {
-  const e = entry(code)
+/** The diagnostic reference page shared by the CLI and the framework's docs site. */
+export function diagnosticPage(code, info, e = entry(code)) {
   const lines = [
-    `# ${code} (${e.severity})`,
+    `# ${code} (${e.severity ?? 'error'})`,
     '',
     e.catches + '.',
     '',
     `**Fix:** ${e.fix}.`,
     '',
-    `**Status in kerf@${info.kerf.version}:** ${status(code, info)}.`,
+    `**Status in kerf@${info.kerf.version}:** ${status(e, info)}.`,
   ]
+  if (e.code !== code) lines.push('', `Lookup alias for \`${e.code}\`.`)
+  if (e.owner) lines.push('', `**Owner:** \`${e.owner}\`.`)
+  if (e.surface) lines.push('', `**Surface and phase:** ${e.surface}, ${e.phase}.`)
+  if (e.status) lines.push('', `**Default status:** ${e.status}.`)
+  if (e.message) lines.push('', `**Public message:** ${e.message}`)
+  if (e.introduced && e.introduced !== 'legacy') lines.push('', `**Introduced:** ${e.introduced}.`)
+  if (e.deprecated) lines.push('', `**Deprecated:** ${e.deprecated}.`)
+  if (e.notes) lines.push('', e.notes)
   if (e.example) lines.push('', 'Triggers it:', '', '```tsx', e.example, '```')
   if (code.startsWith('T'))
     lines.push(
@@ -127,13 +138,15 @@ const pluginDocs = async (root) =>
   (await contributed(root)).flatMap((c) => (c.manifest.docs ? [c.manifest.docs] : []))
 const pluginCodes = async (root) =>
   (await contributed(root)).flatMap((c) =>
-    (c.manifest.diagnostics ?? []).map((d) => ({ ...d, plugin: c.name })),
+    (c.manifest.diagnostics ?? [])
+      .filter((d) => !entry(d.code.toUpperCase()))
+      .map((d) => ({ ...d, plugin: c.name })),
   )
 
 function diagnosticsPage(info, own = []) {
   const rows = [
     ...catalog.map(
-      (e) => `| ${e.code} | ${e.severity} | ${e.catches} | ${e.fix} | ${status(e.code, info)} |`,
+      (e) => `| ${e.code} | ${e.severity} | ${e.catches} | ${e.fix} | ${status(e, info)} |`,
     ),
     ...own.map(
       (d) =>
@@ -191,17 +204,14 @@ export async function docs(root, topic) {
     return { topic: 'index', text, topics: all }
   }
   const info = installed(root)
-  if (/^[A-Z]{1,5}\d{3}$/i.test(key)) {
+  if (/^(?:E_[A-Z]+(?:_[A-Z]+)*|(?:[\w.-]+\/)?[A-Z]{1,5}\d{3})$/i.test(key)) {
     const code = key.toUpperCase()
-    const own = !entry(code) && (await pluginCodes(root)).find((d) => d.code === code)
-    if (own)
-      return {
-        topic: code,
-        text: `# ${code} (${own.severity ?? 'error'})\n\n${own.catches}.\n\n**Fix:** ${own.fix}.\n\nReported by kerf check, from \`${own.plugin}\`.`,
-      }
-    if (!entry(code))
+    const registered = entry(code)
+    const own = !registered && (await pluginCodes(root)).find((d) => d.code.toUpperCase() === code)
+    if (!registered && !own)
       throw Object.assign(new Error(`unknown diagnostic code ${code}`), { code: 'E_UNKNOWN_TOPIC' })
-    return { topic: code, text: codePage(code, info) }
+    const diagnostic = own ? own.code : code
+    return { topic: diagnostic, text: diagnosticPage(diagnostic, info, own || registered) }
   }
   if (key === 'diagnostics')
     return { topic: key, text: diagnosticsPage(info, await pluginCodes(root)) }
