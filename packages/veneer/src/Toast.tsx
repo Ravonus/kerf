@@ -75,6 +75,8 @@ export function Toaster(props: ToasterProps = {}) {
   )
   return (
     <>
+      {/* Siblings keep their insertion point when the region and both announcers move into a modal. */}
+      <template data-veneer-toast-anchor=""></template>
       <section
         ref={(n) => (region = n)}
         data-scope="toast"
