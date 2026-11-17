@@ -12,12 +12,13 @@ import {
   type State,
 } from '../index'
 import { rt } from '../index/graph'
+import { onRenderError, reportRenderError } from '../index/errors'
 import { keys, nextKey, under } from '../keys'
 import { boundaries, timing, waiting, type Tracked } from './shared'
 import { around, checkSwap } from './view'
+import { errorRecord, restoreError } from './error'
 
-type Pass = typeof rt & { shown?: (e: unknown) => unknown }
-const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
+type Pass = typeof rt & { shown?: (e: unknown) => unknown; routeErrors?: boolean }
 
 /** Content's own holes, which a client reads after `scoped` has ended and the server read inside it: same scope, same keys. */
 function inScope(c: unknown) {
@@ -74,7 +75,7 @@ export function Boundary(props: BoundaryProps) {
     content: undefined,
     dispose: undefined,
   }
-  const failed = () => (thrown.value = new Error(data!.r[key!]?.e ?? 'server render failed'))
+  const failed = () => (thrown.value = restoreError(data!.r[key!]))
   if (boundary.was === 'e') failed()
   /** Run `fn` in the content (`c`) or fallback (`f`) scope while keys are on; fresh otherwise. */
   const scoped = <T>(side: 'c' | 'f', fn: () => T): T =>
@@ -89,7 +90,7 @@ export function Boundary(props: BoundaryProps) {
     const status = untrack(() => (failure.value !== undefined ? 'e' : loading.value ? 'p' : 'c'))
     if (key !== undefined && data) {
       data.b[key] = status
-      if (status === 'e') data.r[key] = { e: message(untrack(() => failure.value)) }
+      if (status === 'e') data.r[key] = errorRecord(untrack(() => failure.value))
     }
     if (status === 'p') show.value = 'fallback'
     else if (status === 'c' && key !== undefined)
@@ -171,6 +172,7 @@ function makeBuilder({
         (dispose) =>
           scoped('c', () => {
             boundary.dispose = dispose
+            if (!rt.server && props.error) onRenderError((e) => (thrown.value = e))
             return boundaries.provide(track, () => {
               try {
                 const c = props.children
@@ -318,7 +320,7 @@ function boundaryView({
   return memo(() => {
     const e = failure.value
     if (e !== undefined) {
-      if (DEV && !props.error) console.error('kerf: <Boundary> without `error` caught', e)
+      if (!props.error && forwardFailure(e, parent)) return null
       const view = props.error ? sideView('e', () => props.error!(e, retry)) : null
       if (!rt.stream || key === undefined) return view
       // The fallback may be out already: what replaces it is this, not the content that never came.
@@ -346,4 +348,9 @@ function boundaryView({
     }
     return s === 'content' ? boundary.content : null
   })
+}
+
+function forwardFailure(error: unknown, parent: ReturnType<typeof getOwner>) {
+  if ((rt as Pass).routeErrors) throw error
+  return !rt.server && reportRenderError(error, parent)
 }
