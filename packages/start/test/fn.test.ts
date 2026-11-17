@@ -107,7 +107,11 @@ test('the shared cache serves a cached query until a mutation invalidates its ta
 test('Q006: a cached query that reads the request fails', async () => {
   const res = await call('leaky')
   expect(res.status).toBe(500)
-  expect((await res.json()).e.code).toBe('Q006')
+  const failure = (await res.json()).e
+  expect(failure.code).toBe('Q006')
+  expect(failure.reference).toMatch(/^[a-f0-9]{24}$/)
+  expect(failure.reference).toBe(res.headers.get('x-kerf-error'))
+  expect(failure.stack).toContain('Q006')
 })
 
 test('redirect() in load: 307 for the page, { r } for client navigation', async () => {

@@ -20,8 +20,9 @@ import { fnId, inlineSheets, sheetPieces } from '../src/vite.mjs'
 import { INLINE_CSS_MAX } from '../src/inline.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
 import { build, out, serve } from './build.setup'
+import { registerProductionRecovery } from './build-error-recovery'
 
-type Server = { url: string; stop: () => boolean }
+type Server = Awaited<ReturnType<typeof serve>>
 type GetServer = () => Server
 type ReadPage = (path: string) => Promise<{ html: string; res: Response }>
 type Paint = (html: string) => string
@@ -682,6 +683,8 @@ describe('node preset, end to end', () => {
   registerBuildNoChunkCarriesZodASchemaOnly()
 
   registerBuildTheProductionBuildHydratesWithInChrome(() => server)
+
+  registerProductionRecovery(() => server)
 })
 
 test('bun preset builds and serves', async () => {

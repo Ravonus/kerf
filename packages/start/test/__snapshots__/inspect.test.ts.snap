@@ -40,6 +40,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
     },
     {
       "code": "H016",
+      "file": "src/routes/recover/[kind].tsx",
+      "route": "/recover/[kind]",
+      "severity": "info",
+      "why": "No real page of this route to look at, so only its source was checked. Export \`prerender\`, or link to one from a page.",
+    },
+    {
+      "code": "H016",
       "file": "src/routes/tags/[tag].tsx",
       "route": "/tags/[tag]",
       "severity": "info",
@@ -1389,6 +1396,175 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
       ],
       "url": "/meta/<name>",
+    },
+    {
+      "card": "built-in",
+      "data": "placeholder",
+      "file": "src/routes/recover/[kind].tsx",
+      "image": "on-demand",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+        "src/routes/recover/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Exercise the Start error route.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_kerf/og/recover/<kind>.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Recovery test <kind> · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [
+        "kind",
+      ],
+      "path": "/recover/[kind]",
+      "samples": [],
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Recovery test <kind> · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Exercise the Start error route.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/recover/<kind>",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Recovery test <kind> · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Exercise the Start error route.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/recover/<kind>",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/recover/<kind>.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Recovery test <kind> · Acme",
+            "name": "twitter:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Exercise the Start error route.",
+            "name": "twitter:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_kerf/og/recover/<kind>.png?v=<hash>",
+            "name": "twitter:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/recover/<kind>",
     },
     {
       "card": "built-in",

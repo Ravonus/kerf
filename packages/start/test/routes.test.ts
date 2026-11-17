@@ -19,6 +19,12 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
       dir: 'shared',
       parent: 'layout:',
     },
+    {
+      id: 'layout:recover',
+      file: 'src/routes/recover/_layout.tsx',
+      dir: 'recover',
+      parent: 'layout:',
+    },
   ])
   // Most specific first: static segments before params, longer before shorter, `/` last.
   expect(m.routes.map((r) => [r.id, r.kind, r.params, r.layouts, r.card ?? null])).toEqual([
@@ -28,6 +34,7 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
     ['/shared/large', 'page', [], ['layout:', 'layout:shared'], null],
     ['/shared/small', 'page', [], ['layout:', 'layout:shared'], null],
     ['/meta/$name', 'page', ['name'], ['layout:'], null],
+    ['/recover/$kind', 'page', ['kind'], ['layout:', 'layout:recover'], null],
     ['/tags/$tag', 'page', ['tag'], ['layout:'], null],
     ['/users/$id', 'page', ['id'], ['layout:', 'layout:users'], 'src/routes/users/[id].og.tsx'],
     ['/about', 'page', [], ['layout:'], null],

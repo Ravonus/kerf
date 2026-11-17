@@ -107,7 +107,9 @@ describe('routing', () => {
     const r = await html('/boom')
     expect(r.status).toBe(500)
     expect(tags(r.text)[0]).toBe('title Something broke · Acme')
-    expect(r.text).toMatch(/class="error">Error 500: loader exploded/)
+    expect(r.text.replace(/<!--[\s\S]*?-->/g, '')).toMatch(
+      /class="error"[^>]*>Error 500: loader exploded/,
+    )
   })
 
   test('H007: meta reading a deferred field is an error, not a page with a missing title', async () => {
