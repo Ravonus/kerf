@@ -3350,7 +3350,9 @@ exports[`Tabbed: server HTML 1`] = `
 `;
 
 exports[`Toasts: client DOM after mount 1`] = `
-"<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" style="block-size: 0px;" tabindex="-1">
+"<template data-veneer-toast-anchor="">
+</template>
+<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" style="block-size: 0px;" tabindex="-1">
 <div aria-label="Plain" data-id="t3" data-part="root" data-scope="toast" data-tone="neutral" role="group" style="z-index: 100; --_y: 0px; --_s: 1; --_o: 1;">
 <svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
@@ -3506,7 +3508,9 @@ exports[`Toasts: client DOM after mount 1`] = `
 `;
 
 exports[`Toasts: server HTML 1`] = `
-"<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" tabindex="-1">
+"<template data-veneer-toast-anchor="">
+</template>
+<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" tabindex="-1">
 <div aria-label="Plain" data-id="t3" data-part="root" data-scope="toast" data-tone="neutral" role="group">
 <svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">

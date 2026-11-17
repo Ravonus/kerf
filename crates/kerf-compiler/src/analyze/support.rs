@@ -60,6 +60,8 @@ impl<'a> Visit<'a> for Reactive<'_, '_> {
 pub(super) struct Boxes<'s> {
     pub(super) scoping: &'s Scoping,
     pub(super) set: HashSet<SymbolId>,
+    /// Locally constructed mutable State boxes with the per-entry `get` API.
+    pub(super) entries: HashSet<SymbolId>,
     /// @kerf-js/core/browser value imports.
     pub(super) browser: HashSet<SymbolId>,
     /// `const`s made as arrays here: `[…]`, `Array.from(…)`, `new Array(…)`.
@@ -114,6 +116,17 @@ impl<'a> Visit<'a> for Boxes<'_> {
             };
             if boxed && let Some(sym) = binding_symbol(id) {
                 self.set.insert(sym);
+                let mutable = match &call.callee {
+                    Expression::Identifier(c) => c.name == "state",
+                    Expression::StaticMemberExpression(m) => {
+                        matches!(&m.object, Expression::Identifier(o) if o.name == "state")
+                            && m.property.name == "linked"
+                    }
+                    _ => false,
+                };
+                if mutable {
+                    self.entries.insert(sym);
+                }
             }
         }
         walk::walk_variable_declarator(self, it);

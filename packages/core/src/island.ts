@@ -18,6 +18,9 @@ import { hchild } from './claim'
 import { hydration, sweep } from './hydrate'
 import { keys, under } from './keys'
 import { siblings, comments, bounds, slot, closing } from './island/dom'
+import { listing, ran, track, type Top } from './island/top'
+
+export { park } from './island/top'
 
 export type Load = (id: string) => (props: { v: unknown[]; s: unknown }) => unknown
 
@@ -208,22 +211,13 @@ function watch(r: Later, c: Comment) {
   near.observe(el)
 }
 
-function drop(c: Comment, close: Node) {
-  for (let n: Node | null = c.nextSibling; n && n !== close;) {
-    const x: Node | null = n.nextSibling
-    n.parentNode!.removeChild(n)
-    n = x
-  }
-  close.parentNode?.removeChild(close)
-  c.parentNode?.removeChild(c)
-}
-
 function mountIslands(
   nodes: Node[],
   load: Load,
   wait?: (id: string) => Promise<unknown>,
   page?: boolean,
 ) {
+  const listed = new Map<Node, Top>()
   const found: [Comment, boolean][] = []
   const tops = new Set(nodes)
   let nested = 0
@@ -236,6 +230,8 @@ function mountIslands(
     const [id, key, v, when] = JSON.parse(c.data.slice(3)) as [string, string, unknown[], string?]
     const open = c.nextSibling!
     const close = closing(open)
+    const mine = top && close ? track(c, open, close) : undefined
+    if (mine) listed.set(c, mine)
     const mount = () => {
       const ranges = slot(open, close!, hydration.trash)
       let read = 0
@@ -245,12 +241,13 @@ function mountIslands(
           return ranges[read++ % ranges.length]
         },
       }
-      under(key + '/', () =>
-        hchild(c.parentNode as Element, () => load(id)(props), close, undefined, undefined, 1),
+      // The end marker's parent, not the comment's: a level built for a navigation leaves its top comments behind.
+      const h = under(key + '/', () =>
+        hchild(close!.parentNode as Element, () => load(id)(props), close, undefined, undefined, 1),
       )
-      // At the level's top with a range that stays: the island decides what's in it, so the level can't list it.
-      if (top && !hydration.trash.includes(close as ChildNode)) onCleanup(() => drop(c, close!))
-      else hydration.trash.push(c)
+      if (mine) ran(mine, h)
+      // At the level's top with a range that stays, the comment stays to be dropped with it.
+      if (!top || hydration.trash.includes(close as ChildNode)) hydration.trash.push(c)
     }
     // With the level's own claim, unless the page is loading and the capture script can hold what comes first (`turn`).
     if (!wait || (!when && (!page || !held()))) {
@@ -275,7 +272,6 @@ function mountIslands(
       if (later.get(key) !== r) return
       later.delete(key)
       if (r.el) near?.unobserve(r.el)
-      if (top) drop(c, close!)
     })
     if (!when) turn(r)
     // No capture script (a strict CSP, say): nothing would ever wake it, so it doesn't wait.
@@ -289,6 +285,7 @@ function mountIslands(
           for (const el of [n as Element, ...(n as Element).querySelectorAll('[wk]')])
             hydration.registry.delete(el.getAttribute('wk')!)
   }
+  return listed
 }
 /** Run `fn` as a claiming pass over `nodes`, for HTML that isn't part of `hydrate()`'s own pass. */
 function claiming(nodes: Node[], data: SsrData | undefined, fn: () => void) {
@@ -360,12 +357,15 @@ export function level(
       : undefined
   const scope = resume
   resume = undefined
-  const islands = () => mountIslands(nodes, load, wait, page)
+  let listed: Map<Node, Top> | undefined
+  const islands = () => {
+    listed = mountIslands(nodes, load, wait, page)
+  }
   page ? islands() : claiming(nodes, data, islands)
   resume = scope
   hydration.trash.push(...own.filter((n) => !anchors.has(n)))
   if (!page) sweep()
-  nodes = read().filter((n) => n === a || n === b || !marks(n))
+  nodes = listing(read(), listed!, (n) => n === a || n === b || !marks(n)) as Node[]
   if (!a) return nodes
   const i = nodes.indexOf(a)
   if (i >= 0) {

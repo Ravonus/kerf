@@ -50,14 +50,10 @@ export async function serverFunction(
       return out({ v: e.v, t: e.tags })
     }
     if (request.method !== 'POST') return fail('Q010', `Q010: mutation \`${id}\` needs POST`, 405)
-    const origin = request.headers.get('origin')
-    const from = request.headers.get('sec-fetch-site')
-    const cross =
-      (origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none')
     const type = request.headers.get('content-type') ?? ''
     const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-kerf` still forces a preflight
     if (
-      cross ||
+      crossOrigin(options, request, url) ||
       request.headers.get('x-kerf') !== '1' ||
       !(multipart || type.startsWith('application/json'))
     )
@@ -129,5 +125,17 @@ function functionError(
       e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' },
     },
     500,
+  )
+}
+
+function crossOrigin(options: HandlerOptions, request: Request, url: URL) {
+  const origin = request.headers.get('origin')
+  const from = request.headers.get('sec-fetch-site')
+  // Naming an origin permits its mutation; CORS separately decides whether the browser can read it.
+  const named = options.site?.mutationOrigins
+  const trusted = !!origin && !!named && (named === '*' || named.includes(origin))
+  return (
+    !trusted &&
+    ((origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none'))
   )
 }

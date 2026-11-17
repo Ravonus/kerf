@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { addCommand, pinned } from '../src/add.mjs'
+import { installer } from '../src/add/installer.mjs'
 import { buildCommand, DB_COMMANDS } from '../src/start.mjs'
 import { loadConfig } from '../src/load-config.mjs'
 import { project } from './helpers.mjs'
@@ -239,7 +240,12 @@ function registerAddUpdatesTests() {
   })
 
   it('--dry-run changes nothing', async () => {
-    const dir = project({ ...acme, 'kerf.config.ts': 'export default {}\n' })
+    // Its own lockfile: without one the nearest above it answers, and under this repo that is pnpm's.
+    const dir = project({
+      ...acme,
+      'kerf.config.ts': 'export default {}\n',
+      'package-lock.json': '{}',
+    })
     expect((await addCommand(dir, 'acme', { dryRun: true })).actions).toEqual([
       'install acme with npm',
       'add acme to kerf.config.ts',
@@ -261,7 +267,11 @@ function registerAddUpdatesTests() {
   // resolver sure the package had no `exports`, so the load after a good install failed with a P007 about `index.js`.
   it('installs a package the config already imports, and leaves the config alone', async () => {
     const config = "import acme from 'acme/plugin'\nexport default { plugins: [acme()] }\n"
-    const dir = project({ 'kerf.config.ts': config, 'package.json': '{"name":"app"}' })
+    const dir = project({
+      'kerf.config.ts': config,
+      'package.json': '{"name":"app"}',
+      'package-lock.json': '{}',
+    })
     const bin = join(dir, 'fake-bin')
     mkdirSync(bin)
     writeFileSync(
@@ -461,3 +471,56 @@ function registerDbPluginTests() {
     })
   })
 }
+
+describe('the package manager `kerf add` installs with', () => {
+  const tree = (files: Record<string, string>) => {
+    const dir = mkdtempSync(join(tmpdir(), 'kerf-add-pm-'))
+    for (const [file, text] of Object.entries(files)) {
+      mkdirSync(join(dir, file, '..'), { recursive: true })
+      writeFileSync(join(dir, file), text)
+    }
+    return dir
+  }
+  const none = [{}, {}] as const // no manager is running the command, and the runtime is Node
+
+  it("is the workspace's, for a package with no lockfile of its own", () => {
+    const dir = tree({
+      'pnpm-lock.yaml': '',
+      'pnpm-workspace.yaml': 'packages:\n  - web\n',
+      'web/package.json': JSON.stringify({ dependencies: { '@acme/shared': 'workspace:*' } }),
+    })
+    expect(installer(join(dir, 'web'), ...none)).toEqual(['pnpm', 'add'])
+    expect(installer(dir, ...none)).toEqual(['pnpm', 'add'])
+  })
+
+  it('is the nearest one: a lockfile in the package wins over the one above it', () => {
+    const dir = tree({
+      'pnpm-lock.yaml': '',
+      'apps/web/package-lock.json': '{}',
+      'apps/web/package.json': '{}',
+    })
+    expect(installer(join(dir, 'apps/web'), ...none)).toEqual(['npm', 'install'])
+    expect(installer(join(dir, 'apps'), ...none)).toEqual(['pnpm', 'add'])
+  })
+
+  it('reads `packageManager` where there is no lockfile yet', () => {
+    const dir = tree({
+      'package.json': JSON.stringify({ packageManager: 'yarn@4.5.0+sha512.abc' }),
+      'web/package.json': '{}',
+    })
+    expect(installer(join(dir, 'web'), ...none)).toEqual(['yarn', 'add'])
+  })
+
+  it('with nothing on the way up, is the manager running the command, then npm', () => {
+    const dir = tree({ 'web/package.json': '{}' })
+    const app = join(dir, 'web')
+    // A temp folder has nothing above it that names a manager, unless the machine's own root does.
+    if (installer(app, ...none)[0] !== 'npm') return
+    expect(installer(app, { npm_config_user_agent: 'pnpm/9.1.0 npm/? node/v22' }, {})).toEqual([
+      'pnpm',
+      'add',
+    ])
+    expect(installer(app, {}, { bun: '1.2.0' })).toEqual(['bun', 'add'])
+    expect(installer(app, ...none)).toEqual(['npm', 'install'])
+  })
+})

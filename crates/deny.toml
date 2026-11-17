@@ -4,7 +4,11 @@ all-features = true
 
 [advisories]
 yanked = "deny"
-ignore = []
+ignore = [
+  # typify emits chrono types for a `date-time` schema, so generated contracts name it. Moving them to another
+  # date crate changes every app's generated Rust; until then the advisory (unmaintained, no known flaw) is accepted.
+  { id = "RUSTSEC-2026-0543", reason = "generated contract types use chrono through typify" },
+]
 
 [licenses]
 confidence-threshold = 0.9

@@ -32,6 +32,9 @@
     "./auth/drizzle": "./src/auth/drizzle.ts",
     "./extension": "./src/extension.ts",
     "./client": "./src/client.tsx",
+    "./virtual": {
+      "types": "./virtual.d.ts"
+    },
     "./server": "./src/server.tsx",
     "./vite": "./src/vite.mjs",
     "./routes": "./src/routes.mjs",

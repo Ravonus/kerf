@@ -73,6 +73,7 @@ The snapshots cover export paths, targets and conditions, not names or signature
 - `@kerf-js/start/auth/drizzle`: Drizzle authentication integration; requires Drizzle.
 - `@kerf-js/start/extension`: Server extension contract.
 - `@kerf-js/start/client`: Client application bootstrap; browser.
+- `@kerf-js/start/virtual`: Type declarations for `virtual:kerf/routes` in apps with a custom client entry.
 - `@kerf-js/start/server`: Server application rendering and request handling.
 - `@kerf-js/start/vite`: Start Vite plugin; Node tooling.
 - `@kerf-js/start/routes`: Route manifest tooling.

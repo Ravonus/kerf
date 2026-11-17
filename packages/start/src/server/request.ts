@@ -27,6 +27,7 @@ export function stamped(request: Request, trustProxy?: boolean | number): Reques
   return new Request(request.url, {
     method: request.method,
     headers,
+    signal: request.signal,
     ...(request.body && { body: request.body, duplex: 'half' }),
   })
 }

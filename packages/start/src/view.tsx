@@ -61,14 +61,18 @@ export function Level(props: { route: RouteState; depth: number }) {
         )
       : body()
   }
-  const display = retainRouteView(view, () => {
-    const shape = lv.shape.value
-    return shape ? (
-      <div inert aria-hidden="true" style="display:contents">
-        <ShapeTree shapes={shape} depth={0} />
-      </div>
-    ) : undefined
-  })
+  const display = retainRouteView(
+    view,
+    () => {
+      const shape = lv.shape.value
+      return shape ? (
+        <div inert aria-hidden="true" style="display:contents">
+          <ShapeTree shapes={shape} depth={0} />
+        </div>
+      ) : undefined
+    },
+    route.hide,
+  )
   return <>{display()}</>
 }
 

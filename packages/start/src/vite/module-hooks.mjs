@@ -15,6 +15,7 @@ import {
 } from './route-modules.mjs'
 import {
   serverEntry,
+  httpModule,
   extensionsModule,
   mediaModule,
   busBound,
@@ -79,6 +80,10 @@ export const load = (s) => ({
       return `export { $i${i.index} as default } from ${JSON.stringify(i.file)}\n`
     }
     if (which === V.routes) return routesModule(this, s, client)
+    if (which === V.http || which === V.hooks) {
+      if (client) this.error('Q012: HTTP routes and request hooks run only on the server')
+      return httpModule(s, which === V.hooks, this)
+    }
     if (which === V.app)
       return appModule({
         site: s.options.site ?? {},
@@ -120,6 +125,8 @@ export const transform = (s) => ({
     const client = this.environment?.config.consumer === 'client'
     if (client && path === s.clientEntry()) return { code: ENTRY_SHEETS + code, map: null }
     const rel = relative(s.root, path).split('\\').join('/')
+    if (client && (/\.http\.[jt]s$/.test(rel) || rel.startsWith('src/hooks.server.')))
+      this.error(`Q012: ${rel} runs only on the server; do not import it from client code`)
     if (isServerModule(rel)) {
       const out = client
         ? clientStubs(code, path, rel, await s.shapeTable(this))

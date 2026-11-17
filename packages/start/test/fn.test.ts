@@ -59,6 +59,22 @@ test('Q010: a mutation without the CSRF proof is refused', async () => {
   expect((await get(`/_kerf/fn/${id('addTodo')}`)).status).toBe(405) // GET a mutation
 })
 
+test('a mutation answers an origin the app named in `site.mutationOrigins`, and still wants the rest of the proof', async () => {
+  const named = {
+    'content-type': 'application/json',
+    origin: 'https://partner.example',
+    'sec-fetch-site': 'cross-site',
+  }
+  const ok = await post(
+    'addTodo',
+    { i: { title: 'From a partner page' } },
+    { ...named, 'x-kerf': '1' },
+  )
+  expect(ok.status).toBe(200)
+  const bare = await post('addTodo', { i: { title: 'x' } }, named) // no `x-kerf`: no preflight was forced
+  expect(bare.status).toBe(403)
+})
+
 test('a mutation refreshes the queries it invalidated in the same response (single-flight)', async () => {
   const res = await post('addTodo', {
     i: { title: 'From the test' },

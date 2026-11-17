@@ -119,3 +119,16 @@ export const Check = (props: { on: { value: boolean }; title: string }) => {
 export const CheckDirect = (props: { on: { value: boolean }; title: string }) => (
   <input type="checkbox" checked={props.on.value} data-title={props.title} />
 )
+
+/** Forwarded children must be evaluated only in their content hole. */
+function ForwardedSvg(props: Record<string, unknown>) {
+  return <svg viewBox="0 0 24 24" {...props} />
+}
+export function ForwardedChildren() {
+  return (
+    <ForwardedSvg class="icon">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3-3" />
+    </ForwardedSvg>
+  )
+}

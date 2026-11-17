@@ -62,6 +62,8 @@ export default defineConfig({
 | `site` | Page metadata defaults and CSS delivery. P007 `url` not absolute http(s), `title` without `%s`, `locale` not `en_US` style; H001 no `url`; H003 no `description`; H004 a title over 60 or a description over 160 (warnings) |
 | `site.card` | The generated share card's colours and fonts. P007 a colour that isn't `#rrggbb`, a font family that isn't a name. `kerf docs meta` has the rest |
 | `site.headers` | Response headers by route pattern |
+| `site.mutationOrigins` | Additional origins allowed by Q010 for Kerf mutations: exact origin list or `'*'`. Default same origin. Does not set CORS headers or protect raw HTTP handlers |
+| `site.cors` | `{ origins: ['https://page.example'], credentials?: true, headers?: ['x-agorix-grant'] }`, or `{ origins: '*' }`. Browser access to Kerf function/data endpoints; wildcard with credentials is refused (P007) |
 | `site.security` | Headers every Start response gets unless it sets its own (`nosniff`, `Referrer-Policy`, `X-Frame-Options: SAMEORIGIN`, COOP, HSTS on https). Name a header to change it, `false` to drop it, or `security: false` for none |
 | `site.trustProxy` | `true` or a number: proxies in front of the server. The client's address comes from that many entries from the right of `X-Forwarded-For`, so auth's rate limit sees real clients. Leave it off with nothing in front |
 | `site.log` | `'text'` (default) or `'json'`: the server log's lines, readable or as JSON objects with `time`, `level`, `code`, `message`, `route` and `requestId` |
@@ -167,3 +169,42 @@ HSTS defaults to the current host. `includeSubDomains` commits every subdomain
 to HTTPS; add it only after checking the owner's subdomains. The `preload` token
 also requires a year-long lifetime and does not itself submit the domain to a
 browser preload list. Kerf never opts other people's domains into this policy.
+
+## Cross-origin Kerf endpoints
+
+```ts
+import { defineConfig } from '@kerf-js/core/config'
+
+export default defineConfig({
+  site: {
+    mutationOrigins: ['https://page.example'],
+    cors: {
+      origins: ['https://page.example'],
+      credentials: true,
+      headers: ['x-agorix-grant'],
+    },
+  },
+})
+```
+
+By default only same-origin browsers can read Kerf endpoints.
+`site.cors` permits GET/HEAD reads of `/_kerf/fn/*` and
+`/_kerf/data/*`, and OPTIONS preflight for GET/HEAD and POST on
+`/_kerf/fn/*`. Allowed request headers include `content-type`,
+`x-kerf` and `accept`, plus names in `headers` (case insensitive).
+An unlisted origin, method or header gets a 403 preflight without
+permission headers. Named-origin responses vary on `Origin`;
+preflights also vary on requested method and headers.
+
+`origins: '*'` never sends `Access-Control-Allow-Credentials`.
+Combining wildcard origins and `credentials: true` is rejected by
+config validation and by the server. For cookie sessions, list exact
+origins and explicitly enable credentials. The browser caller must
+also opt into cross-origin credentials when needed.
+
+CORS allows a browser to read a response; `mutationOrigins` separately
+allows the write through Q010. Both must permit the caller for a
+cross-origin mutation. The JSON and `x-kerf: 1` checks still apply.
+Do not use wildcard mutation origins for cookie-authorized writes.
+Raw `.http.ts` handlers set their own CORS and CSRF policy, commonly
+through `src/hooks.server.ts` (`kerf docs start`).

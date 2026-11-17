@@ -11,6 +11,30 @@ function serverSite(z) {
       .union([z.literal(false), z.record(z.string(), z.union([z.string(), z.literal(false)]))])
       .optional(),
     trustProxy: z.union([z.boolean(), z.int().positive()]).optional(),
+    mutationOrigins: z.union([z.literal('*'), z.array(z.string().min(1))]).optional(),
+    cors: z
+      .union([
+        z.strictObject({
+          origins: z.literal('*'),
+          credentials: z.literal(false).optional(),
+          headers: z.array(z.string().regex(/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/)).optional(),
+        }),
+        z.strictObject({
+          origins: z.array(
+            z
+              .string()
+              .url()
+              .refine((s) => {
+                if (!URL.canParse(s)) return false
+                const u = new URL(s)
+                return /^https?:$/.test(u.protocol) && u.origin === s
+              }, 'use an exact HTTP(S) origin'),
+          ),
+          credentials: z.boolean().optional(),
+          headers: z.array(z.string().regex(/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/)).optional(),
+        }),
+      ])
+      .optional(),
     log: z.enum(['text', 'json']).optional(),
   }
 }

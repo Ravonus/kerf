@@ -17,6 +17,7 @@ import { packageOf, trustStatus } from './trust.mjs'
 import { usageError, refused } from './add/errors.mjs'
 import { addToTs, addToData, listed, names } from './add/config.mjs'
 import { setupOf, planSetup, applySetup, setupActions, authEdits } from './add/setup.mjs'
+import { installer } from './add/installer.mjs'
 
 const ALIASES = {
   veneer: '@kerf-js/veneer',
@@ -51,26 +52,6 @@ const ADDONS = new Set([
   '@kerf-js/realtime-socketio',
   '@kerf-js/realtime-webrtc',
 ])
-
-const INSTALL = {
-  'pnpm-lock.yaml': ['pnpm', 'add'],
-  'bun.lock': ['bun', 'add'],
-  'yarn.lock': ['yarn', 'add'],
-  'deno.lock': ['deno', 'add'],
-  'package-lock.json': ['npm', 'install'],
-}
-
-function installer(root) {
-  const lock = Object.keys(INSTALL).find((f) => existsSync(join(root, f)))
-  return (
-    INSTALL[lock] ??
-    (process.versions.deno
-      ? INSTALL['deno.lock']
-      : process.versions.bun
-        ? INSTALL['bun.lock']
-        : INSTALL['package-lock.json'])
-  )
-}
 
 /** What to install: for an app on local tarballs (`local.mjs`) those go straight in `package.json`, since npm refuses any
  *  spec for them that isn't spelled exactly as their override is. */

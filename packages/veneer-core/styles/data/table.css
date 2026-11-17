@@ -193,6 +193,12 @@
 :where([data-scope="table"] [data-part="state"]:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) *:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) [data-scope="table"] *)) p) { margin: 0; max-inline-size: 42ch; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
 /* density: one attribute on the table root (or any ancestor) */
 :where([data-scope="table"][data-density="compact"]) { --_px: calc(var(--veneer-table-pad-x) * 0.85); }
+/* -- responsive: the table measures itself ------------------------------------
+   The rules below ask how wide the table is, so a table that uses them is its own container: phone cards, or priority
+   columns (Table marks itself data-contain, for as long as it lives). Without one around it a container query
+   matches nothing, and a phone kept the desktop table. A table that uses neither pays for no container. The full
+   inline size keeps one in a row from collapsing, since a container's width can't come from its content. */
+:where([data-scope="table"]:is([data-phone="cards"], [data-contain])) { container-type: inline-size; inline-size: 100%; }
 /* -- responsive: priority columns (all modes) --------------------------------
    data-priority="2" hides under 1000px of table width, "3" under 760px.
    Hidden fields stay reachable: the row's expand/detail sheet lists them. */

@@ -107,7 +107,8 @@ impl Emitter<'_> {
     pub(super) fn condition(&mut self, e: &Expression<'_>) -> (String, Rest) {
         match e {
             Expression::ConditionalExpression(c) => {
-                let test = self.expr(&c.test);
+                // A ternary chooses by truthiness. A refetched object must update props without rebuilding its branch.
+                let test = format!("!!({})", self.expr(&c.test));
                 let yes = self.branch(&c.consequent);
                 let no = self.branch(&c.alternate);
                 (test, Box::new(move |t| format!("{t} ? {yes} : {no}")))

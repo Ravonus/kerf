@@ -162,7 +162,7 @@ impl<'a> Visit<'a> for EntryReads<'_, '_> {
                     Expression::Identifier(id)
                         if m.property.name == "value"
                             && symbol_of(self.a.scoping, id)
-                                .is_some_and(|s| self.a.boxes.contains(&s)) =>
+                                .is_some_and(|s| self.a.entry_boxes.contains(&s)) =>
                     {
                         Some((m.span, Some(id.span), true))
                     }

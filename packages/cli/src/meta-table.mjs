@@ -59,5 +59,8 @@ export function metaTable(result) {
       source: 'source',
     }),
     ...rows.map(line),
+    ...result.routes
+      .filter((r) => r.kind === 'http')
+      .map((r) => `${r.path}  HTTP ${r.methods.join(', ')}  ${r.file}`),
   ].join('\n')
 }

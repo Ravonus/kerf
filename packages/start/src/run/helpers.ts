@@ -1,5 +1,6 @@
 import { flush } from '@kerf-js/core'
 import { rt } from '@kerf-js/core/internal'
+import { clientRequest } from '../client-fetch'
 import type { Component, Match, RoutePayload } from '../router'
 import type { ClientRoutes } from '../run'
 import type { Navigation } from './navigation'
@@ -29,7 +30,8 @@ export function deferred(path: string, level: number, key: string): PromiseLike<
 }
 
 export const ask = (url: URL, signal?: AbortSignal, tag?: string) =>
-  fetch(`/_kerf/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, {
+  clientRequest(`/_kerf/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, {
+    method: 'GET',
     signal: signal ?? null,
     cache: 'no-cache',
     headers: { accept: 'application/json', ...(tag && { 'if-none-match': tag }) },

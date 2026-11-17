@@ -324,7 +324,7 @@ export function LoadMore({
   )
   return (
     <div ref={(n) => (el = n)} data-scope="load-more">
-      <span aria-live="polite">{loading ? 'Loading…' : message}</span>
+      <span aria-live="polite">{loading ? 'Loading…' : done ? message : null}</span>
       {!done && (
         <Button emphasis="outline" tone="neutral" disabled={!!loading} onClick={onLoad}>
           Load more

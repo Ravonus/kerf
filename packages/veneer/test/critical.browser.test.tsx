@@ -85,7 +85,8 @@ async function take(doc: string, width: number) {
   // The deferred sheets never arrive.
   await page.route('**/*', (r: Route) =>
     r.request().isNavigationRequest()
-      ? r.fulfill({ contentType: 'text/html', body: doc })
+      ? // utf-8, said: a page left to guess reads the sort bar's arrow as a different run of letters in each document
+        r.fulfill({ contentType: 'text/html; charset=utf-8', body: doc })
       : r.abort(),
   )
   await page.goto('http://app.test/')

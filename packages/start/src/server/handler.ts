@@ -2,7 +2,8 @@ import type { AsyncLocalStorage } from 'node:async_hooks'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
 import { hub } from '../hub'
-import { compressed } from './compression'
+import { compressed, whole } from './compression'
+import { rawResponses } from './http'
 import { stamped } from './request'
 import { secured } from './security'
 import { requestIdOf } from './log'
@@ -19,14 +20,39 @@ export function makeHandler(
 ) {
   return async (incoming: Request): Promise<Response> => {
     const request = stamped(incoming, options.site?.trustProxy)
-    return secured(await handle(request), request, options)
+    let routed: Response | undefined
+    const next = async (replacement = request) => {
+      const response = await handle(replacement)
+      const text = options.handle ? whole.get(response) : undefined
+      // A hook can read or transform the body. Complete pages otherwise defer allocating it until compression.
+      if (text === undefined) return (routed = response)
+      routed = new Response(text, response)
+      whole.set(routed, text)
+      return routed
+    }
+    const response = options.handle ? await options.handle(request, next) : await next()
+    // Nitro's upgrade hooks travel beside the Response. A header-only wrapper must retain them; a refusal must not.
+    if (
+      routed &&
+      response.body === routed.body &&
+      response.status === routed.status &&
+      Reflect.has(routed, 'crossws')
+    )
+      Object.assign(response, { crossws: Reflect.get(routed, 'crossws') })
+    if (routed && response.body === routed.body) {
+      if (rawResponses.has(routed)) rawResponses.add(response)
+      const text = whole.get(routed)
+      if (text !== undefined) whole.set(response, text)
+    }
+    // Hooks see the representation, never compressed bytes that a text transform would corrupt.
+    const out = rawResponses.has(response) ? response : await compressed(request, response)
+    return secured(out, request, options)
   }
-  async function handle(incoming: Request): Promise<Response> {
-    const request = incoming
+  async function handle(request: Request): Promise<Response> {
     await services.loadExtensions()
     services.check()
     const scope = exec.createScope(request, services.scopeOptions)
-    scope.requestId = requestIdOf(incoming, options.site)
+    scope.requestId = requestIdOf(request, options.site)
     const { pathname } = new URL(request.url)
     if (pathname === '/_kerf/health') return health(options.dev)
     // The build's prerender only lists cards: it holds no secrets and may have no database.
@@ -50,10 +76,11 @@ export function makeHandler(
       void exec.finishScope(scope)
       throw e
     }
-    const out = await compressed(request, exec.finishing(response, scope))
+    const finished = exec.finishing(response, scope)
+    if (rawResponses.has(response)) rawResponses.add(finished)
     try {
-      out.headers.set('x-request-id', scope.requestId)
+      finished.headers.set('x-request-id', scope.requestId)
     } catch {} // a response with fixed headers goes without it
-    return out
+    return finished
   }
 }

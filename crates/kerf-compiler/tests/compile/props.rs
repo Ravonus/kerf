@@ -727,3 +727,33 @@ fn alias_not_for_arrays_computed_keys_or_calls() {
         assert_eq!(codes(&d), ["W001"], "{src}");
     }
 }
+
+#[test]
+fn w017_readonly_row_boxes_do_not_offer_nonexistent_get() {
+    let (_, diagnostics) = run(
+        "import { derived, resource } from '@kerf-js/core';
+export function L({ products }) {
+  const totals = derived(() => [1, 2]);
+  const quotes = resource(async () => [3, 4]);
+  return <ul>{products.map((p, i) => <li key={p.id}>{totals.value[i]} / {quotes.value[i]}</li>)}</ul>;
+}",
+    );
+    assert!(
+        diagnostics.iter().all(|d| d.code != "W017"),
+        "readonly boxes have no per-entry get API: {diagnostics:?}"
+    );
+}
+
+#[test]
+fn w017_readonly_component_boxes_do_not_offer_nonexistent_get() {
+    let (_, diagnostics) = run("import { derived, resource } from '@kerf-js/core';
+export function Row({ id }) {
+  const totals = derived(() => ({ a: 1 }));
+  const quotes = resource(async () => ({ a: 2 }));
+  return <p>{totals.value[id]} / {quotes.value[id]}</p>;
+}");
+    assert!(
+        diagnostics.iter().all(|d| d.code != "W017"),
+        "readonly boxes have no per-entry get API: {diagnostics:?}"
+    );
+}

@@ -22,21 +22,31 @@ type Keyed = Node & { $k?: string }
 export function htpl(html: string, svg?: boolean, where?: string): () => Node {
   let node: Node | undefined
   const tag = /^<([\w:-]+)/.exec(html)![1]!
-  const clone = () => {
+  const template = () => {
     if (!node) {
       const t = document.createElement('template')
       // oxlint-disable-next-line kerf/no-html-sink -- `html` is a template the compiler wrote from static markup, never a runtime value
       t.innerHTML = trustedMarkup(svg ? `<svg>${html}</svg>` : html)
       node = svg ? t.content.firstChild!.firstChild! : t.content.firstChild!
     }
-    return node.cloneNode(true)
+    return node
+  }
+  const clone = () => template().cloneNode(true)
+  const matches = (el: Element) => {
+    // Two branches can put the same tag at the same key. Their static attributes still name different templates.
+    const attrs = (template() as Element).attributes
+    for (let i = 0; i < attrs.length; i++) {
+      const attr = attrs[i]!
+      if (el.getAttribute(attr.name) !== attr.value) return false
+    }
+    return true
   }
   return () => {
     if (!keys.on) return clone()
     const key = nextKey()
     if (keys.hydrating) {
       const el = hydration.registry.get(key)
-      if (el && el.localName === tag.toLowerCase()) {
+      if (el && el.localName === tag.toLowerCase() && matches(el)) {
         hydration.registry.delete(key)
         keys.miss = false
         hydration.trash.push(el)
@@ -51,7 +61,7 @@ export function htpl(html: string, svg?: boolean, where?: string): () => Node {
         const at = where ?? html.slice(0, 60)
         console.warn(
           el
-            ? `kerf: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh`
+            ? `kerf: hydration mismatch at ${at} (wk=${key}): ${el.localName === tag.toLowerCase() ? 'the static template attributes differ' : `the client renders <${tag}>, the server rendered <${el.localName}>`}; rendering it fresh`
             : `kerf: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`,
         )
       }
@@ -154,6 +164,7 @@ const isSeparator = (n: Node) => n.nodeType === 8 && (n as Comment).data === ','
  * `child` for hydratable output. `marker`: the `<!>` it goes before, or none when the hole is the element's only content. `root` and
  * `slot` name the hole's scope (its template's key and its index). `once`: `value` builds static content (a
  * component, an element) and runs once, untracked (`2`: `marker` is the page's data script, not a hole); otherwise a function value is read reactively.
+ * Returns the hole it made, when the value is one that can change.
  */
 export function hchild(
   parent: Element,
@@ -162,8 +173,8 @@ export function hchild(
   root?: Keyed,
   slot?: number,
   once?: 1 | 2,
-) {
-  const claim = () => {
+): Hold | undefined {
+  const claim = (): Hold | undefined => {
     const hydrating = keys.hydrating
     let v = once ? untrack(value as () => unknown) : value
     if (!hydrating) return insert(parent, v, marker)
@@ -179,7 +190,7 @@ export function hchild(
         })
       } else if (v !== marker && v instanceof Node) parent.replaceChild(v, marker)
       keys.hydrating = true
-      return
+      return undefined
     }
     // Claim the server's nodes on the first run; later runs place values as usual.
     const current = range(parent, marker ?? undefined)
@@ -198,9 +209,10 @@ export function hchild(
     const done = typeof v !== 'function' ? (put(v), true) : hole(v as () => unknown, put)
     keys.hydrating = true
     if (done && marker?.nodeType === 8) hydration.trash.push(marker as ChildNode) // nothing comes back here
+    return done ? undefined : h
   }
   const miss = keys.miss // a miss inside this hole ends with it: the template around it goes on as it was
-  if (keys.on && root?.$k !== undefined) under(`${root.$k}.${slot}/`, claim)
-  else claim()
+  const h = keys.on && root?.$k !== undefined ? under(`${root.$k}.${slot}/`, claim) : claim()
   keys.miss = miss
+  return h
 }

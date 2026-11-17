@@ -6,6 +6,7 @@ import { trustedMarkup } from './trusted-markup'
 // (`keys.miss`, which each claim and the end of each hole put back).
 
 import { DEV, effect } from './index'
+import { restOf } from './index/view'
 import {
   WORDS,
   addEvent,
@@ -222,15 +223,17 @@ export function spread(el: Element, props: () => Record<string, unknown>) {
   let refDone = false
   let latest: unknown
   let hydrating = keys.hydrating && !keys.miss
-  effect(props, (v, p = {}) => {
-    delete v.children
-    delete v.key
-    for (const k in p) if (!(k in v)) write(k, undefined, p[k])
-    for (const k in v)
-      if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k) || !shows(el, k, v[k])))
-        write(k, v[k], p[k])
-    hydrating = false
-  })
+  effect(
+    // Forwarded children belong to their content hole, never the attribute read.
+    () => restOf(props(), ['children', 'key']),
+    (v, p = {}) => {
+      for (const k in p) if (!(k in v)) write(k, undefined, p[k])
+      for (const k in v)
+        if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k) || !shows(el, k, v[k])))
+          write(k, v[k], p[k])
+      hydrating = false
+    },
+  )
 
   function write(key: string, value: unknown, prev: unknown) {
     if (key === 'defaultValue' && el.localName === 'select') key = 'value'

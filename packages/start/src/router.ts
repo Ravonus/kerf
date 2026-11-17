@@ -5,7 +5,7 @@
 // renders its new route, and everything inside it goes. One state per request on the server (passed down as a
 // prop), one per tab on the client.
 
-import { state, untrack, type State, type SsrData } from '@kerf-js/core'
+import { state, untrack, type Owner, type State, type SsrData } from '@kerf-js/core'
 import type { Merged } from '@kerf-js/core/ssr'
 import type { Wire } from './data'
 import type { PreparedRouteShape } from './run/shape-preparation'
@@ -72,6 +72,11 @@ export interface RouteState {
   prepareShape?: (id: string) => PreparedRouteShape | null
   /** Client: shows a static level's HTML, with the next level inside it. */
   mount?: (html: string, depth: number, next: () => unknown) => unknown
+  /**
+   * Called with a level's owner before its pending shape takes its place: what a static level keeps at its top (an
+   * island's nodes) leaves the page with it. The client sets it.
+   */
+  hide?: (root: Owner) => void
   /** Around a level's component, at the same point on both sides: the server's markers, the client's key scope. */
   around?: (depth: number, id: string, body: () => unknown) => unknown
 }

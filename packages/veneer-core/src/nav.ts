@@ -203,6 +203,21 @@ function tracking(nav: HTMLElement, current: () => HTMLElement | null, settle: (
   return { over, pointerOut: off, focus, blur, target: () => hovered ?? focused ?? current() }
 }
 
+/**
+ * Two bars under one view-transition name make the browser skip the whole page transition. A bar that finds its name
+ * on one before it in the page gives it up, so of two navs with the stylesheet's default name (or one label) the
+ * first keeps it.
+ */
+function ownName(win: Window, doc: Document, face: HTMLElement) {
+  const name = (el: Element) => win.getComputedStyle(el).getPropertyValue('view-transition-name')
+  const mine = name(face)
+  if (!mine || mine === 'none') return
+  for (const other of doc.querySelectorAll('[data-scope="nav"] > [data-part="indicator"]')) {
+    if (other === face) return
+    if (name(other) === mine) return face.style.setProperty('view-transition-name', 'none')
+  }
+}
+
 /** Slides an indicator to the hovered, focused or current nav item. */
 export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   const axis = opts.axis ?? 'x'
@@ -222,7 +237,10 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   face.addEventListener('transitionend', ended)
 
   // At the frame, once layout is due anyway. Measuring now would force it in the middle of building the page.
-  const first = win.requestAnimationFrame(start)
+  const first = win.requestAnimationFrame(() => {
+    ownName(win, doc, face)
+    start()
+  })
 
   const seen = new win.MutationObserver(settle)
   seen.observe(nav, { subtree: true, attributes: true, attributeFilter: ['aria-current'] })

@@ -45,6 +45,10 @@ import type { HandlerOptions } from './server/types'
 export { cardPath, hash } from './server/text'
 export { serverLog, type Diagnostic } from './server/log'
 export type {
+  HttpEntry,
+  HttpArgs,
+  HttpHandler,
+  RequestHook,
   RouteEntry,
   LayoutEntry,
   Manifest,

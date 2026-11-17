@@ -57,6 +57,17 @@ export interface SiteConfig {
    */
   limits?: { body?: number; upload?: number }
   /**
+   * Other origins whose pages may call this server's mutations, or `'*'` for any. By default a mutation is answered
+   * only from its own origin (Q010). For an app whose pages come from one origin and are answered by another. Only
+   * when writes are not authorised by a cookie: a cookie session plus `'*'` is a CSRF hole. The server must also
+   * answer the CORS preflight for those origins.
+   */
+  mutationOrigins?: readonly string[] | '*'
+  /** Browser access to /_kerf/fn/* and /_kerf/data/*. Extra request header names supplement content-type, x-kerf and accept. */
+  cors?:
+    | { origins: '*'; credentials?: false; headers?: readonly string[] }
+    | { origins: readonly string[]; credentials?: boolean; headers?: readonly string[] }
+  /**
    * Headers every server response gets unless it set its own: `nosniff`, `Referrer-Policy`, framing only by this site,
    * `Cross-Origin-Opener-Policy` and, on https, HSTS. Name a header to change it, `false` to drop it, or `false` for none.
    */

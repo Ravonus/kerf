@@ -1,4 +1,4 @@
-import { enter, hydrate, hydration, level as staticLevel } from '@kerf-js/core/dom'
+import { enter, hydrate, hydration, level as staticLevel, park } from '@kerf-js/core/dom'
 import { client, createRouteState, type Component, type RoutePayload } from '../router'
 import { App } from '../view'
 import { ErrorPage, NotFoundPage } from '../builtin'
@@ -69,6 +69,7 @@ export function mount({
       bag ?? undefined,
       (id) => Promise.resolve(island(id)),
     )
+  route.hide = park
   route.around = (_d, _id, body) => enter(body)
   // What landed while the chunks loaded: from here on, a Boundary that's still out is held, and its chunk builds it.
   if (data)

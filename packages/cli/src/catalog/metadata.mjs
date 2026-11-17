@@ -1,6 +1,24 @@
 /** metadataHead diagnostic entries in catalog order. */
 export const metadataHead = [
   {
+    code: 'H018',
+    severity: 'error',
+    by: 'cli',
+    catches:
+      'A page and an HTTP module handle the same GET/HEAD path, or two HTTP modules declare the same path',
+    fix: 'Keep non-GET/HEAD methods beside a page, combine duplicate HTTP modules, or move the route',
+    example: 'src/routes/index.tsx and src/routes/index.http.ts exporting GET',
+  },
+  {
+    code: 'H019',
+    severity: 'error',
+    by: 'cli',
+    catches:
+      'An HTTP module has no named method exports, malformed segments, repeated params, a non-final catch-all, or a reserved /_kerf/ path',
+    fix: 'Export named HTTP methods and use whole [param] segments with only a final [...rest] or [[...rest]] outside /_kerf/',
+    example: 'src/routes/[...rest]/extra.http.ts exporting GET',
+  },
+  {
     code: 'H001',
     severity: 'warning',
     by: 'cli',

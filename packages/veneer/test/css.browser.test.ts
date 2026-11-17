@@ -69,7 +69,7 @@ test('a checkbox input takes the click itself, so role-based tools reach it', as
 })
 
 test("the phone sort bar shows at a phone width of the table's container and no wider", async () => {
-  // the table isn't a container itself (each nested one costs the page a style pass), so it follows the one it's in
+  // a cards table is its own container, as wide as the one it's in
   const shown = async (width: number) =>
     (
       await page(
@@ -180,4 +180,52 @@ test('a closed accordion panel takes no height, whichever order the sheets come 
       await p.$eval('#c', (n) => [getComputedStyle(n).display, n.getBoundingClientRect().height]),
     ).toEqual(['grid', 0])
   }
+})
+
+const CARDS = (attrs: string) =>
+  `<div id="t" data-scope="table" ${attrs}><div data-part="viewport"><table><thead><tr><th>Name</th><th id="h2" data-priority="2">Role</th><th id="h3" data-priority="3">Since</th></tr></thead><tbody><tr><td data-label="Name">Ada</td><td id="c2" data-label="Role" data-priority="2">Admin</td><td id="c3" data-label="Since" data-priority="3">2019</td></tr></tbody></table></div></div>`
+const display = (p: Playwright.Page, id: string) => p.$eval(id, (n) => getComputedStyle(n).display)
+
+test('phone cards switch on a phone with no container around the table', async () => {
+  const phone = await page(CARDS('data-phone="cards"'), 375)
+  expect(await display(phone, 'thead')).toBe('none')
+  expect(await display(phone, 'tbody')).toBe('grid')
+  const desktop = await page(CARDS('data-phone="cards"'), 1320)
+  expect(await display(desktop, 'thead')).toBe('table-header-group')
+  expect(await display(desktop, 'tbody')).toBe('table-row-group')
+})
+
+test('priority columns hide by the width of a table that marks itself, with no container around it', async () => {
+  const shown = async (width: number) => {
+    const p = await page(CARDS('data-contain'), width)
+    return [
+      await display(p, '#h2'),
+      await display(p, '#c2'),
+      await display(p, '#h3'),
+      await display(p, '#c3'),
+    ]
+  }
+  expect(await shown(1320)).toEqual(['table-cell', 'table-cell', 'table-cell', 'table-cell'])
+  expect(await shown(900)).toEqual(['table-cell', 'table-cell', 'none', 'none'])
+  expect(await shown(600)).toEqual(['none', 'none', 'none', 'none'])
+})
+
+test('a table that is its own container keeps its width in a row', async () => {
+  const p = await page(
+    `<div style="display:flex;inline-size:800px">${CARDS('data-phone="cards"')}</div>`,
+  )
+  expect(await p.$eval('#t', (n) => Math.round(n.getBoundingClientRect().width))).toBe(800)
+})
+
+test('`.vh` text is in the page for a screen reader and takes no room on screen', async () => {
+  const p = await browser.newPage()
+  await p.setContent(
+    `<!doctype html><style>${read('veneer.css')}${read('components/base.css')}</style><a id="a" href="https://example.com" target="_blank">Docs<span class="vh"> (opens in a new tab)</span></a>`,
+  )
+  const box = await p.$eval('.vh', (n) => {
+    const r = n.getBoundingClientRect()
+    return { width: r.width, height: r.height, position: getComputedStyle(n).position }
+  })
+  expect(box).toEqual({ width: 1, height: 1, position: 'absolute' })
+  expect(await p.getByRole('link', { name: 'Docs (opens in a new tab)' }).count()).toBe(1)
 })

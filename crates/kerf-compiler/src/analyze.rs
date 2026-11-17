@@ -125,6 +125,7 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
     let mut boxes = Boxes {
         scoping,
         set: HashSet::new(),
+        entries: HashSet::new(),
         browser: crate::browser::value_imports(program),
         arrays: HashSet::new(),
     };
@@ -134,6 +135,7 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
         source,
         plan: Plan::default(),
         boxes: boxes.set,
+        entry_boxes: boxes.entries,
         arrays: boxes.arrays,
         comps: Vec::new(),
         jsx_depth: 0,
@@ -359,7 +361,6 @@ struct EntryHit {
 struct Snapshot {
     sym: SymbolId,
     name: String,
-    /// The `untrack` callee, for the suggested fix.
     callee: Span,
     call: Span,
     /// Reads in the component's JSX (outside handlers).
@@ -373,7 +374,7 @@ struct Analyzer<'s> {
     source: &'s str,
     plan: Plan,
     boxes: HashSet<SymbolId>,
-    /// See `Boxes::arrays`.
+    entry_boxes: HashSet<SymbolId>,
     arrays: HashSet<SymbolId>,
     comps: Vec<CompCtx>,
     jsx_depth: u32,

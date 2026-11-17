@@ -10,7 +10,10 @@ const stable = (r: unknown): Awaited<ReturnType<typeof routesMeta>> =>
 test('the fixture: merged meta, tags, card mode and diagnostics for every route', async () => {
   const r = stable(await routesMeta({ root: fixture, site }))
   expect(r).toMatchSnapshot()
-  const by = Object.fromEntries(r.routes.map((x) => [x.path, x]))
+  expect(r.routes).toContainEqual(
+    expect.objectContaining({ path: '/about', kind: 'http', methods: ['POST'] }),
+  )
+  const by = Object.fromEntries(r.routes.filter((x) => x.kind !== 'http').map((x) => [x.path, x]))
   // A param route runs `meta` on placeholders: what an agent reads is where each value comes from.
   expect(by['/users/[id]']).toMatchObject({
     url: '/users/<id>',

@@ -1,5 +1,6 @@
 import type * as Exec from '../exec'
 import type { Scope } from '../exec'
+import { clientRequest } from '../client-fetch'
 import { fns, net, runtime } from './foundation'
 import { FnError, isRedirect, stable, StartError } from './primitives'
 import type { Answer, Fn, NetControl, Transport } from './types'
@@ -18,12 +19,16 @@ const answer = async (res: Response): Promise<Answer> => {
   return body
 }
 
-/** The browser's: GET for queries, POST + JSON + `x-kerf` for mutations (research 27 §3). */
+/** The browser's: GET for queries, POST + JSON + `x-kerf` for mutations (research 27 §3), sent by `clientFetch`'s. */
 export const http: Transport = {
   query: (id, input) =>
-    fetch(`/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, {
-      headers: { accept: 'application/json' },
-    }).then(answer),
+    clientRequest(
+      `/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`,
+      {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+      },
+    ).then(answer),
   mutate(id, input, f, form) {
     const headers: Record<string, string> = {
       accept: 'application/json',
@@ -32,7 +37,7 @@ export const http: Transport = {
     }
     if (form instanceof FormData) form.set('$r', JSON.stringify(f))
     else headers['content-type'] = 'application/json'
-    return fetch(`/_kerf/fn/${id}`, {
+    return clientRequest(`/_kerf/fn/${id}`, {
       method: 'POST',
       headers,
       body:

@@ -68,3 +68,14 @@ export function tableBase<T>(input: TableProps<T>) {
     shape,
   ] as const
 }
+
+/**
+ * `data-contain` for the table's root. Cards and priority columns go by the table's own width, so it is the
+ * container they ask (table.css). Decided once, not with `data-phone`: a container that came and went with its own
+ * width would chase itself.
+ */
+export const contained = (input: {
+  phone?: 'cards' | 'columns' | undefined
+  columns: readonly { priority?: 2 | 3 | undefined }[]
+}) =>
+  untrack(() => input.phone !== 'columns' || input.columns.some((c) => c.priority)) ? '' : undefined

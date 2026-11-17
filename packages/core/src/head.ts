@@ -4,6 +4,7 @@
 // `headTags` is the pure tag list both the string writer and the client's `setHead` (@kerf-js/core/head) use.
 
 import { esc } from './markup-shared.mjs'
+import type { SiteConfig } from './config'
 
 /** `site` in kerf.config.ts: the defaults every page starts from (§2). */
 export interface Site {
@@ -30,6 +31,14 @@ export interface Site {
   head?: string | undefined
   /** Request body limits in bytes (Start): `body` for JSON (1 MB), `upload` for multipart (25 MB). Past them, 413. */
   limits?: { body?: number | undefined; upload?: number | undefined } | undefined
+  /**
+   * Other origins whose pages may call this server's mutations (Start), or `'*'` for any. By default a mutation is
+   * answered only from its own origin (Q010). Name origins only when writes are not authorised by a cookie: a
+   * cookie session plus `'*'` is a CSRF hole. The server must also answer the CORS preflight for them.
+   */
+  mutationOrigins?: readonly string[] | '*' | undefined
+  /** Browser access to Start's function/data endpoints; wildcard origins cannot use credentials. */
+  cors?: SiteConfig['cors'] | undefined
   /** Default security headers on Start's responses: override one by name, `false` drops one, `false` drops all. */
   security?: false | Record<string, string | false> | undefined
   /** Behind a load balancer or CDN: `true` (one proxy) or how many, so rate limits read the client from `X-Forwarded-For`. */
