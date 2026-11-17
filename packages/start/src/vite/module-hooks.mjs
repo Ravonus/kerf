@@ -300,10 +300,13 @@ async function clientRoutesModule(ctx, s, p, run) {
 }
 
 function retryRouteModules(ctx, s) {
+  if (!s.build) return undefined
   if (s.dev)
     return {
       devUrl: (file) =>
-        JSON.stringify(`${s.vite.config.base}@fs/${file.replaceAll('\\', '/').replace(/^\//, '')}`),
+        JSON.stringify(
+          `${s.vite?.config?.base ?? '/'}@fs/${file.replaceAll('\\', '/').replace(/^\//, '')}`,
+        ),
     }
   const build = createHash('sha256').update(s.build).digest('hex').slice(0, 12)
   const ref = ctx.emitFile({

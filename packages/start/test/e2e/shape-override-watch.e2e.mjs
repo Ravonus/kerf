@@ -61,6 +61,7 @@ async function setup(t) {
   })
   const ctx = {
     environment: { config: { consumer: 'client' } },
+    warn() {},
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
   }
   const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:kerf/routes')

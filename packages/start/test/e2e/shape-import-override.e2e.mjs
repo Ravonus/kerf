@@ -50,6 +50,7 @@ async function project(t) {
   const watched = []
   const context = {
     environment: { config: { consumer: 'client' } },
+    warn() {},
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
     addWatchFile: (path) => watched.push(path),
     error: (msg) => {

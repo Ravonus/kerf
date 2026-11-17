@@ -93,6 +93,7 @@ async function project(t) {
   hot = shapeHotUpdate(state, new Map(), () => undefined)
   const ctx = {
     environment: { config: { consumer: 'client' } },
+    warn() {},
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
   }
   const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:kerf/routes')
