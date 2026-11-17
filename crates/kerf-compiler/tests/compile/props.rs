@@ -746,14 +746,12 @@ export function L({ products }) {
 
 #[test]
 fn w017_readonly_component_boxes_do_not_offer_nonexistent_get() {
-    let (_, diagnostics) = run(
-        "import { derived, resource } from '@kerf-js/core';
+    let (_, diagnostics) = run("import { derived, resource } from '@kerf-js/core';
 export function Row({ id }) {
   const totals = derived(() => ({ a: 1 }));
   const quotes = resource(async () => ({ a: 2 }));
   return <p>{totals.value[id]} / {quotes.value[id]}</p>;
-}",
-    );
+}");
     assert!(
         diagnostics.iter().all(|d| d.code != "W017"),
         "readonly boxes have no per-entry get API: {diagnostics:?}"

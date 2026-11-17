@@ -361,7 +361,6 @@ struct EntryHit {
 struct Snapshot {
     sym: SymbolId,
     name: String,
-    /// The `untrack` callee, for the suggested fix.
     callee: Span,
     call: Span,
     /// Reads in the component's JSX (outside handlers).
@@ -375,9 +374,7 @@ struct Analyzer<'s> {
     source: &'s str,
     plan: Plan,
     boxes: HashSet<SymbolId>,
-    /// Mutable state boxes provide per-entry `get`; derived/resource/browser boxes do not.
     entry_boxes: HashSet<SymbolId>,
-    /// See `Boxes::arrays`.
     arrays: HashSet<SymbolId>,
     comps: Vec<CompCtx>,
     jsx_depth: u32,
