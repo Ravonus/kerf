@@ -210,15 +210,13 @@ export async function rest(
         ),
       )
   } catch (e) {
+    if (controller.desiredSize === null) return
     const depth = e instanceof RenderFailure ? e.depth : 0
-    const data = reportFailure(
-      p.scope,
-      p.options,
-      e instanceof RenderFailure ? e.cause : e,
-      500,
-      'E_STREAM',
-      p.path,
-    )
+    const data = reportFailure(p.scope, p.options, e instanceof RenderFailure ? e.cause : e, {
+      status: 500,
+      code: 'E_STREAM',
+      route: p.url.pathname,
+    })
     const failure = { depth, data }
     controller.enqueue(
       p.enc.encode(
@@ -231,6 +229,8 @@ export async function rest(
       ),
     )
   }
-  controller.enqueue(p.enc.encode(await finish(p, streaming)))
+  const end = await finish(p, streaming)
+  if (controller.desiredSize === null) return
+  controller.enqueue(p.enc.encode(end))
   controller.close()
 }

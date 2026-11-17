@@ -130,8 +130,13 @@ export async function warmPage(
       try {
         await warmContent(p, known, { cold, set, styles, controller })
       } catch (e) {
+        if (controller.desiredSize === null) return
         p.heads.set(cold, null).set(cold + ' w', null)
-        const data = reportFailure(p.scope, p.options, e, 500, 'E_HEAD', p.path)
+        const data = reportFailure(p.scope, p.options, e, {
+          status: 500,
+          code: 'E_HEAD',
+          route: p.url.pathname,
+        })
         controller.enqueue(
           p.enc.encode(
             `<p>Something went wrong. Reference: ${data.reference}. <a href="">Reload page</a></p>\n</body>\n</html>\n`,

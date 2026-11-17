@@ -189,14 +189,11 @@ async function resolveSpecial(
   const entry = byId.get(id)
   const shown =
     id === 'error'
-      ? reportFailure(
-          hold.scope,
-          options,
-          error,
+      ? reportFailure(hold.scope, options, error, {
           status,
-          error instanceof StartError ? error.code : 'E_ROUTE',
-          routeId,
-        )
+          code: error instanceof StartError ? error.code : 'E_ROUTE',
+          route: routeId,
+        })
       : { path }
   const levels: Level[] = [
     ...prefix,
@@ -206,7 +203,11 @@ async function resolveSpecial(
     return await finishResolution(deps, { path, request }, { shown: levels, status, error })
   } catch (cause) {
     const failure = cause instanceof RenderFailure ? cause.cause : cause
-    const data = reportFailure(hold.scope, options, failure, 500, 'E_ROUTE', routeId)
+    const data = reportFailure(hold.scope, options, failure, {
+      status: 500,
+      code: 'E_ROUTE',
+      route: routeId,
+    })
     return finishResolution(
       deps,
       { path, request },

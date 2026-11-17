@@ -38,7 +38,11 @@ export function showRenderFailures(scope: Scope, options: HandlerOptions, path: 
   const safe = new WeakSet<Error>()
   scope.failure.show ??= (error) => {
     if (error instanceof Error && safe.has(error)) return error
-    const data = reportFailure(scope, options, error, 500, 'E_RENDER', path)
+    const data = reportFailure(scope, options, error, {
+      status: 500,
+      code: 'E_RENDER',
+      route: path,
+    })
     const shown = Object.assign(new Error(options.dev ? data.message : 'Server function failed.'), {
       reference: data.reference,
       stack: data.stack,
@@ -53,9 +57,7 @@ export function reportFailure(
   scope: Scope,
   options: HandlerOptions,
   error: unknown,
-  status: number,
-  code: string,
-  route?: string,
+  { status, code, route }: { status: number; code: string; route?: string | undefined },
 ) {
   const reference = referenceOf(scope)
   const details = errorDetails(error)
@@ -71,17 +73,16 @@ export function reportFailure(
 }
 
 /** Replace the failed outlet and its descendants with the site's error view. */
-export function failRoute(
+function failRoute(
   r: Resolved,
   scope: Scope,
   options: HandlerOptions,
   depth: number,
   error: unknown,
-  status: number,
-  code: string,
 ) {
   const failed = r.levels[depth]
-  const data = reportFailure(scope, options, error, status, code, failed?.id)
+  const status = 500
+  const data = reportFailure(scope, options, error, { status, code: 'E_RENDER', route: failed?.id })
   const id = failed && isErrorRoute(failed.id) ? FALLBACK_ROUTE : ERROR_ROUTE
   const fallback: Level = { id, params: {}, data, raw: data }
   r.levels = [...r.levels.slice(0, depth), fallback]
@@ -107,15 +108,7 @@ export async function recoverRender<T>(
     } catch (error) {
       const depth = error instanceof RenderFailure ? error.depth : 0
       if (r.levels[depth]?.id === FALLBACK_ROUTE) throw error
-      failRoute(
-        r,
-        scope,
-        options,
-        depth,
-        error instanceof RenderFailure ? error.cause : error,
-        500,
-        'E_RENDER',
-      )
+      failRoute(r, scope, options, depth, error instanceof RenderFailure ? error.cause : error)
     }
   }
 }

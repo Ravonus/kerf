@@ -92,14 +92,18 @@ export function makeNavigation({
 async function settleLevels(r: Resolved, scope: Scope, options: HandlerOptions) {
   for (const lv of r.levels) {
     if (!lv.d?.length) continue
-    const fields = { ...(lv.data as object) } as Record<string, unknown>
+    const fields = Object.assign(Object.create(null) as Record<string, unknown>, lv.data)
     await Promise.all(
       lv.d.map(async (key) => {
         try {
           fields[key] = await (lv.raw as Record<string, unknown>)[key]
         } catch (error) {
-          const data = reportFailure(scope, options, error, 500, 'E_LOAD', lv.id)
-          ;(lv.e ??= {})[key] = data
+          const data = reportFailure(scope, options, error, {
+            status: 500,
+            code: 'E_LOAD',
+            route: lv.id,
+          })
+          ;(lv.e ??= Object.create(null) as NonNullable<typeof lv.e>)[key] = data
         }
       }),
     )

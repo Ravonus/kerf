@@ -23,7 +23,8 @@ export function deferred(path: string, level: number, key: string): PromiseLike<
           throw deferredError(data, response.headers.get(ERROR_HEADER))
         }
         const match = next.m[level]!
-        if (match.e?.[key]) throw deferredError(match.e[key])
+        const failure = deferredFailure(match, key)
+        if (failure) throw deferredError(failure)
         return (match.data as Record<string, unknown>)[key]
       })
       got.catch(() => (got = undefined))
@@ -101,7 +102,7 @@ export function revive(m: Match): Match {
   if (!m.d?.length) return m
   const data = { ...(m.data as Record<string, unknown>) }
   for (const k of m.d) {
-    const failure = m.e?.[k]
+    const failure = deferredFailure(m, k)
     if (!failure) data[k] = Promise.resolve(data[k])
     else {
       const rejected = Promise.reject(deferredError(failure))
@@ -110,6 +111,10 @@ export function revive(m: Match): Match {
     }
   }
   return { ...m, data }
+}
+
+function deferredFailure(match: Match, key: string) {
+  return match.e && Object.hasOwn(match.e, key) ? match.e[key] : undefined
 }
 
 function deferredError(data?: Partial<RouteErrorData>, header?: string | null) {

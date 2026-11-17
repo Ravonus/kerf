@@ -79,7 +79,11 @@ function functionRejection(
   out: (body: unknown, status?: number) => Response,
 ) {
   return (code: string, message: string, status: number, extra: object = {}, sent?: unknown) => {
-    const data = reportFailure(scope, options, sent ?? new Error(message), status, code, id)
+    const data = reportFailure(scope, options, sent ?? new Error(message), {
+      status,
+      code,
+      route: id,
+    })
     return out(
       {
         e: {
@@ -132,7 +136,7 @@ function functionError(
       e.extra.issues ? { issues: e.extra.issues } : e.extra.typed ? { data: e.extra.data } : {},
       e,
     )
-  const data = reportFailure(scope, options, e, 500, 'E_FN', id)
+  const data = reportFailure(scope, options, e, { status: 500, code: 'E_FN', route: id })
   return out(
     {
       e: { ...data, message: options.dev ? data.message : 'Server function failed.' },
