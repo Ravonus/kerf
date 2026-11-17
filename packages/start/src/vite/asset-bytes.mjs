@@ -32,6 +32,16 @@ function chunkFor(bundle, ids) {
   return matches.length === 1 ? matches[0][0] : undefined
 }
 
+/** Map retries to the original Vite chunks without changing their split or CSS ownership. */
+export function retryChunks(bundle, targets) {
+  return Object.fromEntries(
+    targets.flatMap(([id, source]) => {
+      const file = chunkFor(bundle, [source])
+      return file ? [[id, file]] : []
+    }),
+  )
+}
+
 /** Byte lengths of emitted static closures. Dynamic and external dependencies are not inferred. */
 export function assetBytes(bundle, read, manifest, abs) {
   const routes = Object.fromEntries(

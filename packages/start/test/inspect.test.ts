@@ -57,6 +57,7 @@ test('H002: a static-only preset and a param route whose card is rendered on dem
   // and their cards together, which a static host can serve.
   expect(r.diagnostics.filter((d) => d.code === 'H002').map((d) => d.route)).toEqual([
     '/meta/[name]',
+    '/recover/[kind]',
     '/tags/[tag]',
   ])
   expect(r.routes.find((x) => x.path === '/users/[id]')!.image).toBe('prerender+on-demand')

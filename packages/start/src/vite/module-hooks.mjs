@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { readMigrations } from '../migrations.mjs'
@@ -287,6 +288,7 @@ async function clientRoutesModule(ctx, s, p, run) {
     overrides,
     build: s.build || null,
     lazy: s.dev === false,
+    retry: retryRouteModules(ctx, s),
   }
   const output = clientRoutes(s.manifest, s.abs, p, css)
   s.shapeEntrySignatures = shared.signatures
@@ -295,4 +297,27 @@ async function clientRoutesModule(ctx, s, p, run) {
   s.shapeOverrideDependencies = dependencies
   if (s.dev) watchEntryCandidates(s.vite, shared.missing, root)
   return output
+}
+
+function retryRouteModules(ctx, s) {
+  if (!s.build) return undefined
+  if (s.dev)
+    return {
+      devUrl: (file) =>
+        JSON.stringify(
+          `${s.vite?.config?.base ?? '/'}@fs/${file.replaceAll('\\', '/').replace(/^\//, '')}`,
+        ),
+    }
+  const build = createHash('sha256').update(s.build).digest('hex').slice(0, 12)
+  const ref = ctx.emitFile({
+    type: 'asset',
+    fileName: `kerf-route-retry-${build}.json`,
+    source: '{}',
+  })
+  return {
+    manifest: `import.meta.ROLLUP_FILE_URL_${ref}`,
+    register: (targets) => {
+      s.retryManifest = { ref, targets }
+    },
+  }
 }

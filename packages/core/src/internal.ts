@@ -14,6 +14,7 @@ export {
   stats,
   devComponent,
 } from './index/graph'
+export { onRenderError } from './index/errors'
 export { collecting, Box } from './index/state'
 export { hole } from './index/lifecycle'
 export { localProps } from './linked'

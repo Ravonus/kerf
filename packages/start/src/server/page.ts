@@ -10,6 +10,7 @@ import { leftToPage } from './head'
 import { warmPage } from './page-warm'
 import { EARLY_MS, type PageDeps, type PageState } from './page-types'
 import { scriptNonce } from './security'
+import { showRenderFailures } from './failure'
 
 /** The page renderer for one handler and its remembered heads. */
 export function makePage(deps: PageDeps) {
@@ -28,6 +29,7 @@ export function makePage(deps: PageDeps) {
       )
     }
     scope.started = true // from here a redirect can't change the status (Q007)
+    showRenderFailures(scope, deps.options, path)
     // The render reads raw deferred data; the page carries the settled part.
     const route = deps.stateOf(r, payloadOf(r, false))
     const sent = new Set<string>()

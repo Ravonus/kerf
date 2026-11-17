@@ -10,10 +10,11 @@
 // side the server rendered. Both take a key where they're created (research 19 §2.4); a boundary's content and
 // fallback render in two fixed scopes under it (`<key>c/`, `<key>f/`), so the keys line up either way.
 
-import { effect, onCleanup, state, untrack, type State } from './index'
+import { effect, onCleanup, state, untrack, type SsrData, type State } from './index'
 import { rt } from './index/graph'
 import { keys, nextKey } from './keys'
 import { boundaries } from './async/shared'
+import { errorRecord, restoreError } from './async/error'
 import type { Resource, ResourceOptions } from './async/types'
 
 export { timing, waiting } from './async/shared'
@@ -25,7 +26,6 @@ type Pass = typeof rt & { shown?: (e: unknown) => unknown }
 
 const thenable = (v: unknown): v is PromiseLike<unknown> =>
   v != null && typeof (v as PromiseLike<unknown>).then === 'function'
-const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 /**
  * `resource(async signal => (await fetch(url(), { signal })).json())`. Reads before the first `await` are tracked:
@@ -58,7 +58,7 @@ export function resource<T>(
     pending.value = false
   }
   const saved = key !== undefined ? data?.r[key] : undefined
-  if (saved) saved.e !== undefined ? fail(new Error(saved.e)) : settle(saved.v as T)
+  if (saved) saved.e !== undefined ? fail(restoreError(saved)) : settle(saved.v as T)
 
   if (rt.server && options.data === false) {
     try {
@@ -79,14 +79,14 @@ export function resource<T>(
       rt.wait?.push(flying)
       if (!boundaries.use) rt.top?.push(flying)
     } else if (!saved && key !== undefined && data) {
-      const record = (r: { v?: unknown; e?: string }) => void (data.r[key] = r)
+      const record = (r: SsrData['r'][string]) => void (data.r[key] = r)
       try {
         const out = untrack(() => fetcher(new AbortController().signal))
         if (thenable(out)) {
           pending.value = true
           const done = Promise.resolve(out).then(
             (v) => record({ v }),
-            (e) => record({ e: message(shown(e)) }),
+            (e) => record(errorRecord(shown(e))),
           )
           rt.flight?.set(key, done)
           rt.wait?.push(done)
@@ -98,7 +98,7 @@ export function resource<T>(
       } catch (caught) {
         const e = shown(caught)
         fail(e)
-        record({ e: message(e) })
+        record(errorRecord(e))
       }
     }
   } else {

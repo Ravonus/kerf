@@ -39,8 +39,7 @@ const styled = (m, css) => !css.length ? m : { ...m, get meta() {
 } }
 export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? [])}, ...css, ...(matched.get(runtime.scope?.()) ?? [])].map(c => [c.href, c])).values()]`,
     `export const manifest = ${JSON.stringify({ dir: manifest.dir, routes: manifest.routes, layouts: manifest.layouts, defaultCard: manifest.defaultCard })}`,
-    // The built-in 404 and error pages have no state, and stand in only when the app has no route file for them.
-    `export const statics = ${JSON.stringify(!plan ? [] : [...[...manifest.layouts, ...manifest.routes].filter((r) => isStatic(r.file)).map((r) => r.id), ...['404', 'error'].filter((id) => !manifest.routes.some((r) => r.id === id))])}`,
+    `export const statics = ${JSON.stringify(!plan ? [] : [...[...manifest.layouts, ...manifest.routes].filter((r) => isStatic(r.file)).map((r) => r.id), ...(!manifest.routes.some((r) => r.id === '404') ? ['404'] : [])])}`,
     `export const lazy = ${!!plan?.loads.some((l) => l.when !== 'load')}`,
     // The chunks a page's levels and islands will import, for the document's modulepreloads. Dev has no chunks.
     `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter((r) => !isStatic(r.file) && renders(r.file)).map((r) => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map((i) => [i.id, i.file]), ['$client', join(here, 'run.tsx')]].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
@@ -275,9 +274,9 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     ([request, i]) => `import * as shape${i} from ${JSON.stringify(request)}`,
   )
   // A static route loads only what its module imports that isn't code: its stylesheets, for a navigation to it.
-  const loads = levels.map(
-    (r) =>
-      `${JSON.stringify(r.id)}: () => import(${JSON.stringify(abs(r.file) + (isStatic(r) ? ASSETS : ''))})`,
+  const targets = levels.map((r) => [r.id, abs(r.file) + (isStatic(r) ? ASSETS : '')])
+  const loads = targets.map(
+    ([id, source]) => `${JSON.stringify(id)}: () => import(${JSON.stringify(source)})`,
   )
   // Straight from the file: a module of its own per island would be a chunk that only re-exports.
   const islands = (plan?.islands ?? []).map(
@@ -290,6 +289,42 @@ export const shapes = { ${shapes.join(', ')} }
 export const build = ${JSON.stringify(css.build ?? null)}
 export const table = ${JSON.stringify(table)}
 export const load = { ${loads.join(', ')} }
+${retryModule(css.retry, targets)}
 export const islands = { ${islands.join(', ')} }
+`
+}
+
+function retryModule(retry, targets) {
+  if (!retry) return 'export const retryLoad = {}'
+  retry.register?.(targets)
+  const loaders = targets.map(([id, source]) => {
+    const href = retry.devUrl ? retry.devUrl(source) : `await emitted(${JSON.stringify(id)})`
+    return `${JSON.stringify(id)}: async () => fresh(${href})`
+  })
+  return `
+${
+  retry.manifest
+    ? `
+const manifest = new URL(${retry.manifest}, import.meta.url)
+let files
+async function emitted(id) {
+  files ||= fetch(manifest).then((res) => {
+    if (!res.ok) throw new Error('Route retry table unavailable')
+    return res.json()
+  }).catch((error) => { files = undefined; throw error })
+  const file = (await files)[id]
+  if (typeof file !== 'string') throw new Error('No emitted route module')
+  return new URL(file, manifest).href
+}`
+    : ''
+}
+let attempt = 0
+function fresh(href) {
+  const url = new URL(href, import.meta.url)
+  // Vite strips the dev timestamp before transforming the module. Keep its bare flags intact.
+  const query = ${retry.devUrl ? "'t=' + (Date.now() + ++attempt)" : "'kerf-retry=' + ++attempt"}
+  return import(/* @vite-ignore */ url.href + (url.search ? '&' : '?') + query)
+}
+export const retryLoad = { ${loaders.join(', ')} }
 `
 }

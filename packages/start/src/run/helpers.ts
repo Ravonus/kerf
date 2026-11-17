@@ -4,6 +4,7 @@ import { clientRequest } from '../client-fetch'
 import type { Component, Match, RoutePayload } from '../router'
 import type { ClientRoutes } from '../run'
 import type { Navigation } from './navigation'
+import { ERROR_HEADER, isErrorRoute, type RouteErrorData } from '../failure'
 
 /**
  * A deferred field on a page that loaded with its value still out. A chunk brings what's rendered from it; this is for
@@ -14,9 +15,18 @@ export function deferred(path: string, level: number, key: string): PromiseLike<
   const value = () => {
     if (rt.probe) return new Promise(() => {}) // a hydrate run only tracks its reads, and nothing waits on what it gets
     if (!got) {
-      got = ask(new URL(path, location.href))
-        .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Server function failed.'))))
-        .then((next: RoutePayload) => (next.m[level]!.data as Record<string, unknown>)[key])
+      got = ask(new URL(path, location.href)).then(async (response) => {
+        const next: RoutePayload = await response.json()
+        const last = next.m.at(-1)
+        if (!response.ok || (last && isErrorRoute(last.id))) {
+          const data = last?.data as Partial<RouteErrorData> | undefined
+          throw deferredError(data, response.headers.get(ERROR_HEADER))
+        }
+        const match = next.m[level]!
+        const failure = deferredFailure(match, key)
+        if (failure) throw deferredError(failure)
+        return (match.data as Record<string, unknown>)[key]
+      })
       got.catch(() => (got = undefined))
     }
     return got
@@ -29,11 +39,11 @@ export function deferred(path: string, level: number, key: string): PromiseLike<
   } as PromiseLike<unknown>
 }
 
-export const ask = (url: URL, signal?: AbortSignal, tag?: string) =>
+export const ask = (url: URL, signal?: AbortSignal, tag?: string, reload?: boolean) =>
   clientRequest(`/_kerf/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, {
     method: 'GET',
     signal: signal ?? null,
-    cache: 'no-cache',
+    cache: reload ? 'reload' : 'no-cache',
     headers: { accept: 'application/json', ...(tag && { 'if-none-match': tag }) },
   })
 
@@ -91,8 +101,27 @@ export function current_(path: string) {
 export function revive(m: Match): Match {
   if (!m.d?.length) return m
   const data = { ...(m.data as Record<string, unknown>) }
-  for (const k of m.d) data[k] = Promise.resolve(data[k])
+  for (const k of m.d) {
+    const failure = deferredFailure(m, k)
+    if (!failure) data[k] = Promise.resolve(data[k])
+    else {
+      const rejected = Promise.reject(deferredError(failure))
+      rejected.catch(() => {})
+      data[k] = rejected
+    }
+  }
   return { ...m, data }
+}
+
+function deferredFailure(match: Match, key: string) {
+  return match.e && Object.hasOwn(match.e, key) ? match.e[key] : undefined
+}
+
+function deferredError(data?: Partial<RouteErrorData>, header?: string | null) {
+  return Object.assign(new Error(data?.message ?? 'Server function failed.'), {
+    reference: header ?? data?.reference,
+    stack: data?.stack,
+  })
 }
 
 /** The route ids `pathname` probably needs (its layouts and page), from the table; the server's answer decides. */

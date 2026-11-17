@@ -8,6 +8,18 @@ import { tokens } from '../../../core/vite/config-plugins.mjs'
 import { shapeHotUpdate } from '../../src/vite.mjs'
 import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
 
+const sheets = [
+  'shared',
+  'global',
+  'layout',
+  'first',
+  'component',
+  'last',
+  'server',
+  'unrelated',
+  'changed',
+]
+
 async function project(t) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-level-css-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
@@ -15,18 +27,7 @@ async function project(t) {
   const write = (name, source) => writeFileSync(file(name), source)
   mkdirSync(file('.kerf/tokens'), { recursive: true })
   write('.kerf/tokens/veneer.css', ':root { --size: 4px }')
-  for (const name of [
-    'shared',
-    'global',
-    'layout',
-    'first',
-    'component',
-    'last',
-    'server',
-    'unrelated',
-    'changed',
-  ])
-    write(`${name}.css`, '')
+  for (const name of sheets) write(`${name}.css`, '')
   write('entry.js', "import './shared.css'; import './global.css'; throw Error('entry')")
   write('layout.tsx', "import './layout.css'; export default () => <main />")
   write(
@@ -93,6 +94,7 @@ async function project(t) {
   hot = shapeHotUpdate(state, new Map(), () => undefined)
   const ctx = {
     environment: { config: { consumer: 'client' } },
+    warn() {},
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
   }
   const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:kerf/routes')

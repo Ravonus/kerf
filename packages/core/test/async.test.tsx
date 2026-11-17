@@ -5,6 +5,7 @@ import { renderToString, renderToStringAsync } from '@kerf-js/core/ssr'
 import { hydrate } from '@kerf-js/core/dom'
 import { flush, render } from '@kerf-js/core/test'
 import { Boundary, onCleanup, resource, state } from '@kerf-js/core'
+import { errorRecord, restoreError } from '../src/async/error'
 import { hydration } from '../src/hydrate'
 import { Users, type Load } from './fixtures/ssr/Users'
 import { Users as ServerUsers } from './fixtures/ssr/Users.tsx?kerf-ssr'
@@ -386,4 +387,12 @@ test('a Boundary that first runs after its chunk landed claims the content, and 
   } finally {
     delete page.$wc
   }
+})
+
+test('a sanitized SSR error keeps its reference through hydration without gaining a stack', () => {
+  const reference = '15a97e2a0f83a8d0'
+  const error = Object.assign(new Error('Safe message'), { reference, stack: undefined })
+  const wire = JSON.parse(JSON.stringify(errorRecord(error)))
+  expect(wire).toEqual({ e: 'Safe message', reference })
+  expect(restoreError(wire)).toMatchObject({ message: 'Safe message', reference, stack: undefined })
 })

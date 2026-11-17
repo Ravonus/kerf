@@ -1,3 +1,4 @@
+import { state } from '@kerf-js/core'
 // @vitest-environment jsdom
 // @vitest-environment-options {"url":"http://localhost/"}
 import type * as ActualHelpers from '../src/run/helpers'
@@ -57,6 +58,9 @@ function setup(ready = false) {
     setBag: vi.fn(),
     ready: () => ready,
     initialTags: [],
+    matches: [],
+    pending: state(false),
+    recovery: {},
   }
   const nav = new Navigation(routes, page)
   return { nav, route }

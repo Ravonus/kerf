@@ -16,11 +16,13 @@ export function build({ preset, ...rest }: { preset: string; [key: string]: unkn
 export const out = (preset: string) => join(fixture, `.output-test-${preset}`)
 
 export async function serve(cmd: string, entry: string) {
+  const logs: string[] = []
   const port = await freePort()
   const child = spawn(cmd, [entry], {
     env: { ...process.env, NODE_ENV: 'production', PORT: String(port) },
-    stdio: 'ignore',
+    stdio: ['ignore', 'ignore', 'pipe'],
   })
+  child.stderr.setEncoding('utf8').on('data', (part: string) => logs.push(part))
   // Poll the port: Nitro's logger is silent under vitest's NODE_ENV=test, so there is no "Listening" line to wait for.
   let exited
   child.on('exit', (code) => (exited = code))
@@ -41,5 +43,5 @@ export async function serve(cmd: string, entry: string) {
     )
       break
   }
-  return { url: `http://localhost:${port}`, stop: () => child.kill() }
+  return { url: `http://localhost:${port}`, stop: () => child.kill(), logs }
 }

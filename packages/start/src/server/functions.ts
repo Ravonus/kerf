@@ -4,6 +4,7 @@ import * as exec from '../exec'
 import type { Scope } from '../exec'
 import { bodyLimit, limited, multipartBody, withHeaders } from './request'
 import type { HandlerOptions } from './types'
+import { reportFailure } from './failure'
 
 /** `/_kerf/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
 export async function serverFunction(
@@ -19,19 +20,7 @@ export async function serverFunction(
     res.headers.set('cache-control', 'no-store') // a function's answer is never stored, whatever it set
     return res
   }
-  const fail = (
-    code: string,
-    message: string,
-    status: number,
-    extra: object = {},
-    sent?: unknown,
-  ) => {
-    options.onDiagnostic?.({ code, severity: 'error', message })
-    return out(
-      { e: { code, message: sent instanceof Error ? sent.message : message, ...extra } },
-      status,
-    )
-  }
+  const fail = functionRejection(options, scope, id, out)
   if (!f)
     return fail(
       'Q009',
@@ -83,6 +72,38 @@ export async function serverFunction(
   }
 }
 
+function functionRejection(
+  options: HandlerOptions,
+  scope: Scope,
+  id: string,
+  out: (body: unknown, status?: number) => Response,
+) {
+  return (code: string, message: string, status: number, extra: object = {}, sent?: unknown) => {
+    const data = reportFailure(scope, options, sent ?? new Error(message), {
+      status,
+      code,
+      route: id,
+    })
+    return out(
+      {
+        e: {
+          code,
+          message:
+            options.dev || status < 500
+              ? sent instanceof Error
+                ? sent.message
+                : message
+              : 'Server function failed.',
+          reference: data.reference,
+          ...(options.dev && data.stack && { stack: data.stack }),
+          ...extra,
+        },
+      },
+      status,
+    )
+  }
+}
+
 function functionError(
   e: unknown,
   c: {
@@ -113,16 +134,12 @@ function functionError(
       e.message,
       (e.extra.status as number) ?? 500,
       e.extra.issues ? { issues: e.extra.issues } : e.extra.typed ? { data: e.extra.data } : {},
-      exec.shown(e, scope),
+      e,
     )
-  options.onDiagnostic?.({
-    code: 'E_FN',
-    severity: 'error',
-    message: `${id}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
-  })
+  const data = reportFailure(scope, options, e, { status: 500, code: 'E_FN', route: id })
   return out(
     {
-      e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' },
+      e: { ...data, message: options.dev ? data.message : 'Server function failed.' },
     },
     500,
   )

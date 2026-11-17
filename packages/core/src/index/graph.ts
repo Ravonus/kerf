@@ -1,3 +1,4 @@
+import { reportRenderError } from './errors'
 import { CHAIN, INLINE, LITERAL, MICRO, ORDERED, POP, REUSE } from '../flags'
 import type { Box } from './state'
 import type { Source, Owner, Computation, SsrData } from './types'
@@ -228,7 +229,7 @@ function run(node: Computation) {
   } catch (e) {
     if (DEV && node.n && e && typeof e === 'object' && !(e as { kerf?: string }).kerf)
       (e as { kerf?: string }).kerf = node.n // where it threw
-    throw e
+    if (rt.server || !reportRenderError(e, node)) throw e
   } finally {
     if (at < node.s.length + (INLINE && node.p ? 1 : 0)) unlink(node, at) // what this run didn't read
     listener = prevListener

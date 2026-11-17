@@ -40,7 +40,13 @@ import { createState } from './vite/state.mjs'
 import { shapeSignature } from './vite/route-modules.mjs'
 import { entryCandidate, entryCssSignature, entryWatchLifecycle } from './vite/shape-entry-css.mjs'
 import { V } from './vite/shared.mjs'
-import { configHook, writeBundle, renderChunk, configResolved } from './vite/config-hooks.mjs'
+import {
+  configHook,
+  writeBundle,
+  generateBundle,
+  renderChunk,
+  configResolved,
+} from './vite/config-hooks.mjs'
 import { configureServer, hotUpdate } from './vite/dev-hooks.mjs'
 import { resolveId, load, transform, api } from './vite/module-hooks.mjs'
 export { assetsOnly } from './vite/assets.mjs'
@@ -163,6 +169,7 @@ export default function kerfStart(options = {}) {
       name: 'kerf:start:sheets',
       enforce: 'pre',
       writeBundle: writeBundle(state),
+      generateBundle: generateBundle(state),
       renderChunk: renderChunk(state),
     },
     {

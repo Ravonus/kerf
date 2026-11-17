@@ -48,7 +48,7 @@ export interface EffectOptions {
 
 /** What the server hands the client: resolved resources, boundary states and changed state boxes. */
 export type SsrData = {
-  r: Record<string, { v?: unknown; e?: string }>
+  r: Record<string, { v?: unknown; e?: string; reference?: string; stack?: string }>
   b: Record<string, 'c' | 'p' | 'e'>
   /** The page is still streaming: the client may start before its Boundaries land. */ w?: 1
   /** `defineState` boxes that differ from `init`, by scope */ s?: Record<

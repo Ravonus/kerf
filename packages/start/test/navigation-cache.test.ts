@@ -156,7 +156,8 @@ function sessionRoutes() {
       modules: {},
     },
   })
-  const scope = () => ({ headers: new Headers(), entries: new Map() }) as Parameters<typeof data>[2]
+  const scope = () =>
+    ({ headers: new Headers(), entries: new Map(), failure: {} }) as Parameters<typeof data>[2]
   return { state, receipt, data, scope }
 }
 

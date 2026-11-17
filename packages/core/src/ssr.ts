@@ -73,6 +73,8 @@ export interface RenderOptions {
   head?: HeadOptions
   /** A failure as the page may show it. A read's error reaches the HTML and the page data through this. */
   shown?: (e: unknown) => unknown
+  /** Forward a failed Boundary without its own error view to the host renderer. */
+  routeErrors?: boolean
   /** The render stopped waiting because its passes stopped getting anywhere. */
   stalled?: () => void
 }
@@ -148,7 +150,7 @@ function pass({
   stream,
   top,
 }: PassArgs): string | { html: string; data: SsrData } {
-  const prev = { ...rt }
+  const prev = { ...rt } as typeof rt & { routeErrors?: boolean }
   const prevKeys = { ...keys }
   const prevWrite = writeKeys
   const prevQuiet = quiet
@@ -163,6 +165,7 @@ function pass({
     stream,
     top,
     shown: options.shown,
+    routeErrors: options.routeErrors,
     got: 0,
   })
   // Keys are always computed (resources and boundaries are found by them across passes); written only if hydratable.
@@ -192,6 +195,7 @@ function pass({
       flight: prev.flight,
       stream: prev.stream,
       shown: (prev as typeof prev & { shown?: unknown }).shown,
+      routeErrors: prev.routeErrors,
     })
     Object.assign(keys, prevKeys)
     writeKeys = prevWrite

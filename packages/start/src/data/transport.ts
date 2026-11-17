@@ -4,6 +4,7 @@ import { clientRequest } from '../client-fetch'
 import { fns, net, runtime } from './foundation'
 import { FnError, isRedirect, stable, StartError } from './primitives'
 import type { Answer, Fn, NetControl, Transport } from './types'
+import { browserFailure, ERROR_HEADER } from '../failure'
 
 export function transport(): Transport {
   if (runtime.transport) return runtime.transport
@@ -15,20 +16,30 @@ const answer = async (res: Response): Promise<Answer> => {
   const body = await res
     .json()
     .catch(() => ({ e: { message: `server function answered ${res.status}` } }))
-  if (body.e) throw new FnError(body.e, res.status)
+  if (body.e)
+    throw new FnError(
+      { ...body.e, reference: res.headers.get(ERROR_HEADER) ?? body.e.reference },
+      res.status,
+    )
   return body
+}
+
+function requestFn(path: string, init: RequestInit) {
+  return clientRequest(path, init)
+    .catch((error) => {
+      if ((error as Error | null)?.name === 'AbortError') throw error
+      throw new FnError(browserFailure(error, 0, 'Server function request failed'), 0)
+    })
+    .then(answer)
 }
 
 /** The browser's: GET for queries, POST + JSON + `x-kerf` for mutations (research 27 §3), sent by `clientFetch`'s. */
 export const http: Transport = {
   query: (id, input) =>
-    clientRequest(
-      `/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`,
-      {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-      },
-    ).then(answer),
+    requestFn(`/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    }),
   mutate(id, input, f, form) {
     const headers: Record<string, string> = {
       accept: 'application/json',
@@ -37,12 +48,12 @@ export const http: Transport = {
     }
     if (form instanceof FormData) form.set('$r', JSON.stringify(f))
     else headers['content-type'] = 'application/json'
-    return clientRequest(`/_kerf/fn/${id}`, {
+    return requestFn(`/_kerf/fn/${id}`, {
       method: 'POST',
       headers,
       body:
         form instanceof FormData ? form : JSON.stringify({ i: input, f, ...(form && { c: 1 }) }),
-    }).then(answer)
+    })
   },
 }
 

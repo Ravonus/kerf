@@ -28,13 +28,23 @@ export class FnError extends Error {
   issues?: SchemaIssue[]
   /** What a declared error (`errors`) carries. */
   data?: unknown
+  /** The diagnostic reference from the server, when this call reached it and failed. */
+  reference?: string
   constructor(
-    e: { message?: string; code?: string; issues?: SchemaIssue[] | undefined; data?: unknown },
+    e: {
+      message?: string
+      code?: string
+      issues?: SchemaIssue[] | undefined
+      data?: unknown
+      reference?: string | undefined
+      stack?: string | undefined
+    },
     status: number,
   ) {
     super(e.message ?? `server function failed (${status})`)
     this.status = status
     Object.assign(this, { code: e.code, issues: e.issues, data: e.data })
+    if (e.reference) Object.assign(this, { reference: e.reference, stack: e.stack })
   }
 }
 

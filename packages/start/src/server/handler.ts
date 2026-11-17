@@ -10,6 +10,7 @@ import { requestIdOf } from './log'
 import { health } from './health'
 import type { makeServices } from './services'
 import type { HandlerOptions } from './types'
+import { ERROR_HEADER } from '../failure'
 
 /** Wrap endpoint routing in the request scope and boot lifecycle. */
 export function makeHandler(
@@ -80,6 +81,7 @@ export function makeHandler(
     if (rawResponses.has(response)) rawResponses.add(finished)
     try {
       finished.headers.set('x-request-id', scope.requestId)
+      if (scope.failure.reference) finished.headers.set(ERROR_HEADER, scope.failure.reference)
     } catch {} // a response with fixed headers goes without it
     return finished
   }

@@ -218,23 +218,27 @@ test('Back then Forward before anything lands stays on the page, and leaves noth
   await page.close()
 })
 
-test('a chunk the deploy took away falls back to loading the page', async () => {
+test('a failed route chunk offers an in-place retry at a fresh module URL', async () => {
   const { page } = await open('/')
   await page.evaluate(() => {
-    ;(window as unknown as { __same: number }).__same = 1
+    window.__same = true
   })
-  await page.route('**/routes/about.tsx*', (r) =>
-    r.request().resourceType() === 'document'
-      ? r.continue()
-      : r.fulfill({ status: 404, body: 'gone' }),
-  )
-  await page.route('**/_kerf/data/about', (r) => r.continue())
+  const chunk = '**/routes/about.tsx*'
+  let fresh = false
+  await page.route(chunk, (r) => {
+    if (new URL(r.request().url()).searchParams.has('t')) {
+      fresh = true
+      return r.continue()
+    }
+    return r.fulfill({ status: 404, body: 'gone' })
+  })
   await link(page, '/about')
-  await page.waitForFunction(
-    () => location.pathname === '/about' && window.__same === undefined,
-    null,
-    { timeout: 10_000 },
-  )
+  await page.locator('#error-reference').waitFor()
+  expect(await page.locator('#error-reference').textContent()).toMatch(/^[0-9a-f]{24}$/)
+  await page.locator('#retry-route').click()
+  await page.waitForFunction(() => document.querySelector('h1')?.textContent === 'About us')
+  expect(fresh).toBe(true)
+  expect(await page.evaluate(() => window.__same)).toBe(true)
   await page.close()
 })
 
