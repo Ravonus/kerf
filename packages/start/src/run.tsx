@@ -62,7 +62,10 @@ export interface ClientRoutes {
 }
 
 /** Hydrate the page in `#app` and take over its links. Resolves once hydrated. */
-export async function start(routes: ClientRoutes, options: { container?: Element } = {}) {
+export async function start(
+  routes: ClientRoutes,
+  options: { container?: Element; shell?: boolean } = {},
+) {
   const prepared = prepare(routes, options)
   await Promise.all(prepared.loads)
   const page = mount(prepared)
@@ -73,5 +76,10 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   listeners(navigation, () => (import.meta as Hot).hot)
   // The router follows links from here: the browser's prefetching for full loads (capture.ts `speculate`) stops.
   document.getElementById('kerf-speculate')?.remove()
+  if (options.shell) {
+    // The page in the document stands in for every address: go to the one the visitor asked for.
+    navigation.shell = true
+    void navigation.go(location.href, { arrive: true, scroll: false })
+  }
   return page.route
 }
