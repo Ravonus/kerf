@@ -653,3 +653,21 @@ fn a_list_that_could_rerun_stays_a_list() {
         assert!(code.contains("For"), "{source}: {code}");
     }
 }
+
+#[test]
+fn ternary_branch_memos_track_truthiness_instead_of_object_identity() {
+    let source = "export function Page(p: { row: { label: string } | null }) { return <main>{p.row ? <Editor row={p.row} /> : <p>Empty</p>}</main> }";
+    for hydratable in [false, true] {
+        let code = compile(
+            source,
+            &Options {
+                filename: "Page.tsx".into(),
+                hydratable,
+                ..Default::default()
+            },
+        )
+        .code
+        .unwrap();
+        assert!(code.contains("memo(() => !!(p.row))"), "{code}");
+    }
+}
