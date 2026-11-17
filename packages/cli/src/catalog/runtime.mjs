@@ -27,8 +27,14 @@ export const primaryFailures = {
 
 /** @typedef {import('../catalog.mjs').Entry} Entry */
 
-/** @returns {Entry} */
-function runtime(code, owner, surface, phase, catches, fix, options = {}) {
+/**
+ * @param {string} owner
+ * @param {readonly string[]} row code, surface, phase, catches, fix
+ * @param {Partial<Entry>} [options]
+ * @returns {Entry}
+ */
+function runtime(owner, row, options = {}) {
+  const [code, surface, phase, catches, fix] = row
   return {
     code,
     owner,
@@ -43,13 +49,12 @@ function runtime(code, owner, surface, phase, catches, fix, options = {}) {
   }
 }
 
-/** @returns {Entry} */
-const startCode = (code, surface, phase, catches, fix, options) =>
-  runtime(code, start, surface, phase, catches, fix, options)
+/** A Start code: code, surface, phase, catches, fix, then optional overrides. */
+const startCode = (...row) => runtime(start, row.slice(0, 5), row[5])
 
 /** @returns {Entry} */
 const coreCode = (code, phase, catches, fix, options) =>
-  runtime(code, core, 'state', phase, catches, fix, options)
+  runtime(core, [code, 'state', phase, catches, fix], options)
 
 /** @returns {Entry} */
 const reserved = (code, surface, phase, catches, fix) =>
@@ -374,7 +379,7 @@ export const runtimeDiagnostics = [
       'A command, flag or argument was invalid',
       'Check the command help and supply supported arguments',
     ],
-  ].map(([code, catches, fix]) => runtime(code, cli, 'tooling', 'command', catches, fix)),
+  ].map(([code, catches, fix]) => runtime(cli, [code, 'tooling', 'command', catches, fix])),
 ]
 
 /** Additive runtime metadata for entries that already have editorial copy in the catalog. */

@@ -92,7 +92,7 @@ export async function agentsMd(root) {
   const dcodes = catalog
     .filter((e) => e.code.startsWith('D0') && (e.by === 'cli' || info.status[e.code]?.implemented))
     .map((e) => e.code)
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
   const startApp = existsSync(join(root, 'src', 'routes'))
   const tcodes = catalog
     .filter((e) => e.code.startsWith('T') && info.status[e.code]?.implemented)
