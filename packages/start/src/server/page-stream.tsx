@@ -197,18 +197,19 @@ export async function rest(
     streaming: boolean
   },
 ) {
+  const send = (html: string) => {
+    try {
+      controller.enqueue(p.enc.encode(html))
+      return true
+    } catch {
+      return false // The reader moved on while the render was waiting.
+    }
+  }
   try {
-    for await (const chunk of p.stream.chunks)
-      controller.enqueue(
-        p.enc.encode(
-          nonceScripts(
-            styles.late(pageSheets([], islandsOf(chunk), p.options.chunks), chunk),
-            p.nonce,
-          ) +
-            chunk +
-            '\n',
-        ),
-      )
+    for await (const chunk of p.stream.chunks) {
+      const css = styles.late(pageSheets([], islandsOf(chunk), p.options.chunks), chunk)
+      if (!send(nonceScripts(css, p.nonce) + chunk + '\n')) return
+    }
   } catch (e) {
     if (controller.desiredSize === null) return
     const depth = e instanceof RenderFailure ? e.depth : 0
@@ -218,19 +219,18 @@ export async function rest(
       route: p.url.pathname,
     })
     const failure = { depth, data }
-    controller.enqueue(
-      p.enc.encode(
+    if (
+      !send(
         `<script type="application/json" id="${LATE_ERROR}">${json(failure)}</script>\n` +
           nonceScripts(
             `<script>dispatchEvent(new Event(${JSON.stringify(LATE_ERROR)}))</script>\n`,
             p.nonce,
           ) +
           `<noscript><p>Something went wrong. Reference: ${data.reference}. <a href="">Reload page</a></p></noscript>\n`,
-      ),
+      )
     )
+      return
   }
   const end = await finish(p, streaming)
-  if (controller.desiredSize === null) return
-  controller.enqueue(p.enc.encode(end))
-  controller.close()
+  if (send(end)) controller.close()
 }
