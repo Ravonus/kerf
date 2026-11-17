@@ -21,7 +21,7 @@ import { captureSharedElements } from './shared-elements'
 const RETRY = 1000,
   RETRIES = 30_000
 
-type Options = NavigateOptions & { pop?: boolean; hops?: number }
+type Options = NavigateOptions & { pop?: boolean; hops?: number; arrive?: boolean }
 type Page = ReturnType<typeof mount>
 
 export class Navigation {
@@ -48,6 +48,11 @@ export class Navigation {
   shape: { outlet: Level; leases: PreparedRouteShape[] } | undefined
   source: SourceContext | undefined
   committedURL = location.href
+  /**
+   * The document came from a place that sends one page for every address (`start`'s `shell`). A full load of an
+   * address there brings that page back and never the address's own, so no failed read falls back to one.
+   */
+  shell = false
   committedBase = document.baseURI
   shared: ReturnType<typeof captureSharedElements>
 
@@ -204,7 +209,7 @@ export class Navigation {
   go = async (href: string, opts: Options = {}) => {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
-    if (!opts.pop && url.href === location.href) return
+    if (!opts.pop && !opts.arrive && url.href === location.href) return
     const buildVersion = this.cache.version
     this.cache.setBuild(this.routes.build)
     if (buildVersion !== this.cache.version) this.prefetch.cancel(true)
@@ -299,8 +304,8 @@ export class Navigation {
         break
       } catch {
         if (ctrl.signal.aborted) return
-        if (!shown) return location.replace(url.href)
-        if (!this.cache.peek(url, !!client.seed)) {
+        if (!shown && !this.shell) return location.replace(url.href)
+        if (!this.shell && !this.cache.peek(url, !!client.seed)) {
           this.current = undefined
           ctrl.abort()
           return location.replace(url.href)

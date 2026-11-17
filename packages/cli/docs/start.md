@@ -288,6 +288,27 @@ clientFetch((path, init) => fetch(new URL(path, api), init))
 start(routes)
 ```
 
+**One page for every address.** When the place the page comes from holds only the app's files (an edge in front of
+the servers `clientFetch` reaches), give it one prerendered page to send for every address and start the app with
+`shell`. The app goes to the address the visitor asked for, reading its route data through `clientFetch`. While no
+server answers it keeps the shell up and tries again (1 s, 2 s, … up to 30 s apart); it never loads the page again
+to recover, because that only brings the shell back.
+
+```tsx
+// src/routes/shell.tsx
+// `kerf build` writes .output/public/shell/index.html
+export const prerender = true
+export default () => <p id="shell">Loading…</p>
+```
+
+```ts
+// src/entry.client.ts
+start(routes, { shell: !!document.getElementById('shell') })
+```
+
+Crawlers and link previews read the shell too: an address that needs its own title, description or card still needs
+a server that renders it.
+
 **`auth: 'user'` says who is calling, not what they may touch.** A `run` taking a row's id must check that row belongs
 to `ctx.user`. `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))` in the `where` is the usual way.
 

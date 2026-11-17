@@ -9,17 +9,20 @@ import type { ClientRoutes } from '../src/run'
 import { retainRouteView } from '../src/run/retain-view'
 
 import { Navigation } from '../src/run/navigation'
-const requests = vi.hoisted(() => [] as { resolve: (response: Response) => void }[])
+const requests = vi.hoisted(
+  () => [] as { resolve: (response: Response) => void; reject: (why: Error) => void }[],
+)
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
   ...(await load<typeof ActualHelpers>()),
   ask: () =>
-    new Promise<Response>((resolve) => {
-      requests.push({ resolve })
+    new Promise<Response>((resolve, reject) => {
+      requests.push({ resolve, reject })
     }),
 }))
 
 afterEach(() => {
+  vi.useRealTimers()
   requests.length = 0
   document.body.innerHTML = ''
   vi.unstubAllGlobals()
@@ -213,6 +216,50 @@ it('a route change jumps to the top, and to a hash target, without the page smoo
   answer(1, '/third', '/third', {})
   await hashed
   expect(into).toHaveBeenCalledWith({ behavior: 'instant' })
+  f.nav.dispose()
+  f.dispose()
+})
+
+it('goes nowhere when asked for the address it is at', async () => {
+  const f = fixture()
+  await f.nav.go(location.href, { scroll: false })
+  expect(requests).toHaveLength(0)
+  f.nav.dispose()
+  f.dispose()
+})
+
+it('reads the address a shell was sent for', async () => {
+  const f = fixture()
+  f.nav.shell = true
+  const arriving = f.nav.go(location.href, { arrive: true, scroll: false })
+  await vi.waitFor(() => expect(requests).toHaveLength(1))
+  answer(0, '/users/$id', '/users/1', { id: '1' })
+  await arriving
+  expect(location.pathname).toBe('/users/1')
+  expect(document.querySelector('button')!.textContent).toBe('1:2')
+  f.nav.dispose()
+  f.dispose()
+})
+
+it('keeps a shell up and asks again when no server answers', async () => {
+  vi.useFakeTimers()
+  const f = fixture()
+  f.nav.shell = true
+  const arriving = f.nav.go(location.href, { arrive: true, scroll: false })
+  await vi.waitFor(() => expect(requests).toHaveLength(1))
+  requests[0]!.reject(new TypeError('Failed to fetch'))
+  // The first wait is a second. Nothing is asked before it, and the page is not loaded again.
+  await vi.advanceTimersByTimeAsync(900)
+  expect(requests).toHaveLength(1)
+  await vi.advanceTimersByTimeAsync(200)
+  expect(requests).toHaveLength(2)
+  requests[1]!.reject(new TypeError('Failed to fetch'))
+  await vi.advanceTimersByTimeAsync(2100)
+  expect(requests).toHaveLength(3)
+  answer(2, '/users/$id', '/users/1', { id: '1' })
+  await vi.advanceTimersByTimeAsync(50)
+  await arriving
+  expect(document.querySelector('button')!.textContent).toBe('1:2')
   f.nav.dispose()
   f.dispose()
 })

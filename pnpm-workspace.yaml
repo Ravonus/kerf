@@ -37,3 +37,10 @@ packageExtensions:
   nitro:
     peerDependencies:
       vite: '*'
+
+# Advisories with no patched release that don't reach an app's visitors. Each needs a reason, and goes when a fix ships.
+auditConfig:
+  ignoreGhsas:
+    # picomatch <=4.0.7, slow matching on a crafted glob (no fix released as of 2026-11-17). It arrives through vite,
+    # nitro and tinyglobby, which match globs written in a project's own config at build time, never a visitor's input.
+    - GHSA-fc5q-39xc-vjpf

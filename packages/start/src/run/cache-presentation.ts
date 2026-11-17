@@ -38,7 +38,7 @@ export class CachePresentation {
       )
       return
     }
-    if (!nav.present(guess(nav.routes, pending.url.pathname), pending.url, true)) {
+    if (!nav.present(guess(nav.routes, pending.url.pathname), pending.url, true) && !nav.shell) {
       nav.current = undefined
       pending.ctrl.abort()
       location.replace(pending.url.href)
