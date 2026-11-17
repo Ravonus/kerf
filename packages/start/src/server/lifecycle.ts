@@ -4,7 +4,7 @@ import { hub } from '../hub'
 import { startCron } from './cron'
 import { startJobs } from './jobs'
 import type { makeServices } from './services'
-import { onShutdown } from './shutdown'
+import { onShutdown } from './shutdown.mjs'
 import type { HandlerOptions } from './types'
 
 /** The options with an `onDiagnostic` that names the request each diagnostic came from. */

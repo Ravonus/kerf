@@ -1,5 +1,5 @@
 // Nitro calls close after srvx has drained or forcibly closed HTTP connections.
-import { onShutdown, serverDrained } from './server/shutdown.ts'
+import { onShutdown, serverDrained } from './server/shutdown.mjs'
 
 export default function shutdownPlugin(nitro) {
   if (typeof process !== 'undefined' && !process.env.KERF_BUILD) onShutdown()

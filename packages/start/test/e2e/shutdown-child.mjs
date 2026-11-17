@@ -1,5 +1,5 @@
 import { createServer } from 'node:http'
-import { onShutdown } from '../../src/server/shutdown.ts?ssr'
+import { onShutdown } from '../../src/server/shutdown.mjs?ssr'
 import shutdownPlugin from '../../src/shutdown-plugin.mjs'
 
 let serverDrained

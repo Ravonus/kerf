@@ -4,11 +4,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import http from 'node:http'
 import net from 'node:net'
+import { sleep } from '../../../../scripts/lib/sleep.mjs'
 
-const sleep = (ms) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
 async function start(env = {}) {
   const child = spawn(
     process.execPath,
