@@ -2,7 +2,7 @@ import type { AsyncLocalStorage } from 'node:async_hooks'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
 import { hub } from '../hub'
-import { compressed } from './compression'
+import { compressed, whole } from './compression'
 import { rawResponses } from './http'
 import { stamped } from './request'
 import { secured } from './security'
@@ -21,7 +21,15 @@ export function makeHandler(
   return async (incoming: Request): Promise<Response> => {
     const request = stamped(incoming, options.site?.trustProxy)
     let routed: Response | undefined
-    const next = async (replacement = request) => (routed = await handle(replacement))
+    const next = async (replacement = request) => {
+      const response = await handle(replacement)
+      const text = options.handle ? whole.get(response) : undefined
+      // A hook can read or transform the body. Complete pages otherwise defer allocating it until compression.
+      if (text === undefined) return (routed = response)
+      routed = new Response(text, response)
+      whole.set(routed, text)
+      return routed
+    }
     const response = options.handle ? await options.handle(request, next) : await next()
     // Nitro's upgrade hooks travel beside the Response. A header-only wrapper must retain them; a refusal must not.
     if (
@@ -31,7 +39,14 @@ export function makeHandler(
       Reflect.has(routed, 'crossws')
     )
       Object.assign(response, { crossws: Reflect.get(routed, 'crossws') })
-    return secured(response, request, options)
+    if (routed && response.body === routed.body) {
+      if (rawResponses.has(routed)) rawResponses.add(response)
+      const text = whole.get(routed)
+      if (text !== undefined) whole.set(response, text)
+    }
+    // Hooks see the representation, never compressed bytes that a text transform would corrupt.
+    const out = rawResponses.has(response) ? response : await compressed(request, response)
+    return secured(out, request, options)
   }
   async function handle(request: Request): Promise<Response> {
     await services.loadExtensions()
@@ -62,10 +77,10 @@ export function makeHandler(
       throw e
     }
     const finished = exec.finishing(response, scope)
-    const out = rawResponses.has(response) ? finished : await compressed(request, finished)
+    if (rawResponses.has(response)) rawResponses.add(finished)
     try {
-      out.headers.set('x-request-id', scope.requestId)
+      finished.headers.set('x-request-id', scope.requestId)
     } catch {} // a response with fixed headers goes without it
-    return out
+    return finished
   }
 }

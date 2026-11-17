@@ -1,4 +1,4 @@
-import { rt } from './graph'
+import { CONTEXT, rt, within } from './graph'
 import { getOwner, createRoot } from './lifecycle'
 import type { Owner, State } from './types'
 
@@ -6,6 +6,20 @@ import type { Owner, State } from './types'
 function contexts(from: Owner | null) {
   while (from && !from.context) from = from.owner
   return from?.context
+}
+
+/** Lazy JSX keeps its provider, while its reactive computation still owns tracking and cleanup. */
+function provided<T>(value: T, owner: Owner): T {
+  if (typeof value === 'function') {
+    const context = contexts(owner)
+    const child = function (this: unknown, ...args: unknown[]) {
+      const read = () => provided(value.apply(this, args), getOwner()!)
+      return contexts(getOwner()) === context ? read() : within(owner, read)
+    }
+    Object.defineProperty(child, CONTEXT, { value: context })
+    return child as T
+  }
+  return Array.isArray(value) ? (value.map((child) => provided(child, owner)) as T) : value
 }
 
 /** A value a subtree reads without props: `provide` sets it below an owner, `use` reads the nearest. */
@@ -17,7 +31,8 @@ export function context<T>(fallback?: T) {
       return createRoot((end) => {
         if (parent) (parent.cleanups ??= []).push(end) // the subtree goes when its parent does
         getOwner()!.context = { ...contexts(parent), [id]: value }
-        return fn()
+        const result = fn()
+        return provided(result, getOwner()!)
       })
     },
     get use(): T {

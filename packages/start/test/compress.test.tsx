@@ -150,3 +150,85 @@ test('data is compressed once too', async () => {
   expect(JSON.parse(gunzipSync(Buffer.from(await a!.arrayBuffer())).toString()).p).toBe('/')
   expect(b!.status).toBe(200)
 })
+
+test('a response hook receives plain HTML before the final gzip encoding', async () => {
+  let receivedEncoding: string | null | undefined
+  const hooked = createHandler({
+    manifest,
+    modules: { home: { default: () => <h1>Hooked lemon</h1> } },
+    handle: async (request, next) => {
+      const response = await next(request)
+      receivedEncoding = response.headers.get('content-encoding')
+      const text = await response.text()
+      return new Response(
+        text.replace('</head>', '<meta name="hooked" content="yes"></head>'),
+        response,
+      )
+    },
+  })
+  const response = await hooked(
+    new Request('http://localhost/', { headers: { 'accept-encoding': 'gzip' } }),
+  )
+  expect(receivedEncoding).toBeNull()
+  expect(response.headers.get('content-encoding')).toBe('gzip')
+  const text = gunzipSync(Buffer.from(await response.arrayBuffer())).toString()
+  expect(text).toContain('<meta name="hooked" content="yes">')
+  expect(text).toContain('Hooked lemon')
+})
+
+test('a streaming HTML hook preserves late boundaries under brotli encoding', async () => {
+  const hooked = createHandler({
+    manifest,
+    modules: {
+      slow: {
+        default: () => (
+          <main>
+            <h1>Hook shell</h1>
+            <Boundary pending={<i>hook wait</i>}>
+              <Slow />
+            </Boundary>
+          </main>
+        ),
+      },
+    },
+    handle: async (request, next) => {
+      const response = await next(request)
+      expect(response.headers.get('content-encoding')).toBeNull()
+      const marker = new TextEncoder().encode('<!--hook-stream-->')
+      return new Response(
+        response.body!.pipeThrough(
+          new TransformStream<Uint8Array, Uint8Array>({
+            start(controller) {
+              controller.enqueue(marker)
+            },
+            transform(chunk, controller) {
+              controller.enqueue(chunk)
+            },
+          }),
+        ),
+        response,
+      )
+    },
+  })
+  const response = await hooked(
+    new Request('http://localhost/slow', { headers: { 'accept-encoding': 'br' } }),
+  )
+  const un = createBrotliDecompress()
+  let text = ''
+  un.on('data', (chunk) => (text += chunk))
+  const reader = response.body!.getReader()
+  const pump = (async () => {
+    for (;;) {
+      const { value, done } = await reader.read()
+      if (done) return void un.end()
+      un.write(value)
+    }
+  })()
+  await vi.waitFor(() => expect(text).toContain('Hook shell'))
+  expect(text).toContain('<!--hook-stream-->')
+  expect(text).toContain('hook wait')
+  expect(text).not.toContain('late')
+  release()
+  await pump
+  await vi.waitFor(() => expect(text).toContain('late'))
+})

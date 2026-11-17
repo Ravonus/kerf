@@ -26,7 +26,7 @@ fn w041_native_event_stream_and_cell_snapshots_refresh_through_predicates() {
             );
         } else {
             assert!(
-                code.contains("memo(() => editing.value)") && code.contains("start: seed"),
+                code.contains("memo(() => !!(editing.value))") && code.contains("start: seed"),
                 "{code}"
             );
         }

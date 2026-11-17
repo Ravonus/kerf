@@ -18,6 +18,8 @@ export const devComponent: { label?: string | undefined; id?: number | undefined
 /** The computation reading right now: whatever it reads, it subscribes to. */
 export let listener: Computation | null = null
 export let owner: Owner | null = null
+/** Context carried by a provider's deferred children into their own reactive computation. */
+export const CONTEXT = Symbol()
 let nextId = 0
 /** How many of `listener.s` this run has read again, in order. Those links stay as they are. */
 let at = 0
@@ -322,6 +324,8 @@ export function computation(
     cleanups: null,
     owner,
   }
+  const context = (fn as typeof fn & { [CONTEXT]?: Owner['context'] })[CONTEXT]
+  if (context) node.context = context
   if (DEV && devComponent.label) node.n = devComponent.label
   if (owner) adopt(node)
   return node

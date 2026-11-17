@@ -94,7 +94,7 @@ impl Emitter<'_> {
             self.n += 1;
             let p = format!("_p{}", self.n);
             b.ops.push(format!(
-                "const {p} = {props}; {spread}({el_var}, () => ({{ ...{p} }}));"
+                "const {p} = {props}; {spread}({el_var}, () => {p});"
             ));
             if !has_kids && !void {
                 Self::put(b, ">");
