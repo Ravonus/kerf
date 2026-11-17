@@ -62,3 +62,21 @@ Every new eval scenario, benchmark, or size or speed claim is measured across al
 Kerf + Veneer, Solid, React + Radix, React + Zustand and React + MUI. Changes to Kerf's compiler or runtime, Veneer or veneer-core end
 with `node benchmarks/compare/measure.mjs`, committing the new line in `evals/results/compare-history.jsonl` and the regenerated
 `evals/results/compare.html`, which charts them. Rules and how to add a stack: `benchmarks/compare/README.md`.
+
+
+## Site release hardening
+
+Generated agent guidance owns the security/performance release contract in
+`packages/cli/src/agents-md.mjs`. Keep it current with the supported CSP nonce
+placeholder and named Trusted Types policies. Verify strict enforcement against
+navigation, streaming, controls, forms and exact Save, not just header presence.
+Never nonce arbitrary app HTML or install a permissive default policy. HSTS
+subdomains/preload are owner choices. Trace layout work and decoder/analytics
+loading before changing behavior; silent video artwork needs a truthful
+accessible description rather than fake captions. Social metadata and JSON-LD
+must describe the current published artist and page.
+
+Canvas scrollbar palettes must cache by colour values, not frame-object identity.
+Batch colour probes before style reads and refresh on real theme changes. Keep
+scroll animation frames free of probe DOM writes and repeated layout reads;
+verify live theme edits, pointer dragging, reduced motion and renderer cleanup.

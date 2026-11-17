@@ -170,8 +170,11 @@ test('labels low and zero stock', () => {
 })
 `
 
+// Each test here and in registerMutationAndGit runs the gate with a budget of 30-60 s; vitest's 20 s default cuts it off on a loaded machine.
+const mutating = { timeout: 120_000 }
+
 function registerSoundAndJunk() {
-  it('accepts sound tests: they fail before, pass after, and kill mutants', async () => {
+  it('accepts sound tests: they fail before, pass after, and kill mutants', mutating, async () => {
     const dir = fixture({ 'src/stock.ts': after, 'src/stock.test.ts': sound })
     const r = await gate(dir, {
       changes: [
@@ -191,8 +194,11 @@ function registerSoundAndJunk() {
     expect(r.survivors.every((s) => s.suggestion.startsWith('src/stock.ts:'))).toBe(true)
   })
 
-  it('catches junk: a tautology (T002), a test that passes before (T010), one that kills nothing (T011), an implementation query (T005)', async () => {
-    const junk = `import { canAdd, label } from './stock'
+  it(
+    'catches junk: a tautology (T002), a test that passes before (T010), one that kills nothing (T011), an implementation query (T005)',
+    mutating,
+    async () => {
+      const junk = `import { canAdd, label } from './stock'
 test('tautology', () => {
   expect(true).toBe(true)
 })
@@ -206,52 +212,57 @@ test('implementation detail', () => {
   expect(document.querySelector('.stock-label')).toBeNull()
 })
 `
-    const dir = fixture({ 'src/stock.ts': after, 'src/junk.test.ts': junk })
-    const r = await gate(dir, {
-      changes: [
-        { rel: 'src/stock.ts', before, after },
-        { rel: 'src/junk.test.ts', before: null, after: junk },
-      ],
-      budgetSec: 60,
-    })
-    expect(r.ok).toBe(false)
-    const found = r.diagnostics.map((d) => `${d.code}:${d.span[0]}:${d.severity}`)
-    expect(found).toEqual(
-      expect.arrayContaining([
-        'T002:3:error',
-        'T010:2:error',
-        'T010:5:error',
-        'T010:8:error',
-        'T005:12:error',
-      ]),
-    )
-    expect(r.tests.find((t) => t.name === 'implementation detail')).toMatchObject({
-      after: 'failed',
-    }) // no DOM here: it can't even run
-  })
+      const dir = fixture({ 'src/stock.ts': after, 'src/junk.test.ts': junk })
+      const r = await gate(dir, {
+        changes: [
+          { rel: 'src/stock.ts', before, after },
+          { rel: 'src/junk.test.ts', before: null, after: junk },
+        ],
+        budgetSec: 60,
+      })
+      expect(r.ok).toBe(false)
+      const found = r.diagnostics.map((d) => `${d.code}:${d.span[0]}:${d.severity}`)
+      expect(found).toEqual(
+        expect.arrayContaining([
+          'T002:3:error',
+          'T010:2:error',
+          'T010:5:error',
+          'T010:8:error',
+          'T005:12:error',
+        ]),
+      )
+      expect(r.tests.find((t) => t.name === 'implementation detail')).toMatchObject({
+        after: 'failed',
+      }) // no DOM here: it can't even run
+    },
+  )
 }
 
 function registerMutationAndGit() {
-  it('reports T011 for a test that fails before but kills no mutant of the changed lines', async () => {
-    const weak = `import { label } from './stock'
+  it(
+    'reports T011 for a test that fails before but kills no mutant of the changed lines',
+    mutating,
+    async () => {
+      const weak = `import { label } from './stock'
 test('label is a string with text', () => {
   expect(label(1, 3).length > 0).toBe(true)
 })
 `
-    const dir = fixture({ 'src/stock.ts': after, 'src/weak.test.ts': weak })
-    const r = await gate(dir, {
-      changes: [
-        { rel: 'src/stock.ts', before, after },
-        { rel: 'src/weak.test.ts', before: null, after: weak },
-      ],
-      budgetSec: 60,
-    })
-    expect(r.tests[0]).toMatchObject({ before: 'failed', after: 'passed' })
-    // It kills some mutants (blanking the label), so it is not T011; make sure the survivors still point at what's missed.
-    expect(r.survivors.some((s) => s.op === 'number' || s.op === 'operator')).toBe(true)
-  })
+      const dir = fixture({ 'src/stock.ts': after, 'src/weak.test.ts': weak })
+      const r = await gate(dir, {
+        changes: [
+          { rel: 'src/stock.ts', before, after },
+          { rel: 'src/weak.test.ts', before: null, after: weak },
+        ],
+        budgetSec: 60,
+      })
+      expect(r.tests[0]).toMatchObject({ before: 'failed', after: 'passed' })
+      // It kills some mutants (blanking the label), so it is not T011; make sure the survivors still point at what's missed.
+      expect(r.survivors.some((s) => s.op === 'number' || s.op === 'operator')).toBe(true)
+    },
+  )
 
-  it('reads the diff from git, and flags a weakened existing test (T020)', async () => {
+  it('reads the diff from git, and flags a weakened existing test (T020)', mutating, async () => {
     const dir = fixture({
       'src/stock.ts': before.replace("return ''", "return 'x'"),
       'src/stock.test.ts':
@@ -276,18 +287,22 @@ test('label is a string with text', () => {
     expect(readFileSync(join(dir, 'src/stock.ts'), 'utf8')).toBe(after) // the working tree is never touched
   })
 
-  it('with no source change, skips fail-before and mutates what the new tests import', async () => {
-    const dir = fixture({ 'src/stock.ts': after, 'src/stock.test.ts': sound })
-    const r = await gate(dir, {
-      changes: [{ rel: 'src/stock.test.ts', before: null, after: sound }],
-      budgetSec: 60,
-    })
-    expect(r.notes).toContain(
-      'no source change: fail-before skipped; mutants come from the source the new tests import',
-    )
-    expect(r.tests.every((t) => t.before === null && t.kills > 0)).toBe(true)
-    expect(r.ok).toBe(true)
-  })
+  it(
+    'with no source change, skips fail-before and mutates what the new tests import',
+    mutating,
+    async () => {
+      const dir = fixture({ 'src/stock.ts': after, 'src/stock.test.ts': sound })
+      const r = await gate(dir, {
+        changes: [{ rel: 'src/stock.test.ts', before: null, after: sound }],
+        budgetSec: 60,
+      })
+      expect(r.notes).toContain(
+        'no source change: fail-before skipped; mutants come from the source the new tests import',
+      )
+      expect(r.tests.every((t) => t.before === null && t.kills > 0)).toBe(true)
+      expect(r.ok).toBe(true)
+    },
+  )
 }
 
 describe('the gate', () => {

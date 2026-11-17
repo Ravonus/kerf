@@ -173,6 +173,8 @@ export function cspDirectives(text) {
 /** The first directive named governs, as in a browser's fallback; a nonce or a hash beside `unsafe-inline` cancels it. */
 export function inlineAllowed(policy, ...names) {
   const lists = policy.get(names.find((n) => policy.has(n)))
+  if (names[0]?.startsWith('script-') && lists?.every((l) => /'nonce-\{kerf\}'/.test(l)))
+    return true
   return !lists || lists.every((l) => /'unsafe-inline'/i.test(l) && !/'(?:nonce|sha\d+)-/i.test(l))
 }
 
@@ -181,15 +183,16 @@ export function scriptsRun(policy) {
   const lists = policy.get(
     ['script-src-elem', 'script-src', 'default-src'].find((n) => policy.has(n)),
   )
-  // Past `strict-dynamic` a browser ignores hosts, 'self' and 'unsafe-inline', and kerf's scripts carry no nonce.
+  // Start replaces the reserved placeholder with one fresh nonce on its own scripts, including stream patches.
   return (
     !lists ||
     lists.every(
       (l) =>
-        !/'strict-dynamic'/i.test(l) &&
-        (/'self'/i.test(l) ||
-          l.replace(/'[^']*'/g, '').trim() !== '' ||
-          (/'unsafe-inline'/i.test(l) && !/'(?:nonce|sha\d+)-/i.test(l))),
+        /'nonce-\{kerf\}'/.test(l) ||
+        (!/'strict-dynamic'/i.test(l) &&
+          (/'self'/i.test(l) ||
+            l.replace(/'[^']*'/g, '').trim() !== '' ||
+            (/'unsafe-inline'/i.test(l) && !/'(?:nonce|sha\d+)-/i.test(l)))),
     )
   )
 }

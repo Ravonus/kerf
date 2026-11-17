@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/keel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "@kerf-js/keel: KEEL generation for kerf. The `keel-lit` surface kind (surface.renderer@1) and KEEL's generative modules: trees, looks, light.",
   "keywords": [
     "kerf"

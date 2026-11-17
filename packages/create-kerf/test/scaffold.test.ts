@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
 import { agentsMd, limit } from '../../cli/src/agents-md.mjs'
+import { agentsLimit } from '../../cli/src/contributions.mjs'
 import { check } from '../../cli/src/check.mjs'
 import { devCommand } from '../../cli/src/start.mjs'
 import { scaffold, template as templateSource } from '../src/index.mjs'
@@ -122,12 +123,14 @@ it("the alias is the app's: a tsconfig edit is all it takes to use its own", ser
   }
 })
 
-it('AGENTS.md for the biggest scaffold stays under the limit, plugin sections included', async () => {
-  const { text, bytes } = await agentsMd(app('veneer', { db: 'sqlite', auth: true }))
+// kerf's own text has `limit`; each plugin section has its own `agentsLimit` (P112) on top, as agents-md.mjs counts it.
+it('AGENTS.md for the biggest scaffold stays under the limit, plus its one plugin section', async () => {
+  const { text, bytes, overLimit } = await agentsMd(app('veneer', { db: 'sqlite', auth: true }))
   expect(text).toContain('## Full stack')
   expect(text).toContain('### veneer')
   expect(text).toContain('`#/server/todos`')
-  expect(bytes).toBeLessThan(limit)
+  expect(overLimit).toBe(false)
+  expect(bytes).toBeLessThan(limit + agentsLimit)
 })
 
 it.each(['json', 'yaml'])(

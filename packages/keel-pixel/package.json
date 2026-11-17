@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/keel-pixel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "@kerf-js/keel-pixel: the `keel-pixel` surface kind (surface.renderer@1): KEEL's WebGL2 pixel renderer and theme recipes.",
   "license": "MIT",
   "repository": {

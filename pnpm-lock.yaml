@@ -322,6 +322,28 @@ importers:
       zod:
         specifier: 4.6.7
         version: 4.6.7
+    optionalDependencies:
+      '@kerf-js/compiler-darwin-arm64':
+        specifier: 0.1.1
+        version: 0.1.1
+      '@kerf-js/compiler-darwin-x64':
+        specifier: 0.1.1
+        version: 0.1.1
+      '@kerf-js/compiler-linux-arm64-gnu':
+        specifier: 0.1.1
+        version: 0.1.1
+      '@kerf-js/compiler-linux-arm64-musl':
+        specifier: 0.1.1
+        version: 0.1.1
+      '@kerf-js/compiler-linux-x64-gnu':
+        specifier: 0.1.1
+        version: 0.1.1
+      '@kerf-js/compiler-linux-x64-musl':
+        specifier: 0.1.1
+        version: 0.1.1
+      '@kerf-js/compiler-win32-x64':
+        specifier: 0.1.1
+        version: 0.1.1
 
   packages/create-kerf:
     devDependencies:
@@ -2039,6 +2061,45 @@ packages:
 
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
+
+  '@kerf-js/compiler-darwin-arm64@0.1.1':
+    resolution: {integrity: sha512-v0GhTsEFXRQXXUBN6QAh/eskCls25Sn1LQcOY6ShmDbiN6fqpXKoJH1G1BQzPT9hB2B9kv0q52lcYeal4azeaQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@kerf-js/compiler-darwin-x64@0.1.1':
+    resolution: {integrity: sha512-JZvVS8+T5UdiXakzhxaJXsn0WRJ2qH3Sbb9Xdx63hag62a4wfQE7fPECUdyV03EKDzHiqpEwSAugHxb/qjXCzw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@kerf-js/compiler-linux-arm64-gnu@0.1.1':
+    resolution: {integrity: sha512-97Sjm80QahADLTNY8tSp2SEAQS//QGOxsT/GnP8XfDAoVkKSn5IkygyOg/DQipurfphLRcXlbGZiPjXdlMoGAA==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@kerf-js/compiler-linux-arm64-musl@0.1.1':
+    resolution: {integrity: sha512-niVjAFx/At6UD9DF/ScNdIjcJHUziM6YV0U93STL/sWdT+BMyY2SEkV0h/ME5FSSQcxOT271EZ+j9CQ2NySyvQ==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@kerf-js/compiler-linux-x64-gnu@0.1.1':
+    resolution: {integrity: sha512-8fHCfjiBF8HoWCgGkKivVhHRRLF7hmfRhlNRghsmGr2j66kIQre7z/b0K3QIj+eY0JfdNPAebyKDICO5mhIfng==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@kerf-js/compiler-linux-x64-musl@0.1.1':
+    resolution: {integrity: sha512-aDesf1/N32znIlDia42M9bdqP69W36m9dNvn6vwIn4QDtvx3sXsJxlWQccb0SJzriSc/CA2YuWTds0Ug9Y335Q==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@kerf-js/compiler-win32-x64@0.1.1':
+    resolution: {integrity: sha512-kkZjANYnkJf1AzN7ijoNBh0XpgyUO0JXKGywEBEaq8eoVoBdcA+LuXmxWYXCEzcS2Ts0LYK/UMWDM/BVUmrTMA==}
+    cpu: [x64]
+    os: [win32]
 
   '@libsql/client@0.17.4':
     resolution: {integrity: sha512-lYayFWasDV78A+TjlEhr6ubb3odBV6OHjb+wdp8VQcyWWAEIjuwbCHaraEUS4m4yWoo0BvZo96It4VdzZRmRWw==}
@@ -6327,6 +6388,27 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.6.0
 
   '@js-sdsl/ordered-map@4.4.2':
+    optional: true
+
+  '@kerf-js/compiler-darwin-arm64@0.1.1':
+    optional: true
+
+  '@kerf-js/compiler-darwin-x64@0.1.1':
+    optional: true
+
+  '@kerf-js/compiler-linux-arm64-gnu@0.1.1':
+    optional: true
+
+  '@kerf-js/compiler-linux-arm64-musl@0.1.1':
+    optional: true
+
+  '@kerf-js/compiler-linux-x64-gnu@0.1.1':
+    optional: true
+
+  '@kerf-js/compiler-linux-x64-musl@0.1.1':
+    optional: true
+
+  '@kerf-js/compiler-win32-x64@0.1.1':
     optional: true
 
   '@libsql/client@0.17.4':

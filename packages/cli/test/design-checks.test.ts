@@ -465,6 +465,11 @@ function registerPolicyCases(
       ['error'],
     ],
     [
+      'Start stamps its reserved nonce on owned scripts',
+      "style-src 'unsafe-inline'; script-src 'nonce-{kerf}' 'strict-dynamic'",
+      [],
+    ],
+    [
       "a nonce kerf doesn't put on its scripts",
       "style-src 'unsafe-inline'; script-src 'nonce-abc' 'strict-dynamic'",
       ['error'],

@@ -128,6 +128,48 @@ preview/private exclusions. A noindex finding is an indexing policy issue, not
 chat-agent traffic; use a clean profile before attributing other audit failures
 to application or framework code.
 
+
+### Strict scripts and Trusted Types
+
+`site.security` accepts a response-specific nonce placeholder in CSP headers:
+
+```ts
+import { defineConfig } from '@kerf-js/core/config'
+
+const policy = [
+  "default-src 'self'",
+  "script-src 'nonce-{kerf}' 'strict-dynamic'",
+  "style-src 'self' 'unsafe-inline'",
+  "object-src 'none'; base-uri 'none'; frame-ancestors 'self'",
+].join('; ')
+
+export default defineConfig({
+  site: { security: { 'Content-Security-Policy': policy } },
+})
+```
+
+Start replaces `'nonce-{kerf}'` with a cryptographically random nonce for each
+request. It stamps only its own entry, capture, stylesheet activation and
+Boundary scripts and their module preloads. The Vite nonce meta also protects dynamic preloads. Nonce HTML stays private to prevent shared-cache reuse. Streaming stays incremental and remembered heads never reuse
+nonces. App HTML, including raw HTML bindings, is never automatically trusted.
+A trusted, developer-owned `site.head` script can opt in with `nonce="{kerf}"`.
+Add the image, media, font, connection and iframe origins the app actually uses;
+verify the deployed header and all real flows before enforcing a new policy.
+Do not add `unsafe-eval` or wildcard script origins to make an audit pass.
+
+For Trusted Types, add `require-trusted-types-for 'script'; trusted-types
+kerf-html` to the CSP. Core uses that named policy only
+for compiler literals and escaped same-origin server renders. Raw HTML bindings
+remain subject to enforcement. Third-party script URLs and workers need their
+own narrowly validated policies; never install an identity `default` policy.
+Feature support differs by browser: test enforcement in Chromium and normal
+operation in browsers without Trusted Types.
+
+HSTS defaults to the current host. `includeSubDomains` commits every subdomain
+to HTTPS; add it only after checking the owner's subdomains. The `preload` token
+also requires a year-long lifetime and does not itself submit the domain to a
+browser preload list. Kerf never opts other people's domains into this policy.
+
 ## Cross-origin Kerf endpoints
 
 ```ts

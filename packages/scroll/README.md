@@ -38,6 +38,11 @@ listens for `scroll`.
 `@kerf-js/scroll` keeps the browser's scroll offsets: the viewport is always a real scroll container, and the bars
 are plain elements or a canvas that you style or paint. It has two modes:
 
+Canvas palettes resolve their CSS colours in one batch and reuse them across animation
+frames, even when each frame has a new options object. Colour values, ancestor theme
+attributes and loaded stylesheets invalidate that cache; geometry changes do not.
+Keep custom painters free of per-frame style probes and repeated layout reads.
+
 - **Native** (the default): the browser scrolls the viewport, with its own bar hidden. Wheel, trackpad and touch
   run on the compositor, and a CSS scroll timeline moves the DOM thumb there too, so a long task on the main
   thread stalls neither.

@@ -216,7 +216,16 @@ test('navigating between users keeps both layouts and writes only what changed',
   expect(await page.getAttribute('meta[property="og:image"]', 'content')).toMatch(
     /\/_kerf\/og\/users\/2\.png\?v=/,
   )
-  expect(await page.$$eval('head [data-wm]', (l) => l.length)).toBe(16)
+  expect(await page.getAttribute('meta[name="twitter:title"]', 'content')).toBe(
+    'Grace Hopper · Acme',
+  )
+  expect(await page.getAttribute('meta[name="twitter:description"]', 'content')).toBe(
+    'Compilers, COBOL and nanoseconds.',
+  )
+  expect(await page.getAttribute('meta[name="twitter:image"]', 'content')).toBe(
+    await page.getAttribute('meta[property="og:image"]', 'content'),
+  )
+  expect(await page.$$eval('head [data-wm]', (l) => l.length)).toBe(19)
   expect(errors).toEqual([])
   await page.close()
 })

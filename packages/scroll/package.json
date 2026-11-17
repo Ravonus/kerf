@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/scroll",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Scrolling in JavaScript: native-feeling wheel, touch, keys and focus, with scrollbars drawn in the DOM or on a canvas",
   "keywords": [
     "canvas",

@@ -1,3 +1,4 @@
+import { trustedMarkup } from './trusted-markup'
 // Partial hydration on the client (PLAN §11). A static level is the server's HTML with no code behind it; the islands in
 // it are the only components that run. `<!--wi:["id","key",[values]]-->` opens an island in the server's output,
 // followed by its range; `<!--wl:d:["p",n]-->` … `<!--/wl:d-->` bound route level `d`. `level` adopts a level already
@@ -347,7 +348,7 @@ export function level(
     return a && b ? siblings(a, b) : []
   }
   // oxlint-disable-next-line kerf/no-html-sink -- `html` is the app's own server's render, streamed to this same page
-  t.innerHTML = html
+  t.innerHTML = trustedMarkup(html)
   let nodes = read()
   const [a, b] = bounds(nodes, d + 1)
   resume =
