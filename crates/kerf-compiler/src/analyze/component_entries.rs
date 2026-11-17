@@ -159,7 +159,7 @@ impl<'a> Visit<'a> for ComponentEntryReads<'_, '_> {
             let boxed = match &m.object {
                 Expression::Identifier(id) => {
                     let sym = symbol_of(scoping, id);
-                    if sym.is_some_and(|s| self.a.boxes.contains(&s)) {
+                    if sym.is_some_and(|s| self.a.entry_boxes.contains(&s)) {
                         Some((id.span, sym, true))
                     } else if is_prop(id) && sym != self.ctx.props_param {
                         Some((id.span, sym, false))

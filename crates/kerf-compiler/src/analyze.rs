@@ -125,6 +125,7 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
     let mut boxes = Boxes {
         scoping,
         set: HashSet::new(),
+        entries: HashSet::new(),
         browser: crate::browser::value_imports(program),
         arrays: HashSet::new(),
     };
@@ -134,6 +135,7 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
         source,
         plan: Plan::default(),
         boxes: boxes.set,
+        entry_boxes: boxes.entries,
         arrays: boxes.arrays,
         comps: Vec::new(),
         jsx_depth: 0,
@@ -373,6 +375,8 @@ struct Analyzer<'s> {
     source: &'s str,
     plan: Plan,
     boxes: HashSet<SymbolId>,
+    /// Mutable state boxes provide per-entry `get`; derived/resource/browser boxes do not.
+    entry_boxes: HashSet<SymbolId>,
     /// See `Boxes::arrays`.
     arrays: HashSet<SymbolId>,
     comps: Vec<CompCtx>,
