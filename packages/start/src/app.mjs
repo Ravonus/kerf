@@ -72,10 +72,16 @@ function config({
         // before Nitro bundles the server, so rules added when it is done are in the build. (Dev sends no-store.)
         ...(command === 'build' && {
           hooks: immutableCards(),
-          plugins: [fileURLToPath(new URL('./range.mjs', import.meta.url))],
         }),
         ...traced(root),
         ...nitroOptions,
+        ...(command === 'build' && {
+          plugins: [
+            fileURLToPath(new URL('./range.mjs', import.meta.url)),
+            fileURLToPath(new URL('./shutdown-plugin.mjs', import.meta.url)),
+            ...(nitroOptions.plugins ?? []),
+          ],
+        }),
       }),
     ],
   }

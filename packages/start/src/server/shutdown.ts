@@ -1,23 +1,40 @@
-let last: (() => unknown) | undefined
-let listening = false
+type ShutdownState = {
+  last?: () => unknown
+  listening?: boolean
+  drained?: () => void
+}
 
-/**
- * On SIGTERM or SIGINT (a deploy or scale-down), stop the schedule and close realtime connections with "going away",
- * so open pages reconnect to an instance that's staying, while the server finishes the requests it has (Nitro's
- * server stops taking new ones and waits for them). The newest handler's is the one that runs.
- */
+// Nitro and the SSR entry are separate bundles but share one serving process.
+const key = Symbol.for('kerf.start.shutdown')
+const shared = globalThis as typeof globalThis & { [key]?: ShutdownState }
+const state = (shared[key] ??= {})
+
+/** Notify Start that Nitro's HTTP server has closed its connections. */
+export function serverDrained() {
+  state.drained?.()
+}
+
+/** Stop Start's services and exit after the HTTP server drains on SIGTERM or SIGINT. */
 export function onShutdown(stop: () => unknown) {
-  last = stop
-  if (listening || typeof process === 'undefined' || !process.once) return
-  listening = true
+  state.last = stop
+  if (state.listening || typeof process === 'undefined' || !process.on) return
+  state.listening = true
+  let stopping = false
   for (const signal of ['SIGTERM', 'SIGINT'] as const)
-    process.once(signal, () => {
-      // A listener stops Node's own exit: with no other (Nitro's server has one), exit as the signal would have.
-      const alone = process.listenerCount(signal) === 0
-      void Promise.resolve(last?.())
+    process.on(signal, () => {
+      if (stopping) process.exit(0)
+      stopping = true
+      const seconds = Number.parseInt(process.env.SERVER_SHUTDOWN_TIMEOUT || '') || 5
+      const http = new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, Math.max(0, seconds) * 1000)
+        state.drained = () => {
+          clearTimeout(timer)
+          resolve()
+        }
+      })
+      const services = Promise.resolve()
+        .then(() => state.last?.())
         .catch(() => {})
-        .finally(() => {
-          if (alone) process.kill(process.pid, signal)
-        })
+      void Promise.all([http, services]).then(() => process.exit(0))
     })
 }

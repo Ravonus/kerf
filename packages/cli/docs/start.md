@@ -798,3 +798,12 @@ their first format and preserve `srcset`, `sizes` and art-direction media condit
 Lazy images and inert markup do not create hints. Routes with media hints render
 their current shell before sending the head, rather than caching an artwork URL
 across later content publications. A streamed image beyond the shell is not hinted.
+
+### Stopping a Node server
+
+On SIGTERM or SIGINT, Start stops its schedule, closes realtime connections,
+waits for running jobs and lets the HTTP server drain. The process exits with
+code 0 after both have finished, or after the HTTP graceful window and the
+jobs have finished. `SERVER_SHUTDOWN_TIMEOUT` sets the window in seconds;
+its default is 5. A second signal forces an immediate exit. Close application
+resources in your own shutdown handlers if they require cleanup.
