@@ -15,8 +15,9 @@ export function serverDrained() {
 }
 
 /** Stop Start's services and exit after the HTTP server drains on SIGTERM or SIGINT. */
-export function onShutdown(stop: () => unknown) {
-  state.last = stop
+export function onShutdown(stop?: () => unknown) {
+  // The server plugin arms the signals with no handler of its own: it must not replace the app's.
+  if (stop) state.last = stop
   if (state.listening || typeof process === 'undefined' || !process.on) return
   state.listening = true
   let stopping = false
