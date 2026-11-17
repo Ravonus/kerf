@@ -38,20 +38,3 @@ export function Cart({ items, taxRate }: {
 9. **Side effects go in `watch(() => source, value => cleanup?)`**; DOM work in `onMount`. `flush()` applies pending
    DOM updates now.
 
-## HTTP route declarations
-
-- **H018** (error): a page and HTTP route handle the same GET/HEAD
-  path, or two HTTP modules declare the same path (param names do
-  not distinguish paths). Keep only non-GET/HEAD HTTP methods beside
-  a page, combine duplicate modules, or move the route.
-- **H019** (error): an HTTP module has no named method exports,
-  malformed or repeated params, a catch-all before the end, or a
-  reserved `/_kerf/` path. Export named web methods and use whole
-  `[param]` segments with only a final `[...rest]` or `[[...rest]]`.
-
-`src/routes/index.tsx` beside `index.http.ts` exporting `GET` triggers
-H018; exporting only `POST` is valid. `[...rest]/extra.http.ts`
-triggers H019; `extra/[...rest].http.ts` exporting `GET` is valid.
-There is no safe automatic relocation. `kerf docs start` has examples.
-Q010 does not protect these raw handlers; apps must implement CSRF
-protection for cookie-authorized writes.
