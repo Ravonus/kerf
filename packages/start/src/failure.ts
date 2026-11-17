@@ -29,8 +29,12 @@ export function errorReference(): string {
 
 export function referenceFrom(error: unknown): string | undefined {
   const value = error instanceof Error && (error as Error & { reference?: unknown }).reference
-  return typeof value === 'string' && /^[0-9a-f]{24}$/.test(value) ? value : undefined
+  return isErrorReference(value) ? value : undefined
 }
+
+/** The opaque reference format shared by Start's server and browser. */
+export const isErrorReference = (value: unknown): value is string =>
+  typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)
 
 export function errorDetails(error: unknown) {
   if (error instanceof Error)
