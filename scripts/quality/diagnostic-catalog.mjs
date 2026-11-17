@@ -4,11 +4,50 @@ import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
 import { repoRoot as root } from '../lib/helpers.mjs'
+import { referenceDiagnostics } from '../lib/diagnostic-providers.mjs'
 import { catalog as allCatalog } from '../../packages/cli/src/catalog.mjs'
+import { failureDefaultsSource } from './failure-defaults.mjs'
 
 // These compiler-family rules move to the CLI checker; ownership never exempts coverage.
 const mappedCodes = new Set(['W007', 'W008', 'W030'])
 const baselinePath = resolve(root, 'scripts/quality/diagnostic-catalog-baseline.json')
+const allocationsPath = resolve(root, 'scripts/quality/diagnostic-allocations.json')
+
+/** Keep each code's first registration or alias target reserved through retirement. */
+export function diagnosticAllocations(index) {
+  return Object.fromEntries(
+    [...index]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([code, e]) => [
+        code,
+        code === e.code ? (e.plugin ?? e.owner ?? 'core') : `alias of ${e.code}`,
+      ]),
+  )
+}
+
+/** Renames and removals leave an entry in the registry marked deprecated or reserved. */
+export function allocationProblems(index, allocated) {
+  const current = diagnosticAllocations(index)
+  return [...new Set([...Object.keys(allocated), ...Object.keys(current)])].flatMap((code) => {
+    if (!Object.hasOwn(allocated, code)) return [`unrecorded diagnostic allocation: ${code}`]
+    return current[code] === allocated[code] ? [] : [`changed diagnostic allocation: ${code}`]
+  })
+}
+
+// These quoted literals use another protocol's vocabulary.
+const foreignLiterals = { 'packages/multiplayer/src/server.ts': new Set(['HS256']) }
+
+/** Check diagnostic literals, including dynamically selected members of registered families. */
+export function unresolvedLiterals(files, index) {
+  const problems = new Set()
+  for (const [path, source] of Object.entries(files)) {
+    for (const [, , code] of source.matchAll(/(['"])([A-Z]{1,5}\d{3}|E_[A-Z]+(?:_[A-Z]+)*)\1/g)) {
+      if (!index.has(code) && !foreignLiterals[path]?.has(code))
+        problems.add(`missing diagnostic lookup: ${code} in ${path}`)
+    }
+  }
+  return [...problems].sort((a, b) => a.localeCompare(b))
+}
 
 function tracked(...paths) {
   return execFileSync('git', ['ls-files', '-z', '--', ...paths], { cwd: root })
@@ -239,12 +278,31 @@ export function check() {
     tests: readFiles(cliTests),
   })
   const baseline = JSON.parse(readFileSync(baselinePath, 'utf8'))
+  const runtime = tracked('packages', 'crates/kerf-compiler/src').filter(
+    (path) =>
+      /^(?:packages\/[^/]+\/(?:src\/|vite\/|bin\/|(?:plugin|vite)\.mjs$)|crates\/kerf-compiler\/src\/)/.test(
+        path,
+      ) &&
+      /\.(?:ts|tsx|mjs|cjs|rs)$/.test(path) &&
+      !path.startsWith('packages/cli/src/catalog'),
+  )
+  const allocations = JSON.parse(readFileSync(allocationsPath, 'utf8'))
+  const generated = readFileSync(
+    resolve(root, 'packages/start/src/server/failure-defaults.ts'),
+    'utf8',
+  )
   return {
-    problems: compare(result, baseline),
+    problems: [
+      ...compare(result, baseline),
+      ...allocationProblems(referenceDiagnostics, allocations),
+      ...unresolvedLiterals(readFiles(runtime), referenceDiagnostics),
+      ...(generated === failureDefaultsSource() ? [] : ['stale Start failure defaults']),
+    ],
     source: source.length,
     tests: tests.length,
     cliSource: cliSource.length,
     cliTests: cliTests.length,
+    runtime: runtime.length,
   }
 }
 
@@ -255,6 +313,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   )
   console.log(
     `Checked ${result.cliSource} tracked CLI source files and ${result.cliTests} CLI test files (git ls-files).`,
+  )
+  console.log(
+    `Checked diagnostic lookup across ${result.runtime} tracked runtime and tooling files.`,
   )
   for (const problem of result.problems) console.error(problem)
   if (result.problems.length) process.exitCode = 1

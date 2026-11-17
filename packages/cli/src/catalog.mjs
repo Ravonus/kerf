@@ -30,11 +30,12 @@ import { deploy } from './catalog/deploy.mjs'
 import { rust } from './catalog/rust.mjs'
 import { text } from './catalog/text.mjs'
 import { media } from './catalog/media.mjs'
+import { primaryFailures, runtimeDiagnostics, runtimeMetadata } from './catalog/runtime.mjs'
 
-/** @typedef {{ code: string, severity: 'error' | 'warning' | 'info', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'start' | 'runtime' | 'plugin' | 'reserved', owner?: string, example?: string, proposed?: boolean }} Entry */
+/** @typedef {{ code: string, severity: 'error' | 'warning' | 'info', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'start' | 'runtime' | 'plugin' | 'reserved', owner?: string, example?: string, proposed?: boolean, surface?: string, phase?: string, status?: number, message?: string, introduced?: string, deprecated?: string, notes?: string }} Entry */
 
 /** @type {Entry[]} */
-export const catalog = [
+const original = [
   ...compilerDiagnostics,
   ...design,
   ...styleGroups,
@@ -62,14 +63,49 @@ export const catalog = [
   ...pluginSlots,
 ]
 
-const byCode = new Map(catalog.map((e) => [e.code, e]))
+/** Lookups added since the first diagnostic catalog. */
+export const aliases = Object.fromEntries(
+  Array.from({ length: 9 }, (_, offset) => [`W02${offset + 1}`, 'W020']),
+)
 
-/** W021–W029 share W020's entry. */
-export function entry(code) {
-  if (byCode.has(code)) return byCode.get(code)
-  if (/^W02\d$/.test(code)) return byCode.get('W020')
-  return undefined
+/** The editorial catalog and approved public defaults. */
+export const catalog = [...original, ...runtimeDiagnostics].map((e) => ({
+  ...e,
+  ...runtimeMetadata[e.code],
+  ...primaryFailures[e.code],
+}))
+
+/** Register primary codes and aliases without silently overwriting any allocation. */
+export function indexDiagnostics(entries, redirects = {}) {
+  const index = new Map()
+  const claimed = new Set()
+  for (const e of entries) {
+    const key = e.code.toUpperCase()
+    if (claimed.has(key)) throw new Error(`Duplicate diagnostic code ${e.code}`)
+    claimed.add(key)
+    index.set(e.code, e)
+  }
+  for (const [alias, code] of Object.entries(redirects)) {
+    const key = alias.toUpperCase()
+    if (claimed.has(key)) throw new Error(`Duplicate diagnostic alias ${alias}`)
+    const target = index.get(code)
+    if (!target || target.code !== code) throw new Error(`Unknown diagnostic alias target ${code}`)
+    claimed.add(key)
+    index.set(alias, target)
+  }
+  return index
 }
+
+const byCode = indexDiagnostics(catalog, aliases)
+const originalByCode = indexDiagnostics(original, aliases)
+
+/** Resolve a primary code or a permanent lookup alias. */
+export function entry(code) {
+  return byCode.get(code)
+}
+
+/** Defaults that were already used by legacy CLI emitters. */
+export const diagnosticDefaults = (code) => originalByCode.get(code)
 
 /**
  * Which compiler codes the installed compiler reports: each example must produce its own code.

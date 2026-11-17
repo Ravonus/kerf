@@ -5,7 +5,11 @@
 // Lines and columns are 1-based, columns in UTF-16 units (what editors count). `offset` is UTF-16 indices into the
 // file's text, so `text.slice(...offset)` is the flagged code. Edits use the same two forms.
 
-import { entry } from './catalog.mjs'
+import { diagnosticDefaults } from './catalog.mjs'
+
+/** The framework reference path for a diagnostic, including scoped plugin codes. */
+export const diagnosticPath = (code) =>
+  `/reference/diagnostics/${code.split('/').map(encodeURIComponent).join('/')}`
 
 /** Position helpers over one file's text. The compiler reports UTF-8 byte offsets; JS strings index UTF-16. */
 export function positions(text) {
@@ -40,7 +44,7 @@ export function diagnostic({
   related,
   owner = 'core',
 }) {
-  const known = entry(code)
+  const known = diagnosticDefaults(code)
   const d = { code, severity: severity ?? known?.severity ?? 'error', owner, file, span }
   if (offset) d.offset = offset
   d.why = why
