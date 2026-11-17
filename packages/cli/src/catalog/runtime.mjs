@@ -155,14 +155,6 @@ export const runtimeDiagnostics = [
     'A background query warm failed',
     'Inspect the warmed query and its dependencies',
   ),
-  runtime(
-    'E_PAY',
-    '@kerf-js/pay',
-    'webhook',
-    'handle',
-    'Payment webhook processing failed',
-    'Check the payment handler and retry the webhook according to the provider policy',
-  ),
   startCode(
     'A006',
     'function or realtime',

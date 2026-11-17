@@ -1,6 +1,12 @@
 /** Diagnostic entries shared by the Pay manifest and framework reference. */
 export const diagnostics = [
   [
+    'E_PAY',
+    'error',
+    'Payment webhook processing failed',
+    'Check the payment handler and retry the webhook according to the provider policy',
+  ],
+  [
     'PAY003',
     'error',
     'A Stripe secret, restricted or webhook key in the source, a server secret read in client code, or a key in plugin options',
