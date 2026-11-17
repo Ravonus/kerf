@@ -1,3 +1,4 @@
+import type { Renderer } from '@takumi-rs/core'
 /** Font bytes used by both the native card renderer and its browser preview. */
 export interface CardFont {
   name: string
@@ -36,7 +37,7 @@ export function renderCard(
 ): Promise<Uint8Array<ArrayBuffer>>
 /** A reusable native or WASM card renderer. */
 export function createCardRenderer(options: {
-  backend: { Renderer: typeof import('@takumi-rs/core').Renderer }
+  backend: { Renderer: typeof Renderer }
   fonts?: CardFont[]
   images?: CardImages
 }): Promise<{

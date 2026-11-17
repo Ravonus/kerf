@@ -11,12 +11,12 @@ function contexts(from: Owner | null) {
 /** Lazy JSX keeps its provider, while its reactive computation still owns tracking and cleanup. */
 function provided<T>(value: T, owner: Owner): T {
   if (typeof value === 'function') {
-    const context = contexts(owner)
+    const provider = contexts(owner)
     const child = function (this: unknown, ...args: unknown[]) {
       const read = () => provided(value.apply(this, args), getOwner()!)
-      return contexts(getOwner()) === context ? read() : within(owner, read)
+      return contexts(getOwner()) === provider ? read() : within(owner, read)
     }
-    Object.defineProperty(child, CONTEXT, { value: context })
+    Object.defineProperty(child, CONTEXT, { value: provider })
     return child as T
   }
   return Array.isArray(value) ? (value.map((child) => provided(child, owner)) as T) : value

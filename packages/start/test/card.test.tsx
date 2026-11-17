@@ -87,7 +87,7 @@ test('the wasm renderer, which a Windows build uses, draws the same bytes as the
   const paint = async (backend: unknown) =>
     (
       await (
-        await createCardRenderer({ backend: backend as never, fonts: fonts as never })
+        await createCardRenderer({ backend: backend as never, fonts })
       ).render(html, { width: 1200, height: 630 })
     ).body
   expect(Buffer.from(await paint(wasm)).equals(Buffer.from(await paint(addon)))).toBe(true)

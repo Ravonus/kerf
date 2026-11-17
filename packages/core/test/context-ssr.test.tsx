@@ -3,10 +3,18 @@ import { renderToStringAsync } from '@kerf-js/core/ssr'
 import { hydrate } from '@kerf-js/core/dom'
 import { flush } from '@kerf-js/core/test'
 import { hydration } from '../src/hydrate'
-import { Context as ServerContext, ContextArray as ServerArray } from './fixtures/ssr/Context.tsx?kerf-ssr'
-import { Context as ClientContext, ContextArray as ClientArray } from './fixtures/ssr/Context.tsx?kerf-hydrate'
+import {
+  Context as ServerContext,
+  ContextArray as ServerArray,
+} from './fixtures/ssr/Context.tsx?kerf-ssr'
+import {
+  Context as ClientContext,
+  ContextArray as ClientArray,
+} from './fixtures/ssr/Context.tsx?kerf-hydrate'
 
-afterEach(() => { document.body.innerHTML = '' })
+afterEach(() => {
+  document.body.innerHTML = ''
+})
 test.each([
   { label: 'a lazy child', server: ServerContext, client: ClientContext },
   { label: 'an array of lazy children', server: ServerArray, client: ClientArray },

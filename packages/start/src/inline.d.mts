@@ -19,9 +19,9 @@ export function pageStyles(
   css?: { href: string }[],
   html?: string,
   extra?: {
-    head?: string
-    seen?: { split: boolean; found: Set<string> }
-    have?: Set<string>
-    keep?: boolean
+    head?: string | undefined
+    seen?: { split: boolean; found: Set<string> } | undefined
+    have?: Set<string> | undefined
+    keep?: boolean | undefined
   },
 ): PageStyles
