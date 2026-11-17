@@ -20,13 +20,14 @@ import {
 import { rt } from './index/graph'
 import { dehydrateState, deepFreeze } from './scope/serialize'
 import { attachBoxes } from './scope/boxes'
+import { KerfError } from './errors'
 
 export { unserializable } from './scope/serialize'
 
 // ---- diagnostics ------------------------------------------------------------------------------------------------
 
 /** A misuse of state, with its code and how to fix it. */
-export class StateError extends Error {
+export class StateError extends KerfError {
   constructor(
     public code: string,
     message: string,
