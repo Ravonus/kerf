@@ -1,7 +1,8 @@
+import { KerfError } from '@kerf-js/core/errors'
 import type { SchemaIssue } from './types'
 
 /** A diagnostic thrown by @kerf-js/start: `code` (Q001…) and a fix in the message, like Kerf's StateError. */
-export class StartError extends Error {
+export class StartError extends KerfError {
   /** The HTTP status, when `extra` sets one. */
   declare status?: number
   /** Field by field, when `extra` sets them. */
@@ -15,14 +16,15 @@ export class StartError extends Error {
     message: string,
     fix?: string,
     public extra: Record<string, unknown> = {},
+    options?: ErrorOptions,
   ) {
-    super(`${code}: ${message}${fix ? `\n  fix: ${fix}` : ''}`)
+    super(`${code}: ${message}${fix ? `\n  fix: ${fix}` : ''}`, options)
     Object.assign(this, extra)
   }
 }
 
 /** A failed server function call, as the client sees it. */
-export class FnError extends Error {
+export class FnError extends KerfError {
   code?: string
   status: number
   issues?: SchemaIssue[]

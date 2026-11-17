@@ -5,6 +5,7 @@ import type { Scope } from '../exec'
 import { bodyLimit, limited, multipartBody, withHeaders } from './request'
 import type { HandlerOptions } from './types'
 import { reportFailure } from './failure'
+import { failureDefaults } from './failure-defaults'
 
 /** `/_kerf/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
 export async function serverFunction(
@@ -83,6 +84,7 @@ function functionRejection(
       status,
       code,
       route: id,
+      publicMessage: failureDefaults.E_FN.message,
     })
     return out(
       {
@@ -93,7 +95,7 @@ function functionRejection(
               ? sent instanceof Error
                 ? sent.message
                 : message
-              : 'Server function failed.',
+              : data.message,
           reference: data.reference,
           ...(options.dev && data.stack && { stack: data.stack }),
           ...extra,
@@ -136,13 +138,13 @@ function functionError(
       e.extra.issues ? { issues: e.extra.issues } : e.extra.typed ? { data: e.extra.data } : {},
       e,
     )
-  const data = reportFailure(scope, options, e, { status: 500, code: 'E_FN', route: id })
-  return out(
-    {
-      e: { ...data, message: options.dev ? data.message : 'Server function failed.' },
-    },
-    500,
-  )
+  const data = reportFailure(scope, options, e, {
+    status: 500,
+    code: 'E_FN',
+    route: id,
+    publicMessage: failureDefaults.E_FN.message,
+  })
+  return out({ e: data }, 500)
 }
 
 function crossOrigin(options: HandlerOptions, request: Request, url: URL) {

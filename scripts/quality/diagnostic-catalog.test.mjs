@@ -1,12 +1,58 @@
 import { test } from 'node:test'
-import { deepStrictEqual, ok } from 'node:assert/strict'
-import { gaps, compare } from './diagnostic-catalog.mjs'
+import { deepStrictEqual, ok, throws } from 'node:assert/strict'
+import { indexDiagnostics } from '../../packages/cli/src/catalog.mjs'
+import { referenceDiagnostics } from '../lib/diagnostic-providers.mjs'
+import {
+  allocationProblems,
+  check as checkCatalog,
+  compare,
+  gaps,
+  unresolvedLiterals,
+} from './diagnostic-catalog.mjs'
 
 const baseCatalog = [{ code: 'W001', by: 'compiler' }]
 const baseSource = { 'source.rs': 'Diagnostic::new(source, "W001", severity, span);' }
 const baseTests = { 'compile.rs': 'assert_eq!(codes(&d), ["W001"]);' }
 const runBase = (c = baseCatalog, s = baseSource, t = baseTests, baseline = []) =>
   compare(gaps(c, s, t), baseline)
+
+void test('tracked runtime literals, registered families and generated defaults resolve', () => {
+  deepStrictEqual(checkCatalog().problems, [])
+  deepStrictEqual(
+    unresolvedLiterals(
+      { 'runtime.ts': "report('E_STREAM'); report('E_MISSING'); report('W029')" },
+      referenceDiagnostics,
+    ),
+    ['missing diagnostic lookup: E_MISSING in runtime.ts'],
+  )
+  for (let n = 21; n <= 29; n++)
+    deepStrictEqual(referenceDiagnostics.get(`W0${n}`), referenceDiagnostics.get('W020'))
+})
+
+void test('an allocated code can retire but cannot be removed, reclaimed or shadowed by an alias', () => {
+  const first = { code: 'E_FIRST', owner: 'core' }
+  const retired = { ...first, deprecated: 'Retained for support lookup' }
+  const next = { code: 'E_NEXT', owner: 'start' }
+  const ledger = { E_FIRST: 'core', E_PREVIOUS: 'alias of E_FIRST' }
+  deepStrictEqual(
+    allocationProblems(indexDiagnostics([retired], { E_PREVIOUS: 'E_FIRST' }), ledger),
+    [],
+  )
+  deepStrictEqual(allocationProblems(indexDiagnostics([{ ...first, owner: 'other' }]), ledger), [
+    'changed diagnostic allocation: E_FIRST',
+    'changed diagnostic allocation: E_PREVIOUS',
+  ])
+  deepStrictEqual(
+    allocationProblems(indexDiagnostics([first, next], { E_PREVIOUS: 'E_NEXT' }), ledger),
+    ['changed diagnostic allocation: E_PREVIOUS', 'unrecorded diagnostic allocation: E_NEXT'],
+  )
+  throws(() => indexDiagnostics([first, first]), /Duplicate diagnostic code E_FIRST/)
+  throws(() => indexDiagnostics([first, next], { E_FIRST: 'E_NEXT' }), /Duplicate diagnostic alias/)
+  throws(
+    () => indexDiagnostics([first], { E_PREVIOUS: 'E_NEXT' }),
+    /Unknown diagnostic alias target/,
+  )
+})
 
 void test('valid inputs and repaired gaps pass', () => {
   deepStrictEqual(runBase(), [])

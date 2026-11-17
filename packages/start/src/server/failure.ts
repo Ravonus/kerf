@@ -10,6 +10,16 @@ import {
   isErrorRoute,
 } from '../failure'
 import type { HandlerOptions, Level, Resolved } from './types'
+import { failureDefaults } from './failure-defaults'
+import { presentFailure } from './failure-value'
+
+export { captureFailure, createFailureCapture, presentFailure } from './failure-value'
+export type {
+  FailureCapture,
+  FailureDebug,
+  FailureOccurrence,
+  FailureOptions,
+} from './failure-value'
 
 /** A render fault tagged with the outlet that owns it. */
 export class RenderFailure extends Error {
@@ -42,8 +52,9 @@ export function showRenderFailures(scope: Scope, options: HandlerOptions, path: 
       status: 500,
       code: 'E_RENDER',
       route: path,
+      publicMessage: failureDefaults.E_FN.message,
     })
-    const shown = Object.assign(new Error(options.dev ? data.message : 'Server function failed.'), {
+    const shown = Object.assign(new Error(data.message), {
       reference: data.reference,
       stack: data.stack,
     })
@@ -57,7 +68,12 @@ export function reportFailure(
   scope: Scope,
   options: HandlerOptions,
   error: unknown,
-  { status, code, route }: { status: number; code: string; route?: string | undefined },
+  {
+    status,
+    code,
+    route,
+    publicMessage = failureDefaults.E_ROUTE.message,
+  }: { status: number; code: string; route?: string | undefined; publicMessage?: string },
 ) {
   const reference = referenceOf(scope)
   const details = errorDetails(error)
@@ -69,7 +85,13 @@ export function reportFailure(
     reference,
     ...(route && { route }),
   })
-  return errorData(error, status, reference, options.dev)
+  if (options.dev) return errorData(error, status, reference, true)
+  const projected = presentFailure({
+    publicFailure: { code, status, message: publicMessage },
+    reference,
+    includeReference: true,
+  })
+  return { status: projected.status, message: projected.message, reference }
 }
 
 /** Replace the failed outlet and its descendants with the site's error view. */

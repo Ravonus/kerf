@@ -4,6 +4,7 @@
 // and a page costs nothing. A payment provider is a separate plugin: this one defines the ledger, and `pay.rail` is the seam.
 import { definePlugin, defineSlot, provide } from '@kerf-js/core/plugin'
 import { setup } from './src/setup.mjs'
+import { diagnostics } from './src/diagnostics.mjs'
 
 const extension = defineSlot({
   id: 'server.extension',
@@ -11,88 +12,6 @@ const extension = defineSlot({
   cardinality: 'keyed',
   sides: ['server'],
 })
-
-const diagnostics = [
-  [
-    'PAY003',
-    'error',
-    'A Stripe secret, restricted or webhook key in the source, a server secret read in client code, or a key in plugin options',
-    'Move it to the server env (`src/env.server.ts`), and roll any real key that was committed',
-  ],
-  [
-    'PAY004',
-    'error',
-    "Paid state written on the client after `checkout()`, which only opens the rail's page",
-    'Read `entitlements` instead: a grant arrives from a verified event',
-  ],
-  [
-    'PAY005',
-    'warning',
-    'A price typed into a page that sells something',
-    '`price(product, plan).display`',
-  ],
-  [
-    'PAY008',
-    'error',
-    'Money as a float, or with no currency, in `product()`',
-    'Whole minor units with a currency: `{ usd: 999 }`',
-  ],
-  [
-    'PAY010',
-    'error',
-    "A mutation that opens a checkout without `auth: 'user'`",
-    "Add `auth: 'user'`: a purchase has to belong to someone",
-  ],
-  [
-    'PAY011',
-    'error',
-    'A webhook left unverified: a handler of payment events with no signature check, a `PayRail` whose `verify` ignores `headers`, or no `STRIPE_WEBHOOK_SECRET`',
-    'Delete the handler: `/_kerf/x/pay/<rail>` verifies. Give Stripe that URL, and set `STRIPE_WEBHOOK_SECRET`',
-  ],
-  [
-    'PAY012',
-    'error',
-    "A rail's price or product id in client code",
-    "Name the catalog: `checkout({ product: 'pro', plan: 'month' })`. Map ids on the server: `stripe({ prices: { 'pro.month': … } })`",
-  ],
-  [
-    'PAY013',
-    'error',
-    'An entitlement checked only on the client: nothing on the server enforces it',
-    "`requires: ['pro']` on the query or mutation, or `await ctx.entitlements.has('pro')` in a `load`",
-  ],
-  [
-    'PAY014',
-    'error',
-    'The plugin with no `src/pay.server.ts`: no webhook is mounted, so payments grant nothing',
-    'Default-export `definePay({ … })` from `src/pay.server.ts`',
-  ],
-  [
-    'PAY015',
-    'error',
-    '`ctx.entitlements.has()` tested without `await`: a promise is truthy, so everyone passes',
-    'Await it (`kerf fix` does, in an `async` function)',
-  ],
-  [
-    'PAY016',
-    'warning',
-    '`memoryPayStore()` in `src/pay.server.ts`: a production server refuses to start with it',
-    '`drizzlePayStore(db, { purchases, payEvents })`, or your own `PayStore`',
-  ],
-  [
-    'PAY017',
-    'error',
-    '`@kerf-js/pay/server` or `/drizzle` imported in client code',
-    'Import them in a server module; the client gets `@kerf-js/pay`',
-  ],
-  [
-    'PAY018',
-    'error',
-    '`src/pay.server.ts` with no `pay.rail` provider',
-    'Add a rail to `plugins`: `kerf add pay-stripe`',
-  ],
-  ['PAY031', 'error', 'A live key in a test', '`fakePay` from `@kerf-js/pay/test`'],
-].map(([code, severity, catches, fix]) => ({ code, severity, catches, fix }))
 
 export const pay = definePlugin({
   name: '@kerf-js/pay',

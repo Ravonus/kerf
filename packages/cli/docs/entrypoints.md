@@ -7,6 +7,7 @@ The snapshots cover export paths, targets and conditions, not names or signature
 
 - `@kerf-js/core`: Application reactive runtime and components.
 - `@kerf-js/core/internal`: Compiler and renderer contract; shares the runtime graph, not an app API.
+- `@kerf-js/core/errors`: Browser-safe `KerfError` base class and the `PublicFailure`, `PublicFieldIssue` and `JsonValue` types used for approved failure data.
 - `@kerf-js/core/keyed`: Keyed state helpers.
 - `@kerf-js/core/jsx-runtime`: JSX types for compiler output; types only.
 - `@kerf-js/core/dom`: Browser DOM rendering and hydration; other helpers serve compiler output.

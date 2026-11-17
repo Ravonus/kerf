@@ -11,6 +11,7 @@ import { definePlugin } from '@kerf-js/core/plugin'
 import { hex, luminance, toLinear } from './tokens/color.mjs'
 import { ICONS } from './src/plugin/icons.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
+import { diagnostics } from './src/plugin/diagnostics.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { DEFAULT, normalizeSeed, seedByName } from './src/plugin/seed.mjs'
 import { checkTokens, tailwindTheme, themed, themeOptions } from './src/plugin/theme.mjs'
@@ -383,15 +384,7 @@ export const veneer = definePlugin({
           have: `${catalog.length} components`,
         },
       ],
-      diagnostics: [
-        {
-          code: 'D010',
-          catches:
-            'A token override, alone or with the seed, that leaves text, a control boundary or the focus ring below WCAG contrast at some dial stop',
-          fix: 'Change the token or seed; the message lists each failing pair',
-          severity: 'error',
-        },
-      ],
+      diagnostics,
     }
   },
 })

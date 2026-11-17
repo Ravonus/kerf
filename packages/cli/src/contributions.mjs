@@ -1,5 +1,10 @@
 // What each plugin's `contribute()` returned, checked against the limits. Apart from plugins.mjs because loading a config needs it and the plugin commands load configs.
 
+import { entry } from './catalog.mjs'
+
+// The media manifest already lists diagnostics shared with Start and media-ffmpeg.
+const sharedMediaCodes = new Set(['M017', 'M018', 'M019'])
+
 export const agentsLimit = 1024
 /** Rows a plugin may add to the agent map. */
 const mapLimit = 5
@@ -30,6 +35,7 @@ export function contributions(plugins, report, env) {
   const out = []
   const tokenOwner = new Map()
   const catalogOwner = new Map()
+  const diagnosticOwner = new Map()
   for (const p of [...plugins].sort(byName)) {
     if (typeof p.contribute !== 'function') continue
     const run = () =>
@@ -57,27 +63,50 @@ export function contributions(plugins, report, env) {
       )
 
     const ns = checkManifest(p, manifest, report, tokenOwner, catalogOwner)
+    const diagnostics = manifest.diagnostics?.filter((d) =>
+      claimDiagnostic(p.name, ns, d.code, diagnosticOwner, report),
+    )
     out.push({
       name: p.name,
       version: p.version,
       namespace: ns,
       permissions: p.permissions ?? {},
-      manifest,
+      manifest: diagnostics ? { ...manifest, diagnostics } : manifest,
     })
   }
   return out
 }
 
+function claimDiagnostic(name, namespace, code, owners, report) {
+  if (!code.startsWith(namespace)) {
+    report(
+      'P111',
+      `\`${name}\` declares \`${code}\`, outside its namespace \`${namespace}\`.`,
+      name,
+    )
+    return false
+  }
+  const key = code.toUpperCase()
+  const other = owners.get(key) ?? reservedDiagnosticOwner(name, key)
+  if (other) {
+    report('P111', `\`${name}\` declares \`${code}\`, already registered by \`${other}\`.`, name)
+    return false
+  }
+  owners.set(key, name)
+  return true
+}
+
+/** A framework registration may also have an explicitly recognized manifest provider. */
+export function reservedDiagnosticOwner(name, code) {
+  const key = code.toUpperCase()
+  const registered = entry(key)
+  const owner = registered?.owner ?? (registered ? 'core' : undefined)
+  const shared = name === '@kerf-js/media' && sharedMediaCodes.has(key)
+  return owner !== name && !shared ? owner : undefined
+}
+
 function checkManifest(p, manifest, report, tokenOwner, catalogOwner) {
   const ns = p.namespace ?? `${p.name.replace(/^@[^/]+\//, '').replace(/^plugin-/, '')}/`
-  for (const d of manifest.diagnostics ?? []) {
-    if (!d.code.startsWith(ns))
-      report(
-        'P111',
-        `\`${p.name}\` declares \`${d.code}\`, outside its namespace \`${ns}\`.`,
-        p.name,
-      )
-  }
   const agents = manifest.agents
   if (agents) {
     const bytes = Buffer.byteLength(agentsSection(agents))
