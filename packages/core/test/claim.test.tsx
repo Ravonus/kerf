@@ -315,3 +315,13 @@ test('a claimed binding writes what the client holds differently', () => {
   expect(input.checked).toBe(true)
   expect(input.getAttribute('data-title')).toBe('b')
 })
+
+test('forwarded children claim the server SVG and every child without duplication', () => {
+  const c = put(renderToString(() => <Server.ForwardedChildren />))
+  const svg = c.querySelector('svg')
+  const children = [...svg!.children]
+  hydrate(() => <Client.ForwardedChildren />, c)
+  expect(hydration.misses).toBe(0)
+  expect(c.querySelector('svg')).toBe(svg)
+  expect([...svg!.children]).toEqual(children)
+})
