@@ -37,4 +37,3 @@ export function Cart({ items, taxRate }: {
    snapshot that never updates: never render it (W018).
 9. **Side effects go in `watch(() => source, value => cleanup?)`**; DOM work in `onMount`. `flush()` applies pending
    DOM updates now.
-
