@@ -9,6 +9,7 @@ import { state, untrack, type Owner, type State, type SsrData } from '@kerf-js/c
 import type { Merged } from '@kerf-js/core/ssr'
 import type { Wire } from './data'
 import type { PreparedRouteShape } from './run/shape-preparation'
+import type { ErrorRouteProps, RouteErrorData } from './failure'
 
 /**
  * One level as the server sends it: `d` lists the data's deferred fields (promises on the server, research 25 §4),
@@ -19,6 +20,8 @@ export interface Match {
   params: Record<string, string>
   data?: unknown
   d?: string[] | undefined
+  /** Rejected deferred fields, so the receiving Boundary can handle them. */
+  e?: Record<string, RouteErrorData>
   t?: string[] | undefined
   /** A static level: no client code (PLAN §11). `h`: its HTML (a navigation), `x`: a hash of it, to skip an unchanged one. */
   s?: 1
@@ -79,6 +82,10 @@ export interface RouteState {
   hide?: (root: Owner) => void
   /** Around a level's component, at the same point on both sides: the server's markers, the client's key scope. */
   around?: (depth: number, id: string, body: () => unknown) => unknown
+  /** Catch failures at the outlet that rendered them. */
+  guard?: (depth: number, id: string, body: () => unknown) => unknown
+  /** Recovery controls supplied by the client router. */
+  recovery?: Pick<ErrorRouteProps, 'retry' | 'pending'>
 }
 
 /** What `/_kerf/data/<path>` answers and what the page carries in `#kerf-route`: the matches, the head, the status. */
@@ -184,6 +191,8 @@ export const client: {
 
 /** `navigate()`: replace the history entry, and keep the scroll. */
 export interface NavigateOptions {
+  /** Read fresh route data, including when the destination is the current URL. */
+  reload?: boolean
   /** Replace the history entry instead of pushing one. */
   replace?: boolean | undefined
   /** Keep the scroll position (default: top, or the URL's #hash). */

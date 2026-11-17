@@ -161,7 +161,9 @@ export async function routesMeta({ root, site = {}, preset }) {
       context,
       build: 'inspect',
       requestOrigin: false,
-      onDiagnostic: (d) => found.push(d),
+      onDiagnostic: (d) => {
+        if (!d.reference || /^[A-Z]\d/.test(d.code)) found.push(d)
+      },
     })
     const run = (path) => handler.inspect(path, new Request(`http://kerf.local${path}`))
     const out = []

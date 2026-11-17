@@ -19,6 +19,8 @@ export interface Scope {
   request: Request
   /** This request's id: the `x-request-id` response header, and on every diagnostic it raises. */
   requestId?: string
+  /** Shared by loader frames and stream passes. */
+  failure: { reference?: string; show?: (error: unknown) => Error }
   entries: Map<string, ScopeEntry>
   /** Tags a mutation or `invalidate()` dropped during this request. */
   invalidated: Set<string>
@@ -96,6 +98,7 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   let ctx: Promise<Context> | undefined
   return {
     request,
+    failure: {},
     entries: new Map(),
     invalidated: new Set(),
     headers,

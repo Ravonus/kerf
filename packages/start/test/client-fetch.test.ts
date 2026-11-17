@@ -3,7 +3,7 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { clientFetch, type ClientFetch } from '../src/client-fetch'
 import { http } from '../src/data/transport'
-import { ask } from '../src/run/helpers'
+import { ask, deferred, revive } from '../src/run/helpers'
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
@@ -78,4 +78,39 @@ test('with no sender set, and after it is cleared, requests go to the page origi
     '/_kerf/fn/nodes.list',
     '/_kerf/data',
   ])
+})
+
+test('a server function fault keeps its reference on the typed client error', async () => {
+  const reference = '97b4e0ad7138fcd812219977'
+  clientFetch(() =>
+    Promise.resolve(
+      Response.json(
+        { e: { message: 'Server function failed.', reference } },
+        { status: 500, headers: { 'x-kerf-error': reference } },
+      ),
+    ),
+  )
+  await expect(http.query('nodes.list', undefined)).rejects.toMatchObject({
+    status: 500,
+    reference,
+    message: 'Server function failed.',
+    stack: undefined,
+  })
+})
+
+test('a rejected route field carries the server reference in both browser load paths', async () => {
+  const reference = '1f09217d0e71bb7ae91552d1'
+  const failure = { status: 500, reference, message: 'Something went wrong.' }
+  const match = { id: '/', params: {}, d: ['late'], e: { late: failure }, data: {} }
+  const download = new URL('http://page.test/')
+  const oldLocation = globalThis.location
+  vi.stubGlobal('location', download)
+  clientFetch(() => Promise.resolve(json({ m: [match], p: '/', s: 200 })))
+  try {
+    await expect(Promise.resolve(deferred('/', 0, 'late'))).rejects.toMatchObject({ reference })
+    const values = revive(match).data as Record<string, Promise<unknown>>
+    await expect(values.late).rejects.toMatchObject({ reference })
+  } finally {
+    vi.stubGlobal('location', oldLocation)
+  }
 })

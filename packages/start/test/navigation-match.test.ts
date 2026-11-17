@@ -168,7 +168,6 @@ async function finalResolution(path: string, modules: Record<string, RouteModule
       manifest,
       byId: new Map(manifest.routes.map((route) => [route.id, route])),
       mod: (file) => (file ? modules[file] : undefined),
-      comps: {},
       options,
       originOf: () => undefined,
     },

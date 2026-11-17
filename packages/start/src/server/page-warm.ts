@@ -5,8 +5,10 @@ import { capture, speculate } from '../capture'
 import { withHeaders } from './request'
 import { esc } from './text'
 import { entryScript } from './image-boot'
-import { pageShell, render, rest, shaped, table, top } from './page-stream'
-import { HOLD, type Head, type PageState } from './page-types'
+import { pageShell, renderShell, rest, shaped, table, top } from './page-stream'
+import type { Head, PageState } from './page-types'
+import { referenceOf, reportFailure } from './failure'
+import { noRetention } from './navigation-cache'
 
 type Styles = ReturnType<typeof pageStyles>
 
@@ -23,9 +25,7 @@ async function warmContent(
 ) {
   const { cold, set, styles, controller } = sent
   const t0 = performance.now()
-  p.stream = render(p)
-  await p.stream.settle() // queries read outside a Boundary have nowhere to stream to
-  await p.stream.hold(p.options.hold ?? HOLD)
+  const failed = await renderShell(p)
   const ms = performance.now() - t0
   const shape = shaped(p)
   const t = table(p, shape)
@@ -64,7 +64,7 @@ async function warmContent(
       severity: 'warning',
       message: `${p.path}: a render set a response header after the head was sent, so this route now renders before sending anything.`,
     })
-  } else
+  } else if (!failed)
     p.remember(styles?.links ? cold + ' w' : cold, {
       ...shape,
       ms,
@@ -123,6 +123,7 @@ export async function warmPage(
       ...(known.fold && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }),
     },
   }
+  referenceOf(p.scope)
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
       controller.enqueue(p.enc.encode(head))
@@ -130,17 +131,16 @@ export async function warmPage(
         await warmContent(p, known, { cold, set, styles, controller })
       } catch (e) {
         p.heads.set(cold, null).set(cold + ' w', null)
-        p.options.onDiagnostic?.({
-          code: 'E_HEAD',
-          severity: 'error',
-          message: `${p.path}: ${String(e)}`,
-        })
+        const data = reportFailure(p.scope, p.options, e, 500, 'E_HEAD', p.path)
         controller.enqueue(
-          p.enc.encode('<p>Something went wrong. <a href="">Reload</a></p>\n</body>\n</html>\n'),
+          p.enc.encode(
+            `<p>Something went wrong. Reference: ${data.reference}. <a href="">Reload page</a></p>\n</body>\n</html>\n`,
+          ),
         )
         controller.close()
       }
     },
   })
-  return withHeaders(new Response(body, init), p.scope)
+  const response = withHeaders(new Response(body, init), p.scope)
+  return p.status >= 500 ? noRetention(response) : response
 }

@@ -7,6 +7,8 @@ declare module 'virtual:kerf/routes' {
   export const table: ClientRoutes['table']
   /** Lazy page and layout module imports. */
   export const load: ClientRoutes['load']
+  /** Fresh module URLs for retrying a failed page or layout import. */
+  export const retryLoad: ClientRoutes['retryLoad']
   /** Navigation skeletons by route level. */
   export const shapes: ClientRoutes['shapes']
   /** Styles needed to present navigation skeletons. */

@@ -51,11 +51,12 @@ export function payloadOf(r: Resolved, withHead: boolean, options?: HandlerOptio
     r.levels.map((level) => level.id),
   )
   return {
-    m: r.levels.map(({ id, params, data, d, t }) => ({
+    m: r.levels.map(({ id, params, data, d, e, t }) => ({
       id,
       params,
       data,
       ...(d && { d }),
+      ...(e && { e }),
       ...(t && { t }),
     })),
     p: r.path,
@@ -76,9 +77,14 @@ export function pageData(data: ReturnType<Stream['data']>, scope: Scope) {
   return data && { ...data, r: scrubbed(data.r, scope) }
 }
 
-export const scrubbed = (r: Record<string, { v?: unknown; e?: string }>, scope: Scope) =>
+export const scrubbed = (r: NonNullable<ReturnType<Stream['data']>>['r'], scope: Scope) =>
   Object.fromEntries(
-    Object.entries(r).map(([k, v]) => [k, v.e === undefined ? v : { e: exec.said(v.e, scope) }]),
+    Object.entries(r).map(([k, v]) => [
+      k,
+      v.e === undefined || (v.reference === scope.failure.reference && v.reference)
+        ? v
+        : { e: exec.said(v.e, scope) },
+    ]),
   )
 
 /** The request's resolved queries, as the client cache seeds them (failures are left for the client to retry). */

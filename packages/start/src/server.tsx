@@ -37,6 +37,7 @@ import { makeServices } from './server/services'
 import { makeDispatch } from './server/dispatch'
 import { makeHandler } from './server/handler'
 import { lifecycle, withRequestIds } from './server/lifecycle'
+import { serverLog } from './server/log'
 import { useMailer } from './email'
 import { makeComplete } from './server/head'
 import { makePreview } from './server/preview'
@@ -73,16 +74,27 @@ const PASSES = 1024
 
 /** The app as a `(Request) => Response`: pages, data, functions and cards. */
 export function createHandler(options: HandlerOptions) {
+  if (!options.onDiagnostic) {
+    const log = serverLog(options.site)
+    options = {
+      ...options,
+      onDiagnostic: (d) => {
+        if (d.reference) log(d)
+      },
+    }
+  }
   options = withRequestIds(options, () => als.getStore()?.requestId)
   useMailer(options.email, !!options.dev)
-  const { manifest, site, byId, mod, comps, statics, heads, remember, originOf, stateOf, tree } =
-    makeCore(options, als)
+  const { manifest, site, byId, mod, statics, heads, remember, originOf, stateOf, tree } = makeCore(
+    options,
+    als,
+  )
   const services = makeServices(options)
   const { scopeOptions, mediaServer, authBase, extensions } = services
 
   const resolve = (path: string, request: Request) =>
     resolveRoute(
-      { als, scopeOptions, tree, site, manifest, byId, mod, comps, options, originOf },
+      { als, scopeOptions, tree, site, manifest, byId, mod, options, originOf },
       path,
       request,
     )

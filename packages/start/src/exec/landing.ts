@@ -49,6 +49,7 @@ export function shown(e: unknown, scope: Scope): unknown {
     (e instanceof StartError && Number(e.extra.status ?? 500) < 500)
   )
   const { message, code } = (e ?? {}) as { message?: string; code?: string }
+  if (fault && scope.failure.show) return scope.failure.show(e)
   if (dev || !fault) {
     if (message !== undefined) scope.said.add(message)
     return e

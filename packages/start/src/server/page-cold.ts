@@ -6,8 +6,10 @@ import { whole } from './compression'
 import { withHeaders } from './request'
 import { esc } from './text'
 import { entryScript } from './image-boot'
-import { finish, pageShell, render, rest, shaped, table, top } from './page-stream'
-import { HOLD, type Head, type PageState } from './page-types'
+import { finish, pageShell, renderShell, rest, shaped, table, top } from './page-stream'
+import type { Head, PageState } from './page-types'
+import { referenceOf } from './failure'
+import { noRetention } from './navigation-cache'
 
 type Styles = ReturnType<typeof pageStyles>
 type Shape = ReturnType<typeof shaped>
@@ -53,9 +55,8 @@ export async function coldPage(
   kept: ReturnType<typeof keptSheets>,
 ) {
   const t0 = performance.now()
-  p.stream = render(p)
-  await p.stream.settle() // queries read outside a Boundary have nowhere to stream to
-  await p.stream.hold(p.options.hold ?? HOLD)
+  const failed = await renderShell(p)
+  if (failed) p.status = p.r.status
   const ms = performance.now() - t0
   p.complete(p.r, p.stream.shell)
   const shape = shaped(p)
@@ -68,7 +69,7 @@ export async function coldPage(
         keep: p.request.headers.has('cookie'),
       })
   const capturing = !!p.options.lazy || shape.streaming || shape.media
-  if (known !== null && !p.options.dev)
+  if (known !== null && !p.options.dev && !failed)
     p.remember(styles?.links ? cold + ' w' : cold, {
       ...shape,
       ms,
@@ -88,16 +89,21 @@ export async function coldPage(
     },
   }
   // No Boundary is waiting, so there's nothing to stream: the page goes out in one piece.
+  const headers = (res: Response) => {
+    const out = withHeaders(res, p.scope)
+    return p.status >= 500 ? noRetention(out) : out
+  }
   if (!shape.streaming) {
     const res = new Response(null, init)
     whole.set(res, head + (await finish(p, false)))
-    return withHeaders(res, p.scope)
+    return headers(res)
   }
+  referenceOf(p.scope)
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
       controller.enqueue(p.enc.encode(head))
       await rest(p, { controller, styles: t || styles!, streaming: true })
     },
   })
-  return withHeaders(new Response(body, init), p.scope)
+  return headers(new Response(body, init))
 }

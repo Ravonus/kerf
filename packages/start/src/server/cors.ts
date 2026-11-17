@@ -1,4 +1,5 @@
 import type { Site } from '@kerf-js/core/ssr'
+import { ERROR_HEADER } from '../failure'
 
 /** CORS for Kerf's function and navigation protocol. App HTTP routes set their own policy in the request hook. */
 export function makeCors(site?: Site) {
@@ -45,6 +46,7 @@ export function makeCors(site?: Site) {
     if (allowed && (!preflight || response.status === 204)) {
       out.headers.set('access-control-allow-origin', config?.origins === '*' ? '*' : origin)
       if (config?.credentials) out.headers.set('access-control-allow-credentials', 'true')
+      if (!preflight) out.headers.append('access-control-expose-headers', ERROR_HEADER)
     }
     return out
   }

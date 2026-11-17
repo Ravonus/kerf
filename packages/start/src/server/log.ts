@@ -8,6 +8,8 @@ export interface Diagnostic {
   route?: string
   /** The request it came from (`x-request-id` on that response), when it came from one. */
   requestId?: string | undefined
+  /** An opaque failure reference (`x-kerf-error` on the response). */
+  reference?: string
 }
 
 /**
@@ -25,11 +27,12 @@ export function serverLog(site: Site | undefined): (d: Diagnostic) => void {
           message: d.message.replace(/^[A-Z]{1,3}\d{3}:? /, ''),
           ...(d.route && { route: d.route }),
           ...(d.requestId && { requestId: d.requestId }),
+          ...(d.reference && { reference: d.reference }),
         }),
       )
   return (d) =>
     console.warn(
-      `[kerf] ${d.code} ${d.severity}${d.route ? ` (${d.route})` : ''}${d.requestId ? ` [${d.requestId}]` : ''}: ${d.message.replace(/^[A-Z]{1,3}\d{3}:? /, '')}`,
+      `[kerf] ${d.code} ${d.severity}${d.route ? ` (${d.route})` : ''}${d.requestId ? ` [${d.requestId}]` : ''}${d.reference ? ` [reference ${d.reference}]` : ''}: ${d.message.replace(/^[A-Z]{1,3}\d{3}:? /, '')}`,
     )
 }
 

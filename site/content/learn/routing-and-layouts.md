@@ -66,6 +66,10 @@ npx kerf routes
 If you've used Next.js's app router, this will feel familiar: `_layout.tsx` is its `layout.tsx`, `[id]` and
 `[...rest]` are the same, and `404.tsx` is its `not-found`. There are no route groups, parallel routes or `loading.tsx`:
 a waiting state is a [`<Boundary>`](/learn/loading-data), placed where you want it.
+Use the root `_error.tsx` for the job of Next.js's `error.tsx` and
+`global-error.tsx`. Use `data.reference` where you used
+`error.digest` and `retry()` where you used `reset()`. For a
+local error view, put `<Boundary error>` around that part of the page.
 :::
 
 ## Pages with parameters
@@ -416,35 +420,43 @@ export default function NotFound(props: { data: { path: string } }) {
 }
 ```
 
-`_error.tsx` is the page for a `load` or `meta` that throws. It also renders inside the root layout, with status 500
-(or 503 when the database is down). Its data is the status and a message. In development the message is the error's
-own; in production it is "Something went wrong.", so nothing about your server leaks to a visitor:
+`_error.tsx` handles unhandled errors in a route or layout. It
+receives `data.status`, a safe `data.message`, and an opaque
+`data.reference` a visitor can share. The reference appears in the
+server diagnostic and the `x-kerf-error` header for server faults.
+Development includes the original message and stack.
 
 ```tsx
 // src/routes/_error.tsx
-import type { Meta } from '@kerf-js/start'
+import type { ErrorRouteProps } from '@kerf-js/start'
 
-export const meta: Meta = { title: 'Something went wrong' }
-
-export default function Failed(props: {
-  data: { status: number; message: string }
-}) {
-  const { data } = props
+export default function Failed(props: ErrorRouteProps) {
   return (
     <main>
-      <h1>Error {data.status}</h1>
-      <p>{data.message}</p>
+      <h1>{props.data.message}</h1>
+      <p>Reference {props.data.reference}</p>
+      <button
+        type="button"
+        disabled={props.pending}
+        onClick={() => void props.retry()}
+      >
+        {props.pending ? 'Recovering…' : 'Retry'}
+      </button>
     </main>
   )
 }
 ```
 
-Without these files the status is still right, but the page is only the root layout with nothing where the page
-goes, titled "Not found" or "Error", so it's worth writing both. Both are read only at the root of
-`src/routes` for now; one in a subfolder is reported and ignored.
+Retry gets fresh route data and rebuilds the failed outlet inside
+the same document. Working ancestor layouts keep their state.
+Start shows the error outside a failed root and can mount a fresh
+root on retry. An authored [`<Boundary error>`](/learn/async-and-loading)
+still handles its subtree errors.
 
-An error thrown while a component renders is different: it goes to the nearest [`<Boundary error>`](/learn/async-and-loading),
-not to `_error.tsx`, because by then the page has started.
+Start provides built-in 404 and error views. Put custom versions
+at the root of `src/routes`. A render failure after streaming
+starts keeps the HTTP status sent with the shell. See the
+[Start reference](/reference/start) for recovery guarantees.
 
 `redirect(href)` sends the visitor somewhere else. Called in `load`, the server answers 307 with a `Location` header
 before any HTML is sent; on a client navigation the router follows it. You can pass another status:
@@ -510,7 +522,7 @@ images](/learn/metadata-and-share-images) covers both.
 - A layout's `load` runs before its pages', so it is where a guard goes.
 - `<Link href>` links and marks the current page; `navigate(href)` moves from code; any same-origin `<a>` already
   navigates without a reload.
-- `notFound()` renders `404.tsx`, a throw in `load` renders `_error.tsx`, and `redirect()` answers 307 before anything is
+- `notFound()` renders `404.tsx`, an unhandled route failure renders `_error.tsx`, and `redirect()` answers 307 before anything is
   sent.
 - A route module exports `default`, and when it needs them `load`, `meta` and `prerender`.
 

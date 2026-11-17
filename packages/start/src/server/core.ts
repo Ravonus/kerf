@@ -7,6 +7,8 @@ import type { Scope } from '../exec'
 import { routeTree } from './routes'
 import type { Head } from './page-types'
 import type { HandlerOptions, Resolved } from './types'
+import { FALLBACK_ROUTE, isErrorRoute } from '../failure'
+import { renderLevel } from './failure'
 
 const HEADS_MAX = 512
 
@@ -15,10 +17,14 @@ export function makeCore(options: HandlerOptions, als: AsyncLocalStorage<Scope>)
   const { manifest, modules, site = {} } = options
   const byId = new Map(manifest.routes.map((r) => [r.id, r]))
   const mod = (file?: string) => (file ? modules[file] : undefined)
-  const comps: Record<string, Component> = { 404: NotFoundPage, error: ErrorPage }
+  const comps: Record<string, Component> = {
+    404: NotFoundPage,
+    error: ErrorPage,
+    [FALLBACK_ROUTE]: ErrorPage,
+  }
   for (const l of manifest.layouts) if (mod(l.file)?.default) comps[l.id] = mod(l.file)!.default!
   for (const r of manifest.routes) if (mod(r.file)?.default) comps[r.id] = mod(r.file)!.default!
-  const statics = new Set(options.statics)
+  const statics = new Set(options.statics?.filter((id) => !isErrorRoute(id)))
   /**
    * What each route's last render needed in its head, by status, Save-Data and levels: the next request sends that head
    * before it renders. `null`: a route whose render sets headers, so it renders first.
@@ -60,6 +66,7 @@ export function makeCore(options: HandlerOptions, als: AsyncLocalStorage<Scope>)
       { ...payload, m: r.levels.map((lv) => ({ id: lv.id, params: lv.params, data: lv.raw })) },
       comps,
     )
+    route.guard = (depth, _id, body) => renderLevel(depth, body)
     if (r.levels.some((l) => statics.has(l.id)))
       route.around = (d, id, body) =>
         region(statics.has(id), d, statics.has(r.levels[d - 1]?.id ?? ''), body)

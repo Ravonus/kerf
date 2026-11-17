@@ -7,6 +7,7 @@ import { untrack } from '@kerf-js/core'
 import { active, level, type RouteState } from './router'
 import type { PreparedRouteShape } from './run/shape-preparation'
 import { retainRouteView } from './run/retain-view'
+import { isErrorRoute, type ErrorRouteProps } from './failure'
 
 function ShapeTree(props: { shapes: PreparedRouteShape[]; depth: number }): unknown {
   // A skeleton is a snapshot: the outlet swaps the whole tree when its shapes change.
@@ -34,9 +35,7 @@ export function Level(props: { route: RouteState; depth: number }) {
     untrack(() => props.depth),
   )
   const next = untrack(() => props.depth) + 1
-  const view = () => {
-    const id = lv.id.value
-    if (id === undefined) return null
+  const content = (id: string) => {
     const html = route.mount ? lv.html.value : undefined
     if (html !== undefined)
       return route.mount!(
@@ -44,15 +43,24 @@ export function Level(props: { route: RouteState; depth: number }) {
         untrack(() => props.depth),
         () => <Level route={route} depth={next} />,
       )
-    const Route = route.comps[id] as
+    const component = route.comps[id]
+    const Route = component as
       | ((props: { params: Record<string, string>; data: unknown; children: unknown }) => unknown)
       | undefined
     if (!Route) return null
-    const body = () => (
-      <Route params={lv.params.value} data={lv.data.value}>
-        <Level route={route} depth={next} />
-      </Route>
-    )
+    const ErrorRoute = component as (props: ErrorRouteProps) => unknown
+    const body = () =>
+      isErrorRoute(id) ? (
+        <ErrorRoute
+          data={lv.data.value as ErrorRouteProps['data']}
+          retry={route.recovery?.retry ?? idleRetry}
+          pending={route.recovery?.pending ?? false}
+        />
+      ) : (
+        <Route params={lv.params.value} data={lv.data.value}>
+          <Level route={route} depth={next} />
+        </Route>
+      )
     return route.around
       ? route.around(
           untrack(() => props.depth),
@@ -60,6 +68,11 @@ export function Level(props: { route: RouteState; depth: number }) {
           body,
         )
       : body()
+  }
+  const view = () => {
+    const id = lv.id.value
+    if (id === undefined) return null
+    return route.guard ? route.guard(next - 1, id, () => content(id)) : content(id)
   }
   const display = retainRouteView(
     view,
@@ -75,6 +88,8 @@ export function Level(props: { route: RouteState; depth: number }) {
   )
   return <>{display()}</>
 }
+
+const idleRetry = () => Promise.resolve()
 
 /** True when `path` is `href`, or with `section`, any page under it (a top link for `/components` on `/components/modal`). */
 export function isCurrent(path: string, href: string, section = false) {

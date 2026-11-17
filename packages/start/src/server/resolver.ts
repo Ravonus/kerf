@@ -7,12 +7,13 @@ import {
 } from '@tanstack/router-core'
 import { createMemoryHistory } from '@tanstack/history'
 import { mergeMeta, type Merged, type Meta as MetaObject } from '@kerf-js/core/ssr'
-import type { Component } from '../router'
 import { StartError } from '../data'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
 import { cleanParams, type routeTree, type LoadContext } from './routes'
 import { split, settledView } from './payload'
+import { reportFailure, RenderFailure } from './failure'
+import { FALLBACK_ROUTE } from '../failure'
 import type {
   HandlerOptions,
   LayoutEntry,
@@ -32,7 +33,6 @@ export interface ResolverDeps {
   manifest: HandlerOptions['manifest']
   byId: Map<string, RouteEntry>
   mod: (file?: string) => RouteModule | undefined
-  comps: Record<string, Component>
   options: HandlerOptions
   originOf: (request: Request) => string | undefined
 }
@@ -104,7 +104,7 @@ async function resolvedMatches(
   path: string,
   request: Request,
 ): Promise<Resolved> {
-  const { manifest, byId, mod, comps, options } = deps
+  const { manifest, mod } = deps
   const redirected = redirectOf(deps, router, hold, path)
   if (redirected) return redirected
   const matches = router.state.matches.map((m) => ({
@@ -136,39 +136,82 @@ async function resolvedMatches(
       ...(t?.size && { t: [...t] }),
     }
   }
-  const special = (id: '404' | 'error', status: number, error?: unknown): Promise<Resolved> => {
-    const entry = byId.get(id)
-    if (error instanceof StartError && error.code)
-      options.onDiagnostic?.({ code: error.code, severity: 'error', message: error.message })
-    const shown =
-      id === 'error'
-        ? {
-            status,
-            message:
-              options.dev && error instanceof Error ? error.message : 'Something went wrong.',
-          }
-        : { path }
-    const levels: Level[] = [
-      ...(rootOk && !(failed && failed === rootOk) ? [levelOf(rootOk)] : []),
-      { id, params: {}, data: shown, raw: shown, mod: mod(entry?.file) },
-    ]
-    if (entry && mod(entry.file)?.default) comps[id] = mod(entry.file)!.default!
-    return finish(levels, status, undefined, error)
-  }
+  const special = (
+    id: '404' | 'error',
+    status: number,
+    error?: unknown,
+    prefix = rootOk ? [levelOf(rootOk)] : [],
+  ) => resolveSpecial(deps, hold, { id, status, error, prefix, path, request, routeId: route?.id })
   const finish = (shown: Level[], status: number, matched?: RouteEntry, error?: unknown) =>
     finishResolution(deps, { path, request }, { shown, status, matched, error })
 
   if (failed) {
     const e = exec.dbError(failed.m.error)
-    return special('error', (e as { code?: string } | null)?.code === 'Q016' ? 503 : 500, e)
+    const prefix = matches
+      .slice(0, matches.indexOf(failed))
+      .filter((x) => x.kerf && x.m.status === 'success')
+      .map(levelOf)
+    return special('error', (e as { code?: string } | null)?.code === 'Q016' ? 503 : 500, e, prefix)
   }
   if (missing) return special('404', 404)
   const levels = matches.filter((x) => x.kerf).map(levelOf)
   try {
     return await finish(levels, 200, route)
   } catch (e) {
-    if (isNotFound(e)) return special('404', 404)
-    return special('error', 500, e)
+    const cause = e instanceof RenderFailure ? e.cause : e
+    if (isNotFound(cause)) return special('404', 404)
+    return special('error', 500, cause, levels.slice(0, e instanceof RenderFailure ? e.depth : 0))
+  }
+}
+
+async function resolveSpecial(
+  deps: ResolverDeps,
+  hold: LoadContext,
+  {
+    id,
+    status,
+    error,
+    prefix,
+    path,
+    request,
+    routeId,
+  }: {
+    id: '404' | 'error'
+    status: number
+    error: unknown
+    prefix: Level[]
+    path: string
+    request: Request
+    routeId: string | undefined
+  },
+): Promise<Resolved> {
+  const { byId, mod, options } = deps
+  const entry = byId.get(id)
+  const shown =
+    id === 'error'
+      ? reportFailure(
+          hold.scope,
+          options,
+          error,
+          status,
+          error instanceof StartError ? error.code : 'E_ROUTE',
+          routeId,
+        )
+      : { path }
+  const levels: Level[] = [
+    ...prefix,
+    { id, params: {}, data: shown, raw: shown, mod: mod(entry?.file) },
+  ]
+  try {
+    return await finishResolution(deps, { path, request }, { shown: levels, status, error })
+  } catch (cause) {
+    const failure = cause instanceof RenderFailure ? cause.cause : cause
+    const data = reportFailure(hold.scope, options, failure, 500, 'E_ROUTE', routeId)
+    return finishResolution(
+      deps,
+      { path, request },
+      { shown: [{ id: FALLBACK_ROUTE, params: {}, data, raw: data }], status: 500, error: failure },
+    )
   }
 }
 
@@ -194,19 +237,24 @@ export async function finishResolution(
     description: site.description ? 'config' : 'none',
     image: 'none',
   }
-  for (const lv of shown) {
+  for (const [depth, lv] of shown.entries()) {
     const m =
       lv.mod?.meta ??
       (lv.id === '404'
         ? { title: 'Not found' }
-        : lv.id === 'error'
+        : lv.id === 'error' || lv.id === FALLBACK_ROUTE
           ? { title: 'Error' }
           : undefined)
     if (!m) continue
-    const value =
-      typeof m === 'function'
-        ? await m({ params: lv.params, data: settledView(lv.raw, lv.d, lv.id, options) })
-        : m
+    let value
+    try {
+      value =
+        typeof m === 'function'
+          ? await m({ params: lv.params, data: settledView(lv.raw, lv.d, lv.id, options) })
+          : m
+    } catch (cause) {
+      throw new RenderFailure(depth, cause)
+    }
     metas.push(value)
     const who = lv === shown.at(-1) ? 'route' : 'layout'
     if (value?.title != null) source.title = who

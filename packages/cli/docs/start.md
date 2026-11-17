@@ -54,6 +54,62 @@ Set `meta` on every page as part of building it: a title and one plain sentence 
 route build it from `data` and `params`. `kerf docs meta` has the rest.
 Links are `<Link href>`; code navigates with `navigate(href)`.
 
+`navigate(href, { reload: true, scroll: false })` asks for fresh
+route data even when `href` is the current URL. A same-address
+reload keeps the history entry and mounted layouts.
+
+### Error routes
+
+An unhandled loader, metadata, render or route-module failure
+renders `src/routes/_error.tsx` in the failed outlet. Healthy
+ancestor layouts stay mounted in the browser. Use the exported
+`ErrorRouteProps` type for the error data and recovery controls.
+
+```tsx
+// src/routes/_error.tsx
+import type { ErrorRouteProps } from '@kerf-js/start'
+
+export default function Failed(props: ErrorRouteProps) {
+  return (
+    <main>
+      <h1>{props.data.message}</h1>
+      <p>Reference {props.data.reference}</p>
+      <button
+        type="button"
+        disabled={props.pending}
+        onClick={() => void props.retry()}
+      >
+        {props.pending ? 'Recovering…' : 'Retry'}
+      </button>
+    </main>
+  )
+}
+```
+
+`retry()` reads the current route again in the same document.
+Concurrent calls share one attempt. A new failure has a fresh
+reference. `data.status` is the error status and `data.message`
+is safe to show. Development also supplies `data.stack` when
+the exception has a stack.
+
+For server failures, `data.reference`, the `x-kerf-error`
+response header and the diagnostic's `reference` identify the
+same failure. Start reserves a reference before flushing a stream,
+so a late failure can use it while the original HTTP status
+remains in effect. An authored `<Boundary error>` keeps its own
+view and retry callback. Its server error, and a server-function
+fault surfaced as `FnError`, carry the reference as
+`error.reference`. Browser-only render, network and import
+faults are correlated with the browser console.
+
+When the root layout fails, Start renders the error view outside
+it. Retry can rebuild the root in the same document once it works
+again. State owned by the failed root is recreated. The built-in
+error view covers missing or failing custom views and offers a
+document reload. If the router itself cannot start, use a document
+reload. A retry can re-request a failed route entry chunk. If its
+build or a dependency is gone, reload to pick up a newer build.
+
 ### Raw HTTP routes
 
 Use `name.http.ts` (or `.http.js`) under `src/routes`. An

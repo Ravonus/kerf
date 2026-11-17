@@ -4,6 +4,7 @@ import {
   applyMatches,
   client,
   type Level,
+  type Match,
   type NavigateOptions,
   type RoutePayload,
 } from '../router'
@@ -16,7 +17,9 @@ import { retainSourceContext, type SourceContext } from './source-context'
 import { RouteCache, type Read } from './cache'
 import { Prefetch } from './prefetch'
 import { CachePresentation, retryDelay } from './cache-presentation'
+import { refresh, reloaded } from './refresh'
 import { captureSharedElements } from './shared-elements'
+import { connectRecovery, failRead, needChunks, routeChunks } from './failure'
 
 const RETRY = 1000,
   RETRIES = 30_000
@@ -31,6 +34,7 @@ export class Navigation {
   setBag: Page['setBag']
   ready: Page['ready']
   tags: Page['initialTags']
+  matches: Match[]
   current: AbortController | undefined
   refreshing: { ctrl: AbortController; tags: string[] } | undefined
   /** Tags invalidated while a navigation was out: its route may read them, and that's only known when it lands. */
@@ -68,13 +72,14 @@ export class Navigation {
     this.island = page.island
     this.setBag = page.setBag
     this.tags = page.initialTags
+    this.matches = page.matches ?? []
+    connectRecovery(this, page.pending, page.recovery)
     // Two frames in, the page has painted; a transition before then has no old picture to hold.
     requestAnimationFrame(() => requestAnimationFrame(() => (this.painted = true)))
   }
 
   now = () => client.now?.() ?? 0
-  needs = (next: RoutePayload) =>
-    Promise.all([...next.m.map((m) => this.chunk(m.id)), ...(next.i ?? []).map(this.island)])
+  needs = (next: RoutePayload, retry?: boolean) => needChunks(next, this.chunk, this.island, retry)
   reads = (t: string[]) => this.tags.some((l) => l.some((x) => t.includes(x)))
 
   /** The page moved on: drop old chunks and build held Boundaries from this data. */
@@ -96,6 +101,7 @@ export class Navigation {
       if (next.c) client.seed ? client.seed(next.c, since) : (client.seeds ??= []).push(...next.c)
       if (!current()) return
       this.tags = next.m.map((m) => m.t ?? [])
+      this.matches = next.m
       this.route.assetBytes = matchingRouteAssets(next.a, this.routes.build)
       this.setBag(next.b)
       if (!current()) return
@@ -113,6 +119,8 @@ export class Navigation {
         if (next.m.some((m) => m.s)) current_(url.pathname)
         if (!current()) return
         if (next.h) setHead(next.h, url.pathname)
+        if (!current()) return
+        if (next.s >= 500) flush() // Dispose the failed outlet before unsticking any held Boundaries.
         if (!current()) return
         this.release()
         if (!current()) return
@@ -209,7 +217,7 @@ export class Navigation {
   go = async (href: string, opts: Options = {}) => {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
-    if (!opts.pop && !opts.arrive && url.href === location.href) return
+    if (!opts.pop && !opts.arrive && !opts.reload && url.href === location.href) return
     const buildVersion = this.cache.version
     this.cache.setBuild(this.routes.build)
     if (buildVersion !== this.cache.version) this.prefetch.cancel(true)
@@ -225,7 +233,8 @@ export class Navigation {
     try {
       this.source ??=
         retainSourceContext(document, this.committedURL, this.committedBase) ?? undefined
-      if (!this.source) return opts.pop ? location.replace(url.href) : location.assign(url.href)
+      if (!this.source && !opts.reload)
+        return opts.pop ? location.replace(url.href) : location.assign(url.href)
       const shared = captureSharedElements(opts.shared)
       this.shared?.cancel()
       this.shared = shared
@@ -236,17 +245,29 @@ export class Navigation {
       current_(url.pathname)
       flush()
       this.shared?.arrive()
-      const speculative = this.prefetch.claim(url, ctrl.signal)
+      const speculative = opts.reload ? undefined : this.prefetch.claim(url, ctrl.signal)
       this.prefetch.cancel()
       const cached = opts.pop ? this.cache.peek(url, !!client.seed) : undefined
       const shown = this.presentation.show(this, ctrl, url, cached)
       if (ctrl.signal.aborted || this.current !== ctrl) return
-      if (!shown) this.present(guess(this.routes, url.pathname), url)
+      if (!shown && !opts.reload) this.present(guess(this.routes, url.pathname), url)
       await this.travel(url, ctrl, opts, shown, speculative)
     } finally {
       this.presentation.stop(ctrl)
       if (this.current === ctrl) this.settle()
     }
+  }
+
+  private read(url: URL, signal: AbortSignal, shown: boolean, reload?: boolean) {
+    return this.cache.load({
+      url,
+      signal,
+      fetchRoute: reload ? (target, abort) => ask(target, abort, undefined, true) : ask,
+      now: this.now,
+      canSeed: () => !!client.seed,
+      onForget: shown ? () => this.presentation.check(this) : undefined,
+      reload,
+    })
   }
 
   async travel(
@@ -257,7 +278,8 @@ export class Navigation {
     speculative?: Promise<Read | undefined>,
   ) {
     const path = url.pathname + url.search
-    for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
+    if (!opts.reload)
+      for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
     let next: RoutePayload
     let since: number
     let version: number
@@ -269,14 +291,7 @@ export class Navigation {
         const read =
           shared && (!shared.next.c?.length || client.seed)
             ? shared
-            : await this.cache.load({
-                url,
-                signal: ctrl.signal,
-                fetchRoute: ask,
-                now: this.now,
-                canSeed: () => !!client.seed,
-                onForget: shown ? () => this.presentation.check(this) : undefined,
-              })
+            : await this.read(url, ctrl.signal, shown, opts.reload)
         this.cache.setBuild(this.routes.build)
         if (ctrl.signal.aborted) return
         if (read.version !== this.cache.version) continue
@@ -296,15 +311,18 @@ export class Navigation {
           this.presentation.check(this)
           if (ctrl.signal.aborted) return
         }
-        await this.needs(next)
+        next = await routeChunks(this, next, path, ctrl.signal, opts.reload)
         this.cache.setBuild(this.routes.build)
         if (ctrl.signal.aborted) return
         if (read.version !== this.cache.version) continue
         if (shown && read.notModified) return
         break
-      } catch {
+      } catch (error) {
         if (ctrl.signal.aborted) return
-        if (!shown && !this.shell) return location.replace(url.href)
+        if (opts.reload || (!shown && !this.shell)) {
+          await failRead(this, url, path, ctrl, error)
+          return
+        }
         if (!this.shell && !this.cache.peek(url, !!client.seed)) {
           this.current = undefined
           ctrl.abort()
@@ -321,74 +339,19 @@ export class Navigation {
       if (ctrl.signal.aborted || this.current !== ctrl || this.cache.version !== version) return
       this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)()
     }
-    if (this.shared?.active) swap()
+    if (opts.reload || this.shared?.active) swap()
     else await crossfade(this, swap, () => swapped)
     if (!ctrl.signal.aborted && this.current === ctrl && this.cache.version !== version)
       await this.travel(url, ctrl, opts, shown)
   }
 
-  /** Fetch the page's data again in place, retrying a failed refresh. */
-  async refresh(t: string[]) {
-    t = [...new Set([...t, ...(this.refreshing?.tags ?? [])])]
-    this.refreshing?.ctrl.abort()
-    const self = (this.refreshing = { ctrl: new AbortController(), tags: t })
-    const url = new URL(location.href),
-      since = this.now()
-    try {
-      const next: RoutePayload = await ask(url, self.ctrl.signal).then((r) => r.json())
-      if (self.ctrl.signal.aborted) return
-      if (next.s === 401 || next.s === 403) {
-        this.cache.clear()
-        this.prefetch.cancel(true)
-      }
-      if (next.r && !self.ctrl.signal.aborted) {
-        this.refreshing = undefined
-        return void this.go(next.r, { replace: true })
-      }
-      await this.needs(next)
-      if (self.ctrl.signal.aborted) return
-      this.apply(next, url, url.pathname + url.search, since, false)()
-      this.tries = 0
-    } catch {
-      if (this.refreshing === self) {
-        this.owed.push(...t)
-        clearTimeout(this.again)
-        this.again = setTimeout(this.owing, Math.min(RETRIES, RETRY * 2 ** this.tries++))
-      }
-    }
-    if (this.refreshing === self) this.refreshing = undefined
-  }
+  refresh = (tags: string[]) => refresh(this, tags)
 
   owing = () => {
     if (!this.current && !this.refreshing) this.settle()
   }
 
-  reloaded = async ({ queries }: { queries: boolean }) => {
-    const owner = this.current
-    this.cache.clear()
-    this.prefetch.cancel(true)
-    const url = new URL(location.href),
-      since = this.now()
-    let version = this.cache.version
-    const res = await ask(url)
-    if (version !== this.cache.version || !res.ok) return
-    const next: RoutePayload = await res.clone().json()
-    this.cache.setBuild(this.routes.build)
-    if (version !== this.cache.version || next.s >= 500) return
-    if (next.s === 401 || next.s === 403) {
-      this.cache.clear()
-      version = this.cache.version
-    }
-    if (queries) client.refreshed?.()
-    this.cache.setBuild(this.routes.build)
-    if (version !== this.cache.version || this.current !== owner) return
-    if (next.r) return await this.go(next.r, { replace: true })
-    if (this.current) return await this.go(url.href, { pop: true })
-    await this.needs(next)
-    this.cache.setBuild(this.routes.build)
-    if (version !== this.cache.version || this.current !== owner) return
-    this.apply(next, url, url.pathname + url.search, since, false)()
-  }
+  reloaded = (changed: { queries: boolean }) => reloaded(this, changed)
 
   invalidated = (t: string[]) => {
     this.cache.invalidate(t)

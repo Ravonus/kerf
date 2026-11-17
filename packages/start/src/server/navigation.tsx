@@ -1,14 +1,15 @@
 import { renderToStringAsync } from '@kerf-js/core/ssr'
 import type { Merged } from '@kerf-js/core/ssr'
 import type { RoutePayload, createRouteState } from '../router'
-import * as exec from '../exec'
 import type { Scope } from '../exec'
+import * as exec from '../exec'
 import { App } from '../view'
 import { withLevels } from './render'
 import { payloadOf, wire } from './payload'
 import { noRetention, validateNavigation } from './navigation-cache'
 import { cookieJar, redirectBody, withHeaders } from './request'
 import type { HandlerOptions, Resolved } from './types'
+import { recoverRender, reportFailure, showRenderFailures } from './failure'
 export function makeNavigation({
   resolve,
   finished,
@@ -43,24 +44,32 @@ export function makeNavigation({
         ),
       )
     }
-    for (const lv of r.levels)
-      if (lv.d?.length)
-        lv.data = {
-          ...(lv.data as object),
-          ...Object.fromEntries(
-            await Promise.all(
-              lv.d.map(async (k) => [k, await (lv.raw as Record<string, unknown>)[k]]),
-            ),
-          ),
-        }
-    await finished(r, request)
+    showRenderFailures(scope, options, path)
+    const payload = await recoverRender(r, scope, options, async () => {
+      await settleLevels(r, scope, options)
+      await finished(r, request)
+      return navigationPayload(r, request, scope)
+    })
     const c = wire(scope)
+    const body = JSON.stringify({ ...payload, ...(c.length && { c }) })
+    const response = withHeaders(
+      new Response(body, {
+        headers: { 'content-type': 'application/json' },
+      }),
+      scope,
+    )
+    const faulty = r.error || r.levels.some((lv) => lv.e)
+    return validateNavigation(response, request, body, options.build, faulty ? 500 : r.status)
+  }
+
+  async function navigationPayload(r: Resolved, request: Request, scope: Scope) {
     let payload = payloadOf(r, true, options)
     if (r.levels.some((lv) => statics.has(lv.id))) {
       const route = stateOf(r, payload)
       const out = await renderToStringAsync(() => <App route={route} />, {
         passes: PASSES,
-        shown: (e) => exec.shown(e, scope),
+        shown: (error) => exec.shown(error, scope),
+        routeErrors: true,
         app: { cookies: cookieJar(request) },
       })
       const at = out.lastIndexOf('<script type="application/json" data-kerf>')
@@ -76,11 +85,24 @@ export function makeNavigation({
         }),
       }
     }
-    const body = JSON.stringify({ ...payload, ...(c.length && { c }) })
-    const response = withHeaders(
-      new Response(body, { headers: { 'content-type': 'application/json' } }),
-      scope,
+    return payload
+  }
+}
+
+async function settleLevels(r: Resolved, scope: Scope, options: HandlerOptions) {
+  for (const lv of r.levels) {
+    if (!lv.d?.length) continue
+    const fields = { ...(lv.data as object) } as Record<string, unknown>
+    await Promise.all(
+      lv.d.map(async (key) => {
+        try {
+          fields[key] = await (lv.raw as Record<string, unknown>)[key]
+        } catch (error) {
+          const data = reportFailure(scope, options, error, 500, 'E_LOAD', lv.id)
+          ;(lv.e ??= {})[key] = data
+        }
+      }),
     )
-    return validateNavigation(response, request, body, options.build, r.error ? 500 : r.status)
+    lv.data = fields
   }
 }

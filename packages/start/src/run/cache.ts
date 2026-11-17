@@ -189,9 +189,10 @@ export class RouteCache {
     now: () => number
     canSeed: () => boolean
     onForget?: (() => void) | undefined
+    reload?: boolean | undefined
   }): Promise<Read> {
     const { url, signal, fetchRoute, now, canSeed, onForget } = o
-    let allowTag = true
+    let allowTag = !o.reload
     for (;;) {
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
       const version = this.version,

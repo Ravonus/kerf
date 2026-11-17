@@ -5,7 +5,7 @@ import { isAbsolute, join, relative, resolve, sep, win32 } from 'node:path'
 import { searchForWorkspaceRoot } from 'vite'
 import { INLINE_CSS_MAX } from '../inline.mjs'
 import { packageDirs } from './dev.mjs'
-import { assetBytes } from './asset-bytes.mjs'
+import { assetBytes, retryChunks } from './asset-bytes.mjs'
 import { combineSheets, sheetPieces, inlineSheets } from './sheets.mjs'
 import { here, V, KIT_CHUNKS, INLINE_SHEETS, SHEET_PIECES, ROUTE_ASSET_BYTES } from './shared.mjs'
 
@@ -107,6 +107,17 @@ export const writeBundle = (s) => ({
       (await s.hydration(this))?.islands ?? [],
       s.options.site?.base ?? '/',
     )
+  },
+})
+
+/** Write the build-specific retry table beside the original client chunks. */
+export const generateBundle = (s) => ({
+  order: 'post',
+  handler(_out, bundle) {
+    if (this.environment?.config.consumer !== 'client' || !s.retryManifest) return
+    const { ref, targets } = s.retryManifest
+    const asset = bundle[this.getFileName(ref)]
+    asset.source = JSON.stringify(retryChunks(bundle, targets))
   },
 })
 

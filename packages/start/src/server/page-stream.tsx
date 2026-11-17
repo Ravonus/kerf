@@ -21,6 +21,9 @@ import { imagePreloads } from './image-preloads'
 import { entryScript } from './image-boot'
 import type { PageState } from './page-types'
 import { nonceScripts } from './security'
+import { LATE_ERROR } from '../failure'
+import { RenderFailure, recoverRender, reportFailure } from './failure'
+import { HOLD } from './page-types'
 
 /** Cache entries the client hasn't got. */
 function news(p: PageState) {
@@ -53,7 +56,8 @@ export function render(p: PageState) {
     ...p.timing,
     nonce: p.nonce,
     passes: p.passes,
-    shown: (e) => exec.shown(e, p.scope),
+    shown: (error) => exec.shown(error, p.scope),
+    routeErrors: true,
     stalled: () =>
       p.options.onDiagnostic?.({
         code: 'E_STREAM',
@@ -63,6 +67,18 @@ export function render(p: PageState) {
     app: { cookies: cookieJar(p.request) },
     landing: () => `(self.$wc=self.$wc||[]).push(${json({ c: news(p), ...since(p) })});`,
   })
+}
+
+/** Settle the first shell, with an error view if a route threw before it could be sent. */
+export async function renderShell(p: PageState) {
+  const original = p.r.levels
+  await recoverRender(p.r, p.scope, p.options, async () => {
+    if (p.r.levels !== original) p.route = p.stateOf(p.r, payloadOf(p.r, false))
+    p.stream = render(p)
+    await p.stream.settle()
+    await p.stream.hold(p.options.hold ?? HOLD)
+  })
+  return p.r.levels !== original
 }
 
 /** The head down to the fonts, after metadata is complete. */
@@ -194,7 +210,26 @@ export async function rest(
         ),
       )
   } catch (e) {
-    p.options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
+    const depth = e instanceof RenderFailure ? e.depth : 0
+    const data = reportFailure(
+      p.scope,
+      p.options,
+      e instanceof RenderFailure ? e.cause : e,
+      500,
+      'E_STREAM',
+      p.path,
+    )
+    const failure = { depth, data }
+    controller.enqueue(
+      p.enc.encode(
+        `<script type="application/json" id="${LATE_ERROR}">${json(failure)}</script>\n` +
+          nonceScripts(
+            `<script>dispatchEvent(new Event(${JSON.stringify(LATE_ERROR)}))</script>\n`,
+            p.nonce,
+          ) +
+          `<noscript><p>Something went wrong. Reference: ${data.reference}. <a href="">Reload page</a></p></noscript>\n`,
+      ),
+    )
   }
   controller.enqueue(p.enc.encode(await finish(p, streaming)))
   controller.close()

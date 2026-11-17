@@ -122,7 +122,7 @@ test("a Boundary that fails replaces its fallback with its error, and the page k
   expect(html).not.toContain('relation')
 })
 
-test('a Boundary with no `error` still gives up its fallback', async () => {
+test('a failed Boundary without an error view reports its fault after the shell', async () => {
   const Broken = () => {
     const r = resource(() => Promise.reject(new Error('nope')))
     return <p>{r.value}</p>
@@ -136,7 +136,10 @@ test('a Boundary with no `error` still gives up its fallback', async () => {
       </main>
     ),
   })
-  expect(await body(await get('/'))).toContain('<template></template>')
+  const response = await get('/')
+  const html = await body(response)
+  expect(html).toContain('id="kerf-route-error"')
+  expect(html).toContain(response.headers.get('x-kerf-error'))
 })
 
 test('a failed query in production says only that it failed, on the page and in its diagnostics it says why', async () => {

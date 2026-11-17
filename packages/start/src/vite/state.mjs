@@ -32,6 +32,13 @@ async function hydration(s, ctx) {
     resolve: async (spec, from) => (await ctx.resolve(spec, from, { skipSelf: true }))?.id,
   })
   const done = await s.plan
+  // Retry and pending are client props even when the app's current error view only renders text.
+  for (const route of s.manifest.routes)
+    if (route.kind === 'error') {
+      const file = s.abs(route.file)
+      done.statics.delete(file)
+      done.files.delete(file)
+    }
   try {
     mkdirSync(join(s.root, '.kerf'), { recursive: true })
     writeFileSync(
