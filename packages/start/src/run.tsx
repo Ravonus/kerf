@@ -92,7 +92,7 @@ export async function start(
   }
   addEventListener(LATE_ERROR, late)
   late()
-  listeners(navigation, () => (import.meta as Hot).hot)
+  listeners(navigation, prepared.page.p, options.shell, () => (import.meta as Hot).hot)
   // The router follows links from here: the browser's prefetching for full loads (capture.ts `speculate`) stops.
   document.getElementById('kerf-speculate')?.remove()
   if (options.shell) {

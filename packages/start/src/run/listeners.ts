@@ -6,7 +6,12 @@ import type { Navigation } from './navigation'
 
 type Hot = { on(event: string, on: (data: { queries: boolean }) => unknown): void }
 
-export function listeners(nav: Navigation, hot: () => Hot | undefined) {
+export function listeners(
+  nav: Navigation,
+  renderedPath: string,
+  shell: boolean | undefined,
+  hot: () => Hot | undefined,
+) {
   addEventListener('online', nav.owing)
   addEventListener('focus', nav.owing)
   addEventListener('pagehide', nav.dispose)
@@ -20,7 +25,7 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
   client.sessionChanged = nav.dispose
   clicks(nav)
   preload(nav)
-  history(nav)
+  listenHistory(nav, renderedPath, shell)
   peers?.addEventListener('message', (m) => {
     if (!m.data) {
       nav.dispose()
@@ -143,10 +148,11 @@ export function preload(nav: Navigation) {
   }
 }
 
-// An in-page anchor fires popstate too; only a changed path needs a navigation.
-function history(nav: Navigation) {
-  nav.at = location.pathname + location.search
+/** Follow history and catch a traversal that happened before the runtime could listen. */
+export function listenHistory(nav: Navigation, renderedPath: string, shell?: boolean) {
+  nav.at = renderedPath
   addEventListener('popstate', () => {
+    // An in-page anchor fires popstate too; only a changed path needs a navigation.
     if (location.pathname + location.search !== nav.at)
       return void nav.go(location.href, { pop: true })
     if (nav.current) {
@@ -154,6 +160,17 @@ function history(nav: Navigation) {
       nav.settle()
     }
   })
+  const path = location.pathname + location.search
+  if (path === renderedPath) return
+  // The shell has its own arrival; its rendered path doesn't describe this history entry.
+  if (shell) {
+    nav.at = path
+    return
+  }
+  // Retained controls and pending shapes still belong to the rendered address until the traversal lands.
+  nav.committedURL = location.origin + renderedPath
+  if (!document.querySelector('base[href]')) nav.committedBase = nav.committedURL
+  void nav.go(location.href, { pop: true })
 }
 
 /** Mark a transition's outcome as seen: a skipped one rejects all three of its promises. */
