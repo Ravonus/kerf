@@ -54,6 +54,9 @@ jobs:
           RELEASE: ${{ inputs.release }}
         run: |
           if [ -n "$RELEASE" ]; then
+            # only what set-version.mjs committed (and the gate passed): never stamp a version onto main here
+            have=$(node -p "require('./packages/core/package.json').version")
+            if [ "$have" != "$RELEASE" ]; then echo "::error::main is at $have, not $RELEASE: commit set-version.mjs $RELEASE and gate it first"; exit 1; fi
             echo "releasing $GITHUB_SHA as $RELEASE"
             { echo go=true; echo "sha=$GITHUB_SHA"; echo "version=$RELEASE"; } >> "$GITHUB_OUTPUT"; exit 0
           fi
