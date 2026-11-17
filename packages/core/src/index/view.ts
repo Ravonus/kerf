@@ -1,4 +1,4 @@
-import { rt } from './graph'
+import { rt, within } from './graph'
 import { getOwner, createRoot } from './lifecycle'
 import type { Owner, State } from './types'
 
@@ -6,6 +6,15 @@ import type { Owner, State } from './types'
 function contexts(from: Owner | null) {
   while (from && !from.context) from = from.owner
   return from?.context
+}
+
+/** Server JSX may return lazy children: resolve them under the provider that created them. */
+function provided<T>(value: T, owner: Owner): T {
+  if (typeof value === 'function')
+    return function (this: unknown, ...args: unknown[]) {
+      return within(owner, () => provided(value.apply(this, args), owner))
+    } as T
+  return Array.isArray(value) ? (value.map((child) => provided(child, owner)) as T) : value
 }
 
 /** A value a subtree reads without props: `provide` sets it below an owner, `use` reads the nearest. */
@@ -17,7 +26,8 @@ export function context<T>(fallback?: T) {
       return createRoot((end) => {
         if (parent) (parent.cleanups ??= []).push(end) // the subtree goes when its parent does
         getOwner()!.context = { ...contexts(parent), [id]: value }
-        return fn()
+        const result = fn()
+        return rt.server ? provided(result, getOwner()!) : result
       })
     },
     get use(): T {
