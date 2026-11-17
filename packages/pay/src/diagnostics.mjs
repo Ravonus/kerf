@@ -1,12 +1,6 @@
 /** Diagnostic entries shared by the Pay manifest and framework reference. */
 export const diagnostics = [
   [
-    'E_PAY',
-    'error',
-    'Payment webhook processing failed',
-    'Check the payment handler and retry the webhook according to the provider policy',
-  ],
-  [
     'PAY003',
     'error',
     'A Stripe secret, restricted or webhook key in the source, a server secret read in client code, or a key in plugin options',
@@ -122,3 +116,13 @@ export const diagnostics = [
     'Use the intended environment and credentials issued for it',
   ],
 ].map(([code, severity, catches, fix]) => ({ code, severity, catches, fix }))
+
+/** Runtime outcomes Pay emits. They sit outside the plugin's `PAY` namespace, so the manifest omits them. */
+export const runtimeDiagnostics = [
+  {
+    code: 'E_PAY',
+    severity: 'error',
+    catches: 'Payment webhook processing failed',
+    fix: 'Check the payment handler and retry the webhook according to the provider policy',
+  },
+]
