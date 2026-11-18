@@ -116,3 +116,13 @@ export const diagnostics = [
     'Use the intended environment and credentials issued for it',
   ],
 ].map(([code, severity, catches, fix]) => ({ code, severity, catches, fix }))
+
+/** Runtime outcomes Pay emits. They sit outside the plugin's `PAY` namespace, so the manifest omits them. */
+export const runtimeDiagnostics = [
+  {
+    code: 'E_PAY',
+    severity: 'error',
+    catches: 'Payment webhook processing failed',
+    fix: 'Check the payment handler and retry the webhook according to the provider policy',
+  },
+]

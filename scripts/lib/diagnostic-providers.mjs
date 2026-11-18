@@ -1,11 +1,14 @@
 import { diagnostics as agent } from '../../packages/agent/src/diagnostics.mjs'
-import { diagnostics as pay } from '../../packages/pay/src/diagnostics.mjs'
+import {
+  diagnostics as pay,
+  runtimeDiagnostics as payRuntime,
+} from '../../packages/pay/src/diagnostics.mjs'
 import { diagnostics as veneer } from '../../packages/veneer/src/plugin/diagnostics.mjs'
 import { aliases, catalog, indexDiagnostics } from '../../packages/cli/src/catalog.mjs'
 
 const providerDiagnostics = Object.entries({
   '@kerf-js/agent': agent,
-  '@kerf-js/pay': pay,
+  '@kerf-js/pay': [...pay, ...payRuntime],
   '@kerf-js/veneer': veneer,
 }).flatMap(([plugin, entries]) => entries.map((entry) => ({ ...entry, plugin })))
 
