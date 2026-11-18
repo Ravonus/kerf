@@ -49,6 +49,8 @@ import {
 } from './vite/config-hooks.mjs'
 import { configureServer, hotUpdate } from './vite/dev-hooks.mjs'
 import { resolveId, load, transform, api } from './vite/module-hooks.mjs'
+import { normalizeViteAssets } from './vite/nitro-output.mjs'
+import { sourceMapOptions, viteManifests } from './vite/output-manifests.mjs'
 export { assetsOnly } from './vite/assets.mjs'
 export { inlineSheets, sheetPieces } from './vite/sheets.mjs'
 export { stripServerExports } from './vite/syntax.mjs'
@@ -162,6 +164,7 @@ export default function kerfStart(options = {}) {
       config: configHook(state),
       configResolved: configResolved(state),
       api: api(state),
+      buildApp: normalizeViteAssets(state),
     },
     {
       name: 'kerf:start:sheets',
@@ -202,6 +205,18 @@ export default function kerfStart(options = {}) {
       resolveId: resolveId(state),
       load: load(state),
       transform: transform(state),
+    },
+    {
+      name: 'kerf:start:output-manifests',
+      apply: 'build',
+      enforce: 'post',
+      generateBundle: viteManifests(state),
+      outputOptions(output) {
+        if (this.environment.config.consumer === 'client')
+          return sourceMapOptions(output, state.pathFor)
+        if (this.environment.name !== 'nitro' && output.sourcemap)
+          return { ...output, sourcemapExcludeSources: true }
+      },
     },
   ]
 }

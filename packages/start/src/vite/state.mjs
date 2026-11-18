@@ -5,6 +5,8 @@ import { scanRoutes } from '../routes.mjs'
 import { scanServerModules } from './server-functions.mjs'
 import { usesShapes } from './dev.mjs'
 import { PRELOAD, V } from './shared.mjs'
+import { buildPaths } from './build-paths.mjs'
+import { manifestKey } from './output-manifests.mjs'
 
 /** Partial hydration's view of the project, redone in dev when a file it read changed. */
 async function hydration(s, ctx) {
@@ -27,7 +29,7 @@ async function hydration(s, ctx) {
     entries,
     lazy: (options.hydration ?? 'lazy') === 'lazy',
     transform: s.compile,
-    rel: (f) => relative(s.root, f).split('\\').join('/'),
+    rel: s.dev ? (f) => relative(s.root, f).split('\\').join('/') : s.pathFor,
     cache: s.facts,
     resolve: async (spec, from) => (await ctx.resolve(spec, from, { skipSelf: true }))?.id,
   })
@@ -80,6 +82,19 @@ export function createState(options) {
   }
   s.abs = (f) => resolve(s.root, f)
   s.id = (v) => (v.startsWith('virtual:') ? '\0' + v : v)
+  s.resetPaths = () => {
+    s.pathFor = buildPaths(s.root)
+    s.assetSources = new Map()
+  }
+  s.resetPaths()
+  s.assetKey = (id) => manifestKey(s.pathFor, id)
+  s.assetSource = (file) => {
+    const id = `virtual:kerf/asset-source/${encodeURIComponent(s.pathFor(file))}`
+    const existing = s.assetSources.get(id)
+    if (existing && existing !== file) throw new Error(`Duplicate Kerf asset source ${id}`)
+    s.assetSources.set(id, file)
+    return id
+  }
   s.scan = () => {
     s.serverModules = scanServerModules(s.root)
     s.manifest = scanRoutes(

@@ -887,6 +887,28 @@ token. A token can't be revoked, so reads last until it expires; a mutation also
 With no `BETTER_AUTH_URL` or fixed `baseURL`, no token is accepted, since nothing could check `iss` and `aud`.
 `api: false` removes all of this.
 
+## Reproducible builds
+
+Set `SOURCE_DATE_EPOCH` to a non-negative Unix timestamp in seconds,
+such as the source commit's timestamp.
+
+```sh
+SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" kerf build
+```
+
+With the same source, lockfile, toolchain, build configuration and platform,
+Start emits the same public and server bytes across checkout paths and cache
+states. Nitro's build date and static assets' `Last-Modified` use the epoch.
+Asset `ETag` values still come from the bytes served. With the variable unset,
+Nitro uses the build clock and filesystem mtimes as usual.
+
+Pinned builds omit cached stylesheets from previous releases. Keep those
+assets on the host if older pages still need them. Source maps, when
+requested, use root-relative source identifiers and omit embedded source
+text. Reproducibility also requires deterministic app and plugin inputs,
+including prerendered data. Different operating systems, architectures,
+native binaries, or toolchain versions can produce different bytes.
+
 ## Runtimes
 
 The CLI runs on whichever of the three starts it, with none of the others installed: `bun --bun`, or `deno run -A
