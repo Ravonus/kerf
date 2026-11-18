@@ -1,3 +1,5 @@
+import { checkShell } from '../shell-check.mjs'
+
 export async function commandLsp({ args }) {
   const { lsp } = await import('../infer/lsp.mjs')
   const out = lsp(args.root)
@@ -16,10 +18,12 @@ export async function commandTsc({ formatHuman, sortDiagnostics, args, print, sa
 }
 
 export async function commandCheck({ check, formatHuman, compilerLine, doctor, args, print, say }) {
-  const result = await check(args.root, { files: args.positional, preset: args.flags.preset })
+  const result = args.flags.shell
+    ? await checkShell(args.root)
+    : await check(args.root, { files: args.positional, preset: args.flags.preset })
   if (args.json) print(result)
   say(formatHuman(result.diagnostics))
-  if (args.flags.verbose) say(compilerLine(doctor(args.root).compiler))
+  if (args.flags.verbose && !args.flags.shell) say(compilerLine(doctor(args.root).compiler))
   say(
     `kerf check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`,
   )

@@ -41,6 +41,56 @@ function serverCuts(code, file, shell) {
   return cuts
 }
 
+/** The shell loader's missing or unsafe schema declaration, for the project-wide preflight. */
+export function shellLoaderContract(code, file) {
+  const ast = parse(file, code)
+  const runtime = ast.program.body.filter((node) => node.exportKind !== 'type')
+  const direct = runtime.flatMap((node) =>
+    node.type === 'ExportNamedDeclaration' && node.declaration ? declares(node.declaration) : [],
+  )
+  const aliases = runtime.flatMap((node) =>
+    node.type === 'ExportNamedDeclaration'
+      ? node.specifiers
+          .filter((spec) => spec.exportKind !== 'type')
+          .map((spec) => spec.exported.name ?? spec.exported.value)
+      : [],
+  )
+  if (runtime.some(unsafeShellExport))
+    return [
+      { name: 'load', at: 0, why: 'Declare shell load and prerender directly in this module.' },
+    ]
+  if (direct.includes('load')) {
+    const load = runtime.find(
+      (node) => node.declaration && declares(node.declaration).includes('load'),
+    )
+    if (![...direct, ...aliases].includes('routeData') || !declaredRouteData(runtime)) {
+      return [
+        {
+          name: 'load',
+          at: load?.start ?? 0,
+          why: 'Shell route loaders require a routeData schema export.',
+        },
+      ]
+    }
+  }
+  return []
+}
+
+function declaredRouteData(nodes) {
+  const declaration = nodes
+    .flatMap((node) => node.declaration?.declarations ?? [])
+    .find((decl) => decl.id?.name === 'routeData')
+  if (!declaration) return true // An imported or re-exported schema is checked by the reader.
+  const init = declaration.init
+  if (!init || init.type === 'Literal' || init.name === 'undefined') return false
+  if (init.type !== 'ObjectExpression') return true
+  const initial = init.properties.filter(
+    (prop) => !prop.computed && (prop.key?.name ?? prop.key?.value) === 'initial',
+  )
+  const value = initial[0]?.value
+  return initial.length === 1 && !!value && value.type !== 'Literal' && value.name !== 'undefined'
+}
+
 function unsafeShellExport(node) {
   if (node.type === 'ExportAllDeclaration') return !node.exported
   if (node.type !== 'ExportNamedDeclaration') return false

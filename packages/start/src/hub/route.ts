@@ -5,6 +5,8 @@ import type { Scope } from '../exec'
 import type { Body, Conn, Hub, Sink } from '../hub'
 import { failureMessage } from '../server/public-fault'
 import { realtimeFault } from '../server/realtime-fault'
+import { errorFrameStatus, peerStatus, shellResponse } from '../shell/operation'
+import { sseFrame } from '../shell/realtime-server'
 import { ERROR_HEADER } from '../failure'
 
 // ---- the HTTP route -------------------------------------------------------------------------------------------------
@@ -40,8 +42,10 @@ export async function handleRoute(
   origins: string[],
   hub: () => Hub,
 ): Promise<Response> {
+  const h = hub()
   const refuse = (code: string, message: string, status: number) => {
     scope.options.onDiagnostic?.({ code, severity: 'error', message })
+    if (h.shell) return shellRefusal(h, status)
     return Response.json(
       {
         e: {
@@ -78,7 +82,6 @@ export async function handleRoute(
       'Q010: `/_kerf/rt` without the CSRF proof (POST + JSON + `x-kerf: 1`)',
       403,
     )
-  const h = hub()
   let raw: string
   try {
     raw = await (await limited(request, h.limits.body)).text()
@@ -93,11 +96,13 @@ export async function handleRoute(
     return refuse('Q002', "Q002: `/_kerf/rt` got a body that isn't JSON", 400)
   }
   // A tab that didn't dial the shared socket asks who it is now (link.ts).
-  if ((body as { w?: 1 })?.w === 1)
+  if ((body as { w?: 1 })?.w === 1) {
+    if (h.shell) return shellRefusal(h, 400)
     return Response.json(
       { u: await sessionOf(await scope.ctx()) },
       { headers: { 'cache-control': 'no-store' } },
     )
+  }
   if (!validBody(body))
     return refuse('Q002', 'Q002: `/_kerf/rt` got a body of the wrong shape', 400)
   if (body.k) {
@@ -121,7 +126,15 @@ async function openStream(request: Request, scope: Scope, body: Body, h: Hub): P
     controller.enqueue(bytes)
   }
   const sink: Sink = {
-    write: (event, data) => push(`event: ${event}\ndata: ${data}\n\n`),
+    write(event, data) {
+      const frame = h.shell ? sseFrame(h.build ?? null, event, data) : data
+      if (frame === undefined) {
+        // End with a fixed invalid frame so the browser sees a refusal before reconnecting.
+        push(`event: x\ndata: null\n\n`)
+        if (conn) h.close(conn)
+        else closed = true
+      } else if (!closed) push(`event: ${event}\ndata: ${frame}\n\n`)
+    },
     ping: () => push(': ping\n\n'),
     backlog: () => queued,
     close: () => {
@@ -150,6 +163,7 @@ async function openStream(request: Request, scope: Scope, body: Body, h: Hub): P
     conn = await h.connect(request, scope, body, sink)
   } catch (e) {
     const error = realtimeFault(scope.options, e, '/_kerf/rt')
+    if (h.shell) return shellRefusal(h, error.status)
     return Response.json(
       { e: error },
       {
@@ -167,4 +181,9 @@ async function openStream(request: Request, scope: Scope, body: Body, h: Hub): P
       connection: 'keep-alive',
     },
   })
+}
+
+function shellRefusal(h: Hub, status: number) {
+  const code = peerStatus(status)
+  return shellResponse(h.build ?? null, 'realtime', { code }, errorFrameStatus(code))
 }

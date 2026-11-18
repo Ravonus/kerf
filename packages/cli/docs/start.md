@@ -17,6 +17,8 @@ src/auth.server.ts       auth provider (Better Auth by default),
 src/context.server.ts    what `ctx` holds
 src/routes/**/*.http.ts  raw HTTP method handlers (server only)
 src/hooks.server.ts      named handle(request, next) request hook
+src/bootstrap.tsx        optional shell schema and startup views
+src/bootstrap.server.ts  optional shell startup data provider
 ```
 
 Any auth provider works: `defineAuth` from `@kerf-js/start/auth` takes a `handler(request)` for `/api/auth/*` and a
@@ -89,19 +91,26 @@ A custom `src/entry.client.ts` still calls `start(routes)` with the
 generated `virtual:kerf/routes` namespace. Set `clientFetch` first
 if peers live behind a different origin or transport. Preserve
 the abort signal, redirect refusal and `credentials: 'omit'` on
-the browser fetch. A credentialed application transport must
-terminate credentials at a trusted gateway and construct a new
-data response there.
+the browser fetch. Use a trusted gateway for credentials and have it
+construct a new data response. Route reads, server functions,
+bootstrap and SSE all use this transport in shell mode.
 First load, links, refresh and Back/Forward use the same protocol.
-Code and route data start loading in parallel. Focus and a link
+After optional bootstrap, code and route data load in parallel. Focus and a link
 press can warm release modules when Save-Data is off. The router
 doesn't prefetch or retain peer route responses.
 
 #### Route schema and outcomes
 
-Export `routeData` from every page or layout with a `load`.
-Shell builds require the export even for loaders that only throw
-or redirect. Use a Standard Schema v1 validator for `initial` and
+Run `kerf check --shell` before switching the site to shell mode.
+It inspects source declarations and reports Q021 by file and export
+without running app modules or building. The build applies this
+check to sources and checks recognized declarations again during
+transformation. Source checks cannot evaluate schema expressions,
+dynamic registration or arbitrary plugin-generated code. The
+published browser and framework server check the actual contracts
+before admitting data or opening an operation.
+Export `routeData` from every page or layout with a `load`,
+including loaders that only throw or redirect. Use a Standard Schema v1 validator for `initial` and
 one validator per optional `deferred` key. A level without a
 loader or schema has no data and uses a wire `null` sentinel.
 `load` and `prerender` should be declared directly in their route
@@ -156,13 +165,14 @@ Both ends validate the same schema against the JSON value. The
 browser requires an exact version and build match, exact envelope
 keys, correct status, and the payload shape implied by the release
 route table. Values stripped or changed by schema validation and
-unsafe object keys are rejected. Schema validators must be pure
+duplicate and unsafe object keys are rejected. Schema validators must be pure
 checks with no coercion, transforms, defaults or loose objects.
 The response is limited to 256 KiB of decoded UTF-8, 64 KiB per
 line including the newline, 32 levels of JSON nesting and 64
-deferred fields. Route params are decoded from the requested URL
-by the release's route table. Peers never return params or a
-module selector. Admission failure renders the local error view.
+deferred fields. Route params come from the requested URL and the
+release's route table. Peers may send bounded redirect segments
+only in a redirect outcome. Admission failure renders the local
+error view.
 
 The data endpoint remains `GET /_kerf/data/<path>`. Its media type
 is `application/x-ndjson`. The first frame contains protocol
@@ -174,10 +184,9 @@ version, build ID and the typed outcome:
   404 comes from the browser address.
 - `error` (500) has surviving values and a 24-hex reference.
   The browser supplies the error message and retry controls.
-- `redirect` (200) has a release-defined ID. Return or throw
-  `routeRedirect<keyof typeof destinationMap>('home')` from
-  `load`. Configure the destination in `site.routeRedirects`.
-  HTTP redirects and URLs supplied by the response are refused.
+- `redirect` (200) has a release-defined ID and an optional
+  parameter map. HTTP redirects and peer-supplied destinations
+  are refused.
 
 Top-level promise fields listed in `deferred` are excluded from
 `initial` and stream after the first frame. A deferred frame names
@@ -196,13 +205,225 @@ headers and keep peer `Link`, `Refresh`, `Location` and
 `Set-Cookie` headers out of documents and assets. Fetch options
 cannot enforce policy on responses passed through a custom transport.
 
-Shell mode disables Start's legacy browser queries, mutations,
-mutation-backed form submissions, realtime streams, channels and
-shared state networking. Server functions can still run in
-loaders. App-owned RPC, realtime, native forms, auth, media and
-raw HTTP require their own browser admission and trusted request
-routing. The release owns any HTML, script, CSS or URL sinks
-that its components call directly.
+#### Redirects and return-to
+
+Share a literal destination map with `site.routeRedirects`.
+Fixed destinations may use strings. Dynamic destinations use
+`:name` for a whole segment, with a regex source for each name.
+Start matches each decoded segment against the whole regex and
+encodes it before substitution. It caps the parameter count at
+16 and each value at 256 characters. Use bounded, simple regexes.
+The value must already be NFC and cannot contain separators,
+dots used as path segments, percent escapes, query or fragment
+characters. The result must resolve to the route matched by the
+pattern. A named segment cannot select a shadowing static route.
+Only a source with a release route data contract can redirect.
+The peer can select allowed IDs and values. Put authorization
+and other sensitive transitions in release code.
+
+<!-- example: skip this excerpt spans config and loader files -->
+```ts
+import { routeRedirect, type RouteRedirects } from '@kerf-js/start'
+
+const destinations = {
+  home: '/',
+  node: {
+    path: '/admin/node/:nodeId',
+    params: { nodeId: '[a-z0-9-]{1,64}' },
+  },
+  signIn: { path: '/sign-in', returnTo: 'next' },
+} as const satisfies RouteRedirects
+
+// Set site.routeRedirects to destinations in kerf.config.ts.
+export function load() {
+  return routeRedirect<typeof destinations>('node', {
+    nodeId: 'node-1',
+  })
+}
+```
+
+A guard can return or throw
+`routeRedirect<typeof destinations>('signIn')`. The browser adds
+the initial navigation's path and query under `next`. Intermediate
+peer-selected hops do not supply the return address. On completion,
+`routeReturnTo('next')` reads one value from the current browser URL
+and returns a root-relative release route, or `undefined`. It
+refuses the current path, nested return keys and ambiguous paths.
+The router cuts off repeated redirect hops. Completion handlers
+must still choose suitable routes and handle redirects that
+depend on peer claims or application state.
+Put shell guards in route loaders so they can return these outcomes.
+
+<!-- example: skip use this in a sign-in or setup completion handler -->
+```ts
+import { navigate, routeReturnTo } from '@kerf-js/start'
+
+export async function afterSignIn() {
+  await navigate(routeReturnTo('next') ?? '/')
+}
+```
+
+#### Operations and realtime
+
+Add Standard Schema v1 `output` to every exported `query` and
+`mutation` in a shell app. Write direct definitions in server
+modules and leave operation IDs to Start. The browser stub
+validates before resolving the call or updating the query cache.
+Use the same strict object, bound and URL rules as `routeData`.
+Use an explicit `null` result for a write with no payload. A shell
+mutation marks cached queries stale and active readers revalidate
+with their contracts. The app's optimistic code runs locally and
+the framework drops the failed call's layer. Navigate in release
+code after a successful mutation. Shell RPC carries no peer
+redirect, secondary cache values or SSR form response.
+
+<!-- example: skip install Zod or supply another Standard Schema validator -->
+```ts
+import { mutation, query } from '@kerf-js/start'
+import { z } from 'zod'
+
+const count = z.strictObject({ count: z.number().int().min(0) })
+let value = 0
+export const counter = query({
+  output: count,
+  tags: ['counter'],
+  run: () => ({ count: value }),
+})
+export const increment = mutation({
+  output: count,
+  invalidates: ['counter'],
+  run: () => ({ count: ++value }),
+})
+```
+
+A transport that directly calls `/_kerf/fn/<id>` passes the unread
+`Response` to `admitOperation(operation, response, { signal })`.
+The operation handle selects the release validator and return type.
+Call after Start has selected the release. The default shell transport
+uses `clientFetch` and runs the same admission internally.
+
+<!-- example: skip assumes the counter above and a selected peer -->
+```ts
+import { admitOperation } from '@kerf-js/start'
+import { counter } from './server/counters'
+
+export async function readCounter(peer: URL, signal: AbortSignal) {
+  const path = '/_kerf/fn/' + encodeURIComponent(counter.$id)
+  const response = await fetch(new URL(path, peer), {
+    signal,
+    redirect: 'error',
+    credentials: 'omit',
+  })
+  return admitOperation(counter, response, { signal })
+}
+```
+
+RPC stays at the existing function URL and uses a single NDJSON
+line of at most 64 KiB. It carries protocol version, build and
+operation ID, plus the result and bounded wire tags or a closed
+error code. The browser discards peer tags. Build and operation
+labels detect mismatches. They cannot authenticate a peer, a
+business claim or the freshness of a matching response.
+`ShellDataError` has a local `code`, `status`, and message. It
+carries no peer text, issues, or error data. For example,
+`error.code === 'unauthorized'` selects a local sign-in action.
+Malformed or mismatched framing or values report `invalid`.
+
+Declare one schema per server message name in `channel({ server })`,
+one `message` schema for each `stream()`, and the `value` schema
+for `sharedState()`. Shell query subscriptions and streams use SSE
+through `clientFetch`. SSE has fixed event names and an internal,
+bounded resume token. Native SSE `id:` and `retry:` fields are
+refused. The browser chooses its reconnect timing and revalidates
+locally requested live queries. Use bounded ASCII tokens with
+letters, numbers or `._:~-` for tracked stream IDs.
+
+Channels and shared state are unavailable until the release sets
+`clientSocket` before `start`. Its destination must be a trusted
+gateway that terminates the WebSocket upgrade. Native WebSocket
+can send ambient cookies and process upgrade headers before
+JavaScript can see a frame. The gateway must isolate those headers
+and credentials from the peer and bound messages before forwarding.
+Use exact `realtime({ origins })` for the browser origin and never
+send the browser directly to an untrusted WebSocket peer. Channel
+and SSE data are versioned, build-bound, and checked before they
+reach folds, subscribers or shared state. Legacy network presence
+and the browser multiplexer's session handshake are unavailable.
+
+<!-- example: skip install Zod or supply another Standard Schema validator -->
+```ts
+import { channel, stream } from '@kerf-js/start'
+import { z } from 'zod'
+
+const notice = z.strictObject({ text: z.string().max(160) })
+export const updates = channel({
+  authorize: ({ ctx }) => Boolean(ctx),
+  server: { notice },
+})
+export const alerts = stream({
+  message: notice,
+  async *run() {
+    yield { text: 'Ready' }
+  },
+})
+```
+
+Enhanced forms use the same mutation admission in shell mode.
+Application-owned HTTP, auth, media and realtime endpoints still
+need an explicit data contract and trusted routing.
+
+#### Startup data
+
+Default-export `defineBootstrap(schema, views)` from
+`src/bootstrap.ts` or `src/bootstrap.tsx`, and default-export the
+provider from `src/bootstrap.server.ts`. Start fetches
+`GET /_kerf/bootstrap` once before loading route modules. The schema,
+pending UI, failure UI and Retry live in the release. The provider
+returns data and receives the request, abort signal and server context.
+
+<!-- example: skip this example uses Zod -->
+```tsx
+// src/bootstrap.tsx
+import { defineBootstrap } from '@kerf-js/start'
+import { z } from 'zod'
+
+export default defineBootstrap(
+  z.strictObject({ maintenance: z.boolean() }),
+  {
+    pending: () => <p role="status">Reading settings…</p>,
+    failure: ({ retry }) => (
+      <button onClick={retry}>Retry settings</button>
+    ),
+  },
+)
+```
+
+<!-- example: skip uses the bootstrap module above -->
+```ts
+// src/bootstrap.server.ts
+import type { BootstrapProvider } from '@kerf-js/start'
+import type bootstrap from './bootstrap'
+
+const provide: BootstrapProvider<typeof bootstrap> = () => ({
+  maintenance: false,
+})
+export default provide
+```
+
+Import the shared contract in route code and call `bootstrap.read()`
+for the typed, reactive snapshot. Use `await bootstrap.refresh()`
+to re-read it. Concurrent refresh calls share one request. A
+failed refresh clears the snapshot and `read()` throws until a
+new value is admitted. Use release-owned recovery for mounted
+readers. The snapshot is application-wide across navigations.
+For wallet settings, admit only release-approved values and origins
+before initializing the wallet module. Treat peer claims about
+maintenance, identity and release freshness according to the app's
+own authentication and release policy.
+
+For docs content, use release-authored markup or render admitted
+strings in ordinary JSX text nodes, such as `<pre>{text}</pre>`.
+Start does not provide a rich-text schema or renderer.
 
 ### Error routes
 

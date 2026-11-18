@@ -41,12 +41,24 @@ export interface PluginEntry {
   options?: unknown
 }
 
+/** A shell destination pattern and its release-owned segment validators. */
+export interface RouteRedirectDestination {
+  path: string
+  /** Regex sources, matched against whole decoded segments before encoding. */
+  params?: Readonly<Record<string, string>>
+  /** Query key for the browser's current route path and query. */
+  returnTo?: string
+}
+
+/** Local destinations available to shell peers by name. */
+export type RouteRedirects = Readonly<Record<string, string | RouteRedirectDestination>>
+
 /** Site defaults for metadata, page rendering and response policy. */
 export interface SiteConfig {
   /** Start renders every route in the release browser with schema-checked data. Omit for SSR. */
   render?: 'shell'
   /** Shell-mode redirect IDs and their release-authored, root-relative destinations. */
-  routeRedirects?: Readonly<Record<string, string>>
+  routeRedirects?: RouteRedirects
   /** Response headers by route, static files included: `{ '/arena/**': { 'x-frame-options': 'DENY' } }`. */
   headers?: Record<string, Record<string, string>>
   /**

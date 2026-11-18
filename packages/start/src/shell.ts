@@ -1,3 +1,4 @@
+import type { RouteRedirects } from '@kerf-js/core/config'
 // The release-owned schema contract shared by shell routes and their browser entry.
 import type { MetaObject } from './index'
 
@@ -29,14 +30,35 @@ export type ShellMeta<Data = unknown, Params = Record<string, string>> =
 
 /** A loader's redirect signal. The release maps its id to a local path. */
 export class RouteRedirect<Id extends string = string> extends Error {
-  constructor(readonly id: Id) {
+  constructor(
+    readonly id: Id,
+    readonly params?: Readonly<Record<string, string>>,
+  ) {
     super('Route redirect')
   }
 }
 
-/** Return or throw from a shell loader. Type the id with the keys of the release's redirect table. */
-export function routeRedirect<Id extends string>(id: Id): RouteRedirect<Id> {
-  return new RouteRedirect(id)
+type SegmentParams<Path extends string> = Path extends `${infer First}/${infer Rest}`
+  ? SegmentParams<First> | SegmentParams<Rest>
+  : Path extends `:${infer Key}`
+    ? Key
+    : never
+type RedirectArgs<Table extends RouteRedirects> = {
+  [Id in keyof Table & string]: Table[Id] extends { path: infer Path extends string }
+    ? SegmentParams<Path> extends never
+      ? [id: Id]
+      : [id: Id, params: { [Key in SegmentParams<Path>]: string }]
+    : [id: Id]
+}[keyof Table & string]
+
+/** Return or throw from a shell loader using the literal type of the release's redirect table. */
+export function routeRedirect<Table extends RouteRedirects>(
+  ...args: RedirectArgs<Table>
+): RouteRedirect
+/** A fixed alias. Pass its release id union to type existing literal redirects. */
+export function routeRedirect<Id extends string>(id: Id): RouteRedirect<Id>
+export function routeRedirect(id: string, params?: Readonly<Record<string, string>>) {
+  return new RouteRedirect(id, params)
 }
 
 const localBase = 'https://kerf.invalid'

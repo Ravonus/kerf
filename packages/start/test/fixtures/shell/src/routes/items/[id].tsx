@@ -2,6 +2,7 @@ import { Boundary, resource } from '@kerf-js/core'
 import {
   isRouteUrl,
   notFound,
+  routeReturnTo,
   type LoadArgs,
   type Meta,
   type RouteDataSchema,
@@ -49,6 +50,7 @@ export default function Item(props: RouteProps<typeof load, '/items/[id]'>) {
         {props.data.name} {props.params.id}
       </h1>
       <a href={props.data.link}>Documentation</a>
+      <output data-return-to>{routeReturnTo('next') ?? 'No return route'}</output>
       <Boundary pending={<p>Waiting for detail</p>} error={() => <p>Detail unavailable</p>}>
         <Detail value={props.data.detail} />
       </Boundary>

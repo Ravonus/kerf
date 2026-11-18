@@ -26,7 +26,7 @@ export const topics = {
   lists: 'Keyed lists, conditionals and stable items; W010, W011, W013, W014',
   async: 'resource, <Boundary pending error>, @kerf-js/core/ssr and hydrate; W012',
   start:
-    'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q016, A001–A005, C001–C002, F001–F003, R001–R024',
+    'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q021, A001–A005, C001–C002, F001–F003, R001–R024',
   rust: 'Rust bodies: native() addons with a WASM fallback, remote() sidecars, kerf add rust, impl, the kerf crate, build.rs, Ctx, touch, kerf dev reload, deployment; R101–R109',
   deploy:
     'Deploy: which hosts can run the app, kerf deploy hosts/init, the push workflow, Netlify, Vercel, Cloudflare, Fly, Render, CDN and Cloudinary; E001–E014',

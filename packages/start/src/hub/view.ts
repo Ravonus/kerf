@@ -72,6 +72,7 @@ export function createHubView(deps: View): Hub {
     closing,
     epoch,
     dev: options.dev,
+    shell: options.shell,
     maxDuration: options.maxDuration,
     build: options.build,
     share: options.share,

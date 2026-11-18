@@ -1,3 +1,4 @@
+import type { BootstrapProvider, ShellBootstrap } from '../shell/bootstrap'
 import type { RouteDataSchema } from '../shell'
 import type { ShellSite } from '../shell/routes'
 import type { Merged, Meta as MetaObject } from '@kerf-js/core/ssr'
@@ -97,6 +98,8 @@ export interface Font {
 
 /** `createHandler`: the app as the build describes it, and how to serve it. */
 export interface HandlerOptions {
+  /** The shell startup schema and its data-only server provider. */
+  bootstrap?: { schema: ShellBootstrap['schema']; provide: BootstrapProvider<ShellBootstrap> }
   manifest: Manifest
   /** Named HTTP method exports by route file. */
   httpModules?: Record<string, Partial<Record<string, HttpHandler>>>

@@ -1,42 +1,15 @@
-import type { PublicFailure } from '@kerf-js/core/errors'
-import { DEV, batch, createRoot, state, untrack, type State } from '@kerf-js/core'
+import { DEV, batch, createRoot, state, untrack } from '@kerf-js/core'
 import { HANDOVER, SOCKETS, openLine, socketDown } from '../link'
 import { FnError, keyOf, net, rt, track, type Fn } from '../data'
+import { shellClient } from '../shell/client-policy'
+import { ShellDataError } from '../shell/operation'
+import { shellSocket } from '../shell/realtime-transport'
 import type { ChannelStatus } from '../channel'
 
-// ---- joins ----------------------------------------------------------------------------------------------------------
+import type { Frame, Join, List, ListSpec, SocketLink } from './types'
+export type { Frame, Handle, Join, ListSpec, SocketLink } from './types'
 
-export interface ListSpec {
-  name: string
-  max: number
-  key?: ((m: never) => unknown) | undefined
-}
-export interface List extends ListSpec {
-  box: State<unknown[]>
-}
-export interface Handle {
-  on: Map<string, Set<(m: never) => void>>
-  resets: Set<() => void>
-  value?(v: { v: unknown; at: number }): void
-}
-export interface Join {
-  n: number
-  key: string
-  fn: Fn
-  params: unknown
-  refs: number
-  timer?: ReturnType<typeof setTimeout> | undefined
-  cursor?: string | undefined
-  joined: boolean
-  refused: boolean
-  status: State<ChannelStatus>
-  error: State<unknown>
-  resets: State<number>
-  lists: Map<string, List>
-  handles: Set<Handle>
-  /** `send`s waiting for the join. */
-  waiting: Set<() => void>
-}
+// ---- joins ----------------------------------------------------------------------------------------------------------
 
 export const joins = new Map<string, Join>()
 export const byN = new Map<number, Join>()
@@ -155,26 +128,17 @@ export async function post(j: Join, name: string, message: unknown): Promise<voi
 
 // ---- the socket ------------------------------------------------------------------------------------------------------
 
-/** What the server sends a channel's client: the first element says which. */
-type FrameFailure = Partial<
-  Pick<PublicFailure, 'code' | 'message' | 'status' | 'ref'> & { reference: string }
->
-
-export type Frame =
-  | ['h', { b?: string }]
-  | ['j', number, string | undefined]
-  | ['m', number, string | undefined, string, never]
-  | ['r', number, string | undefined]
-  | ['e', number, FrameFailure]
-  | ['a', number, number, FrameFailure | undefined]
-
-export interface SocketLink {
-  send(text: string): void
-  close(): void
-}
-
 /** This tab's line on the browser's one socket (link.ts). `done` gets the close code. */
 function browser(onFrame: (d: Frame) => void, closed: (code: number) => void): SocketLink {
+  if (shellClient())
+    return shellSocket({
+      find: (id) => byN.get(id)?.fn,
+      frame: (value) => onFrame(value as Frame),
+      closed,
+      failed: (error) => {
+        for (const join of joins.values()) join.error.value = error
+      },
+    })
   return openLine('c', '', (text) => onFrame(JSON.parse(text)), closed)
 }
 
@@ -250,18 +214,21 @@ function frame(d: Frame) {
       if (build && d[1].b && d[1].b !== build) rt.stale.value = true
       build = d[1].b
       open = true
-      attempt = 0
+      if (!shellClient()) attempt = 0
       for (const x of joins.values()) if (!x.refused) enter(x)
     } else if (d[0] === 'j' && j) {
+      if (shellClient() && (j.joined || j.refused)) return
       j.cursor ??= d[2]
       j.joined = true
       j.error.value = undefined
       j.status.value = 'open'
       for (const w of Array.from(j.waiting)) w()
     } else if (d[0] === 'm' && j) {
+      if (shellClient() && !j.joined) return
       j.cursor = d[2]
       dispatch(j, d[3], d[4])
     } else if (d[0] === 'r' && j) {
+      if (shellClient() && !j.joined) return
       j.cursor = d[2]
       for (const l of j.lists.values()) l.box.value = []
       j.resets.value++
@@ -269,13 +236,26 @@ function frame(d: Frame) {
     } else if (d[0] === 'e' && j) {
       j.joined = false
       j.refused = true
-      j.error.value = new FnError(d[2], d[2].status ?? (d[2].code === 'R011' ? 403 : 400))
-      j.status.value = d[2].code === 'R011' ? 'unauthorized' : 'closed'
+      j.error.value =
+        d[2] instanceof ShellDataError
+          ? d[2]
+          : new FnError(d[2], d[2].status ?? (d[2].code === 'R011' ? 403 : 400))
+      j.status.value =
+        d[2].code === 'R011' ||
+        (d[2] instanceof ShellDataError && (d[2].status === 403 || d[2].status === 401))
+          ? 'unauthorized'
+          : 'closed'
       for (const w of Array.from(j.waiting)) w()
     } else if (d[0] === 'a') {
       const p = acks.get(d[2])
+      if (shellClient() && (!j?.joined || !p || p.n !== d[1])) return
       acks.delete(d[2])
-      if (d[3]) p?.no(new FnError(d[3], d[3].status ?? (d[3].code === 'R011' ? 403 : 400)))
+      if (d[3])
+        p?.no(
+          d[3] instanceof ShellDataError
+            ? d[3]
+            : new FnError(d[3], d[3].status ?? (d[3].code === 'R011' ? 403 : 400)),
+        )
       else p?.ok()
     }
   })
@@ -293,7 +273,7 @@ const sleep = (t: number) =>
 
 async function run() {
   listen(true)
-  const fakeNet = () => (DEV ? net() : undefined)
+  const fakeNet = () => (DEV && !shellClient() ? net() : undefined)
   while (joins.size) {
     if (parked || !navigator.onLine) {
       statusAll('reconnecting')
@@ -327,7 +307,12 @@ async function run() {
     for (const [id, p] of acks) {
       acks.delete(id)
       p.no(
-        new FnError({ message: 'the connection dropped: this may or may not have been sent' }, 503),
+        shellClient()
+          ? new ShellDataError('unavailable')
+          : new FnError(
+              { message: 'the connection dropped: this may or may not have been sent' },
+              503,
+            ),
       )
     }
     if (!joins.size) break

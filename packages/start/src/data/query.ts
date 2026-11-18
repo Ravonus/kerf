@@ -1,5 +1,8 @@
 import { DEV, effect, getOwner, onCleanup, resource, untrack, type Resource } from '@kerf-js/core'
 import { fill, mask } from '@kerf-js/core/shape'
+import { shellClient } from '../shell/client-policy'
+import { hasOperation } from '../shell/client-operations'
+import { ShellDataError } from '../shell/operation'
 import { entries, entry, fresh, lastSeen, load, predicted } from './cache'
 import { rt, runtime, server, skip, net } from './foundation'
 import { liveApi } from './live-api'
@@ -14,6 +17,7 @@ export function fetchQuery(fn: Fn, input: unknown): Promise<unknown> {
     return runtime.exec
       .fetchQuery(runtime.exec.createScope(new Request('http://localhost/')), fn, input)
       .then((e) => e.v)
+  if (shellClient() && !hasOperation(fn)) return Promise.reject(new ShellDataError('invalid'))
   const e = entry(fn, input)
   return untrack(() => fresh(e)) ? Promise.resolve(untrack(() => e.value.value)) : load(e)
 }
@@ -34,6 +38,7 @@ export function use(fn: Fn, input: unknown): Resource<unknown> {
       if (arg === skip) return undefined
       const scope = server()
       if (scope) return runtime.exec!.readQuery(scope, fn, arg)
+      if (shellClient() && !hasOperation(fn)) throw new ShellDataError('invalid')
       const e = entry(fn, arg)
       e.readers++
       onCleanup(() => void e.readers--)

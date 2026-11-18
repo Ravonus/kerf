@@ -1,7 +1,16 @@
-import { state } from '@kerf-js/core'
-import { Form, type Meta, type RouteProps } from '@kerf-js/start'
+import { Boundary, state } from '@kerf-js/core'
+import { admitOperation, Form, ShellDataError, type Meta, type RouteProps } from '@kerf-js/start'
+import { connectBuiltIn } from '../../../../../src/channel'
+import { http } from '../../../../../src/data'
 import { z } from 'zod'
-import { probeChannel, probeMutation, probeQuery, probeShared, probeStream } from '../server/critic'
+import {
+  probeChannel,
+  probeMutation,
+  probeQuery,
+  probeShared,
+  probeStream,
+  refuseMutation,
+} from '../server/critic'
 
 const extra = z.strictObject({
   name: z.literal('critic-note'),
@@ -28,11 +37,17 @@ export const meta: Meta<typeof load> = ({ data }) => ({
   jsonLd: { label: data.label },
 })
 
+const errorCode = (error: unknown) => (error instanceof ShellDataError ? error.code : 'unexpected')
+
+function Current() {
+  const current = probeQuery()
+  return <output data-refresh>{current.value?.text}</output>
+}
+
 export default function Critic(props: RouteProps<typeof load>) {
   const query = state('Idle')
-  const connection = probeChannel.connect()
-  const shared = probeShared.connect('critic')
-  const stream = probeStream(undefined, { initial: 'Release stream value' })
+  const direct = state('Idle')
+  const action = state('Idle')
   return (
     <>
       <h1>{props.data.label}</h1>
@@ -40,29 +55,117 @@ export default function Critic(props: RouteProps<typeof load>) {
         type="button"
         onClick={() => {
           void probeQuery.fetch().then(
-            (value) => (query.value = value),
-            () => (query.value = 'Query unavailable'),
+            (value) => (query.value = value.text),
+            (failure) => (query.value = errorCode(failure)),
           )
         }}
       >
         Read server function
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          const path = `/peers/${sessionStorage.peer}/_kerf/fn/${probeQuery.$id}`
+          const attack = sessionStorage.operationAttack
+          const target = path + (attack ? '?operationAttack=' + attack : '')
+          void fetch(target, { redirect: 'error', credentials: 'omit' })
+            .then((response) => admitOperation(probeQuery, response))
+            .then(
+              (value) => {
+                direct.value = value.text
+              },
+              (failure) => {
+                direct.value = errorCode(failure)
+              },
+            )
+        }}
+      >
+        Read through own transport
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void refuseMutation().catch((failure) => {
+            action.value = errorCode(failure)
+          })
+        }}
+      >
+        Request refused mutation
+      </button>
+      <LegacyProbe />
       <output data-query>{query.value}</output>
-      <output data-channel>{connection.status.value}</output>
-      <output data-stream>
-        {stream.status.value} {stream.value}
-      </output>
-      <output data-shared>
-        {shared.status.value} {shared.value}
-      </output>
-      <Form of={probeMutation}>
+      <Boundary pending={<p>Query loading</p>} error={() => <p>Query refused</p>}>
+        <Current />
+      </Boundary>
+      <output data-direct>{direct.value}</output>
+      <output data-action>{action.value}</output>
+      <ChannelProbe />
+      <Form
+        of={probeMutation}
+        onError={(failure) => {
+          action.value = errorCode(failure)
+        }}
+      >
         {(form) => (
           <>
             <button type="submit">Submit server form</button>
-            <output data-form>{form.message.value ?? form.result.value}</output>
+            <output data-form>{form.result.value?.text}</output>
           </>
         )}
       </Form>
+    </>
+  )
+}
+
+function LegacyProbe() {
+  const legacy = state('Idle')
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          void http.query(probeQuery.$id, undefined).then(
+            () => (legacy.value = 'Legacy reply reached app code'),
+            (error) => (legacy.value = errorCode(error)),
+          )
+        }}
+      >
+        Call legacy HTTP transport
+      </button>
+      <output data-legacy>{legacy.value}</output>
+    </>
+  )
+}
+
+function ChannelProbe() {
+  const sendError = state('')
+  const connection = probeChannel.connect(undefined, { keep: 0 })
+  const notices = connection.collect('notice')
+  const shared = probeShared.connect('critic', { keep: 0 })
+  const presence = connectBuiltIn('$share')
+  const stream = probeStream(undefined, { keep: 0 })
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          void connection.send('request', null).catch((failure) => {
+            sendError.value = errorCode(failure)
+          })
+        }}
+      >
+        Request channel message
+      </button>
+      <output data-channel>{connection.status.value}</output>
+      <output data-presence>{presence.status.value}</output>
+      <output data-notice>{notices.value.at(-1)?.text}</output>
+      <output data-channel-error>{errorCode(connection.error)}</output>
+      <output data-send-error>{sendError.value}</output>
+      <output data-stream>{stream.value?.text}</output>
+      <output data-stream-error>{errorCode(stream.error)}</output>
+      <output data-shared>
+        {shared.status.value} {shared.value}
+      </output>
     </>
   )
 }

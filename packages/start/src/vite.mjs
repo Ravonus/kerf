@@ -205,3 +205,5 @@ export default function kerfStart(options = {}) {
     },
   ]
 }
+
+export { checkShellContracts, requireShellContracts } from './vite/shell-contracts.mjs'

@@ -1,3 +1,4 @@
+import { hasChannelContract } from '../shell/realtime'
 import { StartError, type Context, type Fn, type StandardSchemaV1 } from '../data'
 import type { Bucket } from './types'
 
@@ -48,3 +49,13 @@ export const denied = (fn: Fn) =>
     `\`${fn.$id}\`: \`authorize\` refused this client`,
     'sign in, or check `authorize`',
   )
+
+/** Shell joins require a release-provided channel or shared-state contract. */
+export function channelContract(
+  fn: Fn | undefined,
+  shell: boolean | undefined,
+  builtIn: boolean,
+): fn is Fn {
+  if (fn?.kind !== 'channel' && fn?.kind !== 'shared') return false
+  return !shell || (!builtIn && hasChannelContract(fn))
+}

@@ -1,6 +1,8 @@
-import { checkOrigins } from '../hub'
+import { checkOrigins, hub } from '../hub'
 import { StartError } from '../data'
 import { realtimeFault } from '../server/realtime-fault'
+import { socketFrame } from '../shell/realtime-server'
+import { errorFrameStatus, peerStatus, shellResponse } from '../shell/operation'
 import { ERROR_HEADER } from '../failure'
 import type { Scope } from '../exec'
 import type { Peer, Attached } from '../socket'
@@ -17,8 +19,10 @@ export function socketRouteWith(
   request: Request,
   scope: Scope,
   origins: string[],
-  attach: (peer: Peer, request: Request, scope: Scope) => Promise<Attached>,
+  attach: Attach,
 ): Promise<Response> {
+  const h = hub()
+  const shell = h.shell ? { build: h.build ?? null } : undefined
   const hooks = (crossws: object) =>
     Promise.resolve(Object.assign(new Response('Upgrade required', { status: 426 }), { crossws }))
   const turnAway = (code: string, message: string, status: number, cause?: unknown) => {
@@ -28,6 +32,10 @@ export function socketRouteWith(
     // oxlint-disable only-throw-error -- crossws answers an upgrade with the Response its hook throws
     return hooks({
       upgrade() {
+        if (shell) {
+          const refusal = peerStatus(status)
+          throw shellResponse(shell.build, 'realtime', { code: refusal }, errorFrameStatus(refusal))
+        }
         throw Response.json(
           { e: failure },
           {
@@ -57,13 +65,38 @@ export function socketRouteWith(
       `R010: origin \`${origin ?? 'none'}\` may not open a socket: list it in \`realtime({ origins })\``,
       403,
     )
-  const peers = new Map<string, Promise<Pick<Attached, 'message' | 'close'>>>()
   const mux = new URL(request.url).searchParams.has('mux')
-  return hooks({
+  if (shell && mux) return turnAway('R010', 'Shell sockets use direct channels', 403)
+  return hooks(openPeers({ request, scope, attach, mux, shell }))
+}
+
+type Attach = (peer: Peer, request: Request, scope: Scope) => Promise<Attached>
+
+function openPeers({
+  request,
+  scope,
+  attach,
+  mux,
+  shell,
+}: {
+  request: Request
+  scope: Scope
+  attach: Attach
+  mux: boolean
+  shell: { build: string | null } | undefined
+}) {
+  const peers = new Map<string, Promise<Pick<Attached, 'message' | 'close'>>>()
+  return {
     open(peer: WsPeer) {
       const p: Peer = {
-        send: (t) => void peer.send(t),
-        close: (code, reason) => peer.close(code, reason),
+        send(t) {
+          const frame = shell ? socketFrame(shell.build, t) : t
+          if (frame === undefined) {
+            peer.send('null')
+            peer.close(1009)
+          } else peer.send(frame)
+        },
+        close: (code, reason) => peer.close(code, shell ? undefined : reason),
         backlog: () => peer.websocket?.bufferedAmount ?? 0,
       }
       peers.set(
@@ -73,7 +106,10 @@ export function socketRouteWith(
           : attach(p, request, scope)
         ).catch((e) => {
           const failure = realtimeFault(scope.options, e, '/_kerf/ws')
-          peer.close(1011, failure.ref ? `context failed [${failure.ref}]` : 'context failed')
+          peer.close(
+            1011,
+            !shell && failure.ref ? `context failed [${failure.ref}]` : 'context failed',
+          )
           return { message() {}, close() {} }
         }),
       )
@@ -85,5 +121,5 @@ export function socketRouteWith(
       void peers.get(peer.id)?.then((a) => a.close())
       peers.delete(peer.id)
     },
-  })
+  }
 }

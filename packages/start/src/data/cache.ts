@@ -3,6 +3,7 @@ import { client, peers } from '../router'
 import { fnOf, fns, go, net, registered, runtime, server } from './foundation'
 import { FnError, isRedirect, keyOf, redirect } from './primitives'
 import { isMade, produce, resetMade, share } from './draft'
+import { shellClient } from '../shell/client-policy'
 import { transport } from './transport'
 import type { Fn, OptimisticCache, QueryRef, Wire } from './types'
 
@@ -228,6 +229,16 @@ export function seed(list: Wire[] | null | undefined, since = Infinity) {
 }
 
 /** Mark entries with any of `tags` stale: entries with readers refetch now, the rest on their next read. */
+export function refreshShellQueries(keys?: ReadonlySet<string>) {
+  untrack(() => {
+    for (const e of entries.values()) {
+      if (keys && !keys.has(e.key)) continue
+      outdate(e)
+    }
+  })
+  owed()
+}
+
 export function staleTags(tags: string[], except: Set<string> = new Set()) {
   if (!tags.length) return
   ++clock
@@ -314,6 +325,30 @@ if ((import.meta as ImportMeta & { hot?: unknown }).hot)
 // In the browser, as the first route chunk that uses a query loads (before hydration): the page's entries, and
 // whatever a navigation brought before this module loaded.
 if (typeof document !== 'undefined' && !runtime.scope) {
+  if (!shellClient()) seedPage()
+  const later: string[] = []
+  const back = () => {
+    if (document.hidden) return
+    const old = performance.now() - FOCUS
+    untrack(() => {
+      for (const e of entries.values())
+        if (e.readers && e.has.value && e.at < old && !e.stale.value) outdate(e)
+    })
+    if (later.length) staleTags(later.splice(0))
+    owed()
+  }
+  if (!shellClient() && peers)
+    peers.onmessage = (m) => {
+      if (shellClient() || !m.data) return
+      if (document.hidden) later.push(...m.data)
+      else staleTags(m.data)
+    }
+  addEventListener('focus', back)
+  addEventListener('online', owed)
+  document.addEventListener('visibilitychange', back)
+}
+
+function seedPage() {
   client.seed = seed
   client.now = () => clock
   seed(client.seeds)
@@ -329,26 +364,4 @@ if (typeof document !== 'undefined' && !runtime.scope) {
     for (const x of l) seed(x.c, since)
     return Array.prototype.push.apply(landed, l)
   }
-  const later: string[] = []
-  const back = () => {
-    if (document.hidden) return
-    const old = performance.now() - FOCUS
-    // Showing and focus can come apart: one already stale is being read, and marking it again would throw that read away.
-    untrack(() => {
-      for (const e of entries.values())
-        if (e.readers && e.has.value && e.at < old && !e.stale.value) outdate(e)
-    })
-    if (later.length) staleTags(later.splice(0))
-    owed()
-  }
-  // A hidden tab reads nothing until it shows: every open tab refetching on every write is what this would cost otherwise.
-  if (peers)
-    peers.onmessage = (m) => {
-      if (!m.data) return // the session changed: run.tsx reloads
-      if (document.hidden) later.push(...m.data)
-      else staleTags(m.data)
-    }
-  addEventListener('focus', back)
-  addEventListener('online', owed)
-  document.addEventListener('visibilitychange', back)
 }

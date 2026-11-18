@@ -6,11 +6,12 @@ import { ErrorPage, NotFoundPage } from '../builtin'
 import { client, createRouteState, applyMatches, type Match, type NavigateOptions } from '../router'
 import { ERROR_ROUTE, FALLBACK_ROUTE, errorData, errorReference, isErrorRoute } from '../failure'
 import type { ClientRouteModule, ClientRoutes } from '../run'
-import { matchShell, type ShellConfig } from '../shell/routes'
+import { matchShell, setReturnRoutes, type ShellConfig } from '../shell/routes'
 import { admitLink, routeClicks } from './admission'
 import { crossfade } from './helpers'
 import { recover } from './outlet'
 import { App } from '../view'
+import { beforeShell } from './shell-bootstrap'
 import { readShell } from './shell-data'
 import { applyShellHead } from './shell-head'
 import { captureSharedElements } from './shared-elements'
@@ -187,15 +188,27 @@ class ShellNavigation {
     )
   }
 
-  private async read(url: URL, ctrl: AbortController, retry?: boolean) {
+  private async read(
+    url: URL,
+    {
+      from,
+      signal,
+      retry,
+    }: {
+      from: URL
+      signal: AbortSignal
+      retry?: boolean | undefined
+    },
+  ) {
     const local = this.local(url)
     const modules = new Map(local.ids.map((id) => [id, this.chunk(id, retry)]))
     for (const promise of modules.values()) void promise.catch(() => {})
     const admitted = await readShell({
       url,
+      from,
       routes: this.routes,
       local,
-      signal: ctrl.signal,
+      signal,
       schemas: async (id) => {
         const module = await modules.get(id)
         if (!module || !Object.hasOwn(module, 'routeData')) return
@@ -235,9 +248,17 @@ class ShellNavigation {
     if (this.current !== this.committed) this.current?.abort()
     const ctrl = (this.current = new AbortController())
     let url = asked
+    const visited = new Set<string>()
     try {
       for (let hops = 0; hops <= 5; hops++) {
-        const result = await this.read(url, ctrl, opts.reload)
+        const path = pathOf(url)
+        if (visited.has(path)) break
+        visited.add(path)
+        const result = await this.read(url, {
+          from: asked,
+          signal: ctrl.signal,
+          retry: opts.reload,
+        })
         if (ctrl.signal.aborted || this.current !== ctrl) return
         if ('status' in result) return await this.show(url, result, { ...opts, ctrl })
         url = new URL(result.path, location.origin)
@@ -250,11 +271,18 @@ class ShellNavigation {
   }
 }
 
-export function startShell(
+export async function startShell(
   routes: Routes,
   { container = document.getElementById('app')! }: { container?: Element },
 ) {
-  return new ShellNavigation(routes).mount(container)
+  setReturnRoutes({ table: routes.table, ...routes.shell })
+  const navigation = new ShellNavigation(routes)
+  if (Object.hasOwn(routes.shell, 'bootstrap'))
+    await beforeShell(routes.shell.bootstrap, container, () => {
+      navigation.mount(container)
+    })
+  else navigation.mount(container)
+  return navigation.route
 }
 
 function scrollToRoute(url: URL) {

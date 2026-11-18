@@ -314,8 +314,9 @@ export function shellRoutes(s, retry) {
   const loads = targets.map(
     ([id, file]) => `${JSON.stringify(id)}: () => import(${JSON.stringify(file)})`,
   )
-  return `export const build = ${JSON.stringify(build || null)}
-export const shell = ${JSON.stringify({ root, site })}
+  const bootstrap = s.bootstrap?.contract
+  return `${bootstrap ? `import bootstrap from ${JSON.stringify(bootstrap)}\n` : ''}export const build = ${JSON.stringify(build || null)}
+export const shell = { ...${JSON.stringify({ root, site })}${bootstrap ? ', bootstrap' : ''} }
 export const table = ${JSON.stringify(table)}
 export const load = { ${loads.join(', ')} }
 ${retryModule(retry, targets)}`

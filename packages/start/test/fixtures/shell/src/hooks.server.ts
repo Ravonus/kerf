@@ -44,8 +44,11 @@ export const handle: RequestHook = async (request, next) => {
     case 'oversize':
       first.values[1].name = markup.repeat(10_000)
       break
+    case 'redirect-param':
+      first.params = { id: '../outside' }
+      break
     case 'redirect-id':
-      first.id = '//foreign.invalid/'
+      first.id = 'unknownDestination'
       break
     case 'redirect-url':
       first.url = 'https://foreign.invalid/'

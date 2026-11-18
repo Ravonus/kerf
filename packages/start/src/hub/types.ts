@@ -51,6 +51,7 @@ export interface RealtimeOptions {
 
 /** What the app gets from `configure`, beside `src/realtime.server.ts`. */
 export interface HubOptions extends RealtimeOptions {
+  shell?: boolean | undefined
   build?: string | undefined
   dev?: boolean | undefined
   /** Queries marked `live: { required: true }`: without a real feed the server refuses to run (R015). */
@@ -143,6 +144,7 @@ export interface Conn {
 
 /** The realtime server of this process: channels, connections and the change feed. */
 export interface Hub {
+  readonly shell?: boolean | undefined
   readonly bus: Bus
   readonly limits: Limits
   /** `realtime({ share })`. */

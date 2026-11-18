@@ -12,8 +12,11 @@ import {
   type State,
 } from '@kerf-js/core'
 import { currentScope, FnError, skip, StartError, track, type Fn } from '../data'
-import type { ChannelStatus, ConnectOptions, Connection, SharedBox } from '../channel'
 import { shellClient } from '../shell/client-policy'
+import { hasChannelContract } from '../shell/realtime'
+import { hasShellSocket } from '../shell/realtime-transport'
+import { ShellDataError } from '../shell/operation'
+import type { ChannelStatus, ConnectOptions, Connection, SharedBox } from '../channel'
 import {
   acquire,
   hold,
@@ -24,6 +27,13 @@ import {
   type Join,
   type ListSpec,
 } from './socket'
+
+function shellRefusal(fn: Fn): ShellDataError | undefined {
+  if (!shellClient()) return
+  if (!hasChannelContract(fn)) return new ShellDataError('invalid')
+  if (!hasShellSocket()) return new ShellDataError('unavailable')
+  return undefined
+}
 
 const NONE: never[] = []
 type View = Join | undefined
@@ -83,27 +93,26 @@ export function connect(
   options?: ConnectOptions,
 ): Connection<Record<string, never>, Record<string, never>> {
   owned(fn)
-  const shell = shellClient()
-  if (shell || currentScope()) {
-    const closed = { value: (shell ? 'unavailable' : 'connecting') as ChannelStatus }
+  const refused = shellRefusal(fn)
+  if (currentScope() || refused) {
+    const closed = { value: (refused ? 'unavailable' : 'connecting') as ChannelStatus }
     return {
       status: closed,
       room: { value: undefined },
-      error: undefined,
+      error: refused,
       resets: { value: 0 },
       collect: () => ({ value: NONE }),
       on: () => () => {},
       onReset: () => () => {},
       send: () =>
         Promise.reject(
-          new FnError(
-            {
-              message: shell
-                ? 'Channels are unavailable in shell mode.'
-                : 'a channel has no socket on the server',
-            },
-            shell ? 501 : 500,
-          ),
+          refused ??
+            new FnError(
+              {
+                message: 'a channel has no socket on the server',
+              },
+              500,
+            ),
         ),
       retry() {},
     }
@@ -213,9 +222,10 @@ export function shared(fn: Fn, arg: unknown, options?: ConnectOptions): SharedBo
   b.pending = 0
   b.base = { v: initial, at: 0 }
   b.problem = state<unknown>(undefined)
-  const shell = shellClient()
-  if (shell || currentScope()) {
-    b.statusOf = { value: shell ? 'unavailable' : 'connecting' }
+  const refused = shellRefusal(fn)
+  if (currentScope() || refused) {
+    b.statusOf = { value: refused ? 'unavailable' : 'connecting' }
+    if (refused) b.problem.value = refused
     b.view = state<View>(undefined)
     return b
   }

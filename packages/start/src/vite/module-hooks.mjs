@@ -26,7 +26,13 @@ import {
   cardFonts,
 } from './entries.mjs'
 import { stripServerExports, serverExports } from './syntax.mjs'
-import { isServerModule, definesFns, withIds, clientStubs } from './server-functions.mjs'
+import {
+  isServerModule,
+  definesFns,
+  withIds,
+  clientStubs,
+  functionContracts,
+} from './server-functions.mjs'
 import { here, V, DEFAULT_FONTS, ASSETS, ISLAND, ENTRY_SHEETS } from './shared.mjs'
 
 /** Virtual modules that are an app file's default export: `src/<name>.server.ts`, or `undefined` without one. */
@@ -101,7 +107,7 @@ export const load = (s) => ({
         timeout: s.options.timeout,
         hold: s.options.hold,
       })
-    if (which === V.server) return serverEntry(s.clientEntry(), s.dev, s.root)
+    if (which === V.server) return serverEntry(s.clientEntry(), s.dev, s.root, s.bootstrap)
     if (which === V.fns)
       return s.serverModules.map((f) => `import ${JSON.stringify(s.abs(f))}`).join('\n') + '\n'
     if (CONFIG_FILES.has(which)) return configModule(s, which)
@@ -117,12 +123,17 @@ export const load = (s) => ({
 })
 
 export const transform = (s) => ({
-  filter: { id: /\.[jt]sx?(\?kerf-assets)?$|\/vite\/dist\/client\/client\.mjs$/ },
+  filter: {
+    id: /\.[jt]sx?(\?kerf-assets)?$|\/[\s\S]+\.[cm][jt]s$|\/vite\/dist\/client\/client\.mjs$/,
+  },
   async handler(code, file) {
     const path = file.replace(/\?.*$/, '')
     if (file.endsWith(ASSETS))
       return { code: await assetsOnly(this, code, path, s.root, s.words), map: null }
-    if (path.endsWith('/client.mjs')) return s.dev ? markLinks(s.root) + code : undefined
+    if (!s.shell && /\.[cm][jt]s$/.test(path) && !path.endsWith('/vite/dist/client/client.mjs'))
+      return
+    if (path.endsWith('/vite/dist/client/client.mjs'))
+      return s.dev ? markLinks(s.root) + code : undefined
     if (path.includes('/node_modules/')) return
     const client = this.environment?.config.consumer === 'client'
     const shell = s.shell
@@ -131,10 +142,15 @@ export const transform = (s) => ({
     const rel = relative(s.root, path).split('\\').join('/')
     if (client && (/\.http\.[jt]s$/.test(rel) || rel.startsWith('src/hooks.server.')))
       this.error(`Q012: ${rel} runs only on the server; do not import it from client code`)
+    if (shell && !rel.startsWith('..') && code.includes('@kerf-js/start')) {
+      const findings = functionContracts(code, rel)
+      if (findings.length)
+        this.error(findings.map(({ name, why }) => `Q021: ${rel} \`${name}\`: ${why}`).join('\n'))
+    }
     if (isServerModule(rel)) {
       const out = client
-        ? clientStubs(code, path, rel, await s.shapeTable(this))
-        : withIds(code, path, rel)
+        ? clientStubs(code, path, rel, await s.shapeTable(this), shell)
+        : withIds(code, path, rel, shell)
       if (client && s.dev) s.stubs.set(path, out)
       return out === code ? undefined : { code: out, map: null }
     }
