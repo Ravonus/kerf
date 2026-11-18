@@ -3,6 +3,14 @@
 Every `@kerf-js` package is released together, at one version. Early releases (0.1.x) can change APIs between minor
 versions.
 
+## Unreleased
+
+- **Breaking.** A missing function is Q009 (404), including `serverCall` and extension calls. Q019 is reserved for rate
+  limits (429). Queue infrastructure errors are J005. J004 identifies a job recorded as dead.
+  For one release, Q019 with 404 and queue-operation J004 are documented as deprecated legacy meanings for mixed
+  deployments. Update alert and client matchers to use the new codes. Wrong function transports use Q010, and a stale
+  realtime connection or join uses R025.
+
 ## 0.1.0
 
 - The first release as **Kerf**. The framework was published as `@weft-js/*` up to 0.1.4; it was renamed because

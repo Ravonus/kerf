@@ -286,7 +286,7 @@ function frame(h: Hub, c: Sock, text: string) {
   const j = c.joins.get(f[1])
   if (f[0] === 'l') return j && leave(h, c, j)
   if (f[0] !== 'm' || typeof f[2] !== 'number' || typeof f[3] !== 'string') return
-  if (!j) return send(c, ['a', f[1], f[2], { code: 'Q009', message: 'not joined' }])
+  if (!j) return send(c, ['a', f[1], f[2], { code: 'R025', message: 'not joined' }])
   const per = j.fn.def.limits?.perSecond
   if (per && !take(j.bucket, per, per * 2)) {
     return slow(h, c, `${per} messages a second to \`${j.fn.$id}\``)

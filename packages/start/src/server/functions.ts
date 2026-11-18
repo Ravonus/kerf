@@ -30,11 +30,11 @@ export async function serverFunction(
     )
   let fromForm = false
   if (f.kind === 'stream')
-    return fail('Q009', `Q009: \`${id}\` is a stream: its client reads it over \`/_kerf/rt\``, 405)
+    return fail('Q010', `Q010: \`${id}\` is a stream: its client reads it over \`/_kerf/rt\``, 405)
   try {
     if (f.kind === 'query') {
       if (request.method !== 'GET' && request.method !== 'HEAD')
-        return fail('Q009', `Q009: \`${id}\` is a query: GET only`, 405)
+        return fail('Q010', `Q010: \`${id}\` is a query: GET only`, 405)
       const raw = url.searchParams.get('i')
       const e = await exec.fetchQuery(scope, f, raw === null ? undefined : JSON.parse(raw))
       return out({ v: e.v, t: e.tags })

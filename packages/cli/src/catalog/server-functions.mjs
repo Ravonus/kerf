@@ -69,8 +69,7 @@ export const serverFunctions = [
     code: 'Q009',
     severity: 'error',
     by: 'start',
-    catches:
-      "`/_kerf/fn/<id>` names no function: the page is older than the server, or the module isn't a server module",
+    catches: 'An HTTP or executor call names a missing server function (404)',
     fix: 'Reload; keep `query`/`mutation` exports in server modules',
   },
   {
@@ -78,8 +77,8 @@ export const serverFunctions = [
     severity: 'error',
     by: 'start',
     catches:
-      'A mutation request without the CSRF proof (POST, JSON, `x-kerf: 1`, same origin): 403',
-    fix: 'Call mutations through their stub, not a hand-made `fetch` or form',
+      'A server function was called through the wrong method or transport (405), or a mutation request lacks CSRF proof (403)',
+    fix: 'Call the function through its generated stub',
   },
   {
     code: 'Q017',

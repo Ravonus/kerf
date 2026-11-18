@@ -116,7 +116,7 @@ export const fetchQuery = (scope: Scope, fn: Fn, input: unknown): Promise<ScopeE
 function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
   if (fn.kind !== 'query')
     throw new StartError(
-      'Q009',
+      'Q010',
       `\`${fn.$id}\` is a mutation, not a query`,
       'call it as a function, from a handler',
     )
@@ -310,7 +310,7 @@ export async function runMutation(
 ): Promise<Answer> {
   if (fn.kind !== 'mutation')
     throw new StartError(
-      'Q009',
+      'Q010',
       `\`${fn.$id}\` is a query, not a mutation`,
       `\`${fn.$id.replace(/\..*$/, '')}.fetch(input)\``,
     )
@@ -372,7 +372,7 @@ async function refreshed(scope: Scope, refresh: [string, unknown][], tags: strin
 export async function callById(scope: Scope, id: string, input: unknown): Promise<unknown> {
   const fn = fns.get(id)
   if (!fn || (fn.kind !== 'query' && fn.kind !== 'mutation'))
-    throw new StartError('Q019', `no query or mutation \`${id}\``, 'call one by its `$id`', {
+    throw new StartError('Q009', `no query or mutation \`${id}\``, 'call one by its `$id`', {
       status: 404,
     })
   return fn.kind === 'query'

@@ -941,7 +941,8 @@ export const signIn = mutation({
 | J001                                 | A cron job threw                                                         | Fix the job; it runs again when next due                                |
 | J002                                 | A cron schedule that doesn't parse                                       | Five fields: `minute hour day month weekday`                            |
 | J003                                 | A queued job threw and will run again after its backoff                  | Fix the job; it retries until `retries` runs out                        |
-| J004                                 | A queued job is dead: out of retries, or no job by its name              | Fix it and enqueue again; the queue keeps the dead job and its error    |
+| J004                                 | A queued job is dead                                                      | Inspect the dead job and its last attempt before redriving it           |
+| J005                                 | A queue operation failed                                                  | Restore the queue and check lease ownership                            |
 | J006                                 | `enqueue` got input the job's schema rejects (400)                       | Enqueue what the schema accepts                                         |
 | E001                                 | `sendEmail` in production with no mailer                                 | Set `RESEND_API_KEY` or `SMTP_URL`, or export a mailer                  |
 | E002                                 | An email with no sender                                                  | Set `EMAIL_FROM`, or pass `from`                                        |
@@ -1455,7 +1456,7 @@ from the environment only: one written into the config or a host file is E008. A
 | Q015                                 | `src/db/schema.ts` changed since the last generate                       | `kerf db generate`                                                      |
 | Q016 (503)                           | The database is down, or a migration failed                              | Start it, check `DATABASE_URL`, or fix the migration; no restart needed |
 | Q018 (413)                           | A request body over `site.limits`                                        | Send less, or raise `site.limits.body` / `.upload`                      |
-| Q019 (404)                           | `api.call` / `serverCall` named no query or mutation                     | Call one by its `$id`                                                   |
+| Q009 (404)                           | `api.call` / `serverCall` named no query or mutation                     | Call one by its `$id`                                                   |
 | Q020 (500)                           | `serverCall` outside a request                                           | Call it from a query, mutation, `load` or extension route               |
 | A001                                 | The auth secret is missing or under 32 characters in production          | Set `BETTER_AUTH_SECRET`                                                |
 | A002 (401)                           | `auth: 'user'` (or a mutation in an app with auth) called with no session | Sign in first, or guard the route in a layout's `load`                  |

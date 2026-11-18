@@ -93,7 +93,7 @@ export async function handleRoute(
     const c = h.find(body.k)
     const user = c && ((await scope.ctx()) as { user?: { id?: string } }).user?.id
     if (!c || c.user !== user)
-      return refuse('Q009', 'Q009: no such realtime connection (reconnect with the whole set)', 404)
+      return refuse('R025', 'R025: no such realtime connection (reconnect with the whole set)', 404)
     await h.change(c, request, scope.options, body)
     return new Response(null, { status: 204 })
   }

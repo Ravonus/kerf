@@ -186,10 +186,14 @@ export const runtimeDiagnostics = [
   startCode(
     'Q019',
     'function',
-    'limit or resolve',
-    'A function exceeded its rate limit (429), or a function ID could not be resolved by the executor (404)',
-    'Honor Retry-After for rate limits. For a missing function, check the ID and deploy and reload the caller',
-    { status: 429 },
+    'limit',
+    'A function exceeded its rate limit (429)',
+    'Honor Retry-After or review the function limit',
+    {
+      status: 429,
+      notes:
+        'Deprecated legacy meaning (for this release): an executor lookup could emit Q019 with 404. Use Q009 for missing functions.',
+    },
   ),
   startCode(
     'Q020',
@@ -223,16 +227,21 @@ export const runtimeDiagnostics = [
   startCode(
     'J004',
     'job',
-    'dead or queue',
-    'A job exhausted its attempts, or a queue operation failed',
-    'Inspect the dead job or restore the queue, according to the reported operation',
+    'dead',
+    'A job was recorded as dead',
+    'Inspect the dead job and its last attempt before redriving it',
+    {
+      notes:
+        'Deprecated legacy meaning (for this release): a queue infrastructure failure could emit J004. Match J005 for queue infrastructure failures.',
+    },
   ),
-  reserved(
+  startCode(
     'J005',
     'job',
     'queue infrastructure',
     'A job queue infrastructure operation failed',
     'Restore queue connectivity and check lease ownership before redriving work',
+    { introduced: '0.1.1' },
   ),
   startCode(
     'J006',
@@ -386,9 +395,9 @@ export const runtimeDiagnostics = [
 export const runtimeMetadata = {
   Q009: {
     surface: 'function',
-    phase: 'resolve or method',
+    phase: 'resolve',
     status: 404,
     notes:
-      'The existing HTTP missing-function response uses Q009. The executor also has a historical Q019 missing-function path.',
+      'The executor previously used Q019 with 404. For mixed-version servers, match that status and code alongside Q009 for this release.',
   },
 }
