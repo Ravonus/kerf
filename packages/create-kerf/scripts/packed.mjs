@@ -12,6 +12,7 @@ import { scaffold } from '../src/index.mjs'
 import { fnId } from '../../start/src/vite.mjs'
 import { hostPlatform } from '../../core/scripts/platform-package.mjs'
 import { hotChecks, prepare } from './hot-checks.mjs'
+import { failureFixture, failureServed } from './packed/failures.mjs'
 import { mediaApp, mediaServed } from './packed/media.mjs'
 import { payApp, payServed, mockStripe } from './packed/pay.mjs'
 import { packWithAddon } from './pack-all.mjs'
@@ -224,6 +225,7 @@ async function verifyBuilt({
     }
     if (status !== 200) throw new Error(`${name}: the built server answered ${status}`)
     log('built server: pass')
+    if (name === 'default' || wasm) await failureServed(port, log)
     if (media) await mediaServed(app, port, log)
     if (rust) await rustServed(port, log)
     if (pay) await payServed(port, sessions, env.STRIPE_WEBHOOK_SECRET, log)
@@ -242,6 +244,7 @@ await pool(
     const log = (text) => console.log(`[packed] ${name}: ${text}`)
     const sh = (cmd, args, cwd) => run(cmd, args, cwd, rust ? process.env : noRust)
     scaffold(app, options)
+    if (name === 'default' || wasm) failureFixture(app)
     const pkg = pin(JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')), tarballs)
     // pnpm resolves the workspace overrides; npm's pinning path would consume every `add` argument.
     delete pkg.overrides

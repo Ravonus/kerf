@@ -11,6 +11,14 @@ versions.
   deployments. Update alert and client matchers to use the new codes. Wrong function transports use Q010, and a stale
   realtime connection or join uses R025.
 
+- **Breaking.** Production Start diagnostics default to JSON lines. Set `site.log: 'text'` for text collectors.
+  `/_kerf/health` now reports liveness. Move dependency-aware load balancer checks to `/_kerf/ready`.
+- **Breaking.** The generated Node listener waits for plugin startup. Startup rejection, an unowned crash,
+  failed cleanup and drain timeout now terminate it with a nonzero status. Run it under a supervisor.
+- **Breaking.** Production Start responses suppress exception and validator details. Use the public
+  reference to find the server log. Raw throws use the Kerf JSON error envelope, and declared function
+  errors publish only schema-validated JSON data.
+
 ## 0.1.0
 
 - The first release as **Kerf**. The framework was published as `@weft-js/*` up to 0.1.4; it was renamed because

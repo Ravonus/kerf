@@ -876,11 +876,42 @@ Lazy images and inert markup do not create hints. Routes with media hints render
 their current shell before sending the head, rather than caching an artwork URL
 across later content publications. A streamed image beyond the shell is not hinted.
 
-### Stopping a Node server
+### Production failures and probes
 
-On SIGTERM or SIGINT, Start stops its schedule, closes realtime connections,
-waits for running jobs and lets the HTTP server drain. The process exits with
-code 0 after both have finished, or after the HTTP graceful window and the
-jobs have finished. `SERVER_SHUTDOWN_TIMEOUT` sets the window in seconds;
-its default is 5. A second signal forces an immediate exit. Close application
-resources in your own shutdown handlers if they require cleanup.
+Use `GET /_kerf/health` for liveness. It returns `{ ok: true }` without checking dependencies.
+Use `GET /_kerf/ready` for traffic admission. It returns 503 until startup completes, during drain,
+or when a database probe or required realtime feed is unavailable. Production probes omit driver
+messages. Move existing dependency-aware checks from `/_kerf/health` to `/_kerf/ready`.
+
+Unexpected failures use safe copy, a code, a status and an opaque `ref`. Existing Start clients can
+read the same identifier as `reference`. If the HTTP response has yet to commit, `x-kerf-error`
+carries the response's failure reference. A stream can send a later failure with its own reference
+after headers have been sent. Search stderr for the matching `reference` to see operator detail.
+Production diagnostics are JSON lines by default. Development diagnostics are text. `site.log`
+overrides the format in either mode.
+
+Thrown raw HTTP and request-hook exceptions under Start return a 500 JSON envelope
+`{ e: { code, status, message, ref, reference } }` in production. Returned app Responses keep
+their own body and status. Function and realtime errors keep their envelopes and use safe messages.
+Function `raise` data must satisfy the function's declared schema and serialize as plain JSON.
+The field messages explicitly supplied through `invalid` are public. Standard Schema failures
+use generic field copy in production. Native forms clear submitted values on a server fault.
+
+### Starting and stopping a Node server
+
+The generated Nitro Node server awaits explicit and discovered Nitro plugins in Nitro order,
+then starts the Start application. It awaits an optional `startup()` export in
+`src/hooks.server.ts` before opening the listener. That export may return a cleanup function.
+`SERVER_STARTUP_TIMEOUT` bounds initialization in seconds and defaults to 5. Initialization
+failure emits `E_STARTUP` and exits 1 after bounded cleanup.
+
+SIGTERM or SIGINT stops admissions, schedules and queue claims, closes realtime connections
+and drains active work. `SERVER_SHUTDOWN_TIMEOUT` is the total drain budget in seconds and defaults
+to 5. Clean shutdown exits 0. A failed step or expired deadline emits `E_SHUTDOWN` and exits 1.
+A second signal forces an exit with 128 plus its signal number, or 1 during fatal process recovery.
+
+Node logs unhandled rejections and uncaught exceptions as `E_PROCESS` and exits 1.
+An unhandled rejection allows bounded drain. An uncaught exception is written synchronously
+before prompt exit. Use a supervisor to restart the process. `kerf start` forwards signals
+and propagates the child status. These process rules apply to the generated Nitro Node listener.
+Embedded handlers, development workers and other presets retain their host's process policy.

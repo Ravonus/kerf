@@ -1253,17 +1253,19 @@ The full key list is [`kerf docs config`](https://github.com/Ravonus/kerf/blob/m
 
 ## Running in production
 
-**Health.** `GET /_kerf/health` answers 200 when every database answers `select 1` (within 2 s) and live data is
-delivered as `live: { required }` needs, and 503 otherwise, as JSON: `{ ok, db: [{ dialect, ok, ms }], live }`. It
-runs before migrations, so a failed one still reports. Point a load balancer or uptime check at it.
+**Probes.** `GET /_kerf/health` is liveness and returns `{ ok: true }` while the listener can answer.
+Use `GET /_kerf/ready` for load-balancer admission. Readiness requires completed startup, an active listener,
+available database probes and any required realtime feed. It returns 503 during drain or when a required check fails.
 
-**Logs.** Problems the server finds go to stderr, one line each. `site.log: 'json'` makes them JSON objects (`time`,
-`level`, `code`, `message`, `route`, `requestId`) for a log collector. Every response carries `x-request-id`, and every
-line from that request names it, so a user's report leads to the line. Behind `site.trustProxy`, a proxy's own
-`x-request-id` is kept.
+**Logs.** Start writes diagnostics to stderr as JSON lines in production and readable text in development.
+Set `site.log` to `'text'` or `'json'` to override. JSON carries `time`, `level`, `code`, `message` and available
+`route`, `requestId` and `reference` fields. Use `x-request-id` to find request activity and the failure reference
+to find the matching diagnostic. With `site.trustProxy`, a valid proxy-provided request ID is retained.
 
-**Shutdown.** On SIGTERM (a deploy or scale-down) the server stops taking requests and finishes the ones it has, the
-schedule stops, queued jobs that are running finish, and realtime connections close as "going away", so open pages reconnect to an instance that's staying.
+**Node startup and shutdown.** The generated Node server awaits Nitro plugins and the optional `startup` hook
+in `src/hooks.server.ts` before listening. A failed initializer exits 1. SIGTERM and SIGINT stop admissions,
+realtime, schedules and queue claims, then allow active work to finish. A clean stop exits 0. Cleanup failure,
+timeout or an unowned process fault exits nonzero. See `kerf docs start` for deadlines and process exit codes.
 
 **Scheduled jobs.** `src/cron.server.ts` default-exports the jobs:
 
