@@ -325,7 +325,7 @@ export function computation(
     cleanups: null,
     owner,
   }
-  const context = (fn as typeof fn & { [CONTEXT]?: Owner['context'] })[CONTEXT]
+  const context = (fn as { [CONTEXT]?: Owner['context'] })[CONTEXT] ?? owner?.contextOverride
   if (context) node.context = context
   if (DEV && devComponent.label) node.n = devComponent.label
   if (owner) adopt(node)
