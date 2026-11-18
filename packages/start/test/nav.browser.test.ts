@@ -199,6 +199,44 @@ test('a click captured before hydration goes through the router, not a page load
   await page.close()
 })
 
+test('Back before the reloaded runtime boots renders the history entry', async () => {
+  const { page, errors } = await open('/')
+  await page.getByRole('link', { name: 'About' }).click()
+  await page.getByRole('heading', { name: 'About us' }).waitFor()
+
+  const runtime = '**/run.tsx*'
+  const release = await hold(page, runtime)
+  try {
+    await Promise.all([page.waitForRequest(runtime), page.reload({ waitUntil: 'commit' })])
+    await page.getByRole('heading', { name: 'About us' }).waitFor()
+    const entries = await page.evaluate(() => {
+      window.__same = true
+      return history.length
+    })
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          addEventListener('popstate', () => resolve(), { once: true })
+          history.back()
+        }),
+    )
+    expect(new URL(page.url()).pathname).toBe('/')
+    expect(await page.evaluate(() => performance.getEntriesByType('navigation')[0]?.name)).toBe(
+      url + '/about',
+    )
+    expect(await page.getByRole('heading', { name: 'About us' }).isVisible()).toBe(true)
+    expect(await page.evaluate(() => window.__kerf?.hydrated)).toBeUndefined()
+
+    release()
+    await page.getByRole('heading', { name: 'Welcome' }).waitFor({ timeout: 15_000 })
+    expect(await page.evaluate(() => [window.__same, history.length])).toEqual([true, entries])
+    expect(errors).toEqual([])
+  } finally {
+    release()
+    await page.close()
+  }
+})
+
 test('Back then Forward before anything lands stays on the page, and leaves nothing to land', async () => {
   const { page, errors } = await open('/')
   await link(page, '/about')
