@@ -220,6 +220,13 @@ describe('legacy error compatibility', () => {
       ref: reference,
       stack: error.stack,
     })
+    const replayed = Object.assign(new Error(secret), { reference })
+    expect(
+      reportFailure(scope, options, replayed, { status: 503, code: 'E_STREAM' }),
+    ).toMatchObject({
+      code: 'Q016',
+      ref: reference,
+    })
     expect(reports).toEqual(['Q016'])
   })
 })

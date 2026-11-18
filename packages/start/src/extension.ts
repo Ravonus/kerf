@@ -28,7 +28,7 @@ export interface ServerExtension {
   handle?(request: Request, path: string, api: ExtensionApi): Promise<Response> | Response
   /** Merged into `ctx`, after the app's own. It may replace `user` (a caller with a token) and may look things up first. */
   context?(ctx: Context): object | Promise<object>
-  /** Before a function's `run`. Throw to refuse: an error with `answer: { code, message, status }` reaches the client as it is. */
+  /** Before a function's `run`. Throw to refuse: a legacy `answer` can supply a code and status. Start projects the public message. */
   guard?(
     fn: { id: string; kind: string; def: Record<string, unknown> },
     ctx: Context,

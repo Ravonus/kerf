@@ -30,8 +30,13 @@ export function errorReference(): string {
 }
 
 export function referenceFrom(error: unknown): string | undefined {
-  const value = error instanceof Error && (error as Error & { reference?: unknown }).reference
-  return isErrorReference(value) ? value : undefined
+  try {
+    const value =
+      error instanceof Error && Object.getOwnPropertyDescriptor(error, 'reference')?.value
+    return isErrorReference(value) ? value : undefined
+  } catch {
+    return undefined
+  }
 }
 
 /** The opaque reference format shared by Start's server and browser. */

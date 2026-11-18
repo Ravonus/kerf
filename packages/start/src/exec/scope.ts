@@ -1,4 +1,5 @@
 import type { FailureCapture } from '../server/failure-value'
+import type { WireFailure } from '../server/public-fault'
 import type { MediaAsset } from '@kerf-js/core/media'
 import type { ServerExtension } from '../extension'
 import { StartError, type Context } from '../data'
@@ -24,7 +25,7 @@ export interface Scope {
   failure: {
     reference?: string
     capture?: FailureCapture
-    references?: Set<string>
+    results?: Map<string, WireFailure>
     show?: (error: unknown) => Error
   }
   entries: Map<string, ScopeEntry>
