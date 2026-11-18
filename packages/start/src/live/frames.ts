@@ -1,4 +1,5 @@
 import { DEV } from '@kerf-js/core'
+import { ShellDataError } from '../shell/operation'
 import { cache, FnError } from './api'
 import type { Sub } from './sub-types'
 
@@ -38,6 +39,9 @@ export function update(event: string, d: Row, byN: Map<number, Sub>) {
     const s = byN.get(d[0])
     const failure = d[1] as { code?: string; status?: number }
     if (s)
-      s.error.value = new FnError(failure, failure.status ?? (failure.code === 'A002' ? 401 : 500))
+      s.error.value =
+        failure instanceof ShellDataError
+          ? failure
+          : new FnError(failure, failure.status ?? (failure.code === 'A002' ? 401 : 500))
   }
 }

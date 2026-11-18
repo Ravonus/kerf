@@ -83,7 +83,7 @@ export function createHub(options: HubOptions): Hub {
     connections.bye(c, retry),
   )
   const source = options.changes
-  const { fail, change } = createSubscriptions({ limits, source, deliver })
+  const { fail, change } = createSubscriptions({ limits, source, deliver, shell: options.shell })
   const presence = createPresence({
     channels,
     channel,

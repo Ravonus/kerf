@@ -43,7 +43,39 @@ function shellSite(z) {
   return {
     render: z.literal('shell').optional(),
     routeRedirects: z
-      .record(z.string().regex(/^[a-zA-Z][\w-]{0,63}$/), z.string().regex(/^\/(?![/\\])/))
+      .record(
+        z.string().regex(/^[a-zA-Z][\w-]{0,63}$/),
+        z.union([
+          z.string().regex(/^\/(?![/\\])/),
+          z.strictObject({
+            path: z
+              .string()
+              .max(2048)
+              .regex(/^\/(?![/\\])/),
+            params: z
+              .record(
+                z.string().regex(/^[a-zA-Z][\w-]{0,63}$/),
+                z
+                  .string()
+                  .min(1)
+                  .max(256)
+                  .refine((rule) => {
+                    try {
+                      new RegExp(rule, 'u')
+                      return true
+                    } catch {
+                      return false
+                    }
+                  }, 'use a regular expression source'),
+              )
+              .optional(),
+            returnTo: z
+              .string()
+              .regex(/^[a-zA-Z][\w-]{0,63}$/)
+              .optional(),
+          }),
+        ]),
+      )
       .optional(),
   }
 }

@@ -23,7 +23,7 @@ export function start(
   options: { container?: Element; eager?: boolean; shell?: boolean } = {},
 ): ReturnType<typeof run> {
   if (routes.shell) {
-    markShellClient()
+    markShellClient(routes.build ?? null)
     const shell = routes.shell
     return import('./run/shell').then((module) => module.startShell({ ...routes, shell }, options))
   }

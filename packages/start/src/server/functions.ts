@@ -7,6 +7,9 @@ import type { HandlerOptions } from './types'
 import { functionFault } from './function-fault'
 import { failureMessage } from './public-fault'
 import { ERROR_HEADER } from '../failure'
+import { admitValue, errorFrameStatus, peerStatus, shellResponse, tags } from '../shell/operation'
+import { SHELL_MEDIA } from '../shell/wire'
+import type { Answer, Fn } from '../data/types'
 
 /** `/_kerf/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
 export async function serverFunction(
@@ -15,13 +18,19 @@ export async function serverFunction(
   request: Request,
   scope: Scope,
 ): Promise<Response> {
-  const { out, fail } = functionResponses(scope, options.dev)
+  const shell = options.site?.render === 'shell'
+  const segment = url.pathname.slice('/_kerf/fn/'.length)
   let id: string
   try {
-    id = decodeURIComponent(url.pathname.slice('/_kerf/fn/'.length))
+    id = decodeURIComponent(segment)
   } catch {
-    return fail('Q002', 'Invalid function ID encoding', 400)
+    return functionResponses(scope, options, segment).fail(
+      'Q002',
+      'Invalid function ID encoding',
+      400,
+    )
   }
+  const { out, fail } = functionResponses(scope, options, id)
   const f = fns.get(id)
   if (!f)
     return fail(
@@ -31,6 +40,7 @@ export async function serverFunction(
     )
   if (f.kind !== 'query' && f.kind !== 'mutation')
     return fail('Q010', `Q010: \`${id}\` uses the realtime transport`, 405)
+  if (shell && !f.def.output) return fail('Q009', 'Missing operation contract', 404)
   let fromForm = false
   try {
     if (f.kind === 'query') {
@@ -44,7 +54,7 @@ export async function serverFunction(
         return fail('Q002', 'Invalid JSON input', 400)
       }
       const e = await exec.fetchQuery(scope, f, input)
-      return out({ v: e.v, t: e.tags })
+      return await result({ v: e.v, t: e.tags }, f, out, shell)
     }
     if (request.method !== 'POST')
       return fail('Q010', `Q010: mutation \`${id}\` needs POST`, 405, 'POST')
@@ -60,43 +70,78 @@ export async function serverFunction(
         `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-kerf: 1\`, same origin): call it through its stub`,
         403,
       )
-    const read = await limited(request, bodyLimit(options.site?.limits, request))
-    let body: { i?: unknown; f?: [string, unknown][]; c?: 1 }
-    try {
-      body = multipart ? await multipartBody(read) : await read.json()
-      if (!body || typeof body !== 'object' || Array.isArray(body))
-        return fail('Q002', 'Invalid server function body', 400)
-    } catch {
-      return fail('Q002', 'Invalid server function body', 400)
-    }
+    const body = await mutationBody(request, options, multipart)
+    if (!body) return fail('Q002', 'Invalid server function body', 400)
     fromForm = !!body.c
-    // A token opens only the functions listed for it, and what a mutation refreshes would run as that token too.
     const refresh =
-      Array.isArray(body.f) && !request.headers.has('authorization') ? body.f.slice(0, 200) : []
+      !shell && Array.isArray(body.f) && !request.headers.has('authorization')
+        ? body.f.slice(0, 200)
+        : []
     const answer = await exec.runMutation(scope, f, body.i, refresh, fromForm)
-    if (options.dev && sessionChanged(scope.headers))
+    if (!shell && options.dev && sessionChanged(scope.headers))
       options.onDiagnostic?.({
         code: 'A004',
         severity: 'warning',
         message: `\`${id}\` changed the session cookie without a redirect: the tab keeps what the last session cached. \`redirect()\` after it`,
       })
-    return out(answer)
+    return await result(answer, f, out, shell)
   } catch (error) {
-    if (isRedirect(error))
+    if (!shell && isRedirect(error))
       return out({ r: error.href, ...(sessionChanged(scope.headers) && { x: 1 }) })
     const e = await functionFault(error, scope, f, fromForm)
     return out({ e }, e.status, 'reference' in e ? e.reference : undefined)
   }
 }
 
-function functionResponses(scope: Scope, dev: boolean | undefined) {
+type MutationBody = { i?: unknown; f?: [string, unknown][]; c?: 1 }
+
+async function mutationBody(request: Request, options: HandlerOptions, multipart: boolean) {
+  const read = await limited(request, bodyLimit(options.site?.limits, request))
+  try {
+    const value: unknown = multipart ? await multipartBody(read) : await read.json()
+    if (value && typeof value === 'object' && !Array.isArray(value)) return value as MutationBody
+  } catch {
+    return undefined
+  }
+  return undefined
+}
+
+async function result(
+  answer: Answer,
+  fn: Fn,
+  out: ReturnType<typeof functionResponses>['out'],
+  shell: boolean,
+) {
+  if (!shell) return out(answer)
+  const value = await admitValue(fn.def.output, answer.v)
+  if (!tags(answer.t)) throw new Error('Invalid shell operation tags')
+  return out({ v: value, t: answer.t })
+}
+
+function functionResponses(scope: Scope, options: HandlerOptions, id: string) {
+  const { site, build, dev } = options
+  const operation = 'fn:' + id
+  const shell = site?.render === 'shell'
+  const error = (status: number) => {
+    const code = peerStatus(status)
+    return shellResponse(build ?? null, operation, { code }, errorFrameStatus(code))
+  }
   const out = (body: unknown, status = 200, reference?: string) => {
-    const res = withHeaders(Response.json(body, { status }), scope)
+    const response = shell
+      ? status === 200
+        ? shellResponse(build ?? null, operation, body)
+        : error(status)
+      : Response.json(body, { status })
+    const res = withHeaders(response, scope)
     res.headers.set('cache-control', 'no-store') // a function's answer is never stored, whatever it set
-    if (reference) res.headers.set(ERROR_HEADER, reference)
+    if (shell) {
+      res.headers.set('content-type', SHELL_MEDIA)
+      res.headers.delete(ERROR_HEADER)
+    } else if (reference) res.headers.set(ERROR_HEADER, reference)
     return res
   }
   const fail = (code: string, message: string, status: number, allow?: string) => {
+    if (shell) return error(status)
     const response = out(
       {
         e: {

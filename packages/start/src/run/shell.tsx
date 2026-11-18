@@ -6,11 +6,12 @@ import { ErrorPage, NotFoundPage } from '../builtin'
 import { client, createRouteState, applyMatches, type Match, type NavigateOptions } from '../router'
 import { ERROR_ROUTE, FALLBACK_ROUTE, errorData, errorReference, isErrorRoute } from '../failure'
 import type { ClientRouteModule, ClientRoutes } from '../run'
-import { matchShell, type ShellConfig } from '../shell/routes'
+import { matchShell, setReturnRoutes, type ShellConfig } from '../shell/routes'
 import { admitLink, routeClicks } from './admission'
 import { crossfade } from './helpers'
 import { recover } from './outlet'
 import { App } from '../view'
+import { beforeShell } from './shell-bootstrap'
 import { readShell } from './shell-data'
 import { applyShellHead } from './shell-head'
 import { captureSharedElements } from './shared-elements'
@@ -250,11 +251,18 @@ class ShellNavigation {
   }
 }
 
-export function startShell(
+export async function startShell(
   routes: Routes,
   { container = document.getElementById('app')! }: { container?: Element },
 ) {
-  return new ShellNavigation(routes).mount(container)
+  setReturnRoutes({ table: routes.table, root: routes.shell.root })
+  const navigation = new ShellNavigation(routes)
+  if (routes.shell.bootstrap)
+    await beforeShell(routes.shell.bootstrap, container, () => {
+      navigation.mount(container)
+    })
+  else navigation.mount(container)
+  return navigation.route
 }
 
 function scrollToRoute(url: URL) {

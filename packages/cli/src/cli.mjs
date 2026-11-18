@@ -87,6 +87,7 @@ const usage = `usage: kerf <command> [--json] [--root <dir>]
   capture <cmd>       stills at scroll stops, frame times, contact sheets and scene poster bakes in headless Chrome
                       on the GPU, from @kerf-js/capture (\`kerf capture help\`)
   lsp                 a language server for editors on TypeScript 7: tsc --lsp with inferred props
+  check --shell       list missing shell data contracts without building
   tsc                 type-check the whole project with inferred props (tsc or tsgo; for CI)
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
   build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .kerf/contract.json; then the
@@ -167,6 +168,7 @@ const booleans = new Set([
   'meta',
   'all',
   'verbose',
+  'shell',
   'prod',
   'yes',
   'force',

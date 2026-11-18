@@ -7,12 +7,9 @@ import type { Answer, Fn, NetControl, Transport } from './types'
 import { browserFailure, ERROR_HEADER } from '../failure'
 import { shellClient } from '../shell/client-policy'
 
-const unsupported = () =>
-  Promise.reject(
-    new FnError({ message: 'Browser server functions are unavailable in shell mode.' }, 501),
-  )
+import { requestOperation } from '../shell/client-operations'
 
-const shell: Transport = { query: unsupported, mutate: unsupported }
+const shell = httpTransport(requestOperation, true)
 
 export function transport(): Transport {
   if (shellClient()) return shell
@@ -33,7 +30,7 @@ const answer = async (res: Response): Promise<Answer> => {
   return body
 }
 
-function requestFn(path: string, init: RequestInit) {
+function requestFn(_id: string, path: string, init: RequestInit) {
   return clientRequest(path, init)
     .catch((error) => {
       if ((error as Error | null)?.name === 'AbortError') throw error
@@ -43,27 +40,34 @@ function requestFn(path: string, init: RequestInit) {
 }
 
 /** The browser's: GET for queries, POST + JSON + `x-kerf` for mutations (research 27 §3), sent by `clientFetch`'s. */
-export const http: Transport = {
-  query: (id, input) =>
-    requestFn(`/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, {
-      method: 'GET',
-      headers: { accept: 'application/json' },
-    }),
-  mutate(id, input, f, form) {
-    const headers: Record<string, string> = {
-      accept: 'application/json',
-      'x-kerf': '1',
-      ...(runtime.conn && { 'x-kerf-conn': runtime.conn }),
-    }
-    if (form instanceof FormData) form.set('$r', JSON.stringify(f))
-    else headers['content-type'] = 'application/json'
-    return requestFn(`/_kerf/fn/${id}`, {
-      method: 'POST',
-      headers,
-      body:
-        form instanceof FormData ? form : JSON.stringify({ i: input, f, ...(form && { c: 1 }) }),
-    })
-  },
+export const http = httpTransport(requestFn)
+
+function httpTransport(send: typeof requestFn, sealed = false): Transport {
+  return {
+    query: (id, input) =>
+      send(id, `/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+      }),
+    mutate(id, input, f, form) {
+      const headers: Record<string, string> = {
+        accept: 'application/json',
+        'x-kerf': '1',
+        ...(!sealed && runtime.conn && { 'x-kerf-conn': runtime.conn }),
+      }
+      if (form instanceof FormData) {
+        if (!sealed) form.set('$r', JSON.stringify(f))
+      } else headers['content-type'] = 'application/json'
+      return send(id, `/_kerf/fn/${id}`, {
+        method: 'POST',
+        headers,
+        body:
+          form instanceof FormData
+            ? form
+            : JSON.stringify({ i: input, ...(!sealed && { f }), ...(form && { c: 1 }) }),
+      })
+    },
+  }
 }
 
 /**

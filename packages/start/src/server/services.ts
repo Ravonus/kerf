@@ -30,6 +30,7 @@ export function makeServices(options: HandlerOptions) {
   const realtime = configure({
     ...options.realtime,
     build: options.build,
+    shell: options.site?.render === 'shell',
     dev: options.dev,
     store: options.store,
     required: options.liveRequired,

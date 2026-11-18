@@ -8,7 +8,7 @@ import { createScope, type Scope } from './exec'
 import { hub, type Ev, type Hub } from './hub'
 import type { Join, Sock, Hubbed, Value } from './socket/types'
 import { room, leaveRoom, store, VALUE } from './socket/rooms'
-import { take, check, allowed, denied } from './socket/check'
+import { take, check, allowed, denied, channelContract } from './socket/check'
 import { deliver } from './socket/deliver'
 import { sharedWriter } from './socket/shared'
 import { publish } from './socket/publish'
@@ -71,7 +71,7 @@ async function join(
   const st = stateOf(h)
   if (c.joins.has(n) || typeof n !== 'number') return
   const fn = id === SHARE ? shareChannel(h) : fns.get(id)
-  if (fn?.kind !== 'channel' && fn?.kind !== 'shared')
+  if (!channelContract(fn, h.shell, id === SHARE))
     return refuse(
       c,
       n,

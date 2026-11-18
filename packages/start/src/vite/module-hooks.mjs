@@ -101,7 +101,7 @@ export const load = (s) => ({
         timeout: s.options.timeout,
         hold: s.options.hold,
       })
-    if (which === V.server) return serverEntry(s.clientEntry(), s.dev, s.root)
+    if (which === V.server) return serverEntry(s.clientEntry(), s.dev, s.root, s.bootstrap)
     if (which === V.fns)
       return s.serverModules.map((f) => `import ${JSON.stringify(s.abs(f))}`).join('\n') + '\n'
     if (CONFIG_FILES.has(which)) return configModule(s, which)
@@ -117,12 +117,17 @@ export const load = (s) => ({
 })
 
 export const transform = (s) => ({
-  filter: { id: /\.[jt]sx?(\?kerf-assets)?$|\/vite\/dist\/client\/client\.mjs$/ },
+  filter: {
+    id: /\.[jt]sx?(\?kerf-assets)?$|\/[\s\S]+\.[cm][jt]s$|\/vite\/dist\/client\/client\.mjs$/,
+  },
   async handler(code, file) {
     const path = file.replace(/\?.*$/, '')
     if (file.endsWith(ASSETS))
       return { code: await assetsOnly(this, code, path, s.root, s.words), map: null }
-    if (path.endsWith('/client.mjs')) return s.dev ? markLinks(s.root) + code : undefined
+    if (!s.shell && /\.[cm][jt]s$/.test(path) && !path.endsWith('/vite/dist/client/client.mjs'))
+      return
+    if (path.endsWith('/vite/dist/client/client.mjs'))
+      return s.dev ? markLinks(s.root) + code : undefined
     if (path.includes('/node_modules/')) return
     const client = this.environment?.config.consumer === 'client'
     const shell = s.shell
@@ -133,8 +138,8 @@ export const transform = (s) => ({
       this.error(`Q012: ${rel} runs only on the server; do not import it from client code`)
     if (isServerModule(rel)) {
       const out = client
-        ? clientStubs(code, path, rel, await s.shapeTable(this))
-        : withIds(code, path, rel)
+        ? clientStubs(code, path, rel, await s.shapeTable(this), shell)
+        : withIds(code, path, rel, shell)
       if (client && s.dev) s.stubs.set(path, out)
       return out === code ? undefined : { code: out, map: null }
     }

@@ -3,7 +3,7 @@ import { isNotFound } from '@tanstack/router-core'
 import type { AsyncLocalStorage } from 'node:async_hooks'
 import type { Scope } from '../exec'
 import { RouteRedirect, type RouteDataSchema } from '../shell'
-import { matchShell, redirectPath } from '../shell/routes'
+import { matchShell, redirectPath, type ShellConfig, type ShellRoute } from '../shell/routes'
 import {
   SHELL_BYTES,
   SHELL_DEFERRED,
@@ -59,7 +59,13 @@ export function makeShellData(options: HandlerOptions, als: AsyncLocalStorage<Sc
       )
     const fail = (error: unknown) => shellReference(scope, options, error, path)
     const getSchema = (id: string) => levels.get(id)
-    const { result, pending, status } = await resolveShell(local, site, load, getSchema, fail)
+    const { result, pending, status } = await resolveShell(
+      local,
+      { table, root, site },
+      load,
+      getSchema,
+      fail,
+    )
     const header = { v: SHELL_VERSION, build }
     const first = encode({ ...header, ...result })
     if (first.length > SHELL_FRAME_BYTES) {
@@ -89,7 +95,7 @@ function shellResponse(
 
 async function resolveShell(
   local: ReturnType<typeof matchShell>,
-  site: NonNullable<HandlerOptions['site']>,
+  routes: ShellConfig & { table: ShellRoute[] },
   load: (id: string) => Promise<unknown>,
   moduleOf: (id: string) => RouteModule | undefined,
   fail: (error: unknown) => string,
@@ -105,8 +111,12 @@ async function resolveShell(
         throw error
       })
       if (raw instanceof RouteRedirect) {
-        if (!redirectPath(site, raw.id)) invalid()
-        return { result: { kind: 'redirect', id: raw.id }, pending: [], status: 200 }
+        if (!redirectPath(routes, raw.id, raw.params)) invalid()
+        return {
+          result: { kind: 'redirect', id: raw.id, ...(raw.params && { params: raw.params }) },
+          pending: [],
+          status: 200,
+        }
       }
       if (isNotFound(raw)) return { result: { kind: 'not-found', values }, pending, status: 404 }
       const level = await prepareLevel(raw, module?.routeData, depth)

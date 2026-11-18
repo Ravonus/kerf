@@ -28,3 +28,24 @@ test('accepts shell rendering and refuses external redirect destinations', async
     ]),
   )
 })
+
+test('checks all shell contracts without importing or building app modules', async () => {
+  const root = project({
+    'src/routes/index.tsx': 'throw new Error("must not execute"); export const load = () => null',
+    'src/routes/one.tsx': 'export const load = () => null',
+    'src/server/operations.ts': `
+      import { query, stream } from '@kerf-js/start'
+      export const first = query({ run: () => null })
+      export const second = stream({ async *run() {} })
+    `,
+  })
+  const { checkShell } = await import('../src/shell-check.mjs')
+  const result = await checkShell(root)
+  expect(result.ok).toBe(false)
+  expect(result.diagnostics.map(({ code, file, why }) => [code, file, why.split(':')[0]])).toEqual([
+    ['Q021', 'src/routes/index.tsx', 'load'],
+    ['Q021', 'src/routes/one.tsx', 'load'],
+    ['Q021', 'src/server/operations.ts', 'first'],
+    ['Q021', 'src/server/operations.ts', 'second'],
+  ])
+})

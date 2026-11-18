@@ -1,3 +1,4 @@
+import { bootstrapFiles, requireShellContracts } from './shell-contracts.mjs'
 import { createHash } from 'node:crypto'
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -15,6 +16,10 @@ export const configHook = (s) =>
     s.root = config.root ? resolve(config.root) : s.root
     s.dev = env.command === 'serve'
     s.scan()
+    if (s.shell) {
+      s.bootstrap = bootstrapFiles(s.root)
+      if (!s.dev) requireShellContracts(s.root, s.options.routesDir, s.manifest)
+    }
     return {
       environments: {
         client: {

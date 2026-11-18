@@ -38,13 +38,15 @@ export function scanServerModules(root) {
 const FN_KINDS = new Set(['query', 'mutation', 'stream', 'topic', 'channel', 'sharedState'])
 
 /** Local names bound to the `FN_KINDS` from @kerf-js/start. */
-function fnLocals(ast) {
+function fnLocals(ast, shell = false) {
   const locals = new Map()
   for (const n of ast.program.body) {
     if (
       n.type !== 'ImportDeclaration' ||
       n.importKind === 'type' ||
-      !/^@kerf-js\/start(\/data)?$/.test(n.source.value)
+      !(
+        shell ? /^@kerf-js\/start(\/(?:data|channel|live|hub))?$/ : /^@kerf-js\/start(\/data)?$/
+      ).test(n.source.value)
     )
       continue
     for (const s of n.specifiers)
@@ -59,7 +61,7 @@ function fnLocals(ast) {
 }
 
 /** `export const name = query({ … })` statements: the call, its options object and the export name. */
-function fnExports(ast, locals) {
+function fnExports(ast, locals, shell = false) {
   const out = []
   for (const n of ast.program.body) {
     if (n.type !== 'ExportNamedDeclaration' || n.declaration?.type !== 'VariableDeclaration')
@@ -78,12 +80,13 @@ function fnExports(ast, locals) {
       )
         continue
       const obj = call.arguments[locals.get(call.callee.name) === 'sharedState' ? 1 : 0] // `sharedState(name, { … })`
-      if (obj?.type !== 'ObjectExpression' || d.id.type !== 'Identifier') continue
+      if ((!shell && obj?.type !== 'ObjectExpression') || d.id.type !== 'Identifier') continue
       out.push({
         node: n,
+        call,
         name: d.id.name,
         callee: call.callee.name,
-        obj,
+        obj: obj?.type === 'ObjectExpression' ? obj : undefined,
         single: n.declaration.declarations.length === 1,
       })
     }
@@ -95,14 +98,96 @@ const prop = (obj, key) =>
   obj.properties.find(
     (p) => p.type === 'Property' && !p.computed && (p.key.name ?? p.key.value) === key,
   )
+/** A definition's release-side result contract. A topic is server-only, even in a shell release. */
+const contractKeys = {
+  query: 'output',
+  mutation: 'output',
+  stream: 'message',
+  channel: 'server',
+  sharedState: 'value',
+}
+
+function schemaValue(value) {
+  return (
+    value &&
+    value.type !== 'Literal' &&
+    !(value.type === 'Identifier' && value.name === 'undefined')
+  )
+}
+
+function declared(f, key) {
+  const p = f.obj && prop(f.obj, key)
+  if (!p || p.kind !== 'init' || p.method || !schemaValue(p.value)) return false
+  if (key !== 'server' || p.value.type !== 'ObjectExpression') return true
+  return p.value.properties.every(
+    (event) =>
+      event.type === 'SpreadElement' ||
+      (event.kind === 'init' && !event.method && schemaValue(event.value)),
+  )
+}
+
+/** Catalog every recognized operation that cannot yield an admitted client stub. */
+export function functionContracts(code, file) {
+  const ast = parse(file, code)
+  const locals = fnLocals(ast, true)
+  const definitions = fnExports(ast, locals, true)
+  const recognized = new Set(definitions.map((f) => f.call))
+  const findings = definitions.flatMap((f) => {
+    const kind = locals.get(f.callee)
+    const key = contractKeys[kind]
+    if (!key || (f.single && declared(f, key))) return []
+    return [
+      {
+        name: f.name,
+        at: f.node.start,
+        why: `Declare ${kind} separately with a release-owned ${key} schema in its options object.`,
+      },
+    ]
+  })
+  const namespaces = new Set(
+    ast.program.body.flatMap((node) =>
+      node.type === 'ImportDeclaration' && /^@kerf-js\/start(\/|$)/.test(node.source.value)
+        ? node.specifiers
+            .filter((spec) => spec.type === 'ImportNamespaceSpecifier')
+            .map((spec) => spec.local.name)
+        : [],
+    ),
+  )
+  const walk = (node, name) => {
+    if (Array.isArray(node)) {
+      for (const child of node) walk(child, name)
+      return
+    }
+    if (typeof node?.type !== 'string' || node.type === 'ImportDeclaration') return
+    const at = node.type === 'VariableDeclarator' ? (node.id?.name ?? name) : name
+    if (node.type === 'CallExpression' && !recognized.has(node)) {
+      const callee = node.callee
+      const kind =
+        callee.type === 'MemberExpression' && namespaces.has(callee.object.name)
+          ? (callee.property.name ?? callee.property.value)
+          : locals.get(callee.name)
+      if (Object.hasOwn(contractKeys, kind))
+        findings.push({
+          name: at ?? kind,
+          at: node.start,
+          why: `Declare ${kind} as a named import and a direct, separate export with a release schema.`,
+        })
+    }
+    for (const [key, value] of Object.entries(node))
+      if (key !== 'parent' && value && typeof value === 'object') walk(value, at)
+  }
+  walk(ast.program.body, undefined)
+  return findings
+}
+
 /** A function's id: its name and a hash of its file, stable across builds. */
 export const fnId = (name, rel) =>
   `${name}.${createHash('sha256').update(rel).digest('hex').slice(0, 6)}`
 
 /** The server build of a server module: each definition gets its `$id`. Exported for tests. */
-export function withIds(code, file, rel) {
+export function withIds(code, file, rel, shell = false) {
   const ast = parse(file, code)
-  const locals = fnLocals(ast)
+  const locals = fnLocals(ast, shell)
   const all = fnExports(ast, locals)
   for (const f of all) {
     const kind = locals.get(f.callee)
@@ -132,9 +217,9 @@ export function withIds(code, file, rel) {
  * client, no other export, and no types (they're erased, and `z.infer<typeof input>` would keep `input` and zod).
  * Exported for tests.
  */
-export function clientStubs(code, file, rel, shapes) {
+export function clientStubs(code, file, rel, shapes, shell = false) {
   const ast = parse(file, code)
-  const locals = fnLocals(ast)
+  const locals = fnLocals(ast, shell)
   const defs = new Map(fnExports(ast, locals).map((f) => [f.node, f]))
   const kept = [] // [start, text]
   const candidates = []
@@ -149,11 +234,13 @@ export function clientStubs(code, file, rel, shapes) {
       const opt = prop(f.obj, 'optimistic')
       const id = fnId(f.name, rel)
       const kind = locals.get(f.callee)
+      const schema = shell && prop(f.obj, contractKeys[kind])
+      const contract = schema ? `, ${code.slice(schema.start, schema.end)}` : ''
       if (kind === 'channel' || kind === 'sharedState') {
         const initial = prop(f.obj, 'initial')
         kept.push([
           n.start,
-          `export const ${f.name} = ${f.callee}(${kind === 'sharedState' ? "'', " : ''}{ $id: ${JSON.stringify(id)}, $stub: 1${initial ? `, ${code.slice(initial.start, initial.end)}` : ''} })`,
+          `export const ${f.name} = ${f.callee}(${kind === 'sharedState' ? "'', " : ''}{ $id: ${JSON.stringify(id)}, $stub: 1${initial ? `, ${code.slice(initial.start, initial.end)}` : ''}${contract} })`,
         ])
         continue
       }
@@ -164,7 +251,7 @@ export function clientStubs(code, file, rel, shapes) {
           : prop(f.obj, 'shape') && code.slice(prop(f.obj, 'shape').start, prop(f.obj, 'shape').end)
       kept.push([
         n.start,
-        `export const ${f.name} = ${f.callee}({ $id: ${JSON.stringify(id)}${opt ? `, ${code.slice(opt.start, opt.end)}` : ''}${shape ? `, ${shape}` : ''} })`,
+        `export const ${f.name} = ${f.callee}({ $id: ${JSON.stringify(id)}${opt ? `, ${code.slice(opt.start, opt.end)}` : ''}${shape ? `, ${shape}` : ''}${contract} })`,
       ])
       continue
     }

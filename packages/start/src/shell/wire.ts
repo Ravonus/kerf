@@ -71,6 +71,12 @@ export async function validate(schema: RouteSchema | undefined, value: unknown):
   if (!schema) return value === null ? value : invalid()
   if (schema['~standard']?.version !== 1) invalid()
   const result = await schema['~standard'].validate(structuredClone(value))
-  if ('issues' in result || !json(result.value) || !same(value, result.value)) invalid()
+  if (
+    !('value' in result) ||
+    ('issues' in result && result.issues !== undefined) ||
+    !json(result.value) ||
+    !same(value, result.value)
+  )
+    invalid()
   return value
 }

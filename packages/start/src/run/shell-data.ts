@@ -3,6 +3,7 @@ import { clientRequest } from '../client-fetch'
 import { isErrorReference } from '../failure'
 import type { Match } from '../router'
 import type { RouteDataSchema } from '../shell'
+import { shellMedia } from '../shell/operation'
 import { frames } from '../shell/read'
 import { redirectPath, type matchShell, type ShellConfig } from '../shell/routes'
 import {
@@ -78,8 +79,18 @@ export async function readShell({
     if (!record(value) || value.v !== SHELL_VERSION || value.build !== (routes.build ?? null))
       invalid()
     if (value.kind === 'redirect') {
-      if (response.status !== 200 || !fields(value, [...base, 'id'])) invalid()
-      const path = redirectPath(routes.shell.site, value.id)
+      const withParams = Object.hasOwn(value, 'params')
+      if (
+        response.status !== 200 ||
+        !fields(value, withParams ? [...base, 'id', 'params'] : [...base, 'id'])
+      )
+        invalid()
+      const path = redirectPath(
+        { ...routes.shell, table: routes.table },
+        value.id,
+        value.params,
+        url,
+      )
       if (!path || !(await stream.next()).done) invalid()
       return { kind: 'redirect', path }
     }
@@ -92,10 +103,6 @@ export async function readShell({
     await stream.return(undefined)
     throw error
   }
-}
-
-function shellMedia(type: string | null) {
-  return /^application\/x-ndjson(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?$/i.test(type ?? '')
 }
 
 async function readLevels(

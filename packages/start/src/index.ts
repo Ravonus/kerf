@@ -195,4 +195,16 @@ export {
   type RouteDataSchema,
   type RouteSchema,
 } from './shell'
-export type { ShellSite } from './shell/routes'
+export { routeReturnTo, type ShellSite } from './shell/routes'
+export type { RouteRedirectDestination, RouteRedirects } from '@kerf-js/core/config'
+
+export { admitOperation } from './shell/client-operations'
+export { ShellDataError, type ShellErrorCode } from './shell/operation'
+
+export {
+  defineBootstrap,
+  type BootstrapProvider,
+  type BootstrapViews,
+  type ShellBootstrap,
+} from './shell/bootstrap'
+export { clientSocket, type ClientSocket } from './shell/realtime-transport'

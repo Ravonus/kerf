@@ -62,6 +62,15 @@ export function siteOf(loaded) {
   return { ...base, card: { ...card, ...base.card, fonts: { ...card.fonts, ...base.card?.fonts } } }
 }
 
+async function buildSite(root) {
+  const config = await site(root)
+  if (config.site.render === 'shell') {
+    const { requireShellContracts } = await start(root, 'vite')
+    requireShellContracts(root)
+  }
+  return config
+}
+
 /** `runtime` in kerf.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
 export const PRESETS = { node: 'node', bun: 'bun', deno: 'deno_server' }
 /** With no `runtime` in the config, the one running this: a machine may have only that one. */
@@ -134,7 +143,7 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
   const { build } = await start(root, 'app')
   const { writeContract } = await start(root, 'contract')
   const t = performance.now()
-  const config = await site(root)
+  const config = await buildSite(root)
   preset = await buildPreset(root, { preset, runtime, hostRuntime, PRESETS })
   // A build holds no secrets: an app's env check stands down, and server modules load without a database.
   const held = process.env.KERF_BUILD

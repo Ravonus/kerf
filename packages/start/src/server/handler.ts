@@ -12,6 +12,7 @@ import type { makeServices } from './services'
 import type { HandlerOptions } from './types'
 import { ERROR_HEADER } from '../failure'
 import { reportFailure } from './failure'
+import { errorFrameStatus, peerStatus, shellResponse } from '../shell/operation'
 import { makeCors } from './cors'
 
 /** Wrap endpoint routing in the request scope and boot lifecycle. */
@@ -63,7 +64,9 @@ export function makeHandler(
         request,
         id,
         options,
-        reference: out.headers.get(ERROR_HEADER) ?? scope.failure.reference,
+        reference: shellOperation(options, path)
+          ? undefined
+          : (out.headers.get(ERROR_HEADER) ?? scope.failure.reference),
       })
     })
   }
@@ -102,11 +105,20 @@ function escaped(
   }: { options: HandlerOptions; cors: ReturnType<typeof makeCors>; startup: boolean },
 ) {
   if (error instanceof Response) return error
-  if (options.dev && !startup) throw error
+  const operation = shellOperation(options, new URL(request.url).pathname)
+  if (!operation && options.dev && !startup) throw error
   const data = reportFailure(scope, options, error, {
     status: startup ? 503 : 500,
     code: startup ? 'E_STARTUP' : 'E_REQUEST',
   })
+  if (operation) {
+    const code = peerStatus(data.status)
+    return cors(request, () =>
+      Promise.resolve(
+        shellResponse(options.build ?? null, operation, { code }, errorFrameStatus(code)),
+      ),
+    )
+  }
   return cors(request, () =>
     Promise.resolve(
       Response.json(
@@ -118,6 +130,19 @@ function escaped(
       ),
     ),
   )
+}
+
+function shellOperation(options: HandlerOptions, pathname: string) {
+  if (options.site?.render !== 'shell') return
+  if (pathname === '/_kerf/bootstrap') return 'bootstrap'
+  if (pathname === '/_kerf/rt' || pathname === '/_kerf/ws') return 'realtime'
+  if (!pathname.startsWith('/_kerf/fn/')) return
+  const id = pathname.slice('/_kerf/fn/'.length)
+  try {
+    return 'fn:' + decodeURIComponent(id)
+  } catch {
+    return 'fn:' + id
+  }
 }
 
 function inheritTransport(response: Response, source?: Response) {

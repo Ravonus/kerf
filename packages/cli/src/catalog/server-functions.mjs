@@ -89,6 +89,14 @@ export const serverFunctions = [
     fix: 'Call it in a server function or a route `load`',
   },
   {
+    code: 'Q021',
+    severity: 'error',
+    by: 'start',
+    owner: '@kerf-js/start',
+    catches: 'A shell release has a missing or unreadable loader, operation, or bootstrap contract',
+    fix: 'Run `kerf check --shell` and declare strict release-owned schemas for all reported exports',
+  },
+  {
     code: 'S011',
     severity: 'warning',
     by: 'runtime',

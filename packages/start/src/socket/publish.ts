@@ -1,6 +1,7 @@
 import type { PublishOptions } from '../channel'
 import { stable, StartError, type Fn } from '../data'
 import { hub } from '../hub'
+import { admitValue } from '../shell/operation'
 import { check } from './check'
 
 const roomName = (id: string, params: unknown) => `kerf:c:${id}:${stable(params)}`
@@ -19,7 +20,10 @@ export async function publish(
     params,
     `\`${fn.$id}\`'s params`,
   )
-  if (h.dev) {
+  if (h.shell) {
+    const schema = Object.hasOwn(fn.def.server ?? {}, name) ? fn.def.server![name] : undefined
+    await admitValue(schema, message)
+  } else if (h.dev) {
     const schema = Object.hasOwn(fn.def.server ?? {}, name) ? fn.def.server![name] : undefined
     if (!schema)
       throw new StartError(

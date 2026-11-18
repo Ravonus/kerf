@@ -1,179 +1,20 @@
-// A production build runs on two peers while a separate origin serves only release artifacts.
-import { execFile } from 'node:child_process'
-import { createServer, type ServerResponse } from 'node:http'
-import { mkdir, readFile, readdir, rm } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { pipeline } from 'node:stream/promises'
-import { promisify } from 'node:util'
-import { chromium, type Browser, type Page } from 'playwright-core'
-import { serve } from './build.setup'
+import {
+  a,
+  b,
+  address,
+  captured,
+  criticCookieRead,
+  criticMarker,
+  open,
+  go,
+  assertNoMarkup,
+  watchSinks,
+} from './shell.browser.setup'
+import { testHostileShellOperations } from './shell.hostile.browser'
 
-const root = join(import.meta.dirname, 'fixtures/shell')
-const output = join(root, '.output-browser-shell')
-const entry = join(output, 'server/index.mjs')
-const build = {
-  root,
-  preset: 'node',
-  logLevel: 'error',
-  site: {
-    render: 'shell',
-    routeRedirects: { item: '/items/42' },
-    name: 'Release',
-    title: '%s | Release',
-  },
-  nitro: { output: { dir: output } },
-}
-let browser: Browser
-let a: Awaited<ReturnType<typeof serve>>
-let b: Awaited<ReturnType<typeof serve>>
-let address: string
-const captured: { peer: string; path: string; headers: Headers; text: Promise<string> }[] = []
-const criticMarker = 'CRITIC_MARKER'
-const criticCookieRead: (string | undefined)[] = []
-const gateway = createServer((req, res) => {
-  const url = new URL(req.url!, 'http://localhost')
-  if (/^\/(?:peers\/[ab]\/)?_kerf\/(?:fn\/|rt$|ws$)/.test(url.pathname)) {
-    res.writeHead(200, { 'content-type': 'application/json' })
-    res.end(JSON.stringify({ v: criticMarker }))
-    return
-  }
-  const peer = /^\/peers\/(a|b)(\/_kerf\/data\/.*)$/.exec(url.pathname)
-  if (peer && url.searchParams.has('critic')) criticCookieRead.push(req.headers.cookie)
-  const task = peer ? forward(peer[1]!, peer[2]! + url.search, res) : releaseFile(url.pathname, res)
-  void task.catch(() => {
-    if (!res.headersSent) res.writeHead(404)
-    res.end()
-  })
-})
-
-async function forward(peer: string, path: string, res: ServerResponse) {
-  const response = await fetch((peer === 'a' ? a : b).url + path, {
-    redirect: 'manual',
-    headers: { 'x-fixture-peer': peer, 'accept-encoding': 'identity' },
-  })
-  if (path.includes('?critic=')) return hostileReply(path, response, res)
-  res.writeHead(response.status, Object.fromEntries(response.headers))
-  if (!response.body) return void res.end()
-  const [body, receipt] = response.body.tee()
-  const text = new Response(receipt).text()
-  void text.catch(() => {})
-  captured.push({ peer, path, headers: response.headers, text })
-  await pipeline(body, res)
-}
-
-async function hostileReply(path: string, reply: Response, res: ServerResponse) {
-  const kind = new URL(path, 'http://localhost').searchParams.get('critic')
-  const [first, detail] = (await reply.text())
-    .trimEnd()
-    .split('\n')
-    .map((line) => JSON.parse(line))
-  if (kind === 'legacy') {
-    first.m = [{ s: true, h: `<span id="${criticMarker}">probe</span>` }]
-    first.preload = ['/critic-hint.css']
-    first.islands = ['critic']
-  }
-  if (kind === 'headers') {
-    first.values[1].label = `<span id="${criticMarker}">probe</span>`
-    first.values[1].link = { rel: 'stylesheet', href: '/critic-hint.css' }
-  }
-  res.writeHead(reply.status, {
-    'content-type': 'application/x-ndjson',
-    'set-cookie': 'critic-peer=example; Path=/',
-    'content-security-policy': "default-src 'none'",
-    link: '</critic-hint.css>; rel=preload; as=style',
-    refresh: '0; url=/critic-header-target',
-    location: '/critic-header-target',
-  })
-  const outcome =
-    kind === 'deferred'
-      ? [first, { ...detail, value: { text: criticMarker, extra: 'Unexpected' } }]
-      : [first]
-  res.end(outcome.map((frame) => JSON.stringify(frame) + '\n').join(''))
-}
-
-async function releaseFile(path: string, res: ServerResponse) {
-  const asset = path.startsWith('/assets/') || /^\/kerf-route-retry-[a-f0-9]+\.json$/.test(path)
-  const file = join(output, 'public', asset ? path : 'kerf-shell.html')
-  const type = asset
-    ? path.endsWith('.css')
-      ? 'text/css'
-      : path.endsWith('.json')
-        ? 'application/json'
-        : 'text/javascript'
-    : 'text/html'
-  const bytes = await readFile(file)
-  res.writeHead(200, { 'content-type': type }).end(bytes)
-}
-
-beforeAll(async () => {
-  await mkdir(output, { recursive: true })
-  await promisify(execFile)(
-    process.execPath,
-    [join(import.meta.dirname, 'build-app.mjs'), JSON.stringify(build)],
-    {
-      env: { ...process.env, NODE_ENV: 'production' },
-    },
-  )
-  a = await serve(process.execPath, entry)
-  b = await serve(process.execPath, entry)
-  await new Promise<void>((resolve) => {
-    gateway.listen(0, '127.0.0.1', resolve)
-  })
-  address = 'http://127.0.0.1:' + (gateway.address() as { port: number }).port
-  browser = await chromium.launch(
-    process.env.KERF_CHROME ? { executablePath: process.env.KERF_CHROME } : {},
-  )
-}, 120_000)
-
-afterAll(async () => {
-  await browser?.close()
-  gateway.close()
-  a?.stop()
-  b?.stop()
-  await rm(output, { recursive: true, force: true })
-})
-
-const diagnostics = new WeakMap<Page, string[]>()
-
-async function open() {
-  const page = await browser.newPage()
-  page.setDefaultTimeout(8_000)
-  await page.addInitScript(() => {
-    sessionStorage.peer ??= 'a'
-  })
-  const logs: string[] = []
-  diagnostics.set(page, logs)
-  page.on('pageerror', (error) => logs.push(error.stack ?? error.message))
-  page.on('requestfailed', (request) =>
-    logs.push(request.url() + ' ' + request.failure()?.errorText),
-  )
-  page.on('response', (response) => {
-    if (response.status() >= 400) logs.push(response.url() + ' ' + response.status())
-  })
-  const documents: string[] = []
-  page.on('response', (r) => {
-    if (r.request().resourceType() === 'document') documents.push(r.url())
-  })
-  return { page, documents }
-}
-
-async function go(page: Page, path: string, name: string) {
-  await page.goto(address + path, { waitUntil: 'domcontentloaded' })
-  try {
-    await page.getByRole('heading', { name, exact: true }).waitFor()
-  } catch (error) {
-    throw new Error(
-      `Expected ${name} at ${path}. DOM: ${await page.locator('body').textContent()}. Browser: ${(diagnostics.get(page) ?? []).join(' | ')}`,
-      { cause: error },
-    )
-  }
-}
-
-const assertNoMarkup = async (page: Page) => {
-  expect(await page.locator('#peer-markup').count()).toBe(0)
-  expect(await page.evaluate(() => Reflect.get(window, 'peerExecuted'))).toBeUndefined()
-  expect(await page.locator('#kerf-route, #kerf-cache, #kerf-data, [wk]').count()).toBe(0)
-}
+const output = join(import.meta.dirname, 'fixtures/shell/.output-browser-shell')
 
 test('first load, soft navigation and both history directions render the release across two peers', async () => {
   const { page, documents } = await open()
@@ -377,51 +218,6 @@ test('invalid deferred frames stay in the local Boundary and typed text stays li
   }
 })
 
-async function watchSinks(page: Page) {
-  await page.addInitScript((marker) => {
-    const hits: string[] = []
-    Reflect.set(window, 'criticSinks', hits)
-    const inspect = (name: string, values: unknown[]) => {
-      if (values.some((value) => String(value).includes(marker))) hits.push(name)
-    }
-    const watch = (owner: object, name: string) => {
-      const original = Reflect.get(owner, name)
-      Reflect.set(
-        owner,
-        name,
-        new Proxy(original, {
-          apply(target, self, args: unknown[]) {
-            if (
-              name !== 'setAttribute' ||
-              /^(?:on|href|src|style|action|formaction)/i.test(String(args[0]))
-            )
-              inspect(name, args)
-            return Reflect.apply(target, self, args)
-          },
-          construct(target, args: unknown[]) {
-            inspect(name, args)
-            return Reflect.construct(target, args)
-          },
-        }),
-      )
-    }
-    const original = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML')!
-    Object.defineProperty(Element.prototype, 'innerHTML', {
-      ...original,
-      set(this: Element, value: string) {
-        inspect('innerHTML', [value])
-        original.set!.call(this, value)
-      },
-    })
-    watch(Element.prototype, 'insertAdjacentHTML')
-    watch(Element.prototype, 'setAttribute')
-    watch(DOMParser.prototype, 'parseFromString')
-    watch(Document.prototype, 'write')
-    watch(window, 'eval')
-    watch(window, 'Function')
-  }, criticMarker)
-}
-
 test('route Fetch ignores peer presentation headers and refuses to read or write cookies', async () => {
   const { page, documents } = await open()
   const requests: string[] = []
@@ -511,28 +307,28 @@ test('an untyped deferred property produces only the release Boundary fallback',
   }
 })
 
-test('legacy RPC, enhanced forms and realtime have no peer browser transport in shell builds', async () => {
+test('refreshes a query after a mutation, calls a custom transport, and admits channels and SSE', async () => {
   const { page, documents } = await open()
-  const remote: string[] = []
-  const log = (href: string) => {
-    const path = new URL(href).pathname
-    if (/\/_kerf\/(?:fn\/|rt$|ws$)/.test(path)) remote.push(path)
-  }
-  page.on('request', (request) => log(request.url()))
-  page.on('websocket', (socket) => log(socket.url()))
   try {
     await go(page, '/critic', 'Release text')
+    await page.locator('[data-refresh]').getByText('Server query 0').waitFor()
     await page.getByRole('button', { name: 'Read server function' }).click()
-    await page.getByText('Query unavailable').waitFor()
+    await page.locator('[data-query]').getByText('Server query 0').waitFor()
+    await page.getByRole('button', { name: 'Read through own transport' }).click()
+    await page.locator('[data-direct]').getByText('Server query 0').waitFor()
+    await page.locator('[data-stream]').getByText('Server stream').waitFor()
+    await page.locator('[data-channel]').getByText('open').waitFor()
+    await page.getByRole('button', { name: 'Request channel message' }).click()
+    await page.locator('[data-notice]').getByText('Server channel').waitFor()
     await page.getByRole('button', { name: 'Submit server form' }).click()
-    await page.getByText('Browser server functions are unavailable in shell mode.').waitFor()
-    await page.getByText('offline Release stream value').waitFor()
-    expect(await page.locator('[data-channel]').textContent()).toBe('unavailable')
-    expect(await page.locator('[data-shared]').textContent()).toBe(
-      'unavailable Release shared value',
-    )
+    await page.locator('[data-form]').getByText('Server mutation 1').waitFor()
+    await page.locator('[data-refresh]').getByText('Server query 1').waitFor()
+    await page.getByRole('button', { name: 'Request refused mutation' }).click()
+    await page.locator('[data-action]').getByText('forbidden').waitFor()
+    const refused = captured.find((r) => r.path.startsWith('/_kerf/fn/refuseMutation.'))!
+    expect(JSON.parse(await refused.text)).toMatchObject({ v: 1, value: { code: 'forbidden' } })
+    expect(await refused.text).not.toContain('PEER_PRIVATE_ERROR')
     expect(documents).toEqual([address + '/critic'])
-    expect(remote).toEqual([])
     const noJs = await fetch(a.url + '/critic', {
       method: 'POST',
       body: new URLSearchParams({ $fn: 'probeMutation' }),
@@ -544,3 +340,55 @@ test('legacy RPC, enhanced forms and realtime have no peer browser transport in 
     await page.close()
   }
 })
+
+test('expands parameterized redirects using release validators and derives return-to locally', async () => {
+  const { page } = await open()
+  try {
+    await go(page, '/guard?tab=one', 'Peer A item 42')
+    expect(new URL(page.url()).searchParams.get('next')).toBe('/guard?tab=one')
+    await page.locator('[data-return-to]').getByText('/guard?tab=one').waitFor()
+    for (const next of ['https://other.invalid/', '//other.invalid/', '/unlisted']) {
+      await go(page, '/items/42?next=' + encodeURIComponent(next), 'Peer A item 42')
+      await page.locator('[data-return-to]').getByText('No return route').waitFor()
+    }
+    await page.evaluate(() => {
+      sessionStorage.peer = 'b'
+    })
+    await go(page, '/guard?attack=redirect-param', 'Release error')
+    await go(page, '/guard?attack=redirect-id', 'Release error')
+    await assertNoMarkup(page)
+  } finally {
+    await page.close()
+  }
+})
+
+test('waits for bootstrap and re-reads on demand without mounting peer content', async () => {
+  const { page } = await open()
+  await page.addInitScript(() => {
+    sessionStorage.bootstrapDelay = '1'
+  })
+  try {
+    await page.goto(address, { waitUntil: 'domcontentloaded' })
+    await page.getByText('Release bootstrap pending').waitFor()
+    expect(await page.getByRole('heading', { name: 'Release home' }).count()).toBe(0)
+    await page.getByRole('heading', { name: 'Release home' }).waitFor()
+    await page.locator('[data-bootstrap]').getByText('a').waitFor()
+    await page.evaluate(() => {
+      sessionStorage.peer = 'b'
+      sessionStorage.bootstrapAttack = 'field'
+    })
+    await page.getByRole('button', { name: 'Read bootstrap again' }).click()
+    await page.locator('[data-bootstrap-error]').getByText('invalid').waitFor()
+    expect(await page.locator('[data-bootstrap]').textContent()).toBe('a')
+    await page.evaluate(() => {
+      delete sessionStorage.bootstrapAttack
+    })
+    await page.getByRole('button', { name: 'Read bootstrap again' }).click()
+    await page.locator('[data-bootstrap]').getByText('b').waitFor()
+    await assertNoMarkup(page)
+  } finally {
+    await page.close()
+  }
+})
+
+testHostileShellOperations()

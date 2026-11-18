@@ -12,10 +12,12 @@ import {
 import type { Source } from '../changes'
 import type { Body, Conn, Limits, Sub, SubEntry } from './types'
 import { RESET, Tracked } from './tracked'
+import { admitValue } from '../shell/operation'
 import { realtimeFault } from '../server/realtime-fault'
 
 interface Dependencies {
   limits: Limits
+  shell?: boolean | undefined
   source: Source | undefined
   deliver: (c: Conn, s: Sub, raw: string) => boolean
 }
@@ -58,7 +60,11 @@ async function add(
     )
     return refuse(c, n, realtimeFault(scoped, error, id))
   }
-  if (!fn || fn.kind !== (kind === 'q' ? 'query' : 'stream')) {
+  if (
+    !fn ||
+    fn.kind !== (kind === 'q' ? 'query' : 'stream') ||
+    (deps.shell && !(kind === 'q' ? fn.def.output : fn.def.message))
+  ) {
     const error = new StartError(
       'Q009',
       `no ${kind === 'q' ? 'query' : 'stream'} \`${id}\`: reload`,
@@ -129,7 +135,8 @@ async function stream(deps: Dependencies, c: Conn, s: Sub, input: unknown, curso
         for await (const y of out as AsyncIterable<unknown>) {
           if (signal.aborted) return
           const [id, msg] = y instanceof Tracked ? [y.id, y.value] : [null, y]
-          if (s.options.dev) await checked(s.fn, msg)
+          if (deps.shell) await admitValue(s.fn.def.message, msg)
+          else if (s.options.dev) await checked(s.fn, msg)
           const raw = JSON.stringify([s.n, id, msg])
           if (raw.length > limits.message)
             throw new StartError(

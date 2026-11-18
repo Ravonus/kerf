@@ -9,6 +9,7 @@ import { DEV, batch, createRoot, state, untrack } from '@kerf-js/core'
 import type { AuthScope, Fn, LiveMode, LiveOptions, LiveStatus, StandardSchemaV1 } from './data'
 import type { SubEntry } from './hub'
 import { noSockets } from './link'
+import { shellEvents } from './shell/realtime-transport'
 import { shellClient } from './shell/client-policy'
 import { transports } from './live/transport'
 import { backoff, CAP } from './live/backoff'
@@ -150,7 +151,9 @@ const fake: Link = {
 }
 
 /** Two sockets that never answered, and this host has none. */
-const link = (): Link => (DEV && net() ? fake : noSockets() ? http : socket)
+const admitted = shellEvents((id) => byN.get(id)?.fn)
+const link = (): Link =>
+  shellClient() ? admitted : DEV && net() ? fake : noSockets() ? http : socket
 let via: Link = socket
 let closeHub: (() => unknown) | undefined
 
@@ -311,10 +314,6 @@ async function run() {
 
 /** Bring the server's set up to date with `subs`, in place. A 404 (another instance, a restart) reconnects. */
 function sync() {
-  if (shellClient()) {
-    set('offline')
-    return
-  }
   if (changing) return
   changing = Promise.resolve().then(async () => {
     changing = undefined

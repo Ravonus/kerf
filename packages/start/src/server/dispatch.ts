@@ -4,6 +4,7 @@ import type { Scope } from '../exec'
 import { enter } from '../data/foundation'
 import { rtRoute } from '../hub'
 import { socketRoute } from '../socket'
+import { serveBootstrap } from './bootstrap'
 import { serverFunction } from './functions'
 import type { HandlerOptions } from './types'
 import { makeHttp } from './http'
@@ -53,6 +54,8 @@ export function makeDispatch({
     const url = new URL(request.url)
     if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/')))
       return Promise.resolve(options.auth.handler(request))
+    if (options.site?.render === 'shell' && url.pathname === '/_kerf/bootstrap')
+      return serveBootstrap(options, request, scope)
     if (url.pathname.startsWith('/_kerf/fn/')) return serverFunction(options, url, request, scope)
     if (url.pathname.startsWith(EXTENSION)) return extensionRoute(url, request, scope)
     if (!url.pathname.startsWith('/_kerf/')) {
