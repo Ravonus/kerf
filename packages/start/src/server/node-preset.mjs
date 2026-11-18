@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url'
 
 const collector = '#nitro/virtual/kerf-plugins'
 const config = '#nitro/virtual/kerf-node-config'
-const load = (name) => fileURLToPath(new URL(name, import.meta.url))
+const host = fileURLToPath(new URL('./node-host.mjs', import.meta.url))
+const runtime = fileURLToPath(new URL('./node-runtime.mjs', import.meta.url))
 
 /** Retain Nitro's resolved plugin order and leave non-Node and custom entries with their own lifecycle. */
 export function ownNodePreset(nitro, site) {
@@ -33,7 +34,7 @@ export function ownNodePreset(nitro, site) {
     ]
   `
   options.virtual[options.entry] = `
-    import { runNodeHost } from ${JSON.stringify(load('./node-host.mjs'))}
-    await runNodeHost(() => import(${JSON.stringify(load('./node-runtime.mjs'))}), ${JSON.stringify(site?.log ?? 'json')})
+    import { runNodeHost } from ${JSON.stringify(host)}
+    await runNodeHost(() => import(${JSON.stringify(runtime)}), ${JSON.stringify(site?.log ?? 'json')})
   `
 }

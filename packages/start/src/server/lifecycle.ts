@@ -27,7 +27,7 @@ export function lifecycle(
   enter: (scope: Scope, run: () => Promise<void>) => Promise<void>,
 ) {
   const realtime = hub()
-  onShutdown('realtime', realtime.shutdown)
+  onShutdown('realtime', () => realtime.shutdown())
   return () => {
     if (process.env.KERF_BUILD || options.requestOrigin === false) return
     const deps = {

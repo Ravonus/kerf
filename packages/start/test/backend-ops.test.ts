@@ -186,7 +186,7 @@ describe('cron', () => {
       expect(diagnostics).toEqual(['J001'])
       await vi.advanceTimersByTimeAsync(60_000)
       expect(ran).toEqual(['nightly']) // 03:01 isn't due
-      for (const stop of stops) stop()
+      await Promise.all(stops.map((stop) => stop()))
     } finally {
       vi.useRealTimers()
     }

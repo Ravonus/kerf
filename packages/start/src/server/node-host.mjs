@@ -13,7 +13,8 @@ function report(code, stage, error, format) {
     .join('')
   let detail = 'Unknown error'
   try {
-    detail = error instanceof Error ? (error.stack ?? error.message) : String(error)
+    const text = error instanceof Error ? (error.stack ?? error.message) : String(error)
+    if (typeof text === 'string') detail = text
   } catch {
     // Even a thrown value with a broken formatter must lead to exit.
   }

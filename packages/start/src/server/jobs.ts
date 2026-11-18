@@ -113,7 +113,10 @@ export function startJobs(jobs: Jobs, deps: BackgroundDeps): () => Promise<void>
     (stopping ??= (async () => {
       live.stopped = true
       clearTimeout(timer)
-      if (live.claiming) await new Promise<void>((resolve) => (claimedSettled = resolve))
+      if (live.claiming)
+        await new Promise<void>((resolve) => {
+          claimedSettled = resolve
+        })
       await Promise.allSettled([...running])
     })())
 }

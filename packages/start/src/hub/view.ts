@@ -142,7 +142,7 @@ function createOperations(deps: View) {
           ch.stop?.()
         }),
       ]
-      const outcomes = await Promise.allSettled(stop.map(async (fn) => fn()))
+      const outcomes = await Promise.allSettled(stop.map((fn) => Promise.resolve().then(fn)))
       channels.clear()
       outcomes.push(...(await Promise.allSettled([Promise.resolve().then(() => bus.close?.())])))
       const errors = outcomes

@@ -102,25 +102,7 @@ void test(
       },
     )
 
-    for (const [scenario, stage, detail] of [
-      ['import', 'explicit.mjs', 'plugin import fixture failed'],
-      ['sync', 'explicit.mjs', 'plugin initializer fixture failed'],
-      ['reject', 'explicit.mjs', 'plugin rejection fixture failed'],
-      ['hang', 'explicit.mjs', 'Startup timed out'],
-      ['app', 'Kerf application startup', 'app startup fixture failed'],
-    ]) {
-      await t.test(`exits with a correlated startup diagnostic for ${scenario}`, async (sub) => {
-        const host = await launch(root, scenario, scenario === 'reject')
-        sub.after(host.stop)
-        assert.deepEqual(await host.closed, [1, null])
-        await assert.rejects(probe(host.base, 'health'))
-        const startup = host.diagnostics().filter(({ code }) => code === 'E_STARTUP')
-        assert.equal(startup.length, 1)
-        assert.ok(startup[0].message.includes(stage) && startup[0].message.includes(detail))
-        assert.match(startup[0].reference, /^[0-9a-f]{24}$/)
-        if (scenario !== 'import') assert.match(host.out(), /explicit closed/)
-      })
-    }
+    await startupFailures(t, root)
 
     await t.test('a production timer rejection stops admissions and exits', async (sub) => {
       const host = await launch(root, 'crash')
@@ -156,3 +138,25 @@ void test(
     })
   },
 )
+
+async function startupFailures(t, root) {
+  for (const [scenario, stage, detail] of [
+    ['import', 'explicit.mjs', 'plugin import fixture failed'],
+    ['sync', 'explicit.mjs', 'plugin initializer fixture failed'],
+    ['reject', 'explicit.mjs', 'plugin rejection fixture failed'],
+    ['hang', 'explicit.mjs', 'Startup timed out'],
+    ['app', 'Kerf application startup', 'app startup fixture failed'],
+  ]) {
+    await t.test(`exits with a correlated startup diagnostic for ${scenario}`, async (sub) => {
+      const host = await launch(root, scenario, scenario === 'reject')
+      sub.after(host.stop)
+      assert.deepEqual(await host.closed, [1, null])
+      await assert.rejects(probe(host.base, 'health'))
+      const startup = host.diagnostics().filter(({ code }) => code === 'E_STARTUP')
+      assert.equal(startup.length, 1)
+      assert.ok(startup[0].message.includes(stage) && startup[0].message.includes(detail))
+      assert.match(startup[0].reference, /^[0-9a-f]{24}$/)
+      if (scenario !== 'import') assert.match(host.out(), /explicit closed/)
+    })
+  }
+}

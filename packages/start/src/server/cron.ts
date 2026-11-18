@@ -16,7 +16,7 @@ export function startCron(jobs: CronJobs, deps: BackgroundDeps): () => Promise<v
   let timer: ReturnType<typeof setTimeout> | undefined
   let stopped = false
   const active = new Set<Promise<void>>()
-  const tick = async () => {
+  const tick = () => {
     const at = new Date(Math.floor(Date.now() / 60_000) * 60_000)
     arm()
     for (const { name, job, at: matches } of due) {
@@ -48,7 +48,7 @@ export function startCron(jobs: CronJobs, deps: BackgroundDeps): () => Promise<v
     }
   }
   const arm = () => {
-    timer = setTimeout(() => track(tick()), 60_000 - (Date.now() % 60_000) + 50)
+    timer = setTimeout(tick, 60_000 - (Date.now() % 60_000) + 50)
     ;(timer as { unref?: () => void }).unref?.() // a schedule never keeps a process alive by itself
   }
   arm()

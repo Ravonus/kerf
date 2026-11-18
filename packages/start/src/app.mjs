@@ -140,8 +140,14 @@ export async function dev(options) {
 /** Build client and server for `preset` (node by default; bun, deno_server…), into `.output/` unless the preset moves it. */
 export async function build(options) {
   process.env.KERF_START_DIR ??= startDir // for the share cards a build draws (og/native.mjs)
-  const builder = await createBuilder(config({ ...options, command: 'build' }))
-  wrote = undefined
-  await builder.buildApp()
-  return { output: wrote ?? join(resolve(options.root), '.output') }
+  const building = process.env.KERF_BUILD
+  process.env.KERF_BUILD ??= '1'
+  try {
+    const builder = await createBuilder(config({ ...options, command: 'build' }))
+    wrote = undefined
+    await builder.buildApp()
+    return { output: wrote ?? join(resolve(options.root), '.output') }
+  } finally {
+    if (building === undefined) delete process.env.KERF_BUILD
+  }
 }
