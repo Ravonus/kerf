@@ -32,6 +32,8 @@ import { makeNavigation } from './server/navigation'
 import { makeCard } from './server/card'
 import { makePrerender } from './server/prerender'
 import { makePage } from './server/page'
+import { makeShellData } from './server/shell'
+import { makeShellPage } from './server/shell-page'
 import { makeCore } from './server/core'
 import { makeServices } from './server/services'
 import { makeDispatch } from './server/dispatch'
@@ -112,6 +114,7 @@ export function createHandler(options: HandlerOptions) {
     PASSES,
   })
 
+  const shell = site.render === 'shell'
   const page = makePage({
     options,
     site,
@@ -129,7 +132,9 @@ export function createHandler(options: HandlerOptions) {
 
   const media = makeMedia(options, mediaServer)
 
-  const data = makeNavigation({ resolve, finished, statics, stateOf, PASSES, options })
+  const data = shell
+    ? makeShellData(options, als)
+    : makeNavigation({ resolve, finished, statics, stateOf, PASSES, options })
 
   const og = makeCard({ resolve, finished, mod, manifest, options, site, CARD })
 
@@ -144,7 +149,7 @@ export function createHandler(options: HandlerOptions) {
     og,
     data,
     prerenderList,
-    page,
+    page: shell ? makeShellPage(options) : page,
   })
   const workers = lifecycle(options, services, (scope, run) => als.run(scope, run))
   const handler = makeHandler(options, als, services, route, workers)

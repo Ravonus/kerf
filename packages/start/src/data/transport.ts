@@ -5,8 +5,17 @@ import { fns, net, runtime } from './foundation'
 import { FnError, isRedirect, stable, StartError } from './primitives'
 import type { Answer, Fn, NetControl, Transport } from './types'
 import { browserFailure, ERROR_HEADER } from '../failure'
+import { shellClient } from '../shell/client-policy'
+
+const unsupported = () =>
+  Promise.reject(
+    new FnError({ message: 'Browser server functions are unavailable in shell mode.' }, 501),
+  )
+
+const shell: Transport = { query: unsupported, mutate: unsupported }
 
 export function transport(): Transport {
+  if (shellClient()) return shell
   if (runtime.transport) return runtime.transport
   if (net()) return inProcess
   return http

@@ -51,14 +51,15 @@ const makeLoader =
     const f = exec.frame(context.scope)
     context.tags.set(file, f.tags!)
     try {
-      const ctx = await f.ctx()
-      const v = await als.run(f, () =>
-        load({
+      const v = await callLoader(
+        load,
+        {
           params: cleanParams(params, splat ?? context.splat),
           request: context.request,
           signal: abortController.signal,
-          ctx,
-        }),
+        },
+        f,
+        als,
       )
       // oxlint-disable-next-line typescript/only-throw-error -- router-core's own not-found signal, passed on as it came
       if (isNotFound(v)) throw v
@@ -71,6 +72,28 @@ const makeLoader =
       done()
     }
   }
+
+type Loader = NonNullable<RouteModule['load']>
+type LoaderArgs = Omit<Parameters<Loader>[0], 'ctx'>
+
+async function callLoader(
+  load: Loader,
+  args: LoaderArgs,
+  frame: Scope,
+  als: AsyncLocalStorage<Scope>,
+) {
+  const ctx = await frame.ctx()
+  return als.run(frame, () => load({ ...args, ctx }))
+}
+
+export function runLoader(
+  load: RouteModule['load'],
+  args: LoaderArgs,
+  scope: Scope,
+  als: AsyncLocalStorage<Scope>,
+) {
+  return load && callLoader(load, args, exec.frame(scope), als)
+}
 
 /** The router-core tree for the manifest: layouts are path prefixes, routes hang under their innermost layout. */
 export function routeTree(

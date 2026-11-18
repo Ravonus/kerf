@@ -1,3 +1,4 @@
+import type { RouteRedirect } from './shell'
 // @kerf-js/start: what route files import (research 25) and server modules define (research 27). A route module exports
 // its component (`default`) and, when it needs them, `load` (async data, often `await q.fetch()`), `meta` (research
 // 20 §3: static, awaited before the first byte, never reactive) and `prerender` (the params `kerf build` writes as
@@ -144,7 +145,9 @@ export function notFound(): NotFound {
 type AnyLoad = (args: never) => unknown
 
 /** A loader's data: what it resolves to, without `notFound()`. Top-level promise fields are deferred (streamed). */
-export type DataOf<L> = L extends AnyLoad ? Exclude<Awaited<ReturnType<L>>, NotFound> : undefined
+export type DataOf<L> = L extends AnyLoad
+  ? Exclude<Awaited<ReturnType<L>>, NotFound | RouteRedirect>
+  : undefined
 
 /** The data `meta` and cards see: deferred (promise) fields left out, since they're still streaming (H007). */
 export type Settled<D> = D extends object
@@ -184,3 +187,12 @@ export interface OgProps<L = undefined, P extends string = string> {
 export type Prerender<P extends string = string> =
   | ParamsOf<P>[]
   | (() => ParamsOf<P>[] | Promise<ParamsOf<P>[]>)
+
+export {
+  isRouteUrl,
+  routeRedirect,
+  type RouteRedirect,
+  type RouteDataSchema,
+  type RouteSchema,
+} from './shell'
+export type { ShellSite } from './shell/routes'

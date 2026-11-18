@@ -5,6 +5,8 @@ declare module 'virtual:kerf/routes' {
   export const build: ClientRoutes['build']
   /** Paths and layout ancestry used for client navigation. */
   export const table: ClientRoutes['table']
+  /** The release's shell-mode configuration, when enabled at build time. */
+  export const shell: ClientRoutes['shell']
   /** Lazy page and layout module imports. */
   export const load: ClientRoutes['load']
   /** Fresh module URLs for retrying a failed page or layout import. */

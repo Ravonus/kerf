@@ -41,8 +41,12 @@ export interface PluginEntry {
   options?: unknown
 }
 
-/** Page metadata defaults (research 20 §2). Every page writes these as static tags in the server's first response. */
+/** Site defaults for metadata, page rendering and response policy. */
 export interface SiteConfig {
+  /** Start renders every route in the release browser with schema-checked data. Omit for SSR. */
+  render?: 'shell'
+  /** Shell-mode redirect IDs and their release-authored, root-relative destinations. */
+  routeRedirects?: Readonly<Record<string, string>>
   /** Response headers by route, static files included: `{ '/arena/**': { 'x-frame-options': 'DENY' } }`. */
   headers?: Record<string, Record<string, string>>
   /**

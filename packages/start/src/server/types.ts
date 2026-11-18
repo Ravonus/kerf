@@ -1,4 +1,6 @@
-import type { Site, Merged, Meta as MetaObject } from '@kerf-js/core/ssr'
+import type { RouteDataSchema } from '../shell'
+import type { ShellSite } from '../shell/routes'
+import type { Merged, Meta as MetaObject } from '@kerf-js/core/ssr'
 import type { AssetReceipt, Component, Match } from '../router'
 import type { AuthProvider } from '../auth'
 import type { ExtensionEntry } from '../extension'
@@ -41,6 +43,7 @@ export interface Manifest {
 /** What a route file exports. */
 export interface RouteModule {
   default?: Component
+  routeData?: RouteDataSchema
   load?: (args: {
     params: Record<string, string>
     request: Request
@@ -103,7 +106,7 @@ export interface HandlerOptions {
   startup?: (() => unknown) | undefined
   /** Route, layout and card modules by manifest file. */
   modules: Record<string, RouteModule>
-  site?: Site
+  site?: ShellSite
   /**
    * The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`kerf:fonts/preloads`).
    * `pieces`: the build's first-paint table. Without it, `inline` and Kerf's purge (`critical`) are what `pageStyles` uses.

@@ -18,6 +18,7 @@ import {
 } from './data'
 import type { FormFailure } from './exec'
 import { fieldValue, type FieldKind, type FormValue } from './form/value'
+import { shellClient } from './shell/client-policy'
 
 export type { FormValue } from './form/value'
 
@@ -77,6 +78,7 @@ let page: FormFailure | null | undefined
 /** The failure this form came back with: the request's on the server, `#kerf-form` in the hydrating page. */
 function failure(id: string, key?: string): FormFailure | undefined {
   const scope = currentScope()
+  if (!scope && shellClient()) return
   let f: FormFailure | undefined | null = scope?.form
   if (!scope && typeof document === 'object') {
     if (page === undefined) {

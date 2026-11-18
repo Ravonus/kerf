@@ -48,7 +48,7 @@ export default function List(
 
 Import your own code as `#/server/todos`, which is `src/server/todos`. That alias is `paths` in `tsconfig.json`: change it or add your own there, and Vite and `kerf check` follow. Generated files have their own prefix: `kerf:slot/<id>` and `kerf:tokens/<name>`.
 
-`load` and `meta` never ship to the client. A layout's `load` runs before its children's, so it's where a guard goes.
+`load` stays on the server. With SSR, `meta` stays on the server too. A layout's `load` runs before its children's, so it's where a guard goes.
 A layout's `params` are its page's, a `[...rest]` included, so a layout can mark the page it shows.
 Set `meta` on every page as part of building it: a title and one plain sentence from what is on the page. On a param
 route build it from `data` and `params`. `kerf docs meta` has the rest.
@@ -57,6 +57,152 @@ Links are `<Link href>`; code navigates with `navigate(href)`.
 `navigate(href, { reload: true, scroll: false })` asks for fresh
 route data even when `href` is the current URL. A same-address
 reload keeps the history entry and mounted layouts.
+
+### Shell-only mode
+
+Set `site: { render: 'shell', routeRedirects: { home: '/' } }` in
+`kerf.config.ts` to build the application for browser rendering.
+Serve the emitted `.output/public/kerf-shell.html` (or the preset's
+public output) and verify its entire asset closure, including lazy
+chunks and the retry table, from the trusted release. Serve that
+same document at every app page URL, including deep links and
+unknown page URLs. Keep the browser address. A production Start
+peer returns an empty 404 for its application document routes.
+`kerf dev` serves the shell locally.
+
+The shell contains the document element and locale, charset and
+viewport, release entry, entry CSS and static module preloads,
+an empty `#app`, a startup status and a no-JavaScript message.
+Start mounts into `#app` without hydration. The browser imports
+all matched levels, including static pages, layouts, 404 and
+error views. It runs the release's `meta` exports with local
+params and validated immediate data and writes the head and JSON-LD.
+Head extras use fixed metadata attributes and a small set of inert
+link relations. Extra link URLs must be root-relative or use the
+configured HTTPS site origin. Load CSS, scripts and resource hints
+from the release asset graph.
+`site.head`, server prerendering, generated share cards and SSR
+form fallbacks are omitted in this mode. Publish signed crawler
+materials separately if needed.
+
+A custom `src/entry.client.ts` still calls `start(routes)` with the
+generated `virtual:kerf/routes` namespace. Set `clientFetch` first
+if peers live behind a different origin or transport. Preserve
+the abort signal, redirect refusal and `credentials: 'omit'` on
+the browser fetch. A credentialed application transport must
+terminate credentials at a trusted gateway and construct a new
+data response there.
+First load, links, refresh and Back/Forward use the same protocol.
+Code and route data start loading in parallel. Focus and a link
+press can warm release modules when Save-Data is off. The router
+doesn't prefetch or retain peer route responses.
+
+#### Route schema and outcomes
+
+Export `routeData` from every page or layout with a `load`.
+Shell builds require the export even for loaders that only throw
+or redirect. Use a Standard Schema v1 validator for `initial` and
+one validator per optional `deferred` key. A level without a
+loader or schema has no data and uses a wire `null` sentinel.
+`load` and `prerender` should be declared directly in their route
+modules. The schema and `meta` must be safe to bundle for the
+browser. Existing `LoadArgs`, `RouteProps` and `Meta` types work.
+
+<!-- example: skip install Zod or supply another Standard Schema validator -->
+```tsx
+import { z } from 'zod'
+import {
+  isRouteUrl, type Meta, type RouteDataSchema, type RouteProps,
+} from '@kerf-js/start'
+
+export const routeData = {
+  initial: z.strictObject({
+    name: z.string().max(120),
+    href: z.string().refine((href) => isRouteUrl(href)),
+  }),
+  deferred: { count: z.number().int().nonnegative() },
+} satisfies RouteDataSchema
+
+export function load() {
+  return {
+    name: 'Catalog',
+    href: '/catalog',
+    count: Promise.resolve(3),
+  }
+}
+
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: data.name,
+})
+
+export default function Catalog(props: RouteProps<typeof load>) {
+  return <a href={props.data.href}>{props.data.name}</a>
+}
+```
+
+Declare exact objects at every depth. List every permitted field,
+use bounded strings and arrays, and use `isRouteUrl(value, origins)`
+for URL fields. It accepts root-relative URLs or HTTPS URLs at
+explicitly allowed exact origins. It refuses ambiguous authorities,
+encoded path separators and nested path escapes. Give URL fields
+rules specific to the destination and sink. Use validated text in text nodes
+or ordinary attributes. A schema is also a sink contract. A field
+used as text must not later become HTML, CSS, script, an executable
+asset URL, a frame document or an open redirect. Use separately
+verified objects for those cases. A valid schema value does not
+establish that a peer's value is true.
+
+Both ends validate the same schema against the JSON value. The
+browser requires an exact version and build match, exact envelope
+keys, correct status, and the payload shape implied by the release
+route table. Values stripped or changed by schema validation and
+unsafe object keys are rejected. Schema validators must be pure
+checks with no coercion, transforms, defaults or loose objects.
+The response is limited to 256 KiB of decoded UTF-8, 64 KiB per
+line including the newline, 32 levels of JSON nesting and 64
+deferred fields. Route params are decoded from the requested URL
+by the release's route table. Peers never return params or a
+module selector. Admission failure renders the local error view.
+
+The data endpoint remains `GET /_kerf/data/<path>`. Its media type
+is `application/x-ndjson`. The first frame contains protocol
+version, build ID and the typed outcome:
+
+- `page` (HTTP 200) has loader values in local level order.
+- `not-found` (404) has values from surviving layouts. A loader
+  can return or throw `notFound()`. The path shown by the local
+  404 comes from the browser address.
+- `error` (500) has surviving values and a 24-hex reference.
+  The browser supplies the error message and retry controls.
+- `redirect` (200) has a release-defined ID. Return or throw
+  `routeRedirect<keyof typeof destinationMap>('home')` from
+  `load`. Configure the destination in `site.routeRedirects`.
+  HTTP redirects and URLs supplied by the response are refused.
+
+Top-level promise fields listed in `deferred` are excluded from
+`initial` and stream after the first frame. A deferred frame names
+only a declared level index and key and has a checked value or the
+`deferred-error` outcome. Use `resource` and `Boundary` for local
+pending and error UI. A malformed or truncated stream rejects
+the unsettled promises. No route, cache, SSR, raw chunk or head
+markup is accepted from the peer.
+
+The release host owns document and asset response headers, CSP,
+cookie scope, and request routing. Serve documents, scripts,
+stylesheets, retry tables and the service worker from verified
+release files. Keep peer origins outside the release origin. A
+gateway forwarding peer data must supply its own response
+headers and keep peer `Link`, `Refresh`, `Location` and
+`Set-Cookie` headers out of documents and assets. Fetch options
+cannot enforce policy on responses passed through a custom transport.
+
+Shell mode disables Start's legacy browser queries, mutations,
+mutation-backed form submissions, realtime streams, channels and
+shared state networking. Server functions can still run in
+loaders. App-owned RPC, realtime, native forms, auth, media and
+raw HTTP require their own browser admission and trusted request
+routing. The release owns any HTML, script, CSS or URL sinks
+that its components call directly.
 
 ### Error routes
 

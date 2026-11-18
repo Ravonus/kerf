@@ -60,6 +60,8 @@ export default defineConfig({
 | `plugins` | P116 duplicate name; P100 two entries provide one `one` slot; P115 bad options; P117 impure `contribute()`; P111 code outside the plugin's namespace; P112 AGENTS section over 1 KB; P113 token-namespace or catalog collision; and the codes plugins report themselves (e.g. veneer's D010) |
 | `slots` | Which plugin wins a slot two provide. P008 unknown slot id, P009 winner not in `plugins` or not providing the slot |
 | `site` | Page metadata defaults and CSS delivery. P007 `url` not absolute http(s), `title` without `%s`, `locale` not `en_US` style; H001 no `url`; H003 no `description`; H004 a title over 60 or a description over 160 (warnings) |
+| `site.render` | `'shell'` opts Start into a release-owned document and browser-rendered routes. Omit for SSR. See `kerf docs start` |
+| `site.routeRedirects` | Shell-mode redirect IDs mapped to release-owned root-relative destinations |
 | `site.card` | The generated share card's colours and fonts. P007 a colour that isn't `#rrggbb`, a font family that isn't a name. `kerf docs meta` has the rest |
 | `site.headers` | Response headers by route pattern |
 | `site.mutationOrigins` | Additional origins allowed by Q010 for Kerf mutations: exact origin list or `'*'`. Default same origin. Does not set CORS headers or protect raw HTTP handlers |

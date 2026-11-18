@@ -60,6 +60,7 @@ export function makeDispatch({
       if (response) return response
     }
     if (
+      options.site?.render !== 'shell' &&
       request.method === 'POST' &&
       !url.pathname.startsWith('/_kerf/') &&
       /^(application\/x-www-form-urlencoded|multipart\/form-data)/.test(
@@ -72,11 +73,16 @@ export function makeDispatch({
     if (request.method !== 'GET' && request.method !== 'HEAD')
       return Promise.resolve(new Response('Method not allowed', { status: 405 }))
     if (url.pathname.startsWith('/_kerf/m/')) return media(url, request)
-    if (url.pathname.startsWith('/_kerf/og/') && url.pathname.endsWith('.png'))
+    if (
+      options.site?.render !== 'shell' &&
+      url.pathname.startsWith('/_kerf/og/') &&
+      url.pathname.endsWith('.png')
+    )
       return og(url, request)
     if (url.pathname.startsWith('/_kerf/data/') || url.pathname === '/_kerf/data')
       return data((url.pathname.slice('/_kerf/data'.length) || '/') + url.search, request, scope)
-    if (url.pathname === '/_kerf/og-routes') return prerenderList(request, url)
+    if (options.site?.render !== 'shell' && url.pathname === '/_kerf/og-routes')
+      return prerenderList(request, url)
     return page(url, request, scope)
   }
   return (request: Request, scope: Scope) => cors(request, () => dispatch(request, scope))

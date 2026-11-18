@@ -4,6 +4,7 @@
 
 import './gate.css'
 import { boot } from './boot'
+import { markShellClient } from './shell/client-policy'
 import type { ClientRoutes, start as run } from './run'
 
 export type { ClientRoutes } from './run'
@@ -21,6 +22,11 @@ export function start(
   routes: ClientRoutes,
   options: { container?: Element; eager?: boolean; shell?: boolean } = {},
 ): ReturnType<typeof run> {
+  if (routes.shell) {
+    markShellClient()
+    const shell = routes.shell
+    return import('./run/shell').then((module) => module.startShell({ ...routes, shell }, options))
+  }
   return new Promise((settle, fail) => {
     const full = () =>
       import('./run')

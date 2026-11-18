@@ -13,6 +13,7 @@ import {
 } from '@kerf-js/core'
 import { currentScope, FnError, skip, StartError, track, type Fn } from '../data'
 import type { ChannelStatus, ConnectOptions, Connection, SharedBox } from '../channel'
+import { shellClient } from '../shell/client-policy'
 import {
   acquire,
   hold,
@@ -82,8 +83,9 @@ export function connect(
   options?: ConnectOptions,
 ): Connection<Record<string, never>, Record<string, never>> {
   owned(fn)
-  if (currentScope()) {
-    const closed = { value: 'connecting' as ChannelStatus }
+  const shell = shellClient()
+  if (shell || currentScope()) {
+    const closed = { value: (shell ? 'unavailable' : 'connecting') as ChannelStatus }
     return {
       status: closed,
       room: { value: undefined },
@@ -93,7 +95,16 @@ export function connect(
       on: () => () => {},
       onReset: () => () => {},
       send: () =>
-        Promise.reject(new FnError({ message: 'a channel has no socket on the server' }, 500)),
+        Promise.reject(
+          new FnError(
+            {
+              message: shell
+                ? 'Channels are unavailable in shell mode.'
+                : 'a channel has no socket on the server',
+            },
+            shell ? 501 : 500,
+          ),
+        ),
       retry() {},
     }
   }
@@ -202,8 +213,9 @@ export function shared(fn: Fn, arg: unknown, options?: ConnectOptions): SharedBo
   b.pending = 0
   b.base = { v: initial, at: 0 }
   b.problem = state<unknown>(undefined)
-  if (currentScope()) {
-    b.statusOf = { value: 'connecting' }
+  const shell = shellClient()
+  if (shell || currentScope()) {
+    b.statusOf = { value: shell ? 'unavailable' : 'connecting' }
     b.view = state<View>(undefined)
     return b
   }
