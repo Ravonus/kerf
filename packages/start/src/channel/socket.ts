@@ -214,18 +214,21 @@ function frame(d: Frame) {
       if (build && d[1].b && d[1].b !== build) rt.stale.value = true
       build = d[1].b
       open = true
-      attempt = 0
+      if (!shellClient()) attempt = 0
       for (const x of joins.values()) if (!x.refused) enter(x)
     } else if (d[0] === 'j' && j) {
+      if (shellClient() && (j.joined || j.refused)) return
       j.cursor ??= d[2]
       j.joined = true
       j.error.value = undefined
       j.status.value = 'open'
       for (const w of Array.from(j.waiting)) w()
     } else if (d[0] === 'm' && j) {
+      if (shellClient() && !j.joined) return
       j.cursor = d[2]
       dispatch(j, d[3], d[4])
     } else if (d[0] === 'r' && j) {
+      if (shellClient() && !j.joined) return
       j.cursor = d[2]
       for (const l of j.lists.values()) l.box.value = []
       j.resets.value++
@@ -245,7 +248,7 @@ function frame(d: Frame) {
       for (const w of Array.from(j.waiting)) w()
     } else if (d[0] === 'a') {
       const p = acks.get(d[2])
-      if (shellClient() && (!p || p.n !== d[1])) return
+      if (shellClient() && (!j?.joined || !p || p.n !== d[1])) return
       acks.delete(d[2])
       if (d[3])
         p?.no(
@@ -270,7 +273,7 @@ const sleep = (t: number) =>
 
 async function run() {
   listen(true)
-  const fakeNet = () => (DEV ? net() : undefined)
+  const fakeNet = () => (DEV && !shellClient() ? net() : undefined)
   while (joins.size) {
     if (parked || !navigator.onLine) {
       statusAll('reconnecting')
@@ -304,7 +307,12 @@ async function run() {
     for (const [id, p] of acks) {
       acks.delete(id)
       p.no(
-        new FnError({ message: 'the connection dropped: this may or may not have been sent' }, 503),
+        shellClient()
+          ? new ShellDataError('unavailable')
+          : new FnError(
+              { message: 'the connection dropped: this may or may not have been sent' },
+              503,
+            ),
       )
     }
     if (!joins.size) break

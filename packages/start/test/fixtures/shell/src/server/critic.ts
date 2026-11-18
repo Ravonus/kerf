@@ -18,6 +18,9 @@ export const probeChannel = channel({
 export const probeMutation = mutation({
   output: message,
   invalidates: ['critic'],
+  optimistic: (_args, cache) => {
+    cache.update(probeQuery, undefined, () => ({ text: 'Release prediction' }))
+  },
   run: () => ({ text: `Server mutation ${++version}` }),
 })
 export const refuseMutation = mutation({

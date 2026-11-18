@@ -9,7 +9,7 @@ import { parse, valueNames, pruneImports } from './syntax.mjs'
 export const isServerModule = (rel) =>
   rel.startsWith('src/server/') || /\.server\.[cm]?[jt]sx?$/.test(rel)
 
-export function scanServerModules(root) {
+export function scanServerModules(root, all = false) {
   const out = []
   const walk = (dir) => {
     let list
@@ -25,8 +25,8 @@ export function scanServerModules(root) {
       } else if (
         /\.[cm]?[jt]sx?$/.test(d.name) &&
         !/\.(test|spec)\./.test(d.name) &&
-        !d.name.endsWith('.d.ts') &&
-        isServerModule(rel)
+        !/\.d\.[cm]?ts$/.test(d.name) &&
+        (all || isServerModule(rel))
       )
         out.push(rel)
     }
@@ -116,13 +116,27 @@ function schemaValue(value) {
 }
 
 function declared(f, key) {
+  const properties = f.obj?.properties
   const p = f.obj && prop(f.obj, key)
-  if (!p || p.kind !== 'init' || p.method || !schemaValue(p.value)) return false
+  if (!p || !properties || p.kind !== 'init' || p.method || !schemaValue(p.value)) return false
+  if (
+    properties.some(
+      (other) =>
+        other !== p &&
+        (other.type === 'SpreadElement' ||
+          other.computed ||
+          (other.key?.name ?? other.key?.value) === key),
+    )
+  )
+    return false
   if (key !== 'server' || p.value.type !== 'ObjectExpression') return true
   return p.value.properties.every(
     (event) =>
-      event.type === 'SpreadElement' ||
-      (event.kind === 'init' && !event.method && schemaValue(event.value)),
+      event.type === 'Property' &&
+      event.kind === 'init' &&
+      !event.computed &&
+      !event.method &&
+      schemaValue(event.value),
   )
 }
 
@@ -130,12 +144,25 @@ function declared(f, key) {
 export function functionContracts(code, file) {
   const ast = parse(file, code)
   const locals = fnLocals(ast, true)
-  const definitions = fnExports(ast, locals, true)
+  const definitions = isServerModule(file) ? fnExports(ast, locals, true) : []
   const recognized = new Set(definitions.map((f) => f.call))
   const findings = definitions.flatMap((f) => {
     const kind = locals.get(f.callee)
     const key = contractKeys[kind]
-    if (!key || (f.single && declared(f, key))) return []
+    if (!key) return []
+    if (
+      f.obj?.properties.some(
+        (p) => p.type === 'Property' && (p.key?.name ?? p.key?.value) === '$id',
+      )
+    )
+      return [
+        {
+          name: f.name,
+          at: f.node.start,
+          why: 'Shell operation IDs are assigned by Start. Remove the explicit $id.',
+        },
+      ]
+    if (f.single && declared(f, key)) return []
     return [
       {
         name: f.name,
@@ -153,6 +180,11 @@ export function functionContracts(code, file) {
         : [],
     ),
   )
+  const constructors = new Map(locals)
+  const kindOf = (node) =>
+    node?.type === 'MemberExpression' && namespaces.has(node.object.name)
+      ? (node.property.name ?? node.property.value)
+      : constructors.get(node?.name)
   const walk = (node, name) => {
     if (Array.isArray(node)) {
       for (const child of node) walk(child, name)
@@ -160,17 +192,17 @@ export function functionContracts(code, file) {
     }
     if (typeof node?.type !== 'string' || node.type === 'ImportDeclaration') return
     const at = node.type === 'VariableDeclarator' ? (node.id?.name ?? name) : name
+    if (node.type === 'VariableDeclarator' && node.id?.type === 'Identifier') {
+      const kind = kindOf(node.init)
+      if (Object.hasOwn(contractKeys, kind)) constructors.set(node.id.name, kind)
+    }
     if (node.type === 'CallExpression' && !recognized.has(node)) {
-      const callee = node.callee
-      const kind =
-        callee.type === 'MemberExpression' && namespaces.has(callee.object.name)
-          ? (callee.property.name ?? callee.property.value)
-          : locals.get(callee.name)
+      const kind = kindOf(node.callee)
       if (Object.hasOwn(contractKeys, kind))
         findings.push({
           name: at ?? kind,
           at: node.start,
-          why: `Declare ${kind} as a named import and a direct, separate export with a release schema.`,
+          why: `Declare ${kind} as a named import and a direct, separate server export with a release schema.`,
         })
     }
     for (const [key, value] of Object.entries(node))
@@ -201,7 +233,7 @@ export function withIds(code, file, rel, shell = false) {
       )
     }
   }
-  const list = all.filter((f) => !prop(f.obj, '$id'))
+  const list = all.filter((f) => shell || !prop(f.obj, '$id'))
   let out = code
   for (const f of list.sort((a, b) => b.obj.start - a.obj.start))
     out =

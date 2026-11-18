@@ -13,6 +13,7 @@ import {
   SHELL_VERSION,
   invalid,
   initialSchema,
+  isSchema,
   record,
   safeKey,
   validate,
@@ -105,7 +106,7 @@ async function resolveShell(
   try {
     for (const [depth, id] of local.ids.entries()) {
       const module = moduleOf(id)
-      if (module?.load && !module.routeData?.initial) invalid()
+      if (module?.load && !isSchema(module.routeData?.initial)) invalid()
       const raw = await load(id).catch((error: unknown) => {
         if (isNotFound(error) || error instanceof RouteRedirect) return error
         throw error

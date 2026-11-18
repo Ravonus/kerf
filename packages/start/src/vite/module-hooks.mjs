@@ -26,7 +26,13 @@ import {
   cardFonts,
 } from './entries.mjs'
 import { stripServerExports, serverExports } from './syntax.mjs'
-import { isServerModule, definesFns, withIds, clientStubs } from './server-functions.mjs'
+import {
+  isServerModule,
+  definesFns,
+  withIds,
+  clientStubs,
+  functionContracts,
+} from './server-functions.mjs'
 import { here, V, DEFAULT_FONTS, ASSETS, ISLAND, ENTRY_SHEETS } from './shared.mjs'
 
 /** Virtual modules that are an app file's default export: `src/<name>.server.ts`, or `undefined` without one. */
@@ -136,6 +142,11 @@ export const transform = (s) => ({
     const rel = relative(s.root, path).split('\\').join('/')
     if (client && (/\.http\.[jt]s$/.test(rel) || rel.startsWith('src/hooks.server.')))
       this.error(`Q012: ${rel} runs only on the server; do not import it from client code`)
+    if (shell && !rel.startsWith('..') && code.includes('@kerf-js/start')) {
+      const findings = functionContracts(code, rel)
+      if (findings.length)
+        this.error(findings.map(({ name, why }) => `Q021: ${rel} \`${name}\`: ${why}`).join('\n'))
+    }
     if (isServerModule(rel)) {
       const out = client
         ? clientStubs(code, path, rel, await s.shapeTable(this), shell)

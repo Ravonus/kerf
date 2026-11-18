@@ -1,3 +1,4 @@
+import { hasChannelContract } from '../shell/realtime'
 import { StartError, type Context, type Fn, type StandardSchemaV1 } from '../data'
 import type { Bucket } from './types'
 
@@ -56,5 +57,5 @@ export function channelContract(
   builtIn: boolean,
 ): fn is Fn {
   if (fn?.kind !== 'channel' && fn?.kind !== 'shared') return false
-  return !shell || (!builtIn && !!(fn.kind === 'shared' ? fn.def.value : fn.def.server))
+  return !shell || (!builtIn && hasChannelContract(fn))
 }

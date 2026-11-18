@@ -5,6 +5,7 @@ import { fns, net, runtime } from './foundation'
 import { FnError, isRedirect, stable, StartError } from './primitives'
 import type { Answer, Fn, NetControl, Transport } from './types'
 import { browserFailure, ERROR_HEADER } from '../failure'
+import { ShellDataError } from '../shell/operation'
 import { shellClient } from '../shell/client-policy'
 
 import { requestOperation } from '../shell/client-operations'
@@ -31,6 +32,7 @@ const answer = async (res: Response): Promise<Answer> => {
 }
 
 function requestFn(_id: string, path: string, init: RequestInit) {
+  if (shellClient()) return Promise.reject(new ShellDataError('invalid'))
   return clientRequest(path, init)
     .catch((error) => {
       if ((error as Error | null)?.name === 'AbortError') throw error
@@ -45,10 +47,14 @@ export const http = httpTransport(requestFn)
 function httpTransport(send: typeof requestFn, sealed = false): Transport {
   return {
     query: (id, input) =>
-      send(id, `/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-      }),
+      send(
+        id,
+        `/_kerf/fn/${sealed ? encodeURIComponent(id) : id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`,
+        {
+          method: 'GET',
+          headers: { accept: 'application/json' },
+        },
+      ),
     mutate(id, input, f, form) {
       const headers: Record<string, string> = {
         accept: 'application/json',
@@ -58,7 +64,7 @@ function httpTransport(send: typeof requestFn, sealed = false): Transport {
       if (form instanceof FormData) {
         if (!sealed) form.set('$r', JSON.stringify(f))
       } else headers['content-type'] = 'application/json'
-      return send(id, `/_kerf/fn/${id}`, {
+      return send(id, `/_kerf/fn/${sealed ? encodeURIComponent(id) : id}`, {
         method: 'POST',
         headers,
         body:

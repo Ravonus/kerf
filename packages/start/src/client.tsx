@@ -4,7 +4,8 @@
 
 import './gate.css'
 import { boot } from './boot'
-import { markShellClient } from './shell/client-policy'
+import { ShellDataError } from './shell/operation'
+import { markShellClient, shellClient } from './shell/client-policy'
 import type { ClientRoutes, start as run } from './run'
 
 export type { ClientRoutes } from './run'
@@ -27,6 +28,7 @@ export function start(
     const shell = routes.shell
     return import('./run/shell').then((module) => module.startShell({ ...routes, shell }, options))
   }
+  if (shellClient()) return Promise.reject(new ShellDataError('invalid'))
   return new Promise((settle, fail) => {
     const full = () =>
       import('./run')

@@ -1,13 +1,26 @@
 import { DEV } from '@kerf-js/core'
+import { refreshShellQueries } from '../data/cache'
+import { shellClient } from '../shell/client-policy'
 import { ShellDataError } from '../shell/operation'
 import { cache, FnError } from './api'
 import type { Sub } from './sub-types'
 
 export type Row = { 0: number; 1: never; 2: unknown }
 
+export function refreshLiveQueries(subs: Map<string, Sub>) {
+  const keys = new Set([...subs.values()].filter((s) => s.fn.kind === 'query').map((s) => s.key))
+  if (keys.size) refreshShellQueries(keys)
+}
+
 export function ack(d: Row, byN: Map<number, Sub>, seeded: () => boolean) {
   const s = byN.get(d[0])
   if (!s) return
+  if (shellClient()) {
+    s.error.value = undefined
+    if (!s.acked) refreshShellQueries(new Set([s.key]))
+    s.acked = true
+    return
+  }
   s.tags = d[1]
   s.error.value = undefined
   if (DEV && !s.tags.length)

@@ -54,3 +54,39 @@ test('one source scan lists every missing contract including unsupported declara
     rmSync(root, { recursive: true, force: true })
   }
 })
+
+test('refuses indirect declarations, IDs, and overrides in shell sources', () => {
+  const root = mkdtempSync(join(tmpdir(), 'kerf-shell-inventory-'))
+  try {
+    for (const folder of ['src/server', 'src/routes'])
+      mkdirSync(join(root, folder), { recursive: true })
+    writeFileSync(
+      join(root, 'src/client.ts'),
+      `
+      import { mutation } from '@kerf-js/start'
+      export const local = mutation({ run: () => null })
+    `,
+    )
+    writeFileSync(
+      join(root, 'src/server/cases.ts'),
+      `
+      import { query, channel } from '@kerf-js/start'
+      const factory = query
+      export const aliased = factory({ run: () => null })
+      export const dynamic = query({ $id: id(), run: () => null, output: schema })
+      export const spread = query({ output: schema, ...options, run: () => null })
+      export const duplicate = query({ output: schema, output: undefined, run: () => null })
+      export const events = channel({ server: { ...inherited }, authorize: () => true })
+    `,
+    )
+    writeFileSync(join(root, 'src/routes/index.tsx'), "export { default as load } from './other'")
+    expect(
+      checkShellContracts(root)
+        .map(({ name }) => name)
+        .sort(),
+    ).toEqual(['aliased', 'duplicate', 'dynamic', 'events', 'load', 'local', 'spread'])
+    expect(() => requireShellContracts(root)).toThrow(/Q021/)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})

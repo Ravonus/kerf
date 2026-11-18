@@ -84,11 +84,11 @@ function declaredRouteData(nodes) {
   const init = declaration.init
   if (!init || init.type === 'Literal' || init.name === 'undefined') return false
   if (init.type !== 'ObjectExpression') return true
-  return init.properties.some(
-    (prop) =>
-      prop.type === 'SpreadElement' ||
-      (!prop.computed && (prop.key?.name ?? prop.key?.value) === 'initial'),
+  const initial = init.properties.filter(
+    (prop) => !prop.computed && (prop.key?.name ?? prop.key?.value) === 'initial',
   )
+  const value = initial[0]?.value
+  return initial.length === 1 && !!value && value.type !== 'Literal' && value.name !== 'undefined'
 }
 
 function unsafeShellExport(node) {

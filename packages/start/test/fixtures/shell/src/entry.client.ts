@@ -16,8 +16,9 @@ clientFetch((path, init) => {
     target.searchParams.set('delay', '1')
   return fetch(target, init)
 })
-clientSocket((path) => {
-  const target = sessionStorage.peer === 'b' ? sessionStorage.socketB : sessionStorage.socketA
-  return target ? new URL(path, target) : path
-})
+if (!sessionStorage.noSocket)
+  clientSocket((path) => {
+    const target = sessionStorage.peer === 'b' ? sessionStorage.socketB : sessionStorage.socketA
+    return target ? new URL(path, target) : path
+  })
 void start(routes)

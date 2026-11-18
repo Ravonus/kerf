@@ -1,15 +1,16 @@
 import { render } from '@kerf-js/core/dom'
 import type { ShellBootstrap } from '../shell/bootstrap'
+import { isSchema } from '../shell/wire'
 import { ShellDataError } from '../shell/operation'
 
 /** A first-read error stays in the release's startup view until a local retry succeeds. */
 export async function beforeShell(
-  bootstrap: ShellBootstrap,
+  bootstrap: ShellBootstrap | undefined,
   container: Element,
   mount: () => void,
 ) {
   document.getElementById('kerf-shell-pending')?.remove()
-  const { pending: Pending, failure: Failure } = bootstrap.views
+  const { pending: Pending, failure: Failure } = bootstrap?.views ?? {}
   let dispose: (() => void) | undefined
   let reading = false
   const read = async () => {
@@ -21,6 +22,8 @@ export async function beforeShell(
       container,
     )
     try {
+      if (!bootstrap || !isSchema(bootstrap.schema) || typeof bootstrap.refresh !== 'function')
+        throw new ShellDataError('invalid')
       await bootstrap.refresh()
     } catch (cause) {
       const error = cause instanceof ShellDataError ? cause : new ShellDataError('invalid')

@@ -102,9 +102,13 @@ doesn't prefetch or retain peer route responses.
 #### Route schema and outcomes
 
 Run `kerf check --shell` before switching the site to shell mode.
-It lists all missing shell contracts by file and export (Q021)
-without running app modules or building. The build applies the same
-gate, including modules outside the initial page.
+It inspects source declarations and reports Q021 by file and export
+without running app modules or building. The build applies this
+check to sources and checks recognized declarations again during
+transformation. Source checks cannot evaluate schema expressions,
+dynamic registration or arbitrary plugin-generated code. The
+published browser and framework server check the actual contracts
+before admitting data or opening an operation.
 Export `routeData` from every page or layout with a `load`,
 including loaders that only throw or redirect. Use a Standard Schema v1 validator for `initial` and
 one validator per optional `deferred` key. A level without a
@@ -161,7 +165,7 @@ Both ends validate the same schema against the JSON value. The
 browser requires an exact version and build match, exact envelope
 keys, correct status, and the payload shape implied by the release
 route table. Values stripped or changed by schema validation and
-unsafe object keys are rejected. Schema validators must be pure
+duplicate and unsafe object keys are rejected. Schema validators must be pure
 checks with no coercion, transforms, defaults or loose objects.
 The response is limited to 256 KiB of decoded UTF-8, 64 KiB per
 line including the newline, 32 levels of JSON nesting and 64
@@ -209,7 +213,13 @@ Fixed destinations may use strings. Dynamic destinations use
 Start matches each decoded segment against the whole regex and
 encodes it before substitution. It caps the parameter count at
 16 and each value at 256 characters. Use bounded, simple regexes.
-A redirect must resolve to a page in the release's route table.
+The value must already be NFC and cannot contain separators,
+dots used as path segments, percent escapes, query or fragment
+characters. The result must resolve to the route matched by the
+pattern. A named segment cannot select a shadowing static route.
+Only a source with a release route data contract can redirect.
+The peer can select allowed IDs and values. Put authorization
+and other sensitive transitions in release code.
 
 <!-- example: skip this excerpt spans config and loader files -->
 ```ts
@@ -234,10 +244,14 @@ export function load() {
 
 A guard can return or throw
 `routeRedirect<typeof destinations>('signIn')`. The browser adds
-the path and query it requested under `next`. On completion,
-`routeReturnTo('next')` reads that address from the browser and
-returns a root-relative route in the release, or `undefined`. The
-application can further restrict which local routes are appropriate.
+the initial navigation's path and query under `next`. Intermediate
+peer-selected hops do not supply the return address. On completion,
+`routeReturnTo('next')` reads one value from the current browser URL
+and returns a root-relative release route, or `undefined`. It
+refuses the current path, nested return keys and ambiguous paths.
+The router cuts off repeated redirect hops. Completion handlers
+must still choose suitable routes and handle redirects that
+depend on peer claims or application state.
 Put shell guards in route loaders so they can return these outcomes.
 
 <!-- example: skip use this in a sign-in or setup completion handler -->
@@ -252,14 +266,16 @@ export async function afterSignIn() {
 #### Operations and realtime
 
 Add Standard Schema v1 `output` to every exported `query` and
-`mutation` in a shell app. Use direct definitions in server modules.
-The browser stub retains the release schema and validates before
-resolving the call or updating the query cache. Use the same strict
-object, bound and URL rules as `routeData`. Use an explicit `null`
-result for a write with no payload. A mutation invalidates by
-tag and subsequent reads pass through their own query contracts.
-Navigate in release code after a successful mutation. Shell RPC
-doesn't deliver a peer redirect, cache snapshot or SSR form response.
+`mutation` in a shell app. Write direct definitions in server
+modules and leave operation IDs to Start. The browser stub
+validates before resolving the call or updating the query cache.
+Use the same strict object, bound and URL rules as `routeData`.
+Use an explicit `null` result for a write with no payload. A shell
+mutation marks cached queries stale and active readers revalidate
+with their contracts. The app's optimistic code runs locally and
+the framework drops the failed call's layer. Navigate in release
+code after a successful mutation. Shell RPC carries no peer
+redirect, secondary cache values or SSR form response.
 
 <!-- example: skip install Zod or supply another Standard Schema validator -->
 ```ts
@@ -304,7 +320,10 @@ export async function readCounter(peer: URL, signal: AbortSignal) {
 
 RPC stays at the existing function URL and uses a single NDJSON
 line of at most 64 KiB. It carries protocol version, build and
-operation ID, plus the result and cache tags or a closed error code.
+operation ID, plus the result and bounded wire tags or a closed
+error code. The browser discards peer tags. Build and operation
+labels detect mismatches. They cannot authenticate a peer, a
+business claim or the freshness of a matching response.
 `ShellDataError` has a local `code`, `status`, and message. It
 carries no peer text, issues, or error data. For example,
 `error.code === 'unauthorized'` selects a local sign-in action.
@@ -313,12 +332,23 @@ Malformed or mismatched framing or values report `invalid`.
 Declare one schema per server message name in `channel({ server })`,
 one `message` schema for each `stream()`, and the `value` schema
 for `sharedState()`. Shell query subscriptions and streams use SSE
-through `clientFetch`. Channel and shared-state frames use a direct
-WebSocket to `/_kerf/ws`. Set `clientSocket` before `start` to select
-a release-approved destination. Keep cookies at trusted origins and
-set exact `realtime({ origins })` when the socket serves another
-origin. Channel and SSE messages are versioned, build-bound, and
-checked before they reach folds, subscribers or shared state.
+through `clientFetch`. SSE has fixed event names and an internal,
+bounded resume token. Native SSE `id:` and `retry:` fields are
+refused. The browser chooses its reconnect timing and revalidates
+locally requested live queries. Use bounded ASCII tokens with
+letters, numbers or `._:~-` for tracked stream IDs.
+
+Channels and shared state are unavailable until the release sets
+`clientSocket` before `start`. Its destination must be a trusted
+gateway that terminates the WebSocket upgrade. Native WebSocket
+can send ambient cookies and process upgrade headers before
+JavaScript can see a frame. The gateway must isolate those headers
+and credentials from the peer and bound messages before forwarding.
+Use exact `realtime({ origins })` for the browser origin and never
+send the browser directly to an untrusted WebSocket peer. Channel
+and SSE data are versioned, build-bound, and checked before they
+reach folds, subscribers or shared state. Legacy network presence
+and the browser multiplexer's session handshake are unavailable.
 
 <!-- example: skip install Zod or supply another Standard Schema validator -->
 ```ts
@@ -382,7 +412,10 @@ export default provide
 
 Import the shared contract in route code and call `bootstrap.read()`
 for the typed, reactive snapshot. Use `await bootstrap.refresh()`
-to re-read it. A failed refresh keeps the last admitted value.
+to re-read it. Concurrent refresh calls share one request. A
+failed refresh clears the snapshot and `read()` throws until a
+new value is admitted. Use release-owned recovery for mounted
+readers. The snapshot is application-wide across navigations.
 For wallet settings, admit only release-approved values and origins
 before initializing the wallet module. Treat peer claims about
 maintenance, identity and release freshness according to the app's

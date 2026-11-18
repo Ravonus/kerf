@@ -8,7 +8,7 @@ import { functionFault } from './function-fault'
 import { failureMessage } from './public-fault'
 import { ERROR_HEADER } from '../failure'
 import { admitValue, errorFrameStatus, peerStatus, shellResponse, tags } from '../shell/operation'
-import { SHELL_MEDIA } from '../shell/wire'
+import { isSchema, validOperationId } from '../shell/wire'
 import type { Answer, Fn } from '../data/types'
 
 /** `/_kerf/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
@@ -32,7 +32,7 @@ export async function serverFunction(
   }
   const { out, fail } = functionResponses(scope, options, id)
   const f = fns.get(id)
-  if (!f)
+  if (!f || (shell && !validOperationId(id)))
     return fail(
       'Q009',
       `Q009: no server function \`${id}\` (the page is older than the server, or the module isn't a server module): reload`,
@@ -40,7 +40,7 @@ export async function serverFunction(
     )
   if (f.kind !== 'query' && f.kind !== 'mutation')
     return fail('Q010', `Q010: \`${id}\` uses the realtime transport`, 405)
-  if (shell && !f.def.output) return fail('Q009', 'Missing operation contract', 404)
+  if (shell && !isSchema(f.def.output)) return fail('Q009', 'Missing operation contract', 404)
   let fromForm = false
   try {
     if (f.kind === 'query') {
@@ -132,12 +132,10 @@ function functionResponses(scope: Scope, options: HandlerOptions, id: string) {
         ? shellResponse(build ?? null, operation, body)
         : error(status)
       : Response.json(body, { status })
+    if (shell) return response
     const res = withHeaders(response, scope)
     res.headers.set('cache-control', 'no-store') // a function's answer is never stored, whatever it set
-    if (shell) {
-      res.headers.set('content-type', SHELL_MEDIA)
-      res.headers.delete(ERROR_HEADER)
-    } else if (reference) res.headers.set(ERROR_HEADER, reference)
+    if (reference) res.headers.set(ERROR_HEADER, reference)
     return res
   }
   const fail = (code: string, message: string, status: number, allow?: string) => {

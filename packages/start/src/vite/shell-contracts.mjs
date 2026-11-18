@@ -42,7 +42,11 @@ export function checkShellContracts(
   }
   for (const { file } of [...manifest.layouts, ...manifest.routes])
     inspect(file, shellLoaderContract)
-  for (const file of scanServerModules(root)) inspect(file, functionContracts)
+  for (const file of scanServerModules(root, true)) {
+    inspect(file, (source, rel) =>
+      source.includes('@kerf-js/start') ? functionContracts(source, rel) : [],
+    )
+  }
   const { contract, provider } = bootstrapFiles(root)
   if (!!contract !== !!provider)
     findings.push({

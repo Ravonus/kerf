@@ -7,5 +7,5 @@ export interface ShellCheckResult {
   ms: number
 }
 
-/** List every missing shell contract by file and export without executing app code. */
+/** List recognized missing shell contracts by file and export without executing app code. */
 export function checkShell(root: string): Promise<ShellCheckResult>

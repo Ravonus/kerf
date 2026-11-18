@@ -12,6 +12,7 @@ import {
   assertNoMarkup,
   watchSinks,
 } from './shell.browser.setup'
+import { testCriticShellOperations } from './shell.critic.browser'
 import { testHostileShellOperations } from './shell.hostile.browser'
 
 const output = join(import.meta.dirname, 'fixtures/shell/.output-browser-shell')
@@ -379,7 +380,7 @@ test('waits for bootstrap and re-reads on demand without mounting peer content',
     })
     await page.getByRole('button', { name: 'Read bootstrap again' }).click()
     await page.locator('[data-bootstrap-error]').getByText('invalid').waitFor()
-    expect(await page.locator('[data-bootstrap]').textContent()).toBe('a')
+    expect(await page.locator('[data-bootstrap]').textContent()).toBe('No admitted settings')
     await page.evaluate(() => {
       delete sessionStorage.bootstrapAttack
     })
@@ -392,3 +393,5 @@ test('waits for bootstrap and re-reads on demand without mounting peer content',
 })
 
 testHostileShellOperations()
+
+testCriticShellOperations()

@@ -31,10 +31,13 @@ let address: string
 const captured: { peer: string; path: string; headers: Headers; text: Promise<string> }[] = []
 const criticMarker = 'CRITIC_MARKER'
 const criticCookieRead: (string | undefined)[] = []
+const operationCookieRead: (string | undefined)[] = []
 const gateway = createServer((req, res) => {
   const url = new URL(req.url!, 'http://localhost')
   const peer = /^\/peers\/(a|b)(\/_kerf\/(?:data\/.*|fn\/.+|rt|bootstrap))$/.exec(url.pathname)
   if (peer && url.searchParams.has('critic')) criticCookieRead.push(req.headers.cookie)
+  if (peer && url.searchParams.get('operationAttack') === 'critic-headers')
+    operationCookieRead.push(req.headers.cookie)
   const task = peer
     ? forward(peer[1]!, peer[2]! + url.search, req, res)
     : releaseFile(url.pathname, res)
@@ -105,6 +108,18 @@ async function forward(peer: string, path: string, req: IncomingMessage, res: Se
     else res.end()
     return
   }
+  if (attack === 'critic-headers' || attack === 'critic-redirect') {
+    const extraHeaders = {
+      'content-type': 'application/x-ndjson',
+      'set-cookie': 'critic-operation=example; Path=/',
+      link: '</critic-operation-hint.css>; rel=preload; as=style',
+      refresh: '0; url=/critic-operation-target',
+      location: '/critic-operation-target',
+    }
+    res.writeHead(attack === 'critic-redirect' ? 302 : response.status, extraHeaders)
+    res.end(await response.text())
+    return
+  }
   if (attack) {
     const frame = JSON.parse(await response.text())
     const text = tamper(frame, attack)
@@ -141,6 +156,7 @@ async function hostileEvents(response: Response, res: ServerResponse, attack: st
           continue
         }
         const frame = JSON.parse(packet.split('\ndata: ')[1]!)
+        if (sendCriticEvent(res, attack, frame)) return
         const event = attack === 'error' ? 'e' : 'm'
         res.end(`event: ${event}\ndata: ${tamper(frame, attack)}\n\n`)
         return
@@ -150,6 +166,24 @@ async function hostileEvents(response: Response, res: ServerResponse, attack: st
   } finally {
     await reader.cancel().catch(() => {})
   }
+}
+
+function sendCriticEvent(
+  res: ServerResponse,
+  attack: string,
+  frame: { kind: string; value: unknown[] },
+) {
+  const data = JSON.stringify(frame)
+  const packet = {
+    'critic-sse-id': `id: inert-id\nevent: m\ndata: ${data}`,
+    'critic-sse-retry': `retry: 0\nevent: m\ndata: ${data}`,
+    'critic-sse-event': `event: x\ndata: ${JSON.stringify({ ...frame, kind: 'sse:x', value: [987, null, null] })}`,
+    'critic-sse-presence': `event: L\ndata: ${JSON.stringify({ ...frame, kind: 'sse:L', value: { m: 'app', name: criticMarker } })}`,
+    'critic-sse-type': `event: m\ndata: ${JSON.stringify({ ...frame, value: [frame.value[0], 14, frame.value[2]] })}`,
+  }[attack]
+  if (!packet) return false
+  res.end(packet + '\n\n')
+  return true
 }
 
 async function hostileReply(path: string, reply: Response, res: ServerResponse) {
@@ -287,6 +321,7 @@ export {
   go,
   assertNoMarkup,
   operationAttacks,
+  operationCookieRead,
   tamper,
 }
 

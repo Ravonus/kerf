@@ -1,7 +1,20 @@
 import { DEV, flush, untrack, type State } from '@kerf-js/core'
 import { client, peers } from '../router'
-import { entries, entry, setBase, staleTags, relieve, cache, type Entry, type Layer } from './cache'
+import {
+  entries,
+  entry,
+  setBase,
+  staleTags,
+  refreshShellQueries,
+  relieve,
+  cache,
+  type Entry,
+  type Layer,
+} from './cache'
 import { fnOf, fns, go, runtime, server } from './foundation'
+import { hasOperation } from '../shell/client-operations'
+import { ShellDataError } from '../shell/operation'
+import { shellClient } from '../shell/client-policy'
 import { FnError } from './primitives'
 import { transport } from './transport'
 import type { Answer, Fn, OptimisticCache } from './types'
@@ -15,6 +28,7 @@ export async function mutate(
 ): Promise<unknown> {
   const scope = server()
   if (scope) return (await runtime.exec!.runMutation(scope, fn, input, [], !!form)).v
+  if (shellClient() && !hasOperation(fn)) throw new ShellDataError('invalid')
   const m = ++callId
   const touched = new Set<Entry>()
   let overlap = 0
@@ -91,14 +105,15 @@ function applyResult(o: {
       if (refreshed.has(e.key)) continue
       // S011: the server sent no fresh value for an entry this call predicted. Keep the layer until the entry's
       // next value (refetched now) instead of flashing back to the old one.
-      if (DEV && !e.tags.some((t) => a.t?.includes(t)))
+      if (DEV && !shellClient() && !e.tags.some((t) => a.t?.includes(t)))
         console.warn(
           `kerf: S011 \`${fn.$id}\`'s optimistic updated \`${e.key}\` (tags ${JSON.stringify(e.tags)}), but its invalidated tags ${JSON.stringify(a.t ?? [])} don't cover it: the prediction had no fresh value to land on.\n  fix: add one of its tags to \`invalidates\``,
         )
       wait(e)
       e.held = true
     }
-    staleTags(a.t ?? [], refreshed)
+    if (shellClient()) refreshShellQueries()
+    else staleTags(a.t ?? [], refreshed)
     for (const e of seen) relieve(e)
     for (const e of touched) relieve(e)
     error.value = undefined

@@ -17,9 +17,9 @@ export interface BootstrapViews {
 export interface ShellBootstrap<T = unknown> {
   readonly schema: RouteSchema<T>
   readonly views: BootstrapViews
-  /** The last admitted value. Reactive when read under a Kerf owner. */
+  /** The admitted value. Throws when startup or refresh has failed. */
   read(): T
-  /** Re-read through clientFetch. A failure preserves the last admitted value. */
+  /** Re-read through clientFetch. A failure clears the admitted value. */
   refresh(): Promise<T>
 }
 
@@ -50,6 +50,10 @@ export function defineBootstrap<T>(
           value.value = { data }
           return data
         })
+        .catch((error: unknown) => {
+          value.value = undefined
+          throw error
+        })
         .finally(() => {
           reading = undefined
         }))
@@ -69,6 +73,7 @@ async function readBootstrap<T>(schema: RouteSchema<T>): Promise<T> {
     return (await admitValue(
       schema,
       await readValue(response, { build, kind: 'bootstrap', signal }),
+      signal,
     )) as T
   } catch (error) {
     throw signal.aborted ? new ShellDataError('unavailable') : error

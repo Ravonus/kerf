@@ -16,6 +16,6 @@ export const shellClient = () =>
 
 /** The release's build, never one learned from the peer. */
 export function shellBuild() {
-  if (build === undefined) throw new ShellDataError('invalid')
+  if (!build) throw new ShellDataError('invalid')
   return build
 }

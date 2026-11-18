@@ -1,5 +1,5 @@
 // Read a bounded UTF-8 line stream without treating a peer response as a document.
-import { SHELL_BYTES, SHELL_FRAME_BYTES, invalid } from './wire'
+import { SHELL_BYTES, SHELL_FRAME_BYTES, invalid, parseShellJson } from './wire'
 
 export async function* frames(body: ReadableStream<Uint8Array>, signal: AbortSignal) {
   const reader = body.getReader()
@@ -26,7 +26,7 @@ export async function* frames(body: ReadableStream<Uint8Array>, signal: AbortSig
         size += part.length
         if (end < 0) break
         signal.throwIfAborted()
-        const parsed: unknown = JSON.parse(decoder.decode(frame.subarray(0, size)))
+        const parsed = parseShellJson(decoder.decode(frame.subarray(0, size)))
         yield parsed
         size = 0
         start = end + 1

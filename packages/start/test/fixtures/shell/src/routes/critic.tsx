@@ -1,5 +1,7 @@
 import { Boundary, state } from '@kerf-js/core'
 import { admitOperation, Form, ShellDataError, type Meta, type RouteProps } from '@kerf-js/start'
+import { connectBuiltIn } from '../../../../../src/channel'
+import { http } from '../../../../../src/data'
 import { z } from 'zod'
 import {
   probeChannel,
@@ -90,6 +92,7 @@ export default function Critic(props: RouteProps<typeof load>) {
       >
         Request refused mutation
       </button>
+      <LegacyProbe />
       <output data-query>{query.value}</output>
       <Boundary pending={<p>Query loading</p>} error={() => <p>Query refused</p>}>
         <Current />
@@ -114,11 +117,32 @@ export default function Critic(props: RouteProps<typeof load>) {
   )
 }
 
+function LegacyProbe() {
+  const legacy = state('Idle')
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          void http.query(probeQuery.$id, undefined).then(
+            () => (legacy.value = 'Legacy reply reached app code'),
+            (error) => (legacy.value = errorCode(error)),
+          )
+        }}
+      >
+        Call legacy HTTP transport
+      </button>
+      <output data-legacy>{legacy.value}</output>
+    </>
+  )
+}
+
 function ChannelProbe() {
   const sendError = state('')
   const connection = probeChannel.connect(undefined, { keep: 0 })
   const notices = connection.collect('notice')
   const shared = probeShared.connect('critic', { keep: 0 })
+  const presence = connectBuiltIn('$share')
   const stream = probeStream(undefined, { keep: 0 })
   return (
     <>
@@ -133,6 +157,7 @@ function ChannelProbe() {
         Request channel message
       </button>
       <output data-channel>{connection.status.value}</output>
+      <output data-presence>{presence.status.value}</output>
       <output data-notice>{notices.value.at(-1)?.text}</output>
       <output data-channel-error>{errorCode(connection.error)}</output>
       <output data-send-error>{sendError.value}</output>

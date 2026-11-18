@@ -16,9 +16,9 @@ let custom: ClientFetch | undefined
  * mutation a component calls, and the route data a client navigation or a prefetch asks for. The query cache,
  * dedupe, tags and invalidation work as they do by default, since only the wire changes. Call it once, before
  * `start()`, in `src/entry.client.ts`; `clientFetch(undefined)` goes back to the default. It does nothing on the
- * server, where a query runs in process. An SSR document load, realtime (`/_kerf/rt`) and assets bypass it.
- * For `site.render: 'shell'`, the first route data read uses this transport too. Preserve its abort signal,
- * redirect refusal and credential omission.
+ * server, where a query runs in process. An SSR document load, SSR realtime and assets bypass it.
+ * Shell mode uses it for all route data reads, operations, bootstrap and SSE. Preserve its abort
+ * signal, redirect refusal, cache policy and credential omission.
  *
  *   clientFetch((path, init) => fetch(new URL(path, pick()), { ...init, credentials: 'include' }))
  *

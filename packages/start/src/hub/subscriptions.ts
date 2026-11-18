@@ -12,6 +12,7 @@ import {
 import type { Source } from '../changes'
 import type { Body, Conn, Limits, Sub, SubEntry } from './types'
 import { RESET, Tracked } from './tracked'
+import { isSchema } from '../shell/wire'
 import { admitValue } from '../shell/operation'
 import { realtimeFault } from '../server/realtime-fault'
 
@@ -63,7 +64,7 @@ async function add(
   if (
     !fn ||
     fn.kind !== (kind === 'q' ? 'query' : 'stream') ||
-    (deps.shell && !(kind === 'q' ? fn.def.output : fn.def.message))
+    (deps.shell && !isSchema(kind === 'q' ? fn.def.output : fn.def.message))
   ) {
     const error = new StartError(
       'Q009',

@@ -1,14 +1,11 @@
-// The realtime client (research 30 §6): one connection per tab, a line on the browser's one socket (link.ts), one subscription per function + input, shared by every
-// reader and owned by this module, not by a component (PLAN §4.2), so an unmounting tab loses neither its subscription
-// nor its folded state for `keep`. `q.live()` imports this on its first call; `stream` through `stream.ts`, so an app
-// that uses neither ships none of it.
-//
-// A poke is a local `cache.invalidate`: readers refetch through `query`, and the keyed list writes what changed.
-
 import { DEV, batch, createRoot, state, untrack } from '@kerf-js/core'
 import type { AuthScope, Fn, LiveMode, LiveOptions, LiveStatus, StandardSchemaV1 } from './data'
 import type { SubEntry } from './hub'
 import { noSockets } from './link'
+import { FN } from './data/foundation'
+import { hasOperation } from './shell/client-operations'
+import { isSchema, validOperationId } from './shell/wire'
+import { ShellDataError } from './shell/operation'
 import { shellEvents } from './shell/realtime-transport'
 import { shellClient } from './shell/client-policy'
 import { transports } from './live/transport'
@@ -20,7 +17,7 @@ import type { In, StreamDef, StreamFn, StreamOptions } from './live/types'
 import type { Sub } from './live/sub-types'
 import { read } from './live/read'
 import type { Link } from './live/transport'
-import { ack, update, type Row } from './live/frames'
+import { ack, refreshLiveQueries, update, type Row } from './live/frames'
 export { backoff } from './live/backoff'
 export { use } from './live/api'
 export type { StreamStatus, StreamDef, StreamOptions, Stream, StreamFn } from './live/types'
@@ -28,7 +25,6 @@ export type { Link } from './live/transport'
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
 
-const FN = Symbol.for('kerf.fn')
 let auto = 0
 
 export function stream<
@@ -41,7 +37,9 @@ export function stream<
   fns.set(id, fn)
   return Object.assign(
     (input: unknown, options?: StreamOptions<never, unknown>) =>
-      read(fn, input, options, acquire, held),
+      shellClient() && (!isSchema(fn.def.message) || !validOperationId(fn.$id))
+        ? { value: options?.initial, status: rt.status, error: new ShellDataError('invalid') }
+        : read(fn, input, options, acquire, held),
     { kind: 'stream', $id: id, [FN]: fn },
   ) as unknown as StreamFn<In<S>, M>
 }
@@ -117,6 +115,7 @@ function held(s: Sub, keep?: string | number): () => void {
 
 /** `q.live()`'s subscription, from data.ts. */
 export function hold(fn: Fn, input: unknown, options?: LiveOptions): () => void {
+  if (shellClient() && !hasOperation(fn)) return () => {}
   return held(acquire(fn, input), options?.keep)
 }
 
@@ -151,7 +150,10 @@ const fake: Link = {
 }
 
 /** Two sockets that never answered, and this host has none. */
-const admitted = shellEvents((id) => byN.get(id)?.fn)
+const admitted = shellEvents((id) => {
+  const sub = conn?.sent.has(id) ? byN.get(id) : undefined
+  return sub && !untrack(() => sub.done.value) ? sub.fn : undefined
+})
 const link = (): Link =>
   shellClient() ? admitted : DEV && net() ? fake : noSockets() ? http : socket
 let via: Link = socket
@@ -220,7 +222,8 @@ function flushPokes() {
   const tags = [...pokes]
   pokes = new Set()
   pokeTimer = undefined
-  void cache.invalidate(...tags)
+  if (shellClient()) refreshLiveQueries(subs)
+  else void cache.invalidate(...tags)
 }
 
 function frame(event: string, data: unknown) {
@@ -230,21 +233,23 @@ function frame(event: string, data: unknown) {
     if (event === 'h') {
       if (build && d.b && d.b !== build) rt.stale.value = true
       build = d.b
-      if (conn) conn.k = runtime.conn = d.k
+      if (conn) conn.k = d.k
+      if (!shellClient()) runtime.conn = d.k
       cursor ??= d.c
-      attempt = 0
+      if (!shellClient()) attempt = 0
       linked(d.l)
       sync() // what changed while connecting
     } else if (event === 'a') {
       ack(d, byN, () => seeded)
     } else if (event === 'p') {
       cursor = d.c
-      for (const t of d.t) pokes.add(t)
+      if (!shellClient()) for (const t of d.t) pokes.add(t)
       if (net()) flushPokes()
       else pokeTimer ??= setTimeout(flushPokes, 50 + Math.random() * 250)
     } else if (event === 'R') {
       cursor = d.c
-      void cache.invalidate(...[...subs.values()].flatMap((s) => s.tags))
+      if (shellClient()) pokeTimer ??= setTimeout(flushPokes, 50)
+      else void cache.invalidate(...[...subs.values()].flatMap((s) => s.tags))
     } else if (event === 'm' || event === 'r' || event === 'f' || event === 'e') {
       update(event, d, byN)
     } else if (event === 'L') linked(d as unknown as Linked)
@@ -266,7 +271,7 @@ const sleep = (t: number) =>
 async function run() {
   running = true
   listen(true)
-  readPage()
+  if (!shellClient()) readPage()
   while (subs.size) {
     if (parked || offline()) {
       set(parked ? 'reconnecting' : 'offline')
@@ -274,7 +279,8 @@ async function run() {
       continue
     }
     const ac = new AbortController()
-    conn = { ac, sent: new Set(byN.keys()) }
+    const active = [...subs.values()].filter((s) => !s.done.value)
+    conn = { ac, sent: new Set(shellClient() ? active.map((s) => s.n) : byN.keys()) }
     let dead: ReturnType<typeof setTimeout> | undefined
     const alive = () => {
       clearTimeout(dead)
@@ -283,12 +289,7 @@ async function run() {
     alive()
     retry = undefined
     try {
-      await (via = link()).open(
-        { c: cursor, s: [...subs.values()].filter((s) => !s.done.value).map(entry) },
-        frame,
-        ac.signal,
-        alive,
-      )
+      await (via = link()).open({ c: cursor, s: active.map(entry) }, frame, ac.signal, alive)
     } catch (e) {
       if (!ac.signal.aborted && e instanceof FnError)
         for (const s of subs.values())
@@ -323,7 +324,9 @@ function sync() {
     // Between connections the loop sleeps: a changed set wakes it, as the sleep promises.
     if (!live) return nudge?.()
     if (!live.k) return
-    const add = [...byN.values()].filter((s) => !live.sent.has(s.n))
+    const add = [...byN.values()].filter(
+      (s) => !live.sent.has(s.n) && (!shellClient() || !s.done.value),
+    )
     const gone = [...live.sent].filter((n) => !byN.has(n))
     if (!add.length && !gone.length) return
     for (const s of add) live.sent.add(s.n)

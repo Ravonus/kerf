@@ -1,16 +1,15 @@
 import type { Body } from '../hub'
 import type { Link } from '../live/transport'
-import { clientRequest } from '../client-fetch'
+import { requestShell } from './client-operations'
 import { shellBuild } from './client-policy'
-import { readValue, ShellDataError, shellRequest } from './operation'
+import { readValue, ShellDataError, within } from './operation'
 import { admitChannel, admitSse, type Lookup } from './realtime'
 import { SHELL_BYTES, SHELL_FRAME_BYTES, SHELL_TIMEOUT } from './wire'
 
 const encoder = new TextEncoder()
 
 function post(body: Body, signal: AbortSignal) {
-  return clientRequest('/_kerf/rt', {
-    ...shellRequest,
+  return requestShell('/_kerf/rt', {
     method: 'POST',
     headers: { 'content-type': 'application/json', accept: 'text/event-stream', 'x-kerf': '1' },
     body: JSON.stringify(body),
@@ -37,23 +36,28 @@ async function* readEvents(response: Response, signal: AbortSignal) {
   const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
   const cancel = () => void reader.cancel().catch(() => {})
   signal.addEventListener('abort', cancel, { once: true })
-  let buffer = ''
+  const buffer = new Uint8Array(SHELL_FRAME_BYTES + 32)
+  let size = 0
+  let newline = false
   try {
     for (;;) {
       signal.throwIfAborted()
       const { done, value } = await reader.read()
       signal.throwIfAborted()
       if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      let end = 0
-      while ((end = buffer.indexOf('\n\n')) >= 0) {
-        if (end > SHELL_FRAME_BYTES + 32) throw new ShellDataError('invalid')
-        yield buffer.slice(0, end)
-        buffer = buffer.slice(end + 2)
+      for (const byte of value) {
+        if (byte === 10 && newline) {
+          yield decoder.decode(buffer.subarray(0, size - 1))
+          size = 0
+          newline = false
+          continue
+        }
+        if (size === buffer.length) throw new ShellDataError('invalid')
+        buffer[size++] = byte
+        newline = byte === 10
       }
-      if (buffer.length > SHELL_FRAME_BYTES + 32) throw new ShellDataError('invalid')
     }
-    if (buffer || decoder.decode()) throw new ShellDataError('invalid')
+    if (size) throw new ShellDataError('invalid')
   } finally {
     signal.removeEventListener('abort', cancel)
     cancel()
@@ -80,7 +84,8 @@ export function shellEvents(find: Lookup): Link {
           }
           const event = /^event: ([a-zA-Z])\ndata: ([^\n]+)$/.exec(frame)
           if (!event || (event[1] === 'h') === ready) throw new ShellDataError('invalid')
-          const data = await admitSse(event[1]!, event[2]!, shellBuild(), find)
+          const deadline = AbortSignal.any([signal, AbortSignal.timeout(SHELL_TIMEOUT)])
+          const data = await within(admitSse(event[1]!, event[2]!, shellBuild(), find), deadline)
           signal.throwIfAborted()
           ready = true
           if (data !== undefined) heard(event[1]!, data)
@@ -100,14 +105,16 @@ export function shellEvents(find: Lookup): Link {
   }
 }
 
-/** Return the selected peer's WebSocket address for Kerf channels. Defaults to the app's origin. */
+/** Select a trusted WebSocket gateway that terminates the browser's upgrade. */
 export type ClientSocket = (path: string) => URL | string
 let socketTarget: ClientSocket | undefined
 
-/** Set the shell channel socket destination before start. Accepts the raw socket, whose messages Start admits. */
+/** Set the trusted WebSocket gateway before start. Shell channels otherwise remain unavailable. */
 export function clientSocket(target: ClientSocket | undefined) {
   socketTarget = target
 }
+
+export const hasShellSocket = () => socketTarget !== undefined
 
 export function shellSocket(callbacks: {
   find: Lookup
@@ -118,7 +125,10 @@ export function shellSocket(callbacks: {
   let socket: WebSocket
   try {
     const path = '/_kerf/ws'
-    const url = new URL(socketTarget?.(path) ?? path, location.href)
+    const build = shellBuild()
+    if (!build || !socketTarget) throw new ShellDataError('unavailable')
+    const url = new URL(socketTarget(path), location.href)
+    if (url.username || url.password || url.hash) throw new ShellDataError('invalid')
     if (url.protocol === 'http:' || url.protocol === 'https:')
       url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
     socket = new WebSocket(url)
@@ -128,12 +138,15 @@ export function shellSocket(callbacks: {
     return { send() {}, close() {} }
   }
 
+  const lifetime = new AbortController()
   let active = true
   let ready = false
   let pending = 0
+  let queued = 0
   let tail = Promise.resolve()
   const close = () => {
     active = false
+    lifetime.abort()
     socket.close()
   }
   const refuse = () => {
@@ -145,18 +158,20 @@ export function shellSocket(callbacks: {
     if (active && code !== 1000 && code !== 1001)
       callbacks.failed(new ShellDataError(code === 4401 ? 'unauthorized' : 'unavailable'))
     active = false
-    callbacks.closed(code)
+    lifetime.abort()
+    callbacks.closed(code === 4401 ? 4401 : 1006)
   }
   socket.onmessage = ({ data }: MessageEvent<unknown>) => {
     if (!active) return
-    if (typeof data !== 'string' || data.length > SHELL_FRAME_BYTES) return refuse()
+    if (typeof data !== 'string' || !data.length || data.length > SHELL_FRAME_BYTES) return refuse()
     const bytes = encoder.encode(data).length
     pending += bytes
-    if (bytes > SHELL_FRAME_BYTES || pending > SHELL_BYTES) return refuse()
+    if (++queued > 64 || bytes > SHELL_FRAME_BYTES || pending > SHELL_BYTES) return refuse()
     tail = tail
       .then(async () => {
         if (!active) return
-        const value = await admitChannel(data, shellBuild(), callbacks.find)
+        const deadline = AbortSignal.any([lifetime.signal, AbortSignal.timeout(SHELL_TIMEOUT)])
+        const value = await within(admitChannel(data, shellBuild(), callbacks.find), deadline)
         if (!active) return
         if (!ready && (!Array.isArray(value) || value[0] !== 'h')) return refuse()
         if (Array.isArray(value) && value[0] === 'h') {
@@ -168,6 +183,7 @@ export function shellSocket(callbacks: {
       .catch(refuse)
       .finally(() => {
         pending -= bytes
+        queued--
       })
   }
   return {

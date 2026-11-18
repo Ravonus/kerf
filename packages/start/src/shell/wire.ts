@@ -10,6 +10,29 @@ export const SHELL_TIMEOUT = 30_000
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
 
+// Inspect object keys before JSON.parse can collapse duplicate spellings.
+export function parseShellJson(text: string): unknown {
+  const levels: (Set<string> | undefined)[] = []
+  for (const { 0: token, index } of text.matchAll(/"(?:[^"\\]|\\.)*"|[{}[\]]/gs)) {
+    if (token === '{' || token === '[') {
+      if (levels.length >= 40) invalid()
+      levels.push(token === '{' ? new Set() : undefined)
+    } else if (token === '}' || token === ']') {
+      levels.pop()
+    } else {
+      const keys = levels.at(-1)
+      if (!keys) continue
+      let next = index + token.length
+      while (text[next] !== undefined && /[ \t\r\n]/.test(text[next]!)) next++
+      if (text[next] !== ':') continue
+      const key = JSON.parse(token) as string
+      if (!safeKey(key) || keys.has(key)) invalid()
+      keys.add(key)
+    }
+  }
+  return JSON.parse(text) as unknown
+}
+
 export function invalid(): never {
   throw new Error('Invalid shell route data')
 }
@@ -34,6 +57,13 @@ export function safeKey(key: string) {
   return !reserved.has(key)
 }
 
+export const validOperationId = (value: string) => /^[a-zA-Z0-9_$][\w$.-]{0,127}$/.test(value)
+
+export function isSchema(value: unknown): value is RouteSchema {
+  const standard = (value as Partial<RouteSchema> | null | undefined)?.['~standard']
+  return standard?.version === 1 && typeof standard.validate === 'function'
+}
+
 export function initialSchema(contract: RouteDataSchema | undefined) {
   if (contract === undefined) return undefined
   if (!contract?.initial) invalid()
@@ -55,7 +85,7 @@ function json(value: unknown, depth = 0): value is Json {
 }
 
 function same(a: Json, b: Json): boolean {
-  if (a === b) return true
+  if (Object.is(a, b)) return true
   if (Array.isArray(a))
     return Array.isArray(b) && a.length === b.length && a.every((item, i) => same(item, b[i]!))
   return (
@@ -69,7 +99,7 @@ function same(a: Json, b: Json): boolean {
 export async function validate(schema: RouteSchema | undefined, value: unknown): Promise<Json> {
   if (!json(value)) invalid()
   if (!schema) return value === null ? value : invalid()
-  if (schema['~standard']?.version !== 1) invalid()
+  if (!isSchema(schema)) invalid()
   const result = await schema['~standard'].validate(structuredClone(value))
   if (
     !('value' in result) ||

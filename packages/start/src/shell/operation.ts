@@ -4,6 +4,7 @@ import type { RouteSchema } from '../shell'
 import { frames } from './read'
 import {
   fields,
+  isSchema,
   SHELL_BYTES,
   SHELL_FRAME_BYTES,
   SHELL_MEDIA,
@@ -122,10 +123,36 @@ export async function readValue(response: Response, target: Target) {
   throw peerError(value.code, response.status)
 }
 
-export async function admitValue(schema: RouteSchema | undefined, value: unknown) {
-  if (!schema) throw new ShellDataError('invalid')
+// A custom fetch or asynchronous schema can ignore the signal. Ignore its late result.
+export async function within<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
+  const abort = () => new DOMException('The request was aborted.', 'AbortError')
+  let stop = () => {}
   try {
-    return await validate(schema, value)
+    const result = await Promise.race([
+      work,
+      new Promise<never>((_, reject) => {
+        const cancel = () => reject(abort())
+        stop = () => signal.removeEventListener('abort', cancel)
+        if (signal.aborted) cancel()
+        else signal.addEventListener('abort', cancel, { once: true })
+      }),
+    ])
+    if (signal.aborted) throw abort()
+    return result
+  } finally {
+    stop()
+  }
+}
+
+export async function admitValue(
+  schema: RouteSchema | undefined,
+  value: unknown,
+  signal?: AbortSignal | null,
+) {
+  if (!isSchema(schema)) throw new ShellDataError('invalid')
+  try {
+    const work = validate(schema, value)
+    return await (signal ? within(work, signal) : work)
   } catch {
     throw new ShellDataError('invalid')
   }
@@ -144,7 +171,9 @@ export async function admitAnswer(
   response: Response,
   target: Target,
 ) {
-  const answer = await readValue(response, target)
+  const timeout = AbortSignal.timeout(SHELL_TIMEOUT)
+  const signal = target.signal ? AbortSignal.any([target.signal, timeout]) : timeout
+  const answer = await readValue(response, { ...target, signal })
   if (!fields(answer, ['v', 't']) || !tags(answer.t)) throw new ShellDataError('invalid')
-  return { v: await admitValue(schema, answer.v), t: answer.t }
+  return { v: await admitValue(schema, answer.v, signal) }
 }

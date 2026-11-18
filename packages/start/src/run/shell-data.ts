@@ -1,9 +1,9 @@
 // Admit the route outcome before constructing any component props.
-import { clientRequest } from '../client-fetch'
+import { requestShell } from '../shell/client-operations'
 import { isErrorReference } from '../failure'
 import type { Match } from '../router'
 import type { RouteDataSchema } from '../shell'
-import { shellMedia } from '../shell/operation'
+import { shellMedia, within } from '../shell/operation'
 import { frames } from '../shell/read'
 import { redirectPath, type matchShell, type ShellConfig } from '../shell/routes'
 import {
@@ -17,6 +17,7 @@ import {
   record,
   safeKey,
   initialSchema,
+  isSchema,
   validate,
 } from '../shell/wire'
 import type { ClientRoutes } from '../run'
@@ -44,23 +45,22 @@ const base = ['v', 'build', 'kind']
 export async function readShell({
   url,
   local,
+  from = url,
   routes,
   schemas,
   signal,
 }: {
   url: URL
+  from?: URL
   local: Local
   routes: ClientRoutes & { shell: ShellConfig }
   schemas: Schemas
   signal: AbortSignal
 }): Promise<Outcome> {
   const lifetime = AbortSignal.any([signal, AbortSignal.timeout(SHELL_TIMEOUT)])
-  const response = await clientRequest('/_kerf/data' + url.pathname + url.search, {
+  const response = await requestShell('/_kerf/data' + url.pathname + url.search, {
     method: 'GET',
     signal: lifetime,
-    redirect: 'error',
-    credentials: 'omit',
-    cache: 'no-store',
     headers: { accept: SHELL_MEDIA },
   })
   if (
@@ -85,17 +85,22 @@ export async function readShell({
         !fields(value, withParams ? [...base, 'id', 'params'] : [...base, 'id'])
       )
         invalid()
+      const lineage = await within(Promise.all(local.ids.map(schemas)), lifetime)
+      if (!lineage.some((contract) => isSchema(contract?.initial))) invalid()
       const path = redirectPath(
         { ...routes.shell, table: routes.table },
         value.id,
         value.params,
-        url,
+        from,
       )
       if (!path || !(await stream.next()).done) invalid()
       return { kind: 'redirect', path }
     }
-    const outcome = await readLevels(value, { local, schemas, status: response.status, slots })
-    if (slots.size) void settle(stream, slots)
+    const outcome = await within(
+      readLevels(value, { local, schemas, status: response.status, slots, signal: lifetime }),
+      lifetime,
+    )
+    if (slots.size) void settle(stream, slots, lifetime)
     else if (!(await stream.next()).done) invalid()
     return outcome
   } catch (error) {
@@ -112,7 +117,8 @@ async function readLevels(
     schemas,
     status,
     slots,
-  }: { local: Local; schemas: Schemas; status: number; slots: Slots },
+    signal,
+  }: { local: Local; schemas: Schemas; status: number; slots: Slots; signal: AbortSignal },
 ): Promise<Outcome> {
   const { kind, values, reference } = value
   if (kind !== 'page' && kind !== 'not-found' && kind !== 'error') invalid()
@@ -143,7 +149,9 @@ async function readLevels(
   for (const [depth, raw] of values.entries()) {
     const id = local.ids[depth]!
     const schema = await schemas(id)
+    signal.throwIfAborted()
     const data = await validate(initialSchema(schema), raw)
+    signal.throwIfAborted()
     immediate.push(schema ? data : undefined)
     const declared = Object.entries(schema?.deferred ?? {})
     deferred += declared.length
@@ -185,7 +193,7 @@ function rejectAll(slots: Slots) {
     for (const slot of level.values()) slot.reject(deferredError())
 }
 
-async function settle(stream: Frames, slots: Slots) {
+async function settle(stream: Frames, slots: Slots, signal: AbortSignal) {
   try {
     for await (const value of stream) {
       if (!record(value) || typeof value.depth !== 'number' || typeof value.key !== 'string')
@@ -195,7 +203,7 @@ async function settle(stream: Frames, slots: Slots) {
       const slot = level?.get(key)
       if (!slot) invalid()
       if (kind === 'deferred' && fields(value, ['kind', 'depth', 'key', 'value']))
-        slot.resolve(await validate(slot.schema, value.value))
+        slot.resolve(await within(validate(slot.schema, value.value), signal))
       else if (kind === 'deferred-error' && fields(value, ['kind', 'depth', 'key']))
         slot.reject(deferredError())
       else invalid()

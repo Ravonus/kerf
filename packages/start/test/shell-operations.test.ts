@@ -67,7 +67,7 @@ test('reduces peer errors to local codes and rejects mismatched or embellished f
   }
 })
 
-test('bootstrap dedupes concurrent reads and retains the previous value on a refused refresh', async () => {
+test('bootstrap dedupes concurrent reads and clears the previous value on a refused refresh', async () => {
   const bootstrap = defineBootstrap(schema)
   expect(() => bootstrap.read()).toThrow(ShellDataError)
   const fetch = vi.fn(() => Promise.resolve(shellResponse(build, 'bootstrap', sample)))
@@ -87,7 +87,7 @@ test('bootstrap dedupes concurrent reads and retains the previous value on a ref
   expect(bootstrap.read()).toEqual(sample)
   fetch.mockResolvedValueOnce(shellResponse('old', 'bootstrap', { value: 2 }))
   await expect(bootstrap.refresh()).rejects.toMatchObject({ code: 'invalid' })
-  expect(bootstrap.read()).toEqual(sample)
+  expect(() => bootstrap.read()).toThrow(ShellDataError)
   fetch.mockResolvedValueOnce(shellResponse(build, 'bootstrap', { value: 3 }))
   await expect(bootstrap.refresh()).resolves.toEqual({ value: 3 })
   expect(bootstrap.read()).toEqual({ value: 3 })
@@ -134,7 +134,7 @@ test('channels admit only declared server messages and shared-state values', asy
     3,
     'cursor',
     '$v',
-    { v: sample, at: 1 },
+    { v: sample, at: 0 },
   ])
   for (const row of [
     ['m', 2, 'cursor', 'other', sample],
@@ -222,4 +222,67 @@ test('typed redirect tables require the right id and named segments', () => {
   expect(routeRedirect<Redirects>('item').params).toBeUndefined()
   // @ts-expect-error The item path needs outpoint.
   expect(routeRedirect<Redirects>('item', { id: '42' }).params).toEqual({ id: '42' })
+})
+
+test('an uncontracted runtime registration cannot dispatch a browser query or admit its body', async () => {
+  const missing = query({ $id: 'pluginQuery', run: () => sample })
+  const send = vi.fn(() => Promise.resolve(shellResponse(build, 'fn:pluginQuery', result)))
+  clientFetch(send)
+  await expect(missing.fetch()).rejects.toMatchObject({ code: 'invalid' })
+  await expect(
+    admitOperation(missing, shellResponse(build, 'fn:pluginQuery', result)),
+  ).rejects.toMatchObject({ code: 'invalid' })
+  expect(send).not.toHaveBeenCalled()
+})
+
+test('a canceled raw operation cannot deliver a late asynchronous validation', async () => {
+  let resolveValue: (result: { value: typeof sample }) => void = () => {}
+  let validating: () => void = () => {}
+  const entered = new Promise<void>((resolve) => {
+    validating = resolve
+  })
+  const delayed = query({
+    $id: 'delayed',
+    run: () => sample,
+    output: {
+      '~standard': {
+        version: 1,
+        vendor: 'critic',
+        validate: () => {
+          validating()
+          return new Promise((resolve) => {
+            resolveValue = resolve
+          })
+        },
+      },
+    },
+  })
+  const controller = new AbortController()
+  const value = admitOperation(delayed, shellResponse(build, 'fn:delayed', result), {
+    signal: controller.signal,
+  })
+  const settled = value.catch((error: unknown) => error)
+  await entered
+  controller.abort()
+  await expect(settled).resolves.toMatchObject({ code: 'invalid' })
+  resolveValue({ value: sample })
+})
+
+test('service clocks apply typed shared values in delivery order and discard peer time', async () => {
+  const read = (at: number) =>
+    admitChannel(
+      JSON.stringify(
+        wireFrame(build, 'channel', ['m', 3, 'cursor', '$v', { v: sample, at, o: 'epoch' }]),
+      ),
+      build,
+      find,
+    )
+  await expect(read(Number.MAX_SAFE_INTEGER)).resolves.toEqual([
+    'm',
+    3,
+    'cursor',
+    '$v',
+    { v: sample, at: 0 },
+  ])
+  await expect(read(1)).resolves.toEqual(['m', 3, 'cursor', '$v', { v: sample, at: 0 }])
 })
