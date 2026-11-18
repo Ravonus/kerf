@@ -264,7 +264,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     if (!/\.[jt]sx$/.test(file))
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
     if (kind === 'custom') {
-      const request = `virtual:kerf/shape-override/${encodeURIComponent(css.dev ? file : r.file)}.tsx`
+      const request = `virtual:kerf/shape-override/${encodeURIComponent(css.production ? r.file : file)}.tsx`
       return `${id}: ${shape(file, 'default', request, 'override')}`
     }
     return `${id}: ${shape(file)}`

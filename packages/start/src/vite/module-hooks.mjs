@@ -44,7 +44,7 @@ export const resolveId = (s) => ({
     id: /^(virtual:kerf\/|@kerf-js\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@kerf-js\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/,
   },
   handler(source, importer) {
-    const asset = s.assetSources.get(source)
+    const asset = s.assetSources?.get(source)
     if (asset) return asset === V.client ? s.id(asset) : this.resolve(asset, importer)
     // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
     if (source === 'sharp') {
@@ -221,7 +221,7 @@ function unusableSkeleton(ctx, s, root, file) {
 async function overrideModule(ctx, s, which, client) {
   if (!client || !which.endsWith('.tsx')) ctx.error('Invalid skeleton override request')
   const key = decodeURIComponent(which.slice('virtual:kerf/shape-override/'.length, -4))
-  const file = s.dev ? key : s.abs(key)
+  const file = s.dev === false ? s.abs(key) : key
   const levels = [...s.manifest.layouts, ...s.manifest.routes]
   if (!levels.some((level) => s.abs(level.file) === file)) ctx.error('Unknown skeleton override')
   const imported = await resolveImportedOverride(ctx, file, s.root ?? dirname(file))
@@ -330,7 +330,7 @@ async function clientRoutesModule(ctx, s, p, run) {
     entry: shared.styles,
     levels: new Map(files.map((file, i) => [file, sources[i].styles])),
     overrides,
-    dev: s.dev,
+    production: s.dev === false,
     build: s.build || null,
     lazy: s.dev === false,
     retry: retryRouteModules(ctx, s),
