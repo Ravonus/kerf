@@ -1,23 +1,17 @@
-import { Box } from '../index/state'
 import { clean, rt, setFlat } from '../index/graph'
 import { getOwner, memo, untrack, within, type Owner } from '../index'
 import { DEFER, ENDS, FLAT, LINEAR, ROWBOX, SWAP } from '../flags'
 import { keys, under } from '../keys'
-import { Row, find, rendered, rowStep, type Item } from './rows'
+import { find, makeRow, rendered, rowStep, type Item, type ListProps } from './rows'
+import { ScopedRows } from './scoped-rows'
 
 export type ListState = { order: Item[]; out: unknown[]; fresh: boolean; single: boolean; r: Item }
-type Props<T> = {
-  each: readonly T[] | null | undefined
-  by?: ((item: T, index: number) => unknown) | undefined
-  children: (item: () => T, index: () => number) => unknown
-}
-
 type Hooks<T> = {
-  props: Props<T>
+  props: ListProps<T>
   base: string
   data: ListState
   make: () => unknown
-  claim: () => unknown
+  claim: (draw?: () => unknown) => unknown
   repeats: () => void
 }
 
@@ -27,9 +21,24 @@ export function listMemo<T>(o: Hooks<T>) {
     const list = props.each || []
     if (rt.server) return untrack(() => rendered(list, props, base))
     const parent = getOwner()
+    const prepare = props.prepare
     // A callback that takes an index (or might: `(...args)`) gets an index box; `(row) =>` doesn't.
-    const indexed = props.children.length !== 1
-    return untrack(() => reconcile(list, parent, indexed, o))
+    const indexed = prepare ? prepare.length > 1 : props.children.length !== 1
+    return untrack(() => {
+      if (DEFER && o.data.fresh && list.length) o.repeats()
+      o.data.fresh = false
+      // Side-effecting setup follows input order. A staged owner belongs to the list only after reconciliation.
+      if (prepare) {
+        const scoped = new ScopedRows(prepare, o.data.order, indexed)
+        try {
+          return reconcile(list, parent, indexed, o, scoped)
+        } catch (error) {
+          for (const row of scoped.pending) clean(row)
+          throw error
+        }
+      }
+      return reconcile(list, parent, indexed, o)
+    })
   })
 }
 
@@ -62,17 +71,19 @@ function reconcile<T>(
   parent: Owner | null,
   indexed: boolean,
   { props, base, data, make, claim, repeats }: Hooks<T>,
+  scoped?: ScopedRows<T>,
 ) {
   const by = props.by
   const key = (i: number) => (by ? by(list[i]!, i) : list[i])
   const paths = keys.on ? new Set<unknown>() : undefined // two rows with one key can't share a hydration scope
-  if (DEFER && data.fresh && list.length) repeats() // not as they're made: making a row costs no lookup that way
-  data.fresh = false
   const order = data.order
-  const [from, end, stop, traded] = matchEnds(order, list.length, key)
+  // Scoped rows take the first available match, so a cache hit always has a row it can use.
+  const [from, end, stop, traded] = scoped
+    ? ([0, order.length, list.length, false] as const)
+    : matchEnds(order, list.length, key)
   let left: Map<unknown, Item> | undefined
   if (from < stop) {
-    if (from < end && (!LINEAR || end - from > 8)) left = new Map()
+    if (from < end && (scoped || !LINEAR || end - from > 8)) left = new Map()
     if (left) for (let i = from; i < end; i++) left.set(order[i]!.key, order[i]!)
   } else for (let i = from; i < end; i++) clean(order[i]!)
   // oxlint-disable unicorn/no-new-array -- sized up front: filling a list of known length is the keyed list's hot path
@@ -82,9 +93,12 @@ function reconcile<T>(
     const item = list[i]!
     let row = i < from ? order[i] : i >= stop ? order[i + end - stop] : undefined
     if (!row) {
-      let k: unknown = key(i)
-      if ((row = left?.get(k))) left!.delete(k)
-      else if (LINEAR && !left && from < end && (row = find(order, from, end, k))) {
+      const prepared = scoped?.next(item, i, parent, left)
+      let k: unknown = prepared ? prepared.key : key(i)
+      if ((row = left?.get(k))) {
+        left!.delete(k)
+        if (prepared?.row) scoped!.discard(prepared.row)
+      } else if (LINEAR && !left && from < end && (row = find(order, from, end, k))) {
       } // taken out of `order`
       else {
         if (paths) {
@@ -95,10 +109,16 @@ function reconcile<T>(
         const r =
           (data.r =
           row =
-            new Row(item, k, parent, indexed ? new Box(i) : undefined) as Item)
-        if (!ROWBOX) r.box = new Box<unknown>(item)
+            prepared?.row ?? makeRow(item, k, parent, indexed ? i : undefined))
+        if (prepared) r.key = k
+        const draw = prepared?.draw
         // A row the server didn't render builds itself and no more: the next row still claims.
-        r.nodes = within(r, keys.on ? () => under(base + rowStep(k, i) + '/', claim) : make)
+        r.nodes = within(
+          r,
+          keys.on
+            ? () => under(base + rowStep(k, i) + '/', draw ? () => claim(draw) : claim)
+            : (draw ?? make),
+        )
         if (FLAT) data.single &&= !rt.server && r.nodes instanceof Node && r.nodes.nodeType !== 11
         data.fresh = true
         next[i] = row
@@ -107,7 +127,7 @@ function reconcile<T>(
       }
     }
     if (!ROWBOX) row.box.value = item
-    else if (row.v !== item) row.value = item
+    else if (row.v !== item || (scoped && !Object.is(row.v, item))) row.value = item
     if (row.index) row.index.value = i
     next[i] = row
     nodes[i] = row.nodes

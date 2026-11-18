@@ -73,6 +73,72 @@ test('keyed list: reorder moves rows instead of rebuilding them', async () => {
   expect(t.added).toBe(1)
 })
 
+test('a scoped row key shares its setup with the row and reuses rows by key', async () => {
+  const a = { id: 'a', n: 1 }
+  const b = { id: 'b', n: 2 }
+  const items = state([a, b])
+  const setup = vi.fn((id: string) => ({ id }))
+  const getKey = vi.fn((local: { id: string }) => local.id)
+  const disposed = vi.fn()
+  render(() => (
+    <ul>
+      {items.value.map(({ id, n }) => {
+        const local = setup(id)
+        onCleanup(() => disposed(local))
+        return (
+          <li key={getKey(local)}>
+            {local.id}:{n}
+          </li>
+        )
+      })}
+    </ul>
+  ))
+  const [first, second] = screen.getAllByRole('listitem')
+  expect([first!.textContent, second!.textContent]).toEqual(['a:1', 'b:2'])
+  expect(setup.mock.calls).toEqual([['a'], ['b']])
+  expect(getKey.mock.calls).toEqual(setup.mock.results.map(({ value }) => [value]))
+
+  items.value = [b, a]
+  await flush()
+  expect(screen.getAllByRole('listitem')).toEqual([second, first])
+  expect(setup).toHaveBeenCalledTimes(2)
+  expect(getKey).toHaveBeenCalledTimes(2)
+  expect(disposed).not.toHaveBeenCalled()
+
+  items.value = [b, { ...a, n: 9 }]
+  await flush()
+  expect(screen.getAllByRole('listitem')[1]).toBe(first)
+  expect(first!.textContent).toBe('a:9')
+  expect(setup).toHaveBeenCalledTimes(3)
+  expect(getKey).toHaveBeenCalledTimes(3)
+  expect(disposed).toHaveBeenCalledExactlyOnceWith(setup.mock.results[2]!.value)
+})
+
+test('a scoped key can use a local derived from the index', async () => {
+  const items = state(['a', 'b'])
+  const keyOf = vi.fn((id: string, i: number) => `${id}:${i}`)
+  render(() => (
+    <ul>
+      {items.value.map((id, i) => {
+        const key = keyOf(id, i)
+        return <li key={key}>{key}</li>
+      })}
+    </ul>
+  ))
+  expect(screen.getAllByRole('listitem').map((node) => node.textContent)).toEqual(['a:0', 'b:1'])
+  items.value = ['b', 'a']
+  await flush()
+  expect(screen.getAllByRole('listitem').map((node) => node.textContent)).toEqual(['b:0', 'a:1'])
+  items.value = ['b', 'a']
+  await flush()
+  expect(keyOf.mock.calls).toEqual([
+    ['a', 0],
+    ['b', 1],
+    ['b', 0],
+    ['a', 1],
+  ])
+})
+
 test('keyed list: rows keep their nodes through removal at any place, insertion, and the two ends trading places', async () => {
   const items = state(['a', 'b', 'c', 'd', 'e'])
   render(() => (

@@ -9,7 +9,7 @@ import { hole } from './index/lifecycle'
 import { FLAT, RECORD, ROWBOX, SCAN, STEADY, SWAP, TEXT, WIPE } from './flags'
 import { keys } from './keys'
 import { swap, empty, inOrder } from './dom/optimizations'
-import { Row, reader, zero } from './dom/rows'
+import { Row, reader, zero, type ListProps } from './dom/rows'
 import { listMemo, type ListState } from './dom/list'
 import { delegateEvents, addEvent } from './dom/events'
 import {
@@ -255,21 +255,17 @@ export { delegateEvents, addEvent }
  * Compiled from `xs.map(x => <Row key={x.id} … />)`. Rows are keyed by `by(item, index)` (or the item itself): a new
  * object under the same key updates the row in place through its live `item` accessor; it never rebuilds it.
  */
-export function For<T>(props: {
-  each: readonly T[] | null | undefined
-  by?: ((item: T, index: number) => unknown) | undefined
-  children: (item: () => T, index: () => number) => unknown
-}) {
+export function For<T>(props: ListProps<T>) {
   const base = keys.p // rows created while keys are on are scoped `<hole scope><row key>/`
   const data: ListState = { order: [], out: [], fresh: false, single: true, r: undefined! }
   const make = () =>
-    props.children(
+    props.children!(
       reader((ROWBOX ? data.r : data.r.box) as Box<T>),
       data.r.index ? reader(data.r.index) : zero,
     )
-  const claim = () => {
+  const claim = (draw = make) => {
     const { hydrating } = keys
-    const nodes = make()
+    const nodes = draw()
     keys.hydrating = hydrating
     return nodes
   }

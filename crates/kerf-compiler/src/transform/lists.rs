@@ -2,15 +2,15 @@
 
 use oxc_allocator::{CloneIn, TakeIn, Vec as ArenaVec};
 use oxc_ast::ast::{
-    ChainElement, Expression, JSXChild, JSXClosingElement, JSXElementName, JSXExpression,
-    JSXOpeningElement,
+    ArrayExpressionElement, ArrowFunctionBody, ChainElement, Expression, JSXChild,
+    JSXClosingElement, JSXElementName, JSXExpression, JSXOpeningElement,
 };
 use oxc_ast_visit::VisitMut;
 use oxc_span::SPAN;
 
 use crate::analyze::key;
 
-use super::{Transformer, has_optional_link, row_params, take_keys};
+use super::{Transformer, has_optional_link, last_return, row_params, take_keys};
 
 impl<'a> Transformer<'a, '_> {
     pub(super) fn is_list(&self, e: &Expression<'a>) -> bool {
@@ -42,29 +42,30 @@ impl<'a> Transformer<'a, '_> {
         self.visit_expression(&mut each);
         let each = self.rechained(each);
         let mut row = call.arguments[0].to_expression_mut().take_in(&self.ast);
-        // The `by` function reuses the row's item and index patterns, taken before the row's own parameters are
-        // rewritten (`key={i}` keys by position).
-        let mut params: Vec<_> = row_params(&row)
-            .iter()
-            .take(2)
-            .map(|p| p.pattern.clone_in(self.allocator))
-            .collect();
-        if params.is_empty() {
-            params.push(self.binding("_"));
-        }
-        let mut by = take_keys(self, &mut row, &plan.key_attrs);
-        if let Some(by) = by.as_mut() {
-            self.raw.extend(plan.item_syms.iter().copied());
-            self.visit_expression(by);
-            for s in &plan.item_syms {
-                self.raw.remove(s);
-            }
-        }
-        self.visit_expression(&mut row);
+        let row = row.without_parentheses_mut();
+        let by = take_keys(self, row, &plan.key_attrs);
         let mut attrs = vec![self.jsx_attr("each", each)];
-        if let Some(by) = by {
-            attrs.push(self.jsx_attr("by", self.arrow(params, by)));
-        }
+        let children = match (by, plan.scoped_key) {
+            (Some(by), true) => {
+                self.prepare_row(row, by);
+                self.visit_expression(row);
+                attrs.push(self.jsx_attr("prepare", row.take_in(&self.ast)));
+                ArenaVec::new_in(&self.ast)
+            }
+            (by, _) => {
+                if let Some(by) = by {
+                    let by = self.list_by(row, by, &plan.item_syms);
+                    attrs.push(self.jsx_attr("by", by));
+                }
+                self.visit_expression(row);
+                let child = JSXChild::new_expression_container(
+                    SPAN,
+                    JSXExpression::from(row.take_in(&self.ast)),
+                    &self.ast,
+                );
+                ArenaVec::from_iter_in([child], &self.ast)
+            }
+        };
         let name = || JSXElementName::new_identifier_reference(SPAN, "For", &self.ast);
         let opening = JSXOpeningElement::boxed(
             SPAN,
@@ -74,9 +75,60 @@ impl<'a> Transformer<'a, '_> {
             &self.ast,
         );
         let closing = JSXClosingElement::boxed(SPAN, name(), &self.ast);
-        let child = JSXChild::new_expression_container(SPAN, JSXExpression::from(row), &self.ast);
-        let children = ArenaVec::from_iter_in([child], &self.ast);
         *it = Expression::new_jsx_element(SPAN, opening, children, Some(closing), &self.ast);
+    }
+
+    fn list_by(
+        &mut self,
+        row: &Expression<'a>,
+        mut by: Expression<'a>,
+        item_syms: &[oxc_semantic::SymbolId],
+    ) -> Expression<'a> {
+        // The `by` function reuses the row's item and index patterns, taken before the row's own parameters are
+        // rewritten (`key={i}` keys by position).
+        let mut params: Vec<_> = row_params(row)
+            .iter()
+            .take(2)
+            .map(|p| p.pattern.clone_in(self.allocator))
+            .collect();
+        if params.is_empty() {
+            params.push(self.binding("_"));
+        }
+        self.raw.extend(item_syms.iter().copied());
+        self.visit_expression(&mut by);
+        for s in item_syms {
+            self.raw.remove(s);
+        }
+        self.arrow(params, by)
+    }
+
+    fn prepare_row(&self, row: &mut Expression<'a>, by: Expression<'a>) {
+        // Leave setup and the key in the original scope. JSX must wait for the runtime to select the row's
+        // owner and hydration path, and is only needed if a matching row doesn't already exist.
+        let statements = match row {
+            Expression::ArrowFunctionExpression(f) => {
+                f.return_type = None;
+                let ArrowFunctionBody::FunctionBody(body) = &mut f.body else {
+                    unreachable!()
+                };
+                &mut body.statements
+            }
+            Expression::FunctionExpression(f) => {
+                f.return_type = None;
+                &mut f.body.as_mut().expect("a scoped row has a body").statements
+            }
+            _ => unreachable!(),
+        };
+        let ret = last_return(statements).expect("a scoped row has a final return value");
+        let render = self.arrow([], ret.take_in(&self.ast));
+        *ret = Expression::new_array_expression(
+            SPAN,
+            ArenaVec::from_iter_in(
+                [by, render].into_iter().map(ArrayExpressionElement::from),
+                &self.ast,
+            ),
+            &self.ast,
+        );
     }
 
     /// A list's receiver, cut out of `xs?.filter(f).map(…)`, keeps the `?.` links it holds: they need a chain of their own.

@@ -15,8 +15,7 @@ use oxc_syntax::scope::ScopeFlags;
 
 use super::{
     Analyzer, Reactive, Snapshot, binding_symbol, callee_name, chain_root_member,
-    is_component_name, jsx_name, key, map_callback, returned, returns_jsx, spread_of_param,
-    symbol_of,
+    is_component_name, jsx_name, key, map_callback, spread_of_param, symbol_of,
 };
 
 impl<'a> Visit<'a> for Analyzer<'_> {
@@ -359,7 +358,7 @@ impl<'a> Visit<'a> for Analyzer<'_> {
         self.react_call(it);
         self.bind_call_diagnostic(it);
         if let Some(cb) = map_callback(it) {
-            if self.jsx_depth > 0 && returned(cb).0.is_some_and(returns_jsx) {
+            if self.jsx_depth > 0 {
                 self.analyze_list(it, cb);
             }
             if let Some((param, obj)) = spread_of_param(cb)

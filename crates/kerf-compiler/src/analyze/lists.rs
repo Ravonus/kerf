@@ -1,8 +1,11 @@
 //! Keyed-list analysis and diagnostics.
 
-use oxc_ast::ast::{BindingPattern, CallExpression, Expression, JSXAttributeItem, JSXElement};
+use oxc_ast::ast::{
+    BindingPattern, CallExpression, Expression, IdentifierReference, JSXAttributeItem,
+    JSXAttributeValue, JSXElement,
+};
 use oxc_ast_visit::Visit;
-use oxc_semantic::SymbolId;
+use oxc_semantic::{Scoping, SymbolId};
 use oxc_span::{GetSpan, Span};
 
 use crate::diag::{Diagnostic, Edit, Fix, Severity, line_col};
@@ -10,7 +13,7 @@ use crate::project::KeyedProp;
 
 use super::{
     Analyzer, ListPlan, MemberUse, Rewrite, RowStep, binding_symbol, chain_root_member,
-    is_key_attr, key, params_of, returned, root_element, row_roots, static_key, symbol_of,
+    is_key_attr, key, params_of, returned, row_roots, static_key, symbol_of,
 };
 
 impl Analyzer<'_> {
@@ -74,10 +77,24 @@ impl Analyzer<'_> {
     }
 
     pub(super) fn analyze_list(&mut self, call: &CallExpression<'_>, cb: &Expression<'_>) {
+        let (ret, early, early_jsx) = returned(cb);
+        if !early_jsx && !ret.is_some_and(returns_jsx) {
+            return;
+        }
+        if early {
+            self.plan.diagnostics.push(Diagnostic::new(
+                self.source,
+                "W013",
+                Severity::Error,
+                (cb.span().start, cb.span().end),
+                "Early `return` inside a list callback: rows can't appear or disappear from inside the row.",
+                "Filter the list first (`xs.filter(…).map(…)`), then render every item.",
+            ));
+            return;
+        }
         if self.fixed_list(call, cb) {
             return;
         }
-        let (ret, early) = returned(cb);
         let mut plan = ListPlan::default();
         let params = params_of(cb);
         let mut item_name = None;
@@ -108,16 +125,12 @@ impl Analyzer<'_> {
             plan.item_syms.push(sym);
         }
         let root = ret.and_then(root_element);
-        self.list_keys(ret, &mut plan);
-        if early {
-            self.plan.diagnostics.push(Diagnostic::new(
-                self.source,
-                "W013",
-                Severity::Error,
-                (cb.span().start, cb.span().end),
-                "Early `return` inside a list callback: rows can't appear or disappear from inside the row.",
-                "Filter the list first (`xs.filter(…).map(…)`), then render every item.",
-            ));
+        if !self.list_keys(ret, cb, call.arguments.len() == 1, &mut plan) {
+            for sym in plan.item_syms {
+                self.plan.rewrites.remove(&sym);
+            }
+            self.plan.destructured_rows.remove(&key(cb.span()));
+            return;
         }
         if plan.key_attrs.is_empty() {
             self.missing_key_diagnostic(
@@ -140,12 +153,18 @@ impl Analyzer<'_> {
         self.plan.lists.insert(key(call.span), plan);
     }
 
-    fn list_keys(&mut self, ret: Option<&Expression<'_>>, plan: &mut ListPlan) {
+    fn list_keys(
+        &mut self,
+        ret: Option<&Expression<'_>>,
+        cb: &Expression<'_>,
+        one_arg: bool,
+        plan: &mut ListPlan,
+    ) -> bool {
         let mut roots = Vec::new();
         if let Some(ret) = ret {
             row_roots(ret, &mut roots);
         }
-        let mut keys: Vec<(Span, &str)> = Vec::new();
+        let mut keys = Vec::new();
         for el in &roots {
             for a in el
                 .opening_element
@@ -156,25 +175,51 @@ impl Analyzer<'_> {
                 let JSXAttributeItem::Attribute(attr) = a else {
                     continue;
                 };
-                keys.push((
-                    attr.span,
-                    attr.value.as_ref().map_or("", |v| self.text(v.span())),
-                ));
+                keys.push(attr);
             }
         }
-        plan.key_attrs = keys.iter().map(|(s, _)| key(*s)).collect();
-        if let Some((_, first)) = keys.first()
-            && let Some((other, text)) = keys.iter().find(|(_, t)| t != first)
+        plan.key_attrs = keys.iter().map(|attr| key(attr.span)).collect();
+        let Some(first) = keys.first() else {
+            return true;
+        };
+        let text = |v: Option<&JSXAttributeValue<'_>>| v.map_or("", |v| self.text(v.span()));
+        let first_text = text(first.value.as_ref());
+        if let Some(other) = keys
+            .iter()
+            .find(|attr| text(attr.value.as_ref()) != first_text)
         {
+            let other_text = text(other.value.as_ref());
             self.plan.diagnostics.push(Diagnostic::new(
                 self.source,
                 "W010",
                 Severity::Error,
-                (other.start, other.end),
-                format!("The row's roots are keyed differently (`{first}` and `{text}`): a row has one key."),
-                format!("Key every branch by the same field (`key={first}`)."),
+                (other.span.start, other.span.end),
+                format!("The row's roots are keyed differently (`{first_text}` and `{other_text}`): a row has one key."),
+                format!("Key every branch by the same field (`key={first_text}`)."),
             ));
+            return false;
         }
+        if let Some(JSXAttributeValue::ExpressionContainer(value)) = &first.value
+            && let Some(expr) = value.expression.as_expression()
+            && key_uses_row_local(self.scoping, cb, expr, &plan.item_syms)
+        {
+            if !one_arg
+                || ret.is_none_or(|ret| root_element(ret).is_none())
+                || !scoped_row_signature(cb)
+            {
+                self.plan.diagnostics.push(Diagnostic::new(
+                    self.source,
+                    "W009",
+                    Severity::Error,
+                    (first.span.start, first.span.end),
+                    "A list key that uses a callback local needs one returned JSX element and a synchronous item/index callback with no `thisArg`.",
+                    "Use a keyed wrapper element and capture context in a closure, or take the key directly from the item or index.",
+                ));
+                return false;
+            }
+            plan.scoped_key = true;
+        }
+        true
     }
 
     fn missing_key_diagnostic(
@@ -232,7 +277,7 @@ impl Analyzer<'_> {
         let Some(sym) = symbol_of(self.scoping, id) else {
             return false;
         };
-        let (ret, _) = returned(cb);
+        let (ret, _, _) = returned(cb);
         let mut roots = Vec::new();
         if let Some(ret) = ret {
             row_roots(ret, &mut roots);
@@ -271,5 +316,81 @@ impl Analyzer<'_> {
                 line,
             });
         }
+    }
+}
+
+fn scoped_row_signature(cb: &Expression<'_>) -> bool {
+    let sync = match cb {
+        Expression::ArrowFunctionExpression(f) => !f.r#async,
+        Expression::FunctionExpression(f) => !f.r#async && !f.generator,
+        _ => false,
+    };
+    let params = params_of(cb);
+    sync && params.rest.is_none()
+        && match params.items.as_slice() {
+            [] => true,
+            [item] => !matches!(item.pattern, BindingPattern::AssignmentPattern(_)),
+            [item, index] => {
+                !matches!(item.pattern, BindingPattern::AssignmentPattern(_))
+                    && matches!(index.pattern, BindingPattern::BindingIdentifier(_))
+            }
+            _ => false,
+        }
+}
+
+fn key_uses_row_local(
+    scoping: &Scoping,
+    cb: &Expression<'_>,
+    expr: &Expression<'_>,
+    items: &[SymbolId],
+) -> bool {
+    if matches!(cb, Expression::ArrowFunctionExpression(f) if f.body.as_expression().is_some()) {
+        return false;
+    }
+    let mut reads = KeyReads {
+        scoping,
+        callback: cb.span(),
+        expr: expr.span(),
+        items,
+        local: false,
+    };
+    reads.visit_expression(expr);
+    reads.local
+}
+
+struct KeyReads<'a> {
+    scoping: &'a Scoping,
+    callback: Span,
+    expr: Span,
+    items: &'a [SymbolId],
+    local: bool,
+}
+
+impl<'a> Visit<'a> for KeyReads<'_> {
+    fn visit_identifier_reference(&mut self, id: &IdentifierReference<'a>) {
+        if let Some(sym) = symbol_of(self.scoping, id) {
+            let binding = self.scoping.symbol_span(sym);
+            self.local |= self.callback.contains_inclusive(binding)
+                && !self.expr.contains_inclusive(binding)
+                && !self.items.contains(&sym);
+        }
+    }
+}
+
+pub(super) fn returns_jsx(e: &Expression<'_>) -> bool {
+    match e.without_parentheses() {
+        Expression::JSXElement(_) | Expression::JSXFragment(_) => true,
+        Expression::ConditionalExpression(c) => {
+            returns_jsx(&c.consequent) || returns_jsx(&c.alternate)
+        }
+        Expression::LogicalExpression(l) => returns_jsx(&l.right),
+        _ => false,
+    }
+}
+
+fn root_element<'b, 'a>(e: &'b Expression<'a>) -> Option<&'b JSXElement<'a>> {
+    match e.without_parentheses() {
+        Expression::JSXElement(el) => Some(el),
+        _ => None,
     }
 }

@@ -83,9 +83,10 @@ pub enum RowStep {
 #[derive(Debug, Default)]
 pub struct ListPlan {
     /// The `key={…}` attributes on the row's root elements (one for an element, one per branch or top-level child
-    /// for a conditional or fragment). The first one's expression moves to the list's `by` function; all are
-    /// removed from the row.
+    /// for a conditional or fragment). All are removed from the row.
     pub key_attrs: Vec<SpanKey>,
+    /// The key closes over callback locals, so setup returns the key and a deferred render together.
+    pub scoped_key: bool,
     /// Item and index symbols: rewritten to accessor calls in the row, kept raw in the `by` function.
     pub item_syms: Vec<SymbolId>,
 }
@@ -207,46 +208,33 @@ fn params_of<'b, 'a>(cb: &'b Expression<'a>) -> &'b FormalParameters<'a> {
     }
 }
 
-/// What the callback returns: the final returned expression, and whether an earlier `return` exists.
-fn returned<'b, 'a>(cb: &'b Expression<'a>) -> (Option<&'b Expression<'a>>, bool) {
+/// The final return value, whether the callback returns elsewhere, and whether any such return is JSX.
+fn returned<'b, 'a>(cb: &'b Expression<'a>) -> (Option<&'b Expression<'a>>, bool, bool) {
     let statements = match cb {
         Expression::ArrowFunctionExpression(f) => match &f.body {
             ArrowFunctionBody::FunctionBody(body) => &body.statements,
-            body => return (body.as_expression(), false),
+            body => return (body.as_expression(), false, false),
         },
         Expression::FunctionExpression(f) => match &f.body {
             Some(body) => &body.statements,
-            None => return (None, false),
+            None => return (None, false, false),
         },
-        _ => return (None, false),
+        _ => return (None, false, false),
     };
     let last = match statements.last() {
         Some(Statement::ReturnStatement(r)) => r.argument.as_ref(),
         _ => None,
     };
-    let mut early = EarlyReturn { found: false };
-    for s in statements.iter().take(statements.len().saturating_sub(1)) {
+    let mut early = EarlyReturn::default();
+    let count = statements.len()
+        - usize::from(matches!(
+            statements.last(),
+            Some(Statement::ReturnStatement(_))
+        ));
+    for s in &statements[..count] {
         early.visit_statement(s);
     }
-    (last, early.found)
-}
-
-fn returns_jsx(e: &Expression<'_>) -> bool {
-    match e.without_parentheses() {
-        Expression::JSXElement(_) | Expression::JSXFragment(_) => true,
-        Expression::ConditionalExpression(c) => {
-            returns_jsx(&c.consequent) || returns_jsx(&c.alternate)
-        }
-        Expression::LogicalExpression(l) => returns_jsx(&l.right),
-        _ => false,
-    }
-}
-
-fn root_element<'b, 'a>(e: &'b Expression<'a>) -> Option<&'b JSXElement<'a>> {
-    match e.without_parentheses() {
-        Expression::JSXElement(el) => Some(el),
-        _ => None,
-    }
+    (last, early.found, early.jsx)
 }
 
 /// The elements a row can start with: the element itself, each branch of a conditional (`a ? <A/> : <B/>`,
