@@ -1,7 +1,7 @@
 // `kerf dev` and `kerf build` for an app with src/routes (research 25 §6): Vite 8 with kerf() (hydratable output),
 // kerfStart() and Nitro's Vite plugin. A vite.config in the app is merged in. The CLI passes the config's `site`.
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createBuilder, createServer } from 'vite'
@@ -36,7 +36,7 @@ function config({
   nitro: nitroOptions = {},
   production,
 }) {
-  root = resolve(root)
+  root = command === 'build' ? realpathSync(root) : resolve(root)
   const sockets = usesSockets(root)
   const runner = devRunner(sockets)
   const user = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs']

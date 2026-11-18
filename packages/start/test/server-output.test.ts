@@ -168,6 +168,8 @@ describe('build file identifiers', () => {
     expect(manifestKey(paths, '../../../root/\0virtual:kerf/entry-client')).toBe(
       'virtual:kerf/entry-client',
     )
+    expect(paths('../../../root/\0rolldown/runtime.js')).toBe('rolldown/runtime.js')
+    expect(manifestKey(paths, '../../../root/rolldown/runtime.js')).toBe('rolldown/runtime.js')
     expect(slash('src\\routes\\x.tsx')).toBe('src/routes/x.tsx')
   })
 

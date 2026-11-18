@@ -49,9 +49,9 @@ async function copyApp(root, library, mtime) {
     await utimes(join(root, file), mtime, mtime)
 }
 
-async function build(root, mode) {
-  await run(process.execPath, [cli, 'build', '--runtime', 'node'], {
-    cwd: root,
+async function build(root, mode, cwd = root) {
+  await run(process.execPath, [cli, 'build', '--runtime', 'node', '--root', root], {
+    cwd,
     env: {
       ...process.env,
       NODE_ENV: 'production',
@@ -169,14 +169,16 @@ async function validators(t, root, files) {
 async function verifyMode(t, dir, mode, library) {
   const a = join(dir, mode, 'a')
   const b = join(dir, mode, 'a different', 'checkout', 'b')
+  const alias = join(dir, mode, 'linked-b')
   await copyApp(a, library, 946684800)
   await copyApp(b, library, 1670839932)
+  await symlink(b, alias, 'junction')
   await build(a, mode)
   const cold = await inventory(a)
-  await build(b, mode)
+  await build(alias, mode, dirname(packages))
   const relocated = await inventory(b)
   identical(cold, relocated)
-  noCheckoutPaths(relocated, [a, b, library, dirname(packages)])
+  noCheckoutPaths(relocated, [a, b, alias, library, dirname(packages)])
   assert.equal(JSON.parse(cold.get('nitro.json')).date, '2023-11-14T22:13:20.000Z')
   assert.equal(JSON.parse(cold.get('../.kerf/contract.json')).functions.length, 1)
   assert.equal(cold.has('public/kerf-shell.html'), mode === 'shell')
@@ -191,7 +193,7 @@ async function verifyMode(t, dir, mode, library) {
   await build(a, mode)
   const warm = await inventory(a)
   identical(cold, warm)
-  noCheckoutPaths(warm, [a, b, library, dirname(packages)])
+  noCheckoutPaths(warm, [a, b, alias, library, dirname(packages)])
   if (mode === 'ssr')
     await t.test('serves static validators and the island and function', (sub) =>
       validators(sub, b, cold),

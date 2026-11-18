@@ -5,7 +5,8 @@ const byKey = ([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)
 
 /** Manifest references use the same labels as their generated lookups. */
 export function manifestKey(pathFor, key) {
-  const virtual = /(?:^|[/\\])\0?((?:virtual:|#nitro\/virtual\/).+)$/.exec(key)
+  const virtual =
+    /(?:^|[/\\])\0?((?:(?:virtual:|#nitro\/virtual\/).+|rolldown\/runtime\.js))$/.exec(key)
   return virtual ? virtual[1] : pathFor(key)
 }
 

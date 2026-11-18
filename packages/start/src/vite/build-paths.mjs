@@ -23,9 +23,13 @@ export function buildPaths(root) {
     directories.set(dir, pkg)
     return pkg
   }
-  return (id) => {
-    const virtual = id.replace(/^\0/, '')
-    if (virtual.startsWith('virtual:') || virtual.startsWith('#nitro/virtual/')) return virtual
+  return function pathFor(id) {
+    const virtualStart = id.indexOf('\0')
+    if (virtualStart !== -1) {
+      const virtual = id.slice(virtualStart + 1)
+      return isAbsolute(virtual) ? pathFor(virtual) : slash(virtual)
+    }
+    if (id.startsWith('virtual:') || id.startsWith('#nitro/virtual/')) return id
     const path = id.startsWith('file:') ? fileURLToPath(id) : resolve(root, id)
     const local = slash(relative(root, path))
     if (local !== '..' && !local.startsWith('../') && !isAbsolute(local)) return local
