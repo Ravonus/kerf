@@ -25,7 +25,7 @@ import assets from '${clientEntry}?assets=client'
 import { preloads } from 'kerf:fonts/preloads'
 ${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ manifest: { ...manifest, http }, httpModules, handle, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, store: cache, cron, email, jobs, liveRequired: ${JSON.stringify(scanRequired(root).map((r) => r.name))}, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, hold: app.hold, routeAssetBytes: ${dev ? 'null' : `'${ROUTE_ASSET_BYTES}'`}, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, pieces: ${dev ? 'undefined' : `'${SHEET_PIECES}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
-  onDiagnostic: serverLog(app.site) })
+  onDiagnostic: serverLog(app.site, app.dev) })
 export default { fetch }
 ${dev ? "import { acceptScopeReruns } from '@kerf-js/core/hmr'\nacceptScopeReruns()\n" : ''}`
 }

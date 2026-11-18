@@ -33,8 +33,23 @@ describe('the server log', () => {
 
   test('the default is a readable line carrying the request id', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    serverLog(undefined)(d)
+    serverLog(undefined, true)(d)
     expect(warn.mock.calls[0]![0]).toBe('[kerf] Q019 error (/a) [r1]: too often')
+  })
+
+  test.each([
+    [undefined, false, true],
+    [undefined, true, false],
+    ['text', false, false],
+    ['json', true, true],
+  ] as const)('chooses the log format %s in dev=%s', (log, dev, json) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    serverLog(log ? { log } : undefined, dev)({ ...d, message: 'first\nsecond' })
+    const line = warn.mock.calls[0]?.[0] as string
+    warn.mockRestore()
+    expect(line.split('\n')).toHaveLength(1)
+    if (json) expect(JSON.parse(line)).toMatchObject({ message: 'first\nsecond' })
+    else expect(line).toContain('first\\nsecond')
   })
 
   test("a proxy's x-request-id is kept only behind a trusted proxy, and only when it's plain", () => {

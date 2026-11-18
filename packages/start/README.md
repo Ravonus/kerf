@@ -1227,7 +1227,7 @@ export default defineConfig({
 | `site.headers`       | `{ [pattern]: headers }`                       |                | Response headers by route pattern, static files included                                     |
 | `site.security`      | `false` \| `{ [header]: string \| false }`     | see below      | Headers every response gets unless it sets its own; name one to change it, `false` drops it |
 | `site.trustProxy`    | `boolean` \| `number`                          | `false`        | Proxies in front: the client's address comes from `X-Forwarded-For` (rate limits)          |
-| `site.log`           | `'text'` \| `'json'`                          | `'text'`       | The server log's lines: readable, or JSON objects for a log collector                       |
+| `site.log`           | `'text'` \| `'json'`                          | By mode        | Readable text in development, JSON lines in production                       |
 | `site.limits`        | `{ body, upload }` (bytes)                     | 1 MB, 25 MB    | Largest JSON and multipart (file) request body; past it, 413 (Q018) before the rest is read |
 | `site.inlineCss`     | `boolean`                                      | `true`         | First-paint CSS in a `<style>`; `false` for plain links (strict CSP)                         |
 | `site.criticalCss`   | `boolean`                                      | `true`         | One hashed sheet plus first-paint CSS; `false` splits by chunk and inlines up to 48 KB       |

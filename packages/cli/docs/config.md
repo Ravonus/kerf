@@ -66,7 +66,7 @@ export default defineConfig({
 | `site.cors` | `{ origins: ['https://page.example'], credentials?: true, headers?: ['x-agorix-grant'] }`, or `{ origins: '*' }`. Browser access to Kerf function/data endpoints; wildcard with credentials is refused (P007) |
 | `site.security` | Headers every Start response gets unless it sets its own (`nosniff`, `Referrer-Policy`, `X-Frame-Options: SAMEORIGIN`, COOP, HSTS on https). Name a header to change it, `false` to drop it, or `security: false` for none |
 | `site.trustProxy` | `true` or a number: proxies in front of the server. The client's address comes from that many entries from the right of `X-Forwarded-For`, so auth's rate limit sees real clients. Leave it off with nothing in front |
-| `site.log` | `'text'` (default) or `'json'`: the server log's lines, readable or as JSON objects with `time`, `level`, `code`, `message`, `route` and `requestId` |
+| `site.log` | `'text'` or `'json'`. Defaults to text in development and JSON lines in production. Records include `time`, `level`, `code` and `message`, plus `route`, `requestId` and `reference` when available. |
 | `site.limits` | `{ body, upload }` in bytes: the largest JSON (1 MB) and multipart (25 MB) request body. Past it, 413 (Q018) |
 | `runtime` | `node`, `bun` or `deno`: what `kerf build` targets (`kerf docs start`) |
 | `hydration` | `'lazy'` (default): islands load when needed; `'partial'`: every island loads with the page; `'full'`: every route hydrates whole |

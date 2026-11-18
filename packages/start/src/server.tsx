@@ -75,7 +75,7 @@ const PASSES = 1024
 /** The app as a `(Request) => Response`: pages, data, functions and cards. */
 export function createHandler(options: HandlerOptions) {
   if (!options.onDiagnostic) {
-    const log = serverLog(options.site)
+    const log = serverLog(options.site, !!options.dev)
     options = {
       ...options,
       onDiagnostic: (d) => {
