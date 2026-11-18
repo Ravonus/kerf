@@ -18,6 +18,8 @@ export interface Owner {
   owner: Owner | null
   /** Set by `provide` on its root; everything below finds it through `owner`. */
   context?: Record<symbol, unknown>
+  /** A deferred child called inline borrows this owner while using its captured context. */
+  contextOverride?: Owner['context']
 }
 
 /** A node of the graph: a derived value or an effect, with what it reads and what reads it. */
