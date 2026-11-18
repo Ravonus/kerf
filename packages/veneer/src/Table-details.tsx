@@ -50,15 +50,16 @@ export function tableDetails<T>({
     pick,
     toggle,
     span: () => cols.value.length + (sel ? 1 : 0) + (hasDetails ? 1 : 0),
-    body: (row) =>
-      props.expand
-        ? props.expand(row)
-        : untrack(() =>
-            tableFields(
-              () => row,
-              () => ctx,
-            ),
+    body: (row) => {
+      const fields = () =>
+        untrack(() =>
+          tableFields(
+            () => row,
+            () => ctx,
           ),
+        )
+      return props.expand ? props.expand(row, fields) : fields()
+    },
     edit: (r, c, v) => props.onEdit?.(r, c, v),
   }
 

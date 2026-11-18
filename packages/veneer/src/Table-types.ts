@@ -72,8 +72,11 @@ export interface TableProps<T> {
   page?: { size: number } | undefined
   /** Called on Next or Previous, with the page or server cursor to load. */
   onPageChange?: ((to: unknown, reason: 'next' | 'prev') => void) | undefined
-  /** A row's details. Default a list of every column. */
-  expand?: ((row: T) => unknown) | undefined
+  /**
+   * A row's details. Default a list of every column. `fields` renders that default list, so details can keep it and
+   * add to it.
+   */
+  expand?: ((row: T, fields: () => unknown) => unknown) | undefined
   /** inline (default): they slide open in place at every width. sheet: a panel over the table below 1000px. */
   details?: 'inline' | 'sheet' | undefined
   /** Called with the row, the column's id and the new value when a cell edit is committed. */
