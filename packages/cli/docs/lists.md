@@ -2,6 +2,9 @@
 
 - `xs.map(x => <Row key={x.id} … />)` in JSX is a keyed list. Each key keeps its row; a new object under the same
   key updates the row in place.
+- A block callback can use a local in `key` when it synchronously returns one JSX element (**W009**). Setup runs
+  together with the key for each new item, and again if an index parameter changes. If a replacement computes the
+  same key, the mounted row keeps its state and local bindings, and its item and index reads stay live.
 - Over objects, a missing `key` is **W010** (autofix to `key={x.id}` when items have `id`). Over primitives, the
   value is the key.
 - `xs.filter(…).sort(…).map(…)` works; put the chain in a `derived` when other code needs it too.

@@ -153,13 +153,16 @@ impl<'a> Visit<'a> for MemberUse<'_> {
 }
 
 /// A `return` before the last statement (nested functions don't count).
+#[derive(Default)]
 pub(super) struct EarlyReturn {
     pub(super) found: bool,
+    pub(super) jsx: bool,
 }
 
 impl<'a> Visit<'a> for EarlyReturn {
-    fn visit_return_statement(&mut self, _: &ReturnStatement<'a>) {
+    fn visit_return_statement(&mut self, ret: &ReturnStatement<'a>) {
         self.found = true;
+        self.jsx |= ret.argument.as_ref().is_some_and(super::lists::returns_jsx);
     }
     fn visit_function(&mut self, _: &Function<'a>, _: ScopeFlags) {}
     fn visit_arrow_function_expression(&mut self, _: &ArrowFunctionExpression<'a>) {}

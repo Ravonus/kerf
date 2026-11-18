@@ -1,6 +1,7 @@
 import { NONE } from '../index/graph'
-import { type Box } from '../index/state'
+import { Box } from '../index/state'
 import { type Computation, type Owner } from '../index'
+import { ROWBOX } from '../flags'
 import { keys, under } from '../keys'
 
 /**
@@ -8,6 +9,7 @@ import { keys, under } from '../keys'
  * one. It sets a box's fields itself: built through `extends Box`, every row costs a derived constructor.
  */
 export class Row {
+  declare preparedKey: unknown
   v: unknown
   f: Computation | undefined = undefined
   o: Computation[] = NONE
@@ -26,6 +28,34 @@ export class Row {
 }
 /** A row as `For` sees it, with the prototype it gets there. `box` holds the item when rows aren't boxes themselves. */
 export type Item = Row & Box<unknown> & { box: Box<unknown> }
+
+/** Create the row owner and its live input readers' boxes. */
+export function makeRow(
+  item: unknown,
+  key: unknown,
+  parent: Owner | null,
+  index: number | undefined,
+) {
+  const row = new Row(item, key, parent, index === undefined ? undefined : new Box(index)) as Item
+  if (!ROWBOX) row.box = new Box(item)
+  return row
+}
+
+type Reader<T> = (item: () => T, index: () => number) => unknown
+/** Compiler-generated setup that pairs a local key with a deferred render. */
+export type PrepareRow<T> = (
+  item: () => T,
+  index: () => number,
+) => readonly [unknown, () => unknown]
+/** Inputs to `For`, including the compiler's callback-local key form. */
+export type ListProps<T> = { each: readonly T[] | null | undefined } & (
+  | {
+      by?: ((item: T, index: number) => unknown) | undefined
+      children: Reader<T>
+      prepare?: undefined
+    }
+  | { prepare: PrepareRow<T>; by?: undefined; children?: undefined }
+)
 
 /** The row under `k` between `from` and `end`, taken out. */
 export function find(order: Item[], from: number, end: number, k: unknown): Item | undefined {
@@ -48,31 +78,23 @@ export const rowStep = (k: unknown, i: number) =>
     : `:${String(k).replace(/[%/.&<>"\0\r]/g, (c) => `%${c.charCodeAt(0).toString(16)}`)}`
 
 /** A server's list: rendered once, so each row is its item and its scope, with no row to keep or owner to clean. */
-export function rendered<T>(
-  list: readonly T[],
-  props: {
-    each: readonly T[] | null | undefined
-    by?: ((item: T, index: number) => unknown) | undefined
-    children: (item: () => T, index: () => number) => unknown
-  },
-  base: string,
-) {
+export function rendered<T>(list: readonly T[], props: ListProps<T>, base: string) {
   // oxlint-disable-next-line unicorn/no-new-array -- sized up front, as the client's list is
   const out = new Array<unknown>(list.length)
   const paths = keys.on ? new Set<unknown>() : undefined
+  const { prepare } = props
   for (let i = 0; i < list.length; i++) {
     const item = list[i]!
-    let key = props.by ? props.by(item, i) : item
+    const readItem = () => item
+    const readIndex = () => i
+    const prepared = prepare?.(readItem, readIndex)
+    let key = prepared ? prepared[0] : props.by ? props.by(item, i) : item
     if (paths) {
       const id = key === Object(key) ? key : String(key)
       if (paths.has(id)) key = { duplicate: key }
       paths.add(id)
     }
-    const make = () =>
-      props.children(
-        () => item,
-        () => i,
-      )
+    const make = prepared ? prepared[1] : () => props.children!(readItem, readIndex)
     out[i] = paths ? under(base + rowStep(key, i) + '/', make) : make()
   }
   return out

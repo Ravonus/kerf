@@ -32,7 +32,8 @@ export function Cart({ items, taxRate }: {
    (W017), in the list and in the row component alike.
 7. **Lists and conditionals**: `.map` with `key` (W010), `&&`, ternaries. Keep items
    stable: replace only the changed item (`p.id === id ? { ...p, price } : p`), never `({ ...p })` every item
-   (W014).
+   (W014). A key that uses a callback local requires a synchronous item/index callback with one returned JSX
+   element (W009).
 8. **Copy a prop into state with `state.linked(() => prop)`**, not `state(prop)` (W005). `untrack(() => …)` is a
    snapshot that never updates: never render it (W018).
 9. **Side effects go in `watch(() => source, value => cleanup?)`**; DOM work in `onMount`. `flush()` applies pending

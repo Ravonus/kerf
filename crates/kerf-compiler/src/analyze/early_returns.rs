@@ -193,7 +193,7 @@ impl<'a> Visit<'a> for Aliases<'_, '_> {
 }
 
 pub(super) fn has_return(statement: &Statement<'_>) -> bool {
-    let mut returns = EarlyReturn { found: false };
+    let mut returns = EarlyReturn::default();
     returns.visit_statement(statement);
     returns.found
 }

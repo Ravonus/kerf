@@ -118,6 +118,16 @@ export const compilerDiagnostics = [
     fix: 'Pass `count.value` / pass `count`',
   },
   {
+    code: 'W009',
+    severity: 'error',
+    by: 'compiler',
+    catches:
+      'A callback-local list key with multiple or conditional roots, an unsupported callback signature, or a `thisArg`',
+    fix: 'Return one keyed wrapper element from a synchronous item/index callback and capture context in a closure, or key directly from the item or index',
+    example:
+      'export function L({ xs }) { return <ul>{xs.map(x => { const id = x.id; return <><li key={id} /></> })}</ul> }',
+  },
+  {
     code: 'W010',
     severity: 'error',
     by: 'compiler',

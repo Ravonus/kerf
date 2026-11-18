@@ -144,8 +144,9 @@ test('an island that shows its children twice keeps both', async () => {
   await page.close()
 })
 
-test('props reach an island, and each row of a keyed list keeps its own state', async () => {
+test('islands in rows keyed by a callback local claim and keep independent state', async () => {
   const { page, errors } = await open('/islands')
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect(await page.textContent('.counter[data-label=solo]')).toBe('solo: 5')
   await page.click('.counter[data-label=solo]')
   await page.click('.counter[data-label=b]')

@@ -261,7 +261,7 @@ impl Facts<'_> {
             }
             Expression::CallExpression(call) if self.core_call(call) == Some("derived") => {
                 if let Some(callback) = call.arguments.first().and_then(|a| a.as_expression()) {
-                    let (value, early) = returned(callback);
+                    let (value, early, _) = returned(callback);
                     if !early && let Some(value) = value {
                         self.infer(&destination.child("value"), value);
                     }

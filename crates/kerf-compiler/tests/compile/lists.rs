@@ -361,10 +361,18 @@ fn w010_without_an_id_field_has_no_edit() {
 
 #[test]
 fn w013_early_return_in_row() {
-    let (_, d) = run(
-        "export function L({ xs }) { return <ul>{xs.map(x => { if (!x.on) return null; return <li key={x.id} /> })}</ul> }",
-    );
-    assert!(codes(&d).contains(&"W013"), "{d:?}");
+    for callback in [
+        "x => { if (!x.on) return null; return <li key={x.id} /> }",
+        "x => { if (!x.on) return null; const id = x.id; return <li key={id} /> }",
+        "x => { { const id = x.id; return <li key={id} /> } }",
+    ] {
+        let (code, d) = run(&format!(
+            "export function L({{ xs }}) {{ return <ul>{{xs.map({callback})}}</ul> }}"
+        ));
+        assert_eq!(codes(&d), ["W013"], "{d:?}");
+        assert_eq!(d[0].severity, Severity::Error);
+        assert!(!code.contains("by:"), "{code}");
+    }
 }
 
 // ---- W014: identity-breaking spreads into keyed lists (v3 finding) ---------------------------------------------
