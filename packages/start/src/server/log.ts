@@ -13,8 +13,13 @@ export interface Diagnostic {
   reference?: string
 }
 
+const runtime = globalThis as { process?: { env?: { NODE_ENV?: string } } }
+
 /** Format Start diagnostics for stderr. An explicit site format takes precedence over the server mode. */
-export function serverLog(site: Site | undefined, dev = process.env.NODE_ENV !== 'production') {
+export function serverLog(
+  site: Site | undefined,
+  dev = runtime.process?.env?.NODE_ENV !== 'production',
+) {
   const format = site?.log ?? (dev ? 'text' : 'json')
   return (d: Diagnostic) => console.warn(diagnosticLine(d, format))
 }
