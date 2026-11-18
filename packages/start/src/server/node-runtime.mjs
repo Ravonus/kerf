@@ -50,20 +50,21 @@ function upgrade(server) {
 /** Open the listener only after all required initializers have settled successfully. */
 export async function start(stage) {
   const app = useNitroApp()
-  let drainingHttp = Promise.resolve()
   // The pinned HookableCore stops at the first rejection. Snapshot its callbacks so each gets a chance to close.
-  onShutdown('Nitro close hooks', async () => {
-    await Promise.resolve()
-    await drainingHttp.catch(() => {}) // The HTTP drain step owns this failure.
-    const hooks = app.hooks?._hooks.close ?? []
-    const settled = [...hooks].reverse().map(async (hook) => hook())
-    return Promise.allSettled(settled).then((results) => {
-      const errors = results
-        .filter((result) => result.status === 'rejected')
-        .map((result) => result.reason)
-      if (errors.length) throw new AggregateError(errors, errors.map(String).join(' | '))
-    })
-  })
+  onShutdown(
+    'Nitro close hooks',
+    () => {
+      const hooks = app.hooks?._hooks.close ?? []
+      const settled = [...hooks].reverse().map(async (hook) => hook())
+      return Promise.allSettled(settled).then((results) => {
+        const errors = results
+          .filter((result) => result.status === 'rejected')
+          .map((result) => result.reason)
+        if (errors.length) throw new AggregateError(errors, errors.map(String).join(' | '))
+      })
+    },
+    'cleanup',
+  )
   for (const [name, load] of plugins) {
     if (isDraining()) return
     stage(`Nitro plugin ${name}`)
@@ -81,7 +82,7 @@ export async function start(stage) {
   if (isDraining()) return
   stage('Node HTTP listener')
   const server = listener(app)
-  onShutdown('HTTP drain', () => (drainingHttp = server.close()))
+  onShutdown('HTTP drain', () => server.close())
   if (import.meta._websocket) upgrade(server)
   await server.serve()
   if (import.meta._tasks && !isDraining()) {

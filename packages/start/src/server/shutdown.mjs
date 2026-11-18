@@ -7,6 +7,6 @@ const host = () => globalThis[shutdownKey]
 export const isDraining = () => host()?.stopping === true
 
 /** A named shutdown step from either bundle. Embedded handlers install no process policy. */
-export function onShutdown(name, stop) {
-  host()?.steps.push([name, stop])
+export function onShutdown(name, stop, phase = 'drain') {
+  host()?.steps.push([name, stop, phase])
 }

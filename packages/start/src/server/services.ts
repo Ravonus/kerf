@@ -93,6 +93,6 @@ async function startApp(options: HandlerOptions, realtime: Hub, workers: () => v
   }
   if (isDraining()) return
   const cleanup = await options.startup?.()
-  if (typeof cleanup === 'function') onShutdown('application cleanup', () => cleanup())
+  if (typeof cleanup === 'function') onShutdown('application cleanup', () => cleanup(), 'cleanup')
   if (!isDraining()) workers()
 }

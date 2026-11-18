@@ -39,7 +39,7 @@ function stopProcess(state, code, rollback) {
     report('E_SHUTDOWN', names || 'stderr flush', 'Shutdown timed out', state.format)
     process.exit(code || 1)
   }, timeout('SERVER_SHUTDOWN_TIMEOUT'))
-  const settled = steps.map(async (step) => {
+  const settle = async (step) => {
     const [name, stop] = step
     try {
       await stop()
@@ -49,8 +49,10 @@ function stopProcess(state, code, rollback) {
     } finally {
       pending.delete(step)
     }
-  })
-  void Promise.all(settled).then(() => {
+  }
+  const drain = Promise.all(steps.filter(([, , phase]) => phase === 'drain').map(settle))
+  const cleanup = () => Promise.all(steps.filter(([, , phase]) => phase === 'cleanup').map(settle))
+  void drain.then(cleanup).then(() => {
     process.stderr.write('', (error) => {
       clearTimeout(deadline)
       if (error) report('E_SHUTDOWN', 'stderr flush', error, state.format)

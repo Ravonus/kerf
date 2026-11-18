@@ -7,12 +7,15 @@ await runNodeHost(
   () =>
     Promise.resolve({
       start() {
-        const server = createServer((_req, res) =>
+        let inFlight = 0
+        const server = createServer((_req, res) => {
+          inFlight++
           setTimeout(() => {
             res.setHeader('connection', 'close')
+            inFlight--
             res.end('ok')
-          }, 500),
-        )
+          }, 500)
+        })
         onShutdown(
           'HTTP drain',
           () =>
@@ -20,11 +23,16 @@ await runNodeHost(
               server.close((error) => (error ? no(error) : ok()))
             }),
         )
-        onShutdown('app cleanup', async () => {
-          if (process.env.STOP_FAIL) throw new Error('shutdown test marker')
-          await sleep(Number(process.env.STOP_DELAY || 0))
-          console.log('stopped')
-        })
+        onShutdown(
+          'app cleanup',
+          async () => {
+            if (process.env.STOP_FAIL) throw new Error('shutdown test marker')
+            if (inFlight) throw new Error('resources closed before HTTP drained')
+            await sleep(Number(process.env.STOP_DELAY || 0))
+            console.log('stopped')
+          },
+          'cleanup',
+        )
         setInterval(() => {}, 1000)
         server.listen(0, '127.0.0.1', () => console.log(server.address().port))
         process.on('SIGUSR1', () => {

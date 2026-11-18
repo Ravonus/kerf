@@ -46,7 +46,7 @@ async function exit(child, limit = 3000) {
 }
 
 void test('drains requests and services, then exits despite a live handle', async () => {
-  const { child, port } = await start({ STOP_DELAY: '800' })
+  const { child, port } = await start({ STOP_DELAY: '300' })
   try {
     const response = new Promise((resolve, reject) => {
       http
@@ -62,7 +62,7 @@ void test('drains requests and services, then exits despite a live handle', asyn
     await response
     assert.equal(child.exitCode, null)
     assert.deepEqual(await exit(child), [0, null])
-    assert.ok(Date.now() - started >= 700)
+    assert.ok(Date.now() - started >= 600)
   } finally {
     child.kill('SIGKILL')
   }
@@ -88,7 +88,7 @@ void test('the HTTP grace window is bounded', async () => {
     socket.write('GET / HTTP/1.1\r\nHost: localhost\r\n')
     child.kill('SIGTERM')
     assert.deepEqual(await exit(child, 2500), [1, null])
-    assert.match(records()[0].message, /HTTP drain: Shutdown timed out/)
+    assert.match(records()[0].message, /HTTP drain.*Shutdown timed out/)
     socket.destroy()
   } finally {
     child.kill('SIGKILL')
