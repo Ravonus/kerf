@@ -1,0 +1,21 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Results Toolbar ------------------------------------------------------------ */
+:where([data-scope="results-toolbar"]) {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  min-inline-size: 0; min-block-size: var(--veneer-control-lg); gap: var(--veneer-space-tight);
+  padding: var(--veneer-space-hair) var(--veneer-space-tight);
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-raised);
+}
+:where([data-scope="results-toolbar"] > [data-part="results-summary"], [data-scope="results-toolbar"] > [data-part="results-actions"]) {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--veneer-space-tight); min-inline-size: 0;
+}
+:where([data-scope="results-toolbar"] > [data-part="results-summary"]) {
+  color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size);
+}
+:where([data-scope="results-toolbar"] > [data-part="results-summary"] > [data-part="results-count"] > strong) {
+  color: var(--veneer-color-text); font-variant-numeric: tabular-nums;
+}
+:where([data-scope="results-toolbar"] > [data-part="results-actions"]) { justify-content: end; margin-inline-start: auto; }
+}

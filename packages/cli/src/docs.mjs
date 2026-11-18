@@ -51,6 +51,22 @@ export const topics = {
   config: 'kerf.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   design:
     'The design language: Stack, Row, Heading, Text, Link, the closed vocabulary, `kerf fix`, `kerf tokens`; D001–D007, D011, D012, D030–D041',
+  'veneer-artwork-frame':
+    'Display an image with an optional decorative fallback and pixel-based corner treatment.',
+  'veneer-celebration-overlay':
+    'Show a named celebration in a native modal with Escape, backdrop and close-button dismissal.',
+  'veneer-locked-tile': 'Explain a restriction and expose the content when it becomes available.',
+  'veneer-particle-burst':
+    'Play a finite, seeded burst of confetti, disks or caller-supplied sprites.',
+  'veneer-particle-field': 'Render an ambient, seeded particle background.',
+  'veneer-progressive-picture': 'Show a runtime image without changing the layout.',
+  'veneer-results-toolbar': 'Show a result count and the actions for the list in a wrapping row.',
+  'veneer-scratch-reveal': 'Cover content with a scratchable layer and a native reveal button.',
+  'veneer-section-heading':
+    'Add context and actions to a heading that follows the document outline.',
+  'veneer-seeded-placeholder': 'Render deterministic, themeable SVG artwork for missing media.',
+  'veneer-streak-indicator': 'Show a labeled count with visual intensity tied to thresholds.',
+  'veneer-field-and-accordion': 'Bind a field to other help text and extend a disclosure header.',
   style:
     'Style groups (@kerf-js/core/style): group(), axes, parts, accents, kerf style find/explain, .kerf/styles.json; D020–D025, W060',
   diagnostics: 'Every diagnostic code, from W to L, and which ones the installed kerf reports',

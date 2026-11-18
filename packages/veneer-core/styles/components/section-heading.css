@@ -1,0 +1,15 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Section Heading ------------------------------------------------------------ */
+:where([data-scope="section-heading"]) {
+  display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between;
+  gap: var(--veneer-space-group);
+}
+:where([data-scope="section-heading"] > [data-part="section-copy"]) {
+  display: grid; gap: var(--veneer-space-tight);
+  flex: 1 1 min(100%, 22rem); max-inline-size: 65ch; min-inline-size: 0;
+}
+:where([data-scope="section-heading"] > [data-part="section-actions"]) {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--veneer-space-tight);
+}
+}

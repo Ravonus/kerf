@@ -1,0 +1,35 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Scratch Reveal ------------------------------------------------------------- */
+:where([data-scope="scratch-reveal"]) {
+  position: relative; display: grid; isolation: isolate; min-block-size: 8rem;
+  border-radius: var(--veneer-radius-surface);
+}
+:where([data-scope="scratch-reveal"] > [data-part="scratch-result"]) {
+  display: grid; place-items: center; padding: var(--veneer-pad-surface);
+}
+:where([data-scope="scratch-reveal"] > [data-part="scratch-cover"]) {
+  position: absolute; inset: 0; display: grid; place-items: center; touch-action: none;
+  padding: 0; border: 0; border-radius: inherit; overflow: clip; cursor: grab;
+  background: var(--scratch-ink, var(--veneer-color-surface-inverse));
+  color: var(--veneer-color-on-inverse);
+  transition: opacity var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="scratch-reveal"] > [data-part="scratch-cover"][data-ready]) { background: transparent; }
+:where([data-scope="scratch-reveal"] > [data-part="scratch-cover"] > canvas) {
+  position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none;
+  color: var(--scratch-ink, var(--veneer-color-surface-inverse));
+}
+:where([data-scope="scratch-reveal"] > [data-part="scratch-cover"] > [data-part="scratch-prompt"]) {
+  position: relative; font: inherit; padding: var(--veneer-space-tight);
+}
+:where([data-scope="scratch-reveal"] > [data-part="scratch-cover"] > [data-part="scratch-prompt"][data-scratched]) { visibility: hidden; }
+:where([data-scope="scratch-reveal"][data-state="open"] > [data-part="scratch-cover"]) { opacity: 0; pointer-events: none; }
+:where([data-scope="scratch-reveal"][data-motion="reduce"] > [data-part="scratch-cover"], [data-motion="reduce"] [data-scope="scratch-reveal"] > [data-part="scratch-cover"]) { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  :where([data-scope="scratch-reveal"] > [data-part="scratch-cover"]) { transition: none; }
+}
+@media (forced-colors: active) {
+  :where([data-scope="scratch-reveal"] > [data-part="scratch-cover"]) { border: 1px solid ButtonText; color: ButtonText; }
+}
+}

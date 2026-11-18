@@ -10,6 +10,7 @@ type Model = {
   live: Record<string, unknown>
   problem: Value<unknown>
   glyph: Value<IconRef | undefined>
+  labelContent: Value<unknown>
   message: Value<boolean>
   msg: Value<string | undefined>
   chars: Value<{ c: string; at: number }[]>
@@ -22,6 +23,7 @@ export function fieldView({
   id,
   problem,
   glyph,
+  labelContent,
   message,
   msg,
   chars,
@@ -33,6 +35,7 @@ export function fieldView({
   id: Model['id']
   problem: Model['problem']
   glyph: Model['glyph']
+  labelContent: Model['labelContent']
   message: Model['message']
   msg: Model['msg']
   chars: Model['chars']
@@ -45,6 +48,7 @@ export function fieldView({
       ref={setRoot}
       data-scope="field"
       data-variant={p.variant}
+      data-custom-label={labelContent.value != null ? '' : undefined}
       data-appearance={p.appearance}
       data-size={p.size === 'md' ? undefined : p.size}
       data-counter={p.counter}
@@ -64,20 +68,9 @@ export function fieldView({
         <span data-part="sweep-base" aria-hidden="true"></span>
         <span data-part="sweep" aria-hidden="true"></span>
         {glyph.value && fieldIcon(glyph)}
-        <label
-          data-part="label"
-          for={p.group || p.labelled ? undefined : id}
-          id={p.group || p.labelled ? `${id}-l` : undefined}
-        >
-          <span data-part="label-text">{p.label}</span>
-          <span data-part="label-chars" aria-hidden="true">
-            {chars.value.map((x) => (
-              <span key={x.at} data-char data-c={x.c}></span>
-            ))}
-          </span>
-        </label>
+        <FieldLabel p={p} id={id} chars={chars} labelContent={labelContent} />
         {p.prefix !== undefined && <span data-part="prefix">{p.prefix}</span>}
-        {p.group ? fieldBody({ p, id, msg, problem, shell }) : untrack(() => p.control(shell))}
+        {p.group ? fieldBody({ p, id, problem, shell }) : untrack(() => p.control(shell))}
         {p.suffix !== undefined && <span data-part="suffix">{p.suffix}</span>}
         {p.clearable && (
           <button type="button" data-part="clear" tabindex="-1" aria-label={`Clear ${p.label}`}>
@@ -107,13 +100,11 @@ function fieldIcon(glyph: Model['glyph']) {
 function fieldBody({
   p,
   id,
-  msg,
   problem,
   shell,
 }: {
   p: Model['p']
   id: Model['id']
-  msg: Model['msg']
   problem: Model['problem']
   shell: Model['shell']
 }) {
@@ -122,7 +113,7 @@ function fieldBody({
       data-part="body"
       role="group"
       aria-labelledby={`${id}-l`}
-      aria-describedby={msg.value}
+      aria-describedby={shell.describedby}
       aria-invalid={problem.value ? 'true' : undefined}
     >
       {untrack(() => p.control(shell))}
@@ -143,5 +134,34 @@ function fieldMessage(p: Model['p'], msg: Model['msg'], problem: Model['problem'
       )}
       {p.counter !== undefined && <span data-part="counter" aria-live="off"></span>}
     </div>
+  )
+}
+
+function FieldLabel({
+  p,
+  id,
+  chars,
+  labelContent,
+}: Pick<Model, 'p' | 'id' | 'chars' | 'labelContent'>) {
+  return (
+    <label
+      data-part="label"
+      for={p.group || p.labelled ? undefined : id}
+      id={p.group || p.labelled ? `${id}-l` : undefined}
+    >
+      <span data-part="label-text" class={labelContent.value != null ? 'vh' : undefined}>
+        {p.label}
+      </span>
+      {labelContent.value != null && (
+        <span data-part="label-content" aria-hidden="true">
+          {labelContent.value}
+        </span>
+      )}
+      <span data-part="label-chars" aria-hidden="true">
+        {chars.value.map((x) => (
+          <span key={x.at} data-char data-c={x.c}></span>
+        ))}
+      </span>
+    </label>
   )
 }

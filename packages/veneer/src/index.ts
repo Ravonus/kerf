@@ -236,3 +236,25 @@ export type {
   ChangeReason,
 } from '@kerf-js/veneer-core'
 export { sweep, setDial, getDial, setPalette, getPalette } from '@kerf-js/veneer-core'
+
+export { ArtworkFrame, type ArtworkFrameProps } from './ArtworkFrame'
+export { CelebrationOverlay, type CelebrationOverlayProps } from './CelebrationOverlay'
+export { LockedTile, type LockedTileProps } from './LockedTile'
+export { ParticleBurst, type ParticleBurstProps } from './ParticleBurst'
+export { ParticleField, type ParticleFieldProps } from './ParticleField'
+export { ProgressivePicture, type ProgressivePictureProps } from './ProgressivePicture'
+export { ResultsToolbar, type ResultsToolbarProps } from './ResultsToolbar'
+export { ScratchReveal, type ScratchRevealProps } from './ScratchReveal'
+export { SectionHeading, type SectionHeadingProps } from './SectionHeading'
+export {
+  SeededPlaceholder,
+  type SeededPlaceholderProps,
+  type PlaceholderPalette,
+} from './SeededPlaceholder'
+export { StreakIndicator, type StreakIndicatorProps } from './StreakIndicator'
+export type {
+  CornerAnalysis,
+  ParticleOrigin,
+  ParticleShape,
+  ParticleSprite,
+} from '@kerf-js/veneer-core/visuals'

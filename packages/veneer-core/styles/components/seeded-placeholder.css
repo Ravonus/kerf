@@ -1,0 +1,14 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Seeded Placeholder --------------------------------------------------------- */
+:where([data-scope="seeded-placeholder"]) { display: block; inline-size: 100%; block-size: 100%; }
+:where([data-scope="seeded-placeholder"] > [data-part="placeholder-background"]) { fill: var(--veneer-color-surface-sunken); }
+:where([data-scope="seeded-placeholder"] > [data-part="placeholder-dots"]) { fill: var(--veneer-color-text); opacity: 0.19; }
+:where([data-scope="seeded-placeholder"] > [data-part="placeholder-frame"]) {
+  fill: none; stroke: var(--veneer-color-text-subtle); stroke-width: 1; opacity: 0.65;
+}
+:where([data-scope="seeded-placeholder"] > [data-part="placeholder-facets"]) {
+  fill: var(--veneer-color-accent-soft); stroke: var(--veneer-color-accent-solid);
+}
+:where([data-scope="seeded-placeholder"] > [data-part="placeholder-center"]) { fill: var(--veneer-color-accent-text); }
+}
