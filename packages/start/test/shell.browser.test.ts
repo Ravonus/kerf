@@ -28,9 +28,17 @@ let a: Awaited<ReturnType<typeof serve>>
 let b: Awaited<ReturnType<typeof serve>>
 let address: string
 const captured: { peer: string; path: string; headers: Headers; text: Promise<string> }[] = []
+const criticMarker = 'CRITIC_MARKER'
+const criticCookieRead: (string | undefined)[] = []
 const gateway = createServer((req, res) => {
   const url = new URL(req.url!, 'http://localhost')
+  if (/^\/(?:peers\/[ab]\/)?_kerf\/(?:fn\/|rt$|ws$)/.test(url.pathname)) {
+    res.writeHead(200, { 'content-type': 'application/json' })
+    res.end(JSON.stringify({ v: criticMarker }))
+    return
+  }
   const peer = /^\/peers\/(a|b)(\/_kerf\/data\/.*)$/.exec(url.pathname)
+  if (peer && url.searchParams.has('critic')) criticCookieRead.push(req.headers.cookie)
   const task = peer ? forward(peer[1]!, peer[2]! + url.search, res) : releaseFile(url.pathname, res)
   void task.catch(() => {
     if (!res.headersSent) res.writeHead(404)
@@ -43,6 +51,7 @@ async function forward(peer: string, path: string, res: ServerResponse) {
     redirect: 'manual',
     headers: { 'x-fixture-peer': peer, 'accept-encoding': 'identity' },
   })
+  if (path.includes('?critic=')) return hostileReply(path, response, res)
   res.writeHead(response.status, Object.fromEntries(response.headers))
   if (!response.body) return void res.end()
   const [body, receipt] = response.body.tee()
@@ -50,6 +59,36 @@ async function forward(peer: string, path: string, res: ServerResponse) {
   void text.catch(() => {})
   captured.push({ peer, path, headers: response.headers, text })
   await pipeline(body, res)
+}
+
+async function hostileReply(path: string, reply: Response, res: ServerResponse) {
+  const kind = new URL(path, 'http://localhost').searchParams.get('critic')
+  const [first, detail] = (await reply.text())
+    .trimEnd()
+    .split('\n')
+    .map((line) => JSON.parse(line))
+  if (kind === 'legacy') {
+    first.m = [{ s: true, h: `<span id="${criticMarker}">probe</span>` }]
+    first.preload = ['/critic-hint.css']
+    first.islands = ['critic']
+  }
+  if (kind === 'headers') {
+    first.values[1].label = `<span id="${criticMarker}">probe</span>`
+    first.values[1].link = { rel: 'stylesheet', href: '/critic-hint.css' }
+  }
+  res.writeHead(reply.status, {
+    'content-type': 'application/x-ndjson',
+    'set-cookie': 'critic-peer=example; Path=/',
+    'content-security-policy': "default-src 'none'",
+    link: '</critic-hint.css>; rel=preload; as=style',
+    refresh: '0; url=/critic-header-target',
+    location: '/critic-header-target',
+  })
+  const outcome =
+    kind === 'deferred'
+      ? [first, { ...detail, value: { text: criticMarker, extra: 'Unexpected' } }]
+      : [first]
+  res.end(outcome.map((frame) => JSON.stringify(frame) + '\n').join(''))
 }
 
 async function releaseFile(path: string, res: ServerResponse) {
@@ -333,6 +372,174 @@ test('invalid deferred frames stay in the local Boundary and typed text stays li
     await page.goto(address + '/items/42?attack=text')
     expect(await page.getByRole('heading').textContent()).toContain('<b id="peer-markup">')
     await assertNoMarkup(page)
+  } finally {
+    await page.close()
+  }
+})
+
+async function watchSinks(page: Page) {
+  await page.addInitScript((marker) => {
+    const hits: string[] = []
+    Reflect.set(window, 'criticSinks', hits)
+    const inspect = (name: string, values: unknown[]) => {
+      if (values.some((value) => String(value).includes(marker))) hits.push(name)
+    }
+    const watch = (owner: object, name: string) => {
+      const original = Reflect.get(owner, name)
+      Reflect.set(
+        owner,
+        name,
+        new Proxy(original, {
+          apply(target, self, args: unknown[]) {
+            if (
+              name !== 'setAttribute' ||
+              /^(?:on|href|src|style|action|formaction)/i.test(String(args[0]))
+            )
+              inspect(name, args)
+            return Reflect.apply(target, self, args)
+          },
+          construct(target, args: unknown[]) {
+            inspect(name, args)
+            return Reflect.construct(target, args)
+          },
+        }),
+      )
+    }
+    const original = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML')!
+    Object.defineProperty(Element.prototype, 'innerHTML', {
+      ...original,
+      set(this: Element, value: string) {
+        inspect('innerHTML', [value])
+        original.set!.call(this, value)
+      },
+    })
+    watch(Element.prototype, 'insertAdjacentHTML')
+    watch(Element.prototype, 'setAttribute')
+    watch(DOMParser.prototype, 'parseFromString')
+    watch(Document.prototype, 'write')
+    watch(window, 'eval')
+    watch(window, 'Function')
+  }, criticMarker)
+}
+
+test('route Fetch ignores peer presentation headers and refuses to read or write cookies', async () => {
+  const { page, documents } = await open()
+  const requests: string[] = []
+  page.on('request', (request) => requests.push(new URL(request.url()).pathname))
+  const marker = `<span id="${criticMarker}">probe</span>`
+  const from = criticCookieRead.length
+  try {
+    await page.context().addCookies([{ name: 'critic-release', value: 'example', url: address }])
+    await watchSinks(page)
+    await go(page, '/critic?critic=headers', marker)
+    expect(await page.title()).toBe(marker + ' | Release')
+    expect(await page.locator('#' + criticMarker).count()).toBe(0)
+    expect(await page.locator('meta[name=critic-note]').getAttribute('id')).toBeNull()
+    expect(await page.locator('meta[name=critic-note]').getAttribute('content')).toBe(
+      'Text content',
+    )
+    expect(await page.locator('link[href="/critic-hint.css"]').count()).toBe(0)
+    expect(await page.locator('script[type="application/ld+json"]').textContent()).toBe(
+      JSON.stringify({ label: marker }),
+    )
+    expect(criticCookieRead.slice(from)).toEqual([undefined])
+    expect((await page.context().cookies()).map(({ name }) => name)).toEqual(['critic-release'])
+    await page.getByRole('link', { name: 'Home' }).click()
+    await page.getByRole('heading', { name: 'Release home' }).waitFor()
+    expect(documents).toEqual([address + '/critic?critic=headers'])
+    expect(requests).not.toContain('/critic-header-target')
+    expect(requests).not.toContain('/critic-hint.css')
+    expect(await page.evaluate(() => Reflect.get(window, 'criticSinks'))).toEqual([])
+  } finally {
+    await page.close()
+  }
+})
+
+test('peer hydration, island and preload fields do not reach shell DOM sinks', async () => {
+  const { page, documents } = await open()
+  const requests: string[] = []
+  page.on('request', (request) => requests.push(new URL(request.url()).pathname))
+  try {
+    await watchSinks(page)
+    await go(page, '/critic?critic=legacy', 'Release error')
+    expect(await page.locator('#' + criticMarker).count()).toBe(0)
+    expect(await page.evaluate(() => Reflect.get(window, 'criticSinks'))).toEqual([])
+    expect(await page.title()).toBe('Release error | Release')
+    expect(documents).toEqual([address + '/critic?critic=legacy'])
+    expect(requests).not.toContain('/critic-hint.css')
+    expect(requests).not.toContain('/@vite/client')
+  } finally {
+    await page.close()
+  }
+})
+
+test('a peer envelope is rejected after Back and a link click with release code already loaded', async () => {
+  const { page, documents } = await open()
+  const requests: string[] = []
+  page.on('request', (request) => requests.push(request.url()))
+  try {
+    await go(page, '/critic', 'Release text')
+    await page.getByRole('link', { name: 'Home' }).click()
+    await page.getByRole('heading', { name: 'Release home' }).waitFor()
+    await page.getByRole('link', { name: 'Critic' }).focus()
+    expect(requests.filter((url) => url.endsWith('/_kerf/data/critic'))).toHaveLength(1)
+    await page.route('**/peers/a/_kerf/data/critic', (request) =>
+      request.continue({ url: request.request().url() + '?critic=legacy' }),
+    )
+    await page.goBack()
+    await page.getByRole('heading', { name: 'Release error' }).waitFor()
+    expect(page.url()).toBe(address + '/critic')
+    await page.goForward()
+    await page.getByRole('heading', { name: 'Release home' }).waitFor()
+    await page.getByRole('link', { name: 'Critic' }).click()
+    await page.getByRole('heading', { name: 'Release error' }).waitFor()
+    expect(await page.locator('#' + criticMarker).count()).toBe(0)
+    expect(documents).toEqual([address + '/critic'])
+  } finally {
+    await page.close()
+  }
+})
+
+test('an untyped deferred property produces only the release Boundary fallback', async () => {
+  const { page } = await open()
+  try {
+    await go(page, '/items/42?critic=deferred', 'Peer A item 42')
+    await page.getByText('Detail unavailable').waitFor()
+    expect(await page.getByText(criticMarker).count()).toBe(0)
+  } finally {
+    await page.close()
+  }
+})
+
+test('legacy RPC, enhanced forms and realtime have no peer browser transport in shell builds', async () => {
+  const { page, documents } = await open()
+  const remote: string[] = []
+  const log = (href: string) => {
+    const path = new URL(href).pathname
+    if (/\/_kerf\/(?:fn\/|rt$|ws$)/.test(path)) remote.push(path)
+  }
+  page.on('request', (request) => log(request.url()))
+  page.on('websocket', (socket) => log(socket.url()))
+  try {
+    await go(page, '/critic', 'Release text')
+    await page.getByRole('button', { name: 'Read server function' }).click()
+    await page.getByText('Query unavailable').waitFor()
+    await page.getByRole('button', { name: 'Submit server form' }).click()
+    await page.getByText('Browser server functions are unavailable in shell mode.').waitFor()
+    await page.getByText('offline Release stream value').waitFor()
+    expect(await page.locator('[data-channel]').textContent()).toBe('unavailable')
+    expect(await page.locator('[data-shared]').textContent()).toBe(
+      'unavailable Release shared value',
+    )
+    expect(documents).toEqual([address + '/critic'])
+    expect(remote).toEqual([])
+    const noJs = await fetch(a.url + '/critic', {
+      method: 'POST',
+      body: new URLSearchParams({ $fn: 'probeMutation' }),
+      redirect: 'manual',
+    })
+    expect(noJs.status).toBe(405)
+    expect(noJs.headers.get('location')).toBeNull()
   } finally {
     await page.close()
   }

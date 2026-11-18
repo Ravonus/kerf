@@ -21,7 +21,7 @@ export async function* frames(body: ReadableStream<Uint8Array>, signal: AbortSig
       while (start < value.length) {
         const end = value.indexOf(10, start)
         const part = value.subarray(start, end < 0 ? value.length : end)
-        if (size + part.length > SHELL_FRAME_BYTES) invalid()
+        if (size + part.length > frame.length) invalid()
         frame.set(part, size)
         size += part.length
         if (end < 0) break

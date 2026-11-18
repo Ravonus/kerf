@@ -45,12 +45,15 @@ const localBase = 'https://kerf.invalid'
 export function isRouteUrl(value: unknown, origins: readonly string[] = []): value is string {
   if (typeof value !== 'string' || value.length > 2048 || /[\s\\\p{Cc}<>]/u.test(value))
     return false
-  if (!value.startsWith('/') && !value.startsWith('https://')) return false
-  if (value.startsWith('//')) return false
+  const local = value.startsWith('/')
+  if (local ? value.startsWith('//') : !/^https:\/\/[^/@?#]+(?:[/?#]|$)/.test(value)) return false
   try {
     const url = new URL(value, localBase)
     if (url.username || url.password) return false
-    return value.startsWith('/')
+    // Encoded separators and nested escapes can be decoded by downstream route handlers.
+    if (/%(?:2f|5c|25[\da-f]{2})/i.test(url.pathname)) return false
+    if (/\p{Cc}/u.test(decodeURIComponent(url.pathname))) return false
+    return local
       ? url.origin === localBase && !url.pathname.startsWith('//')
       : url.protocol === 'https:' && origins.includes(url.origin)
   } catch {

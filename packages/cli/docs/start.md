@@ -63,7 +63,8 @@ reload keeps the history entry and mounted layouts.
 Set `site: { render: 'shell', routeRedirects: { home: '/' } }` in
 `kerf.config.ts` to build the application for browser rendering.
 Serve the emitted `.output/public/kerf-shell.html` (or the preset's
-public output) and its assets from the trusted release. Serve that
+public output) and verify its entire asset closure, including lazy
+chunks and the retry table, from the trusted release. Serve that
 same document at every app page URL, including deep links and
 unknown page URLs. Keep the browser address. A production Start
 peer returns an empty 404 for its application document routes.
@@ -76,14 +77,21 @@ Start mounts into `#app` without hydration. The browser imports
 all matched levels, including static pages, layouts, 404 and
 error views. It runs the release's `meta` exports with local
 params and validated immediate data and writes the head and JSON-LD.
+Head extras use fixed metadata attributes and a small set of inert
+link relations. Extra link URLs must be root-relative or use the
+configured HTTPS site origin. Load CSS, scripts and resource hints
+from the release asset graph.
 `site.head`, server prerendering, generated share cards and SSR
 form fallbacks are omitted in this mode. Publish signed crawler
 materials separately if needed.
 
 A custom `src/entry.client.ts` still calls `start(routes)` with the
 generated `virtual:kerf/routes` namespace. Set `clientFetch` first
-if peers live behind a different origin or transport. Read data
-via fetch with redirects disabled and preserve the abort signal.
+if peers live behind a different origin or transport. Preserve
+the abort signal, redirect refusal and `credentials: 'omit'` on
+the browser fetch. A credentialed application transport must
+terminate credentials at a trusted gateway and construct a new
+data response there.
 First load, links, refresh and Back/Forward use the same protocol.
 Code and route data start loading in parallel. Focus and a link
 press can warm release modules when Save-Data is off. The router
@@ -91,8 +99,9 @@ doesn't prefetch or retain peer route responses.
 
 #### Route schema and outcomes
 
-Export `routeData` from every page or layout with a `load` that
-returns data. Use a Standard Schema v1 validator for `initial` and
+Export `routeData` from every page or layout with a `load`.
+Shell builds require the export even for loaders that only throw
+or redirect. Use a Standard Schema v1 validator for `initial` and
 one validator per optional `deferred` key. A level without a
 loader or schema has no data and uses a wire `null` sentinel.
 `load` and `prerender` should be declared directly in their route
@@ -128,7 +137,9 @@ export default function Catalog(props: RouteProps<typeof load>) {
 Declare exact objects at every depth. List every permitted field,
 use bounded strings and arrays, and use `isRouteUrl(value, origins)`
 for URL fields. It accepts root-relative URLs or HTTPS URLs at
-explicitly allowed exact origins. Use validated text in text nodes
+explicitly allowed exact origins. It refuses ambiguous authorities,
+encoded path separators and nested path escapes. Give URL fields
+rules specific to the destination and sink. Use validated text in text nodes
 or ordinary attributes. A schema is also a sink contract. A field
 used as text must not later become HTML, CSS, script, an executable
 asset URL, a frame document or an open redirect. Use separately
@@ -170,12 +181,22 @@ pending and error UI. A malformed or truncated stream rejects
 the unsettled promises. No route, cache, SSR, raw chunk or head
 markup is accepted from the peer.
 
-The release host must serve and verify the document, entry,
-assets and lazy modules independently of peers. Do not route
-document, script, service-worker or stylesheet requests to peer
-origins. Apply separate admission to RPCs, realtime, media and
-raw HTTP endpoints. The shell protocol does not define those
-contracts or the release-signing policy.
+The release host owns document and asset response headers, CSP,
+cookie scope, and request routing. Serve documents, scripts,
+stylesheets, retry tables and the service worker from verified
+release files. Keep peer origins outside the release origin. A
+gateway forwarding peer data must supply its own response
+headers and keep peer `Link`, `Refresh`, `Location` and
+`Set-Cookie` headers out of documents and assets. Fetch options
+cannot enforce policy on responses passed through a custom transport.
+
+Shell mode disables Start's legacy browser queries, mutations,
+mutation-backed form submissions, realtime streams, channels and
+shared state networking. Server functions can still run in
+loaders. App-owned RPC, realtime, native forms, auth, media and
+raw HTTP require their own browser admission and trusted request
+routing. The release owns any HTML, script, CSS or URL sinks
+that its components call directly.
 
 ### Error routes
 

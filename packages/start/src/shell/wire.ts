@@ -1,5 +1,5 @@
 // Versioned frames contain JSON values and outcomes only. No legacy navigation fields are admitted.
-import type { RouteSchema } from '../shell'
+import type { RouteDataSchema, RouteSchema } from '../shell'
 
 export const SHELL_MEDIA = 'application/x-ndjson'
 export const SHELL_VERSION = 1
@@ -34,6 +34,12 @@ export function safeKey(key: string) {
   return !reserved.has(key)
 }
 
+export function initialSchema(contract: RouteDataSchema | undefined) {
+  if (contract === undefined) return undefined
+  if (!contract?.initial) invalid()
+  return contract.initial
+}
+
 function json(value: unknown, depth = 0): value is Json {
   if (depth > 32) return false
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return true
@@ -64,7 +70,7 @@ export async function validate(schema: RouteSchema | undefined, value: unknown):
   if (!json(value)) invalid()
   if (!schema) return value === null ? value : invalid()
   if (schema['~standard']?.version !== 1) invalid()
-  const result = await schema['~standard'].validate(value)
+  const result = await schema['~standard'].validate(structuredClone(value))
   if ('issues' in result || !json(result.value) || !same(value, result.value)) invalid()
-  return result.value
+  return value
 }

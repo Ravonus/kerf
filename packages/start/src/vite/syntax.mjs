@@ -13,20 +13,31 @@ function serverCuts(code, file, shell) {
     sourceType: 'module',
   })
   const cuts = []
+  const shellNames = new Set()
   const namesToStrip = shell ? SHELL_SERVER_EXPORTS : SERVER_EXPORTS
   for (const node of ast.program.body) {
     if (shell && node.exportKind !== 'type' && unsafeShellExport(node))
       throw new Error(`${file}: declare shell route load and prerender directly in this module`)
-    if (node.type !== 'ExportNamedDeclaration' || !node.declaration) continue
+    if (node.type !== 'ExportNamedDeclaration' || (shell && node.exportKind === 'type')) continue
+    if (shell)
+      for (const spec of node.specifiers)
+        if (spec.exportKind !== 'type') shellNames.add(spec.exported.name ?? spec.exported.value)
     const d = node.declaration
-    const names =
-      d.type === 'VariableDeclaration' ? d.declarations.map((x) => x.id?.name) : [d.id?.name]
+    if (!d) continue
+    const names = shell
+      ? declares(d)
+      : d.type === 'VariableDeclaration'
+        ? d.declarations.map((x) => x.id?.name)
+        : [d.id?.name]
+    if (shell) for (const name of names) shellNames.add(name)
     if (names.length && names.every((n) => namesToStrip.has(n))) cuts.push([node.start, node.end])
     else if (shell && names.some((n) => namesToStrip.has(n)))
       throw new Error(
         `${file}: declare shell route load and prerender separately from client exports`,
       )
   }
+  if (shellNames.has('load') && !shellNames.has('routeData'))
+    throw new Error(`${file}: shell route loaders require a routeData schema export`)
   return cuts
 }
 

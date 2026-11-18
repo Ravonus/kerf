@@ -12,6 +12,7 @@ import {
   SHELL_TIMEOUT,
   SHELL_VERSION,
   invalid,
+  initialSchema,
   record,
   safeKey,
   validate,
@@ -97,6 +98,8 @@ async function resolveShell(
   const pending: Deferred[] = []
   try {
     for (const [depth, id] of local.ids.entries()) {
+      const module = moduleOf(id)
+      if (module?.load && !module.routeData?.initial) invalid()
       const raw = await load(id).catch((error: unknown) => {
         if (isNotFound(error) || error instanceof RouteRedirect) return error
         throw error
@@ -106,8 +109,6 @@ async function resolveShell(
         return { result: { kind: 'redirect', id: raw.id }, pending: [], status: 200 }
       }
       if (isNotFound(raw)) return { result: { kind: 'not-found', values }, pending, status: 404 }
-      const module = moduleOf(id)
-      if (module?.load && !module.routeData?.initial) invalid()
       const level = await prepareLevel(raw, module?.routeData, depth)
       if (pending.length + level.pending.length > SHELL_DEFERRED) invalid()
       values.push(level.value)
@@ -132,7 +133,7 @@ async function prepareLevel(raw: unknown, schema: RouteDataSchema | undefined, d
   const { data, d = [] } = split(raw)
   const keys = Object.keys(schema?.deferred ?? {})
   if (d.length !== keys.length || keys.some((key) => !safeKey(key) || !d.includes(key))) invalid()
-  const value = await validate(schema?.initial, raw === undefined ? null : data)
+  const value = await validate(initialSchema(schema), raw === undefined ? null : data)
   if (!keys.length) return { value, pending: [] }
   if (!record(raw) || !record(value) || keys.some((key) => Object.hasOwn(value, key))) invalid()
   return {

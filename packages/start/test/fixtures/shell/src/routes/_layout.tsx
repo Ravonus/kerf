@@ -12,6 +12,7 @@ export default function Layout(props: RouteProps) {
         <Link href="/alias">Alias</Link>
         <Link href="/broken">Broken</Link>
         <Link href="/missing">Missing</Link>
+        <Link href="/critic">Critic</Link>
       </nav>
       <button type="button" onClick={() => count.value++}>
         Counter {count.value}

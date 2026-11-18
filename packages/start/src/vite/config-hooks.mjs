@@ -18,6 +18,7 @@ export const configHook = (s) =>
     return {
       environments: {
         client: {
+          ...(s.shell && { define: { __KERF_SHELL__: 'true' } }),
           build: {
             rollupOptions: {
               input: s.clientEntry(),

@@ -1,7 +1,6 @@
 // Mount a shell route from release code and independently admitted loader values.
 import { flush } from '@kerf-js/core'
 import { render } from '@kerf-js/core/dom'
-import { setHead } from '@kerf-js/core/head'
 import { mergeMeta } from '@kerf-js/core/ssr'
 import { ErrorPage, NotFoundPage } from '../builtin'
 import { client, createRouteState, applyMatches, type Match, type NavigateOptions } from '../router'
@@ -13,6 +12,7 @@ import { crossfade } from './helpers'
 import { recover } from './outlet'
 import { App } from '../view'
 import { readShell } from './shell-data'
+import { applyShellHead } from './shell-head'
 import { captureSharedElements } from './shared-elements'
 
 type Routes = ClientRoutes & { shell: ShellConfig }
@@ -135,7 +135,7 @@ class ShellNavigation {
       this.at = pathOf(url)
       this.matches = next.matches
       applyMatches(this.route, next.matches, this.at, next.status, true)
-      applyHead(next.head, url.pathname)
+      applyShellHead(next.head, url.pathname)
       document.getElementById('kerf-shell-pending')?.remove()
       flush()
       this.transition.painted = true
@@ -196,7 +196,12 @@ class ShellNavigation {
       routes: this.routes,
       local,
       signal: ctrl.signal,
-      schemas: async (id) => (await modules.get(id))?.routeData,
+      schemas: async (id) => {
+        const module = await modules.get(id)
+        if (!module || !Object.hasOwn(module, 'routeData')) return
+        if (!module.routeData) throw new Error('Invalid shell route schema')
+        return module.routeData
+      },
     })
     if (admitted.kind === 'redirect') return admitted
     const { matches, kind, reference, immediate } = admitted
@@ -288,14 +293,4 @@ async function routeHead(
   const special =
     status === 500 ? { title: 'Error' } : status === 404 ? { title: 'Not found' } : undefined
   return mergeMeta(site, special, ...metas)
-}
-
-function applyHead(head: Commit['head'], pathname: string) {
-  setHead(head, pathname)
-  if (!head.jsonLd) return
-  const data = document.createElement('script')
-  data.type = 'application/ld+json'
-  data.setAttribute('data-wm', '')
-  data.textContent = JSON.stringify(head.jsonLd)
-  document.head.append(data)
 }

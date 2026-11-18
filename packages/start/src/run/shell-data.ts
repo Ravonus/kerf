@@ -15,6 +15,7 @@ import {
   invalid,
   record,
   safeKey,
+  initialSchema,
   validate,
 } from '../shell/wire'
 import type { ClientRoutes } from '../run'
@@ -57,12 +58,13 @@ export async function readShell({
     method: 'GET',
     signal: lifetime,
     redirect: 'error',
+    credentials: 'omit',
     cache: 'no-store',
     headers: { accept: SHELL_MEDIA },
   })
   if (
     response.redirected ||
-    response.headers.get('content-type')?.split(';')[0]?.trim() !== SHELL_MEDIA ||
+    !shellMedia(response.headers.get('content-type')) ||
     !response.body ||
     Number(response.headers.get('content-length')) > SHELL_BYTES
   ) {
@@ -90,6 +92,10 @@ export async function readShell({
     await stream.return(undefined)
     throw error
   }
+}
+
+function shellMedia(type: string | null) {
+  return /^application\/x-ndjson(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?$/i.test(type ?? '')
 }
 
 async function readLevels(
@@ -130,7 +136,7 @@ async function readLevels(
   for (const [depth, raw] of values.entries()) {
     const id = local.ids[depth]!
     const schema = await schemas(id)
-    const data = await validate(schema?.initial, raw)
+    const data = await validate(initialSchema(schema), raw)
     immediate.push(schema ? data : undefined)
     const declared = Object.entries(schema?.deferred ?? {})
     deferred += declared.length
