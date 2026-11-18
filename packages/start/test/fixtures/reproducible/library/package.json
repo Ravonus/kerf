@@ -1,0 +1,5 @@
+{
+  "name": "release-library",
+  "type": "module",
+  "exports": "./panel.tsx"
+}

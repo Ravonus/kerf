@@ -362,10 +362,7 @@ function registerBuildInlineSheetsLeavesOutWhatWouldBreakIn() {
       'big.css': 'a{}'.repeat(INLINE_CSS_MAX),
     }
     for (const [name, css] of Object.entries(sheets)) writeFileSync(join(dir, 'assets', name), css)
-    expect(Object.keys(inlineSheets(dir, '/')).sort()).toEqual([
-      '/assets/data.css',
-      '/assets/ok.css',
-    ])
+    expect(Object.keys(inlineSheets(dir, '/'))).toEqual(['/assets/data.css', '/assets/ok.css'])
     rmSync(dir, { recursive: true, force: true })
   })
 }

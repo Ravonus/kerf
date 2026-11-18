@@ -1,0 +1,1 @@
+Asset packaged in the Nitro server.

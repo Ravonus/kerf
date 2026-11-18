@@ -34,6 +34,7 @@ import {
   functionContracts,
 } from './server-functions.mjs'
 import { here, V, DEFAULT_FONTS, ASSETS, ISLAND, ENTRY_SHEETS } from './shared.mjs'
+import { normalizeAssetLookup } from './nitro-output.mjs'
 
 /** Virtual modules that are an app file's default export: `src/<name>.server.ts`, or `undefined` without one. */
 const CONFIG_FILES = new Set([V.context, V.auth, V.realtime, V.cache, V.cron, V.email, V.jobs])
@@ -43,6 +44,8 @@ export const resolveId = (s) => ({
     id: /^(virtual:kerf\/|@kerf-js\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@kerf-js\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/,
   },
   handler(source, importer) {
+    const asset = s.assetSources.get(source)
+    if (asset) return asset === V.client ? s.id(asset) : this.resolve(asset, importer)
     // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
     if (source === 'sharp') {
       if (s.dev || !/[\\/](@kerf-js[\\/]media|packages[\\/]media)[\\/]/.test(importer ?? '')) return
@@ -107,7 +110,7 @@ export const load = (s) => ({
         timeout: s.options.timeout,
         hold: s.options.hold,
       })
-    if (which === V.server) return serverEntry(s.clientEntry(), s.dev, s.root, s.bootstrap)
+    if (which === V.server) return serverEntry(s)
     if (which === V.fns)
       return s.serverModules.map((f) => `import ${JSON.stringify(s.abs(f))}`).join('\n') + '\n'
     if (CONFIG_FILES.has(which)) return configModule(s, which)
@@ -124,9 +127,15 @@ export const load = (s) => ({
 
 export const transform = (s) => ({
   filter: {
-    id: /\.[jt]sx?(\?kerf-assets)?$|\/[\s\S]+\.[cm][jt]s$|\/vite\/dist\/client\/client\.mjs$/,
+    id: /\.[jt]sx?(\?kerf-assets)?$|\/[\s\S]+\.[cm][jt]s$|\/vite\/dist\/client\/client\.mjs$|^\0virtual:fullstack\/assets\?|[?&]assets(?:[=&]|$)/,
   },
   async handler(code, file) {
+    if (
+      !s.dev &&
+      (file.startsWith('\0virtual:fullstack/assets?') ||
+        (/[?&]assets(?:[=&]|$)/.test(file) && code.includes('virtual:fullstack/assets-manifest')))
+    )
+      return { code: normalizeAssetLookup(code, s.assetKey), map: { mappings: '' } }
     const path = file.replace(/\?.*$/, '')
     if (file.endsWith(ASSETS))
       return { code: await assetsOnly(this, code, path, s.root, s.words), map: null }
@@ -211,7 +220,8 @@ function unusableSkeleton(ctx, s, root, file) {
 
 async function overrideModule(ctx, s, which, client) {
   if (!client || !which.endsWith('.tsx')) ctx.error('Invalid skeleton override request')
-  const file = decodeURIComponent(which.slice('virtual:kerf/shape-override/'.length, -4))
+  const key = decodeURIComponent(which.slice('virtual:kerf/shape-override/'.length, -4))
+  const file = s.dev ? key : s.abs(key)
   const levels = [...s.manifest.layouts, ...s.manifest.routes]
   if (!levels.some((level) => s.abs(level.file) === file)) ctx.error('Unknown skeleton override')
   const imported = await resolveImportedOverride(ctx, file, s.root ?? dirname(file))
@@ -242,6 +252,7 @@ async function routesModule(ctx, s, client) {
       ? await devStyles(s.vite.environments.client, s.manifest, s.abs, s.clientEntry())
       : undefined,
     p,
+    s.assetSource,
   )
 }
 
@@ -319,6 +330,7 @@ async function clientRoutesModule(ctx, s, p, run) {
     entry: shared.styles,
     levels: new Map(files.map((file, i) => [file, sources[i].styles])),
     overrides,
+    dev: s.dev,
     build: s.build || null,
     lazy: s.dev === false,
     retry: retryRouteModules(ctx, s),

@@ -4,7 +4,12 @@ import { join } from 'node:path'
 import { scanRequired } from '../live-target.mjs'
 import { here, V, purgeFile, INLINE_SHEETS, SHEET_PIECES, ROUTE_ASSET_BYTES } from './shared.mjs'
 
-export function serverEntry(clientEntry, dev, root, bootstrap) {
+export function serverEntry(s) {
+  const { dev, root, bootstrap } = s
+  const clientEntry = s.clientEntry()
+  const assets = dev
+    ? `import assets from ${JSON.stringify(clientEntry + '?assets=client')}`
+    : `const assets = import.meta.vite.assets(${JSON.stringify({ import: s.assetSource(clientEntry), environment: 'client', asEntry: true })})`
   return `import { createHandler, serverLog } from ${JSON.stringify(join(here, 'server.tsx'))}
 import { chunks, lazy, manifest, modules, routeCss, statics } from '${V.routes}'
 import '${V.fns}'
@@ -27,7 +32,7 @@ import email from '${V.email}'
 import jobs from '${V.jobs}'
 import extensions from '${V.extensions}'
 import * as app from '${V.app}'
-import assets from '${clientEntry}?assets=client'
+${assets}
 import { preloads } from 'kerf:fonts/preloads'
 ${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ ${bootstrap?.contract && bootstrap.provider ? 'bootstrap: { schema: bootstrap.schema, provide }, ' : ''}manifest: { ...manifest, http }, httpModules, handle: hooks.handle, startup: hooks.startup, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, store: cache, cron, email, jobs, liveRequired: ${JSON.stringify(scanRequired(root).map((r) => r.name))}, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, hold: app.hold, routeAssetBytes: ${dev ? 'null' : `'${ROUTE_ASSET_BYTES}'`}, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, pieces: ${dev ? 'undefined' : `'${SHEET_PIECES}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.

@@ -20,7 +20,9 @@ export function inlineSheets(outDir, base, limit = INLINE_CSS_MAX) {
   const dir = join(outDir, 'assets')
   if (!existsSync(dir)) return {}
   const sheets = {}
-  for (const name of readdirSync(dir).filter((f) => f.endsWith('.css'))) {
+  for (const name of readdirSync(dir)
+    .sort()
+    .filter((f) => f.endsWith('.css'))) {
     const css = readFileSync(join(dir, name), 'utf8')
     if (
       css.length <= limit &&
@@ -79,13 +81,16 @@ export function sheetPieces(outDir, base, plan, keep, root) {
   const sheets = names
     .map((n) => [href(n), readFileSync(join(outDir, n), 'utf8')])
     .filter(([, css]) => !/<\/style|<!--/i.test(css))
-  const old = join(root, '.kerf/sheets')
-  mkdirSync(old, { recursive: true })
-  for (const f of Object.keys(plan.files))
-    writeFileSync(join(old, f.replace('assets/', '')), plan.files[f])
-  for (const f of readdirSync(old)) {
-    if (Date.now() - statSync(join(old, f)).mtimeMs > KEEP_SHEETS_MS) rmSync(join(old, f))
-    else if (!existsSync(join(dir, f))) writeFileSync(join(dir, f), readFileSync(join(old, f)))
+  // A pinned build's asset inventory comes from its inputs, including when this cache contains older releases.
+  if (process.env.SOURCE_DATE_EPOCH === undefined) {
+    const old = join(root, '.kerf/sheets')
+    mkdirSync(old, { recursive: true })
+    for (const f of Object.keys(plan.files))
+      writeFileSync(join(old, f.replace('assets/', '')), plan.files[f])
+    for (const f of readdirSync(old).sort()) {
+      if (Date.now() - statSync(join(old, f)).mtimeMs > KEEP_SHEETS_MS) rmSync(join(old, f))
+      else if (!existsSync(join(dir, f))) writeFileSync(join(dir, f), readFileSync(join(old, f)))
+    }
   }
   const shape = (s) => s && { href: href(s.file), has: s.has.map(href) }
   return { ...pieces(sheets, keep), shared: shape(plan.shared), routes: plan.routes.map(shape) }

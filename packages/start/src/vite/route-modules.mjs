@@ -10,7 +10,7 @@ import { shapeOverride } from './shape-override.mjs'
  * the first `)`, which a path can hold). `meta` is read once per level that renders, before the first byte: that's
  * how the entry learns the request's levels (`routeCss`), outermost first, 404 and error pages included.
  */
-export function serverRoutes(manifest, abs, dev, plan) {
+export function serverRoutes(manifest, abs, dev, plan, assetSource = (file) => file) {
   const files = [
     ...manifest.layouts.map((l) => l.file),
     ...manifest.routes.map((r) => r.file),
@@ -23,7 +23,7 @@ export function serverRoutes(manifest, abs, dev, plan) {
   const renders = (f) => levels.has(f) && /\bdefault\b/.test(readFileSync(abs(f), 'utf8'))
   const isStatic = (f) => plan?.statics.has(abs(f))
   const clientAssets = (file) =>
-    `import.meta.vite.assets(${JSON.stringify({ import: file, environment: 'client' }).replaceAll(')', '\\u0029')})`
+    `import.meta.vite.assets(${JSON.stringify({ import: assetSource(file), environment: 'client' }).replaceAll(')', '\\u0029')})`
   const css = (f) =>
     dev
       ? JSON.stringify(dev.files[f] ?? [])
@@ -264,7 +264,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     if (!/\.[jt]sx$/.test(file))
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
     if (kind === 'custom') {
-      const request = `virtual:kerf/shape-override/${encodeURIComponent(file)}.tsx`
+      const request = `virtual:kerf/shape-override/${encodeURIComponent(css.dev ? file : r.file)}.tsx`
       return `${id}: ${shape(file, 'default', request, 'override')}`
     }
     return `${id}: ${shape(file)}`

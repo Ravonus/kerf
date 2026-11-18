@@ -98,8 +98,13 @@ test('kerfStart exposes ordered plugins for its concerns', () => {
     ['kerf:start:sheets', 'pre', undefined],
     ['kerf:start:dev', 'pre', undefined],
     ['kerf:start:modules', 'pre', undefined],
+    ['kerf:start:output-manifests', 'post', 'build'],
   ])
-  expect(plugins[0]).toMatchObject({ config: expect.any(Function), api: expect.any(Object) })
+  expect(plugins[0]).toMatchObject({
+    config: expect.any(Function),
+    api: expect.any(Object),
+    buildApp: expect.any(Function),
+  })
   expect(plugins[1]).toMatchObject({
     writeBundle: expect.any(Object),
     renderChunk: expect.any(Object),
@@ -112,6 +117,10 @@ test('kerfStart exposes ordered plugins for its concerns', () => {
     resolveId: expect.any(Object),
     load: expect.any(Object),
     transform: expect.any(Object),
+  })
+  expect(plugins[4]).toMatchObject({
+    generateBundle: expect.any(Object),
+    outputOptions: expect.any(Function),
   })
 })
 

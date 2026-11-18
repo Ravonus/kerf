@@ -11,6 +11,7 @@ import { devRunner, devSockets } from './dev-runtime.mjs'
 import { pageSockets } from './live-target.mjs'
 import kerfStart, { startDir } from './vite.mjs'
 import { ownNodePreset } from './server/node-preset.mjs'
+import { buildDate, finalizeBuild, nitroOutput } from './vite/nitro-output.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
 function usesSockets(root) {
@@ -33,6 +34,7 @@ function config({
   logLevel,
   command,
   nitro: nitroOptions = {},
+  production,
 }) {
   root = resolve(root)
   const sockets = usesSockets(root)
@@ -77,11 +79,19 @@ function config({
         ...nitroOptions,
         ...(command === 'build' && {
           hooks: {
-            ...(site?.render === 'shell' ? { compiled: recordOutput } : immutableCards()),
+            ...(site?.render !== 'shell' && immutableCards()),
             ...nitroOptions.hooks,
+            async compiled(instance) {
+              production.output = instance.options.output
+              await nitroOptions.hooks?.compiled?.(instance)
+            },
             async 'build:before'(instance) {
               await nitroOptions.hooks?.['build:before']?.(instance)
               ownNodePreset(instance, site)
+            },
+            async 'rollup:before'(instance, bundle) {
+              await nitroOptions.hooks?.['rollup:before']?.(instance, bundle)
+              bundle.plugins.push(nitroOutput(instance, production.date))
             },
           },
           plugins: [
@@ -108,20 +118,11 @@ function traced(root) {
   return deps.length ? { traceDeps: deps } : {}
 }
 
-/** Where the last build's Nitro wrote. A preset may move it (Netlify serves `dist`). */
-let wrote
-
-function recordOutput(instance) {
-  const { dir, publicDir } = instance.options.output
-  wrote = publicDir.startsWith(dir) ? dir : publicDir
-}
-
 function immutableCards() {
   let built
   return {
     'prerender:generate'(_route, instance) {
       built = instance
-      recordOutput(instance)
     },
     'prerender:done'({ prerenderedRoutes }) {
       if (!built) return
@@ -145,14 +146,16 @@ export async function dev(options) {
 
 /** Build client and server for `preset` (node by default; bun, deno_server…), into `.output/` unless the preset moves it. */
 export async function build(options) {
+  const production = { date: buildDate(process.env.SOURCE_DATE_EPOCH) }
   process.env.KERF_START_DIR ??= startDir // for the share cards a build draws (og/native.mjs)
   const building = process.env.KERF_BUILD
   process.env.KERF_BUILD ??= '1'
   try {
-    const builder = await createBuilder(config({ ...options, command: 'build' }))
-    wrote = undefined
+    const builder = await createBuilder(config({ ...options, command: 'build', production }))
     await builder.buildApp()
-    return { output: wrote ?? join(resolve(options.root), '.output') }
+    const { dir, publicDir } = production.output
+    await finalizeBuild(production.output, production.date)
+    return { output: publicDir.startsWith(dir) ? dir : publicDir }
   } finally {
     if (building === undefined) delete process.env.KERF_BUILD
   }

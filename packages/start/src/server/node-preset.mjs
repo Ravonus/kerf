@@ -1,7 +1,8 @@
 // The stock Nitro 3 Node entry starts listening while promises returned by plugins are still pending.
 import { createRequire } from 'node:module'
-import { dirname, join, relative } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { buildPaths } from '../vite/build-paths.mjs'
 
 const collector = '#nitro/virtual/kerf-plugins'
 const config = '#nitro/virtual/kerf-node-config'
@@ -20,6 +21,7 @@ export function ownNodePreset(nitro, site) {
   const require = createRequire(options.entry)
   const internal = join(dirname(options.entry), '../../../runtime/internal')
   const plugins = [...new Set(options.plugins)]
+  const pathFor = buildPaths(options.rootDir)
   options.entry = '#nitro/virtual/kerf-node-entry'
   options.plugins = [collector]
   // Nitro still creates its hook-aware h3 app and uses its ordinary useNitroApp singleton.
@@ -30,7 +32,7 @@ export function ownNodePreset(nitro, site) {
     export { startScheduleRunner } from ${JSON.stringify(join(internal, 'task.mjs'))}
     export { resolveWebsocketHooks } from ${JSON.stringify(join(internal, 'app.mjs'))}
     export const plugins = [
-      ${plugins.map((plugin) => `[${JSON.stringify(relative(options.rootDir, plugin))}, () => import(${JSON.stringify(plugin)})]`).join(',\n')}
+      ${plugins.map((plugin) => `[${JSON.stringify(pathFor(plugin))}, () => import(${JSON.stringify(plugin)})]`).join(',\n')}
     ]
   `
   options.virtual[options.entry] = `

@@ -14,6 +14,7 @@ import { here, V, KIT_CHUNKS, INLINE_SHEETS, SHEET_PIECES, ROUTE_ASSET_BYTES } f
 export const configHook = (s) =>
   function (config, env) {
     s.root = config.root ? resolve(config.root) : s.root
+    s.resetPaths()
     s.dev = env.command === 'serve'
     s.scan()
     if (s.shell) {
@@ -21,6 +22,7 @@ export const configHook = (s) =>
       if (!s.dev) requireShellContracts(s.root, s.options.routesDir, s.manifest)
     }
     return {
+      ...(!s.dev && { build: { rolldownOptions: { experimental: { attachDebugInfo: 'none' } } } }),
       environments: {
         client: {
           ...(s.shell && { define: { __KERF_SHELL__: 'true' } }),
@@ -214,6 +216,7 @@ export const configResolved = (s) =>
         .slice(0, 8)
     if (s.dev) s.build = 'dev'
     s.root = config.root
+    s.resetPaths()
     const main = config.plugins.find((p) => p.name === 'kerf')
     s.words = config.plugins.find((p) => p.name === 'kerf:purge')?.api
     s.words?.add('data-kerf styled') // gate.css reveals a mark a static page's HTML may hold alone
