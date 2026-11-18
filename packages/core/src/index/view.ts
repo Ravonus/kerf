@@ -4,6 +4,8 @@ import type { Owner, State } from './types'
 
 /** The nearest `provide`'s values: each one holds its parents' too. */
 function contexts(from: Owner | null) {
+  // Children created during an override capture it. Existing descendants retain their own ancestry.
+  if (from?.contextOverride) return from.contextOverride
   while (from && !from.context) from = from.owner
   return from?.context
 }
@@ -11,10 +13,22 @@ function contexts(from: Owner | null) {
 /** Lazy JSX keeps its provider, while its reactive computation still owns tracking and cleanup. */
 function provided<T>(value: T, owner: Owner): T {
   if (typeof value === 'function') {
-    const provider = contexts(owner)
+    // A nested provider has already captured its full context, including its parents' values.
+    if (CONTEXT in value) return value
+    const provider = owner.context!
     const child = function (this: unknown, ...args: unknown[]) {
-      const read = () => provided(value.apply(this, args), getOwner()!)
-      return contexts(getOwner()) === provider ? read() : within(owner, read)
+      const caller = getOwner()
+      const read = () => provided(value.apply(this, args), owner)
+      if (!caller) return within(owner, read)
+      if (contexts(caller) === provider) return read()
+      // Inline calls still belong to the caller's computation. Only context lookup changes.
+      const previous = caller.contextOverride
+      caller.contextOverride = provider
+      try {
+        return read()
+      } finally {
+        caller.contextOverride = previous
+      }
     }
     Object.defineProperty(child, CONTEXT, { value: provider })
     return child as T

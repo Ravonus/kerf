@@ -47,5 +47,6 @@ export function getOwner() {
 /** Runs `fn` under a new owner that outlives its caller; `dispose` ends it and all it owns. */
 export function createRoot<T>(fn: (dispose: () => void) => T, parent: Owner | null = owner): T {
   const root: Owner = { owned: null, tail: null, cleanups: null, owner: parent }
+  if (parent?.contextOverride) root.context = parent.contextOverride
   return within(root, () => fn(() => clean(root)))
 }

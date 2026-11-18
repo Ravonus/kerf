@@ -61,8 +61,7 @@ function isolated(body, declaration, reference) {
 }
 
 /** Extract only a closed, static local override. Never evaluate the source module. */
-export function shapeOverride(file) {
-  const source = readFileSync(file, 'utf8')
+export function shapeOverride(file, source = readFileSync(file, 'utf8')) {
   const parsed = parse(file, source)
   if (parsed.errors.length) return
   const body = parsed.program.body

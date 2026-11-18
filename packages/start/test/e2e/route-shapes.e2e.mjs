@@ -408,7 +408,8 @@ void test('Vite transforms an inline CSS request to data without injecting a sty
 void test('changing direct stylesheet imports invalidates shape metadata', async (t) => {
   const f = fixture(t)
   const file = f.abs('page.tsx')
-  f.write('page.tsx', "import './one.css'; export default () => <main />")
+  const source = "import './one.css'; export default () => <main />"
+  f.write('page.tsx', source)
   const modes = new Map([['page.tsx', shapeSignature(file)]])
   const calls = []
   const graph = {
@@ -422,6 +423,11 @@ void test('changing direct stylesheet imports invalidates shape metadata', async
   }
   const handler = shapeHotUpdate(state, modes, () => ['unchanged'])
   const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
+  // An editor can truncate the file before Vite's read yields the saved contents.
+  f.write('page.tsx', '')
+  const writing = { file, modules: [], type: 'update', read: () => Promise.resolve(source) }
+  assert.deepEqual(await handler.call(context, writing), ['unchanged'])
+  assert.deepEqual(calls, [])
   f.write('page.tsx', "import './two.css'; export default () => <main />")
   assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
   assert.deepEqual(calls, ['routes', { type: 'full-reload' }])

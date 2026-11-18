@@ -56,24 +56,39 @@ export { isServerModule, fnId, withIds, clientStubs } from './vite/server-functi
 export { scanRoutes, routeTypes } from './routes.mjs'
 export { here as startDir } from './vite/shared.mjs'
 
-/**
- * A signature of what a save means for the shapes, or undefined when it doesn't parse. A broken save takes ordinary HMR
- * and its overlay: reloading onto it would leave the tab on the server's error page, which no fix reaches.
- */
-const parsed = (signature, file) => {
+/** An unparseable save takes ordinary HMR so the mounted page survives the error. */
+const parsed = (signature, file, source) => {
   try {
-    return signature(file)
+    return signature(file, source)
   } catch {
     return undefined
   }
 }
 
+function invalidateShapes(graph) {
+  const mod = graph.getModuleById('\0' + V.routes)
+  if (mod) graph.invalidateModule(mod)
+}
+
+function reloadShapes(state, graph) {
+  invalidateShapes(graph)
+  state.vite?.ws.send({ type: 'full-reload' })
+  return []
+}
+
 /** Reload when an edit changes shape metadata embedded in the client route module. */
 export function shapeHotUpdate(state, modes, next) {
   return async function (update) {
+    let source
     if (this.environment.config.consumer === 'client') {
+      const rel = relative(state.root, update.file).split('\\').join('/')
+      const graph = this.environment.moduleGraph
+      // Reports are written by the dev server itself and cannot change the shapes.
+      const report = rel === '.kerf/hydration.json' || rel === '.kerf/dev.json'
       const pending =
-        state.shapeScanActive === state.shapeScanGeneration && state.shapeScanActive !== undefined
+        !report &&
+        state.shapeScanActive === state.shapeScanGeneration &&
+        state.shapeScanActive !== undefined
       if (pending) state.shapeScanGeneration++
       const owners = [...(state.shapeOverrideDependencies ?? [])].flatMap(([file, routes]) =>
         entryCandidate(new Set([file]), update.file) ? [...routes] : [],
@@ -85,30 +100,26 @@ export function shapeHotUpdate(state, modes, next) {
           existsSync(update.file)
         )
           await this.environment.pluginContainer.watchChange(update.file, { event: 'create' })
-        const graph = this.environment.moduleGraph
         for (const file of owners) {
           const id = `\0virtual:kerf/shape-override/${encodeURIComponent(file)}.tsx`
           const asset = graph.getModuleById(id)
           if (asset) graph.invalidateModule(asset)
         }
-        const mod = graph.getModuleById('\0' + V.routes)
-        if (mod) graph.invalidateModule(mod)
-        state.vite?.ws.send({ type: 'full-reload' })
-        return []
+        return reloadShapes(state, graph)
       }
-      const rel = relative(state.root, update.file).split('\\').join('/')
       const entrySignatures = state.shapeEntrySignatures
-      if (entrySignatures?.has(update.file)) {
-        const signature = parsed(entryCssSignature, update.file)
+      const hasEntrySignature = entrySignatures?.has(update.file)
+      const levels = [...state.manifest.routes, ...state.manifest.layouts]
+      const shapeFile =
+        levels.some((level) => level.file === rel) || state.clientEntry?.() === update.file
+      // Vite waits for a truncated file to finish saving before it returns the source.
+      if (update.type === 'update' && (hasEntrySignature || shapeFile))
+        source = await update.read?.()
+      if (hasEntrySignature) {
+        const signature = parsed(entryCssSignature, update.file, source)
         const previous = entrySignatures.get(update.file)
         if (signature !== undefined) entrySignatures.set(update.file, signature)
-        if (signature !== undefined && previous !== signature) {
-          const graph = this.environment.moduleGraph
-          const mod = graph.getModuleById('\0' + V.routes)
-          if (mod) graph.invalidateModule(mod)
-          state.vite?.ws.send({ type: 'full-reload' })
-          return []
-        }
+        if (signature !== undefined && previous !== signature) return reloadShapes(state, graph)
       }
       const candidateEvent =
         (update.type === 'create' || update.type === 'delete') &&
@@ -119,34 +130,21 @@ export function shapeHotUpdate(state, modes, next) {
         // A watched missing path may arrive as an update; Vite clears negative resolution on create.
         if (missingUpdate && existsSync(update.file))
           await this.environment.pluginContainer.watchChange(update.file, { event: 'create' })
-        const graph = this.environment.moduleGraph
-        const mod = graph.getModuleById('\0' + V.routes)
-        if (mod) graph.invalidateModule(mod)
-        state.vite?.ws.send({ type: 'full-reload' })
-        return []
+        return reloadShapes(state, graph)
       }
-      const levels = [...state.manifest.routes, ...state.manifest.layouts]
-      if (levels.some((level) => level.file === rel) || state.clientEntry?.() === update.file) {
-        const mode = parsed(shapeSignature, update.file)
+      if (shapeFile) {
+        const mode = parsed(shapeSignature, update.file, source)
         const before = modes.get(rel)
         if (mode !== undefined) modes.set(rel, mode)
-        if (mode !== undefined && before !== mode) {
-          const graph = this.environment.moduleGraph
-          const mod = graph.getModuleById('\0' + V.routes)
-          if (mod) graph.invalidateModule(mod)
-          state.vite?.ws.send({ type: 'full-reload' })
-          return []
-        }
+        if (mode !== undefined && before !== mode) return reloadShapes(state, graph)
       }
       if (pending) {
-        const graph = this.environment.moduleGraph
-        const mod = graph.getModuleById('\0' + V.routes)
-        if (mod) graph.invalidateModule(mod)
-        state.vite?.ws.send({ type: 'full-reload' })
-        return []
+        // A save can supersede a scan without changing its shape metadata. Let Vite hot-update
+        // the edited module so a mounted route keeps its document, even while the server rebuilds.
+        invalidateShapes(graph)
       }
     }
-    return next.call(this, update)
+    return next.call(this, update, source)
   }
 }
 

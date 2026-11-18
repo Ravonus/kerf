@@ -233,24 +233,37 @@ function configModule(s, which) {
 
 async function routesModule(ctx, s, client) {
   if (client && s.shell) return shellRoutes(s, retryRouteModules(ctx, s))
-  const run = { owner: s.shapeEntryOwner, scan: undefined }
-  if (client && s.shapeEntryClosed) throw new Error('entry style scan outlived its server')
-  if (client)
-    run.scan = s.shapeScanActive = s.shapeScanGeneration = (s.shapeScanGeneration ?? 0) + 1
-  try {
-    const p = await s.hydration(ctx)
-    if (client) return await clientRoutesModule(ctx, s, p, run)
-    return serverRoutes(
-      s.manifest,
-      s.abs,
-      s.dev
-        ? await devStyles(s.vite.environments.client, s.manifest, s.abs, s.clientEntry())
-        : undefined,
-      p,
-    )
-  } finally {
-    if (client && s.shapeScanActive === run.scan) delete s.shapeScanActive
-  }
+  if (client) return clientScan(ctx, s)
+  const p = await s.hydration(ctx)
+  return serverRoutes(
+    s.manifest,
+    s.abs,
+    s.dev
+      ? await devStyles(s.vite.environments.client, s.manifest, s.abs, s.clientEntry())
+      : undefined,
+    p,
+  )
+}
+
+/** A superseded scan's request can still use the current generation's module. */
+function clientScan(ctx, s) {
+  if (s.shapeEntryClosed) throw new Error('entry style scan outlived its server')
+  const run = { owner: s.shapeEntryOwner, scan: (s.shapeScanGeneration ?? 0) + 1 }
+  s.shapeScanActive = s.shapeScanGeneration = run.scan
+  const result = (async () => {
+    try {
+      const output = await clientRoutesModule(ctx, s, await s.hydration(ctx), run)
+      if (output !== undefined) return output
+      if (s.shapeEntryClosed || run.owner !== s.shapeEntryOwner)
+        throw new Error('entry style scan outlived its server')
+      const latest = s.shapeScanLatest
+      return latest.scan > run.scan ? latest.result : clientScan(ctx, s)
+    } finally {
+      if (s.shapeScanActive === run.scan) delete s.shapeScanActive
+    }
+  })()
+  s.shapeScanLatest = { scan: run.scan, result }
+  return result
 }
 
 async function scanOverrides(ctx, s, all, root) {
@@ -290,9 +303,9 @@ async function clientRoutesModule(ctx, s, p, run) {
   )
   const sources = await Promise.all(files.map((file) => entryCss(ctx, file, root)))
   const shared = await entryCss(ctx, entryFile, root)
-  if (run.owner && run.owner !== s.shapeEntryOwner)
+  if (s.shapeEntryClosed || run.owner !== s.shapeEntryOwner)
     throw new Error('entry style scan outlived its server')
-  if (run.scan !== s.shapeScanGeneration) throw new Error('entry style scan superseded')
+  if (run.scan !== s.shapeScanGeneration) return
   for (const source of sources) {
     for (const [file, signature] of source.signatures) shared.signatures.set(file, signature)
     for (const file of source.candidates) shared.candidates.add(file)

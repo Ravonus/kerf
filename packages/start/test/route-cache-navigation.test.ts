@@ -10,6 +10,7 @@ import { Navigation } from '../src/run/navigation'
 const requests = vi.hoisted(
   () =>
     [] as {
+      path: string
       tag: string | undefined
       resolve: (r: Response) => void
       reject: (error: Error) => void
@@ -18,9 +19,9 @@ const requests = vi.hoisted(
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
   ...(await load<typeof ActualHelpers>()),
-  ask: (_url: URL, _signal: AbortSignal, tag?: string) =>
+  ask: (url: URL, _signal: AbortSignal, tag?: string) =>
     new Promise<Response>((resolve, reject) => {
-      requests.push({ tag, resolve, reject })
+      requests.push({ path: url.pathname + url.search, tag, resolve, reject })
     }),
 }))
 
@@ -341,6 +342,35 @@ it('renders a reloaded authorization envelope after clearing its validators', as
   expect(route.levels[0]!.data.value).toBe('denied')
   expect(requests).toHaveLength(1)
   nav.dispose()
+})
+
+it('refreshes the rendered route behind a rewritten address after each dev update', async () => {
+  const { nav, route } = setup()
+  const alias = '/mount/%66rom/?from=%2f'
+  const rendered = '/from?from=%2f'
+  history.replaceState(null, '', alias)
+  nav.at = alias
+  nav.committedURL = location.href
+  route.path.value = rendered
+  try {
+    for (let i = 0; i < 2; i++) {
+      const update = nav.reloaded({ queries: false })
+      const payload: RoutePayload = {
+        p: rendered,
+        s: 200,
+        m: [{ id: '/from', params: {}, data: i }],
+      }
+      requests[i]!.resolve(Response.json(payload))
+      await update
+      expect(requests[i]!.path).toBe(rendered)
+      expect(route.levels[0]!.data.value).toBe(i)
+      expect(route.path.value).toBe(rendered)
+      expect(nav.at).toBe(alias)
+      expect(location.pathname + location.search).toBe(alias)
+    }
+  } finally {
+    nav.dispose()
+  }
 })
 
 it('clears cached validators and renders a refresh authorization envelope', async () => {

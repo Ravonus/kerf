@@ -44,8 +44,10 @@ export async function reloaded(nav: Navigation, { queries }: { queries: boolean 
   nav.prefetch.cancel(true)
   const url = new URL(location.href),
     since = nav.now()
+  // A request hook can render a route at an address the data endpoint cannot match.
+  const rendered = owner ? url : new URL(nav.route.path.value, url)
   let version = nav.cache.version
-  const res = await ask(url)
+  const res = await ask(rendered)
   if (version !== nav.cache.version || !res.ok) return
   const next: RoutePayload = await res.clone().json()
   nav.cache.setBuild(nav.routes.build)
@@ -62,5 +64,5 @@ export async function reloaded(nav: Navigation, { queries }: { queries: boolean 
   await nav.needs(next)
   nav.cache.setBuild(nav.routes.build)
   if (version !== nav.cache.version || nav.current !== owner) return
-  nav.apply(next, url, url.pathname + url.search, since, false)()
+  nav.apply(next, url, rendered.pathname + rendered.search, since, false)()
 }
