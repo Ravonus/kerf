@@ -51,7 +51,7 @@ function config({
       ),
     },
     plugins: [
-      kerf({ hydratable: true, csp: site?.csp }),
+      kerf({ hydratable: site?.render !== 'shell', csp: site?.csp }),
       kerfStart({ root, site, hydration }),
       runner && devSockets(),
       nitro({
@@ -66,12 +66,14 @@ function config({
         ...(sockets && { features: { websocket: true } }),
         ...(runner && { devServer: { runner } }),
         // Build mode for share cards (research 20 §4.3): the server lists them and Nitro's prerender writes the PNGs.
-        prerender: { routes: ['/_kerf/og-routes'], failOnError: true },
+        ...(site?.render !== 'shell' && {
+          prerender: { routes: ['/_kerf/og-routes'], failOnError: true },
+        }),
         // Prerendered cards are static files at content-addressed URLs: immutable. The rule names each file (a
         // `/_kerf/og/**` rule would also override the handler's no-cache for a stale `?v=` on demand). Prerender runs
         // before Nitro bundles the server, so rules added when it is done are in the build. (Dev sends no-store.)
         ...(command === 'build' && {
-          hooks: immutableCards(),
+          hooks: site?.render === 'shell' ? { compiled: recordOutput } : immutableCards(),
         }),
         ...traced(root),
         ...nitroOptions,
@@ -101,16 +103,20 @@ function traced(root) {
   return deps.length ? { traceDeps: deps } : {}
 }
 
-/** Where the last build's Nitro wrote, known once it prerenders: a preset may move it (netlify serves `dist`). */
+/** Where the last build's Nitro wrote. A preset may move it (Netlify serves `dist`). */
 let wrote
+
+function recordOutput(instance) {
+  const { dir, publicDir } = instance.options.output
+  wrote = publicDir.startsWith(dir) ? dir : publicDir
+}
 
 function immutableCards() {
   let built
   return {
     'prerender:generate'(_route, instance) {
       built = instance
-      const { dir, publicDir } = instance.options.output
-      wrote = publicDir.startsWith(dir) ? dir : publicDir
+      recordOutput(instance)
     },
     'prerender:done'({ prerenderedRoutes }) {
       if (!built) return

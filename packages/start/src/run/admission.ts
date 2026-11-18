@@ -28,7 +28,7 @@ export function admitLink(event: Event, routes: ClientRoutes) {
   try {
     const url = ours(anchor)
     if (!url || !['http:', 'https:'].includes(url.protocol)) return
-    if (!guess(routes, url.pathname).length) return
+    if (!routes.shell && !guess(routes, url.pathname).length) return
     return { anchor, url, noop: url.href === location.href }
   } catch {
     return undefined
@@ -50,7 +50,8 @@ export function routeClicks(
 ) {
   const down = (event: PointerEvent) => {
     const target = admitLink(event, routes)
-    if (target && !target.noop) warm?.(target.url)
+    if (target && !target.noop && (!routes.shell || !target.anchor.closest('[data-preload="off"]')))
+      warm?.(target.url)
   }
   const click = (event: MouseEvent) => {
     const target = admitLink(event, routes)

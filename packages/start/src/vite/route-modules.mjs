@@ -285,6 +285,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   )
   return `${shapeImports.join('\n')}
 ${shapeStyles([...styleFiles.keys()], css.lazy)}
+export const shell = undefined
 export const shapes = { ${shapes.join(', ')} }
 export const build = ${JSON.stringify(css.build ?? null)}
 export const table = ${JSON.stringify(table)}
@@ -292,6 +293,26 @@ export const load = { ${loads.join(', ')} }
 ${retryModule(css.retry, targets)}
 export const islands = { ${islands.join(', ')} }
 `
+}
+
+/** A shell release ships each level as browser code, including levels that ordinary SSR would send as HTML. */
+export function shellRoutes(s, retry) {
+  const { manifest, abs, build, options } = s
+  const table = manifest.routes
+    .filter((r) => r.kind === 'page')
+    .map(({ id, pattern, layouts, splat }) => ({ id, pattern, layouts, splat }))
+  const { name, title, description, locale, image, twitter, url, routeRedirects } = options.site
+  const site = { name, title, description, locale, image, twitter, url, routeRedirects }
+  const root = manifest.layouts.find((l) => !l.dir)?.id
+  const targets = [...manifest.layouts, ...manifest.routes].map((r) => [r.id, abs(r.file)])
+  const loads = targets.map(
+    ([id, file]) => `${JSON.stringify(id)}: () => import(${JSON.stringify(file)})`,
+  )
+  return `export const build = ${JSON.stringify(build || null)}
+export const shell = ${JSON.stringify({ root, site })}
+export const table = ${JSON.stringify(table)}
+export const load = { ${loads.join(', ')} }
+${retryModule(retry, targets)}`
 }
 
 function retryModule(retry, targets) {

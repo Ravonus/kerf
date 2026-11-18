@@ -9,6 +9,7 @@ import { entryCss, projectParent, watchEntryCandidates } from './shape-entry-css
 import { resolveImportedOverride, shapeOverride } from './shape-override.mjs'
 import {
   clientRoutes,
+  shellRoutes,
   serverRoutes,
   devStyles,
   markLinks,
@@ -111,7 +112,7 @@ export const load = (s) => ({
         : `const list = ${JSON.stringify(readMigrations(s.root))}\nexport default () => list\n`
     if (which === V.media) return mediaModule(s.root, s.dev)
     if (which === V.client)
-      return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\n${ENTRY_SHEETS}start(routes)\n`
+      return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\n${s.shell ? '' : ENTRY_SHEETS}start(routes)\n`
   },
 })
 
@@ -124,7 +125,9 @@ export const transform = (s) => ({
     if (path.endsWith('/client.mjs')) return s.dev ? markLinks(s.root) + code : undefined
     if (path.includes('/node_modules/')) return
     const client = this.environment?.config.consumer === 'client'
-    if (client && path === s.clientEntry()) return { code: ENTRY_SHEETS + code, map: null }
+    const shell = s.shell
+    if (client && path === s.clientEntry() && !shell)
+      return { code: ENTRY_SHEETS + code, map: null }
     const rel = relative(s.root, path).split('\\').join('/')
     if (client && (/\.http\.[jt]s$/.test(rel) || rel.startsWith('src/hooks.server.')))
       this.error(`Q012: ${rel} runs only on the server; do not import it from client code`)
@@ -148,8 +151,8 @@ export const transform = (s) => ({
       !s.manifest.layouts.some((l) => l.file === rel)
     )
       return
-    if (s.dev) s.loaders.set(file, serverExports(code, file))
-    const out = stripServerExports(code, file)
+    if (s.dev) s.loaders.set(file, serverExports(code, file, shell))
+    const out = stripServerExports(code, file, shell)
     // @kerf-js/core/hmr saw the server exports and left this to Vite, but they're gone and the rest is components.
     if (
       s.dev &&
@@ -213,6 +216,7 @@ function configModule(s, which) {
 }
 
 async function routesModule(ctx, s, client) {
+  if (client && s.shell) return shellRoutes(s, retryRouteModules(ctx, s))
   const run = { owner: s.shapeEntryOwner, scan: undefined }
   if (client && s.shapeEntryClosed) throw new Error('entry style scan outlived its server')
   if (client)

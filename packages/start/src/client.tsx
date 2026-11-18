@@ -21,6 +21,10 @@ export function start(
   routes: ClientRoutes,
   options: { container?: Element; eager?: boolean; shell?: boolean } = {},
 ): ReturnType<typeof run> {
+  if (routes.shell) {
+    const shell = routes.shell
+    return import('./run/shell').then((module) => module.startShell({ ...routes, shell }, options))
+  }
   return new Promise((settle, fail) => {
     const full = () =>
       import('./run')

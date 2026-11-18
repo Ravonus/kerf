@@ -86,7 +86,7 @@ export const hotUpdate = (s) =>
       s.manifest.routes.some((r) => r.file === rel) ||
       s.manifest.layouts.some((l) => l.file === rel)
     if (route) {
-      const part = serverExports(readFileSync(file, 'utf8'), file)
+      const part = serverExports(readFileSync(file, 'utf8'), file, s.shell)
       // A level the server renders has no module in the page, and its `load` and `meta` are on the server too.
       refresh(s.vite, rel, s.loaders.get(file) !== part, false)
       s.loaders.set(file, part)

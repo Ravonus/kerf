@@ -39,6 +39,15 @@ function serverSite(z) {
   }
 }
 
+function shellSite(z) {
+  return {
+    render: z.literal('shell').optional(),
+    routeRedirects: z
+      .record(z.string().regex(/^[a-zA-Z][\w-]{0,63}$/), z.string().regex(/^\/(?![/\\])/))
+      .optional(),
+  }
+}
+
 function baseSchemas(z) {
   const zodSchema = z.custom(
     (v) => v != null && typeof v === 'object' && ('_zod' in v || '~standard' in v),
@@ -89,6 +98,7 @@ function baseSchemas(z) {
   })
 
   const site = z.strictObject({
+    ...shellSite(z),
     headers: z.record(z.string(), z.record(z.string(), z.string())).optional(),
     name: z.string().min(1).optional(),
     url: z.url({ protocol: /^https?$/, error: 'must be an absolute http(s) URL' }).optional(),

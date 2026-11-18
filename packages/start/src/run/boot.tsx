@@ -1,7 +1,6 @@
 import { enter, hydrate, hydration, level as staticLevel, park } from '@kerf-js/core/dom'
 import { client, createRouteState, type Component, type RoutePayload } from '../router'
-import { onCleanup, state, untrack } from '@kerf-js/core'
-import { onRenderError } from '@kerf-js/core/internal'
+import { recover } from './outlet'
 import { App } from '../view'
 import { ErrorPage, NotFoundPage } from '../builtin'
 import { matchingRouteAssets } from '../asset-receipt.mjs'
@@ -151,30 +150,4 @@ export function mount({
     matches: page.m,
     setBag: (next: RoutePayload['b']) => (bag = next),
   }
-}
-
-function recover(route: ReturnType<typeof createRouteState>) {
-  const pending = state(false)
-  const recovery: { retry?: () => Promise<void>; fail?: (depth: number, error: unknown) => void } =
-    {}
-  route.recovery = {
-    retry: () => recovery.retry?.() ?? Promise.resolve(),
-    get pending() {
-      return pending.value
-    },
-  }
-  route.guard = (depth, id, body) => {
-    const lv = route.levels[depth]!
-    let alive = true
-    onCleanup(() => {
-      alive = false
-    })
-    onRenderError((error) => {
-      queueMicrotask(() => {
-        if (alive && untrack(() => lv.id.value) === id) recovery.fail?.(depth, error)
-      })
-    })
-    return body()
-  }
-  return { pending, recovery }
 }

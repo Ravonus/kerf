@@ -4,6 +4,7 @@ import { createRequire } from 'node:module'
 import { isAbsolute, join, relative, resolve, sep, win32 } from 'node:path'
 import { searchForWorkspaceRoot } from 'vite'
 import { INLINE_CSS_MAX } from '../inline.mjs'
+import { SHELL_FILE, shellDocument } from '../shell-document.mjs'
 import { packageDirs } from './dev.mjs'
 import { assetBytes, retryChunks } from './asset-bytes.mjs'
 import { combineSheets, sheetPieces, inlineSheets } from './sheets.mjs'
@@ -94,6 +95,7 @@ export const writeBundle = (s) => ({
     }
     if (
       s.dev ||
+      s.shell ||
       this.environment?.config.consumer !== 'client' ||
       s.options.site?.criticalCss === false ||
       s.options.site?.inlineCss === false
@@ -114,12 +116,45 @@ export const writeBundle = (s) => ({
 export const generateBundle = (s) => ({
   order: 'post',
   handler(_out, bundle) {
-    if (this.environment?.config.consumer !== 'client' || !s.retryManifest) return
+    if (this.environment?.config.consumer !== 'client') return
+    if (s.shell) emitShell(this, bundle, s)
+    if (!s.retryManifest) return
     const { ref, targets } = s.retryManifest
     const asset = bundle[this.getFileName(ref)]
     asset.source = JSON.stringify(retryChunks(bundle, targets))
   },
 })
+
+function emitShell(ctx, bundle, s) {
+  const entryId = s.id(s.clientEntry())
+  const entry = Object.values(bundle).find(
+    (file) => file.type === 'chunk' && file.facadeModuleId === entryId,
+  )
+  if (!entry) ctx.error('Could not find the shell release entry')
+  const base = ctx.environment.getTopLevelConfig().base
+  const href = (file) => (base.startsWith('/') ? base : '/') + file
+  const js = new Set()
+  const css = new Set()
+  const walk = (chunk) => {
+    for (const file of chunk.viteMetadata?.importedCss ?? []) css.add(href(file))
+    for (const file of chunk.imports) {
+      if (js.has(href(file)) || bundle[file]?.type !== 'chunk') continue
+      js.add(href(file))
+      walk(bundle[file])
+    }
+  }
+  walk(entry)
+  ctx.emitFile({
+    type: 'asset',
+    fileName: SHELL_FILE,
+    source: shellDocument({
+      entry: href(entry.fileName),
+      css: [...css],
+      js: [...js],
+      locale: s.options.site.locale,
+    }),
+  })
+}
 
 export const renderChunk = (s) => ({
   order: 'post',

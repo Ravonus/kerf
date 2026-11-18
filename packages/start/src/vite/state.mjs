@@ -9,7 +9,7 @@ import { PRELOAD, V } from './shared.mjs'
 /** Partial hydration's view of the project, redone in dev when a file it read changed. */
 async function hydration(s, ctx) {
   const { options } = s
-  if (options.hydration === 'full' || !s.compile) return undefined
+  if (s.shell || options.hydration === 'full' || !s.compile) return undefined
   if (s.plan && !s.dev) return s.plan
   if (s.plan && Date.now() - s.planned < 200) return s.plan
   s.planned = Date.now()
@@ -68,6 +68,7 @@ async function shapeTable(s, ctx) {
 export function createState(options) {
   const s = {
     options,
+    shell: options.site?.render === 'shell',
     root: options.root ?? process.cwd(),
     dev: false,
     build: '',

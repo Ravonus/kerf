@@ -1,35 +1,53 @@
 import { parseSync } from 'vite'
 
 const SERVER_EXPORTS = new Set(['load', 'meta', 'prerender'])
+const SHELL_SERVER_EXPORTS = new Set(['load', 'prerender'])
 
 /**
  * The client build of a route module: `load`, `meta` and `prerender` removed (they run on the server; loaders can
  * hold database code and secrets), then imports nothing else uses. Exported for tests.
  */
-function serverCuts(code, file) {
+function serverCuts(code, file, shell) {
   const ast = parseSync(file, code, {
     lang: file.endsWith('.tsx') ? 'tsx' : file.endsWith('.ts') ? 'ts' : 'jsx',
     sourceType: 'module',
   })
   const cuts = []
+  const namesToStrip = shell ? SHELL_SERVER_EXPORTS : SERVER_EXPORTS
   for (const node of ast.program.body) {
+    if (shell && node.exportKind !== 'type' && unsafeShellExport(node))
+      throw new Error(`${file}: declare shell route load and prerender directly in this module`)
     if (node.type !== 'ExportNamedDeclaration' || !node.declaration) continue
     const d = node.declaration
     const names =
       d.type === 'VariableDeclaration' ? d.declarations.map((x) => x.id?.name) : [d.id?.name]
-    if (names.length && names.every((n) => SERVER_EXPORTS.has(n))) cuts.push([node.start, node.end])
+    if (names.length && names.every((n) => namesToStrip.has(n))) cuts.push([node.start, node.end])
+    else if (shell && names.some((n) => namesToStrip.has(n)))
+      throw new Error(
+        `${file}: declare shell route load and prerender separately from client exports`,
+      )
   }
   return cuts
 }
 
-export const serverExports = (code, file) =>
-  serverCuts(code, file)
+function unsafeShellExport(node) {
+  if (node.type === 'ExportAllDeclaration') return !node.exported
+  if (node.type !== 'ExportNamedDeclaration') return false
+  return node.specifiers.some(
+    (spec) =>
+      spec.exportKind !== 'type' &&
+      SHELL_SERVER_EXPORTS.has(spec.exported.name ?? spec.exported.value),
+  )
+}
+
+export const serverExports = (code, file, shell) =>
+  serverCuts(code, file, shell)
     .map(([a, b]) => code.slice(a, b))
     .join('\n')
 
 /** The server-only exports of a route file, cut out of the client's copy. */
-export function stripServerExports(code, file = 'route.tsx') {
-  const cuts = serverCuts(code, file)
+export function stripServerExports(code, file = 'route.tsx', shell = false) {
+  const cuts = serverCuts(code, file, shell)
   if (!cuts.length) return code
   let out = code
   for (const [a, b] of cuts.sort((x, y) => y[0] - x[0])) out = out.slice(0, a) + out.slice(b)

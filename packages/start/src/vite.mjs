@@ -151,7 +151,7 @@ export function shapeHotUpdate(state, modes, next) {
 }
 
 /**
- * @param {{ root?: string, site?: import('@kerf-js/core/ssr').Site, routesDir?: string, timeout?: number, hold?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
+ * @param {{ root?: string, site?: import('./shell/routes').ShellSite, routesDir?: string, timeout?: number, hold?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
  */
 export default function kerfStart(options = {}) {
   const state = createState(options)

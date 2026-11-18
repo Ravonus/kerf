@@ -143,7 +143,13 @@ const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.s
  * layout whose data didn't change sees no write at all); the first level whose route changes, and every level after
  * it, switch route.
  */
-export function applyMatches(r: RouteState, matches: Match[], path: string, status: number) {
+export function applyMatches(
+  r: RouteState,
+  matches: Match[],
+  path: string,
+  status: number,
+  shell = false,
+) {
   untrack(() => {
     const depth = Math.max(matches.length, r.levels.length)
     let fresh = false
@@ -152,7 +158,7 @@ export function applyMatches(r: RouteState, matches: Match[], path: string, stat
       const lv = level(r, d)
       if (m) {
         if (!same(lv.params.value, m.params)) lv.params.value = m.params
-        if (!same(lv.data.value, m.data)) lv.data.value = m.data
+        if (shell ? lv.data.value !== m.data : !same(lv.data.value, m.data)) lv.data.value = m.data
         if (!m.s) lv.html.value = undefined
         else if (fresh || lv.x !== m.x || lv.id.value !== m.id) {
           lv.html.value = m.h
