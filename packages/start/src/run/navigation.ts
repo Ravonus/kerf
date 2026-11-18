@@ -97,7 +97,7 @@ export class Navigation {
     const current = () => this.current === owner && !owner?.signal.aborted
     return () => {
       if (!current()) return
-      this.at = path
+      this.at = url.pathname + url.search
       if (next.c) client.seed ? client.seed(next.c, since) : (client.seeds ??= []).push(...next.c)
       if (!current()) return
       this.tags = next.m.map((m) => m.t ?? [])

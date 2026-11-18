@@ -100,8 +100,8 @@ export const markLinks = (
 `
 
 /** Read a route or entry module only when its parsed syntax is valid. */
-export function shapeBody(file) {
-  const result = parse(file, readFileSync(file, 'utf8'))
+export function shapeBody(file, source = readFileSync(file, 'utf8')) {
+  const result = parse(file, source)
   if (result.errors.length) {
     const message = result.errors[0]?.message ?? 'invalid source'
     throw new SyntaxError(`${file}: syntax error: ${message}`)
@@ -110,8 +110,8 @@ export function shapeBody(file) {
 }
 
 /** Classify a route skeleton export without evaluating the route. */
-export function skeletonExport(file) {
-  const body = shapeBody(file)
+export function skeletonExport(file, source) {
+  const body = shapeBody(file, source)
   const constants = new Map()
   const bindings = (decl) => {
     if (decl?.type !== 'VariableDeclaration' || decl.kind !== 'const') return
@@ -154,7 +154,9 @@ export function skeletonExport(file) {
       exported = !node.source && constants.get(local) ? 'disabled' : 'unavailable'
     }
   }
-  return exported === 'unavailable' && shapeOverride(file) ? 'custom' : (exported ?? 'generated')
+  return exported === 'unavailable' && shapeOverride(file, source)
+    ? 'custom'
+    : (exported ?? 'generated')
 }
 
 /** Whether a source specifier can name a non-module stylesheet or token sheet. */
@@ -163,8 +165,8 @@ export function shapeStyleSpecifier(spec) {
 }
 
 // Inline CSS is data until a consumer applies it. Other dependencies remain unproven.
-function styleImports(file) {
-  return shapeBody(file)
+function styleImports(file, source) {
+  return shapeBody(file, source)
     .filter((node) => node.type === 'ImportDeclaration' && !node.specifiers.length)
     .map((node) => node.source.value)
     .filter(shapeStyleSpecifier)
@@ -191,9 +193,13 @@ export async function shapeCssSources(ctx, file) {
 }
 
 /** The route facts embedded in the client shape manifest. */
-export function shapeSignature(file) {
-  const kind = skeletonExport(file)
-  return JSON.stringify([kind, styleImports(file), kind === 'custom' ? shapeOverride(file) : null])
+export function shapeSignature(file, source = readFileSync(file, 'utf8')) {
+  const kind = skeletonExport(file, source)
+  return JSON.stringify([
+    kind,
+    styleImports(file, source),
+    kind === 'custom' ? shapeOverride(file, source) : null,
+  ])
 }
 
 /**
