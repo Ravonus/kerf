@@ -332,7 +332,7 @@ describe('on the server', () => {
         }),
     })
     expect(() => memory.check!(false)).toThrow(expect.objectContaining({ code: 'PAY016' }))
-    memory.check!(true)
+    await memory.check!(true)
     await expect(
       Promise.resolve().then(() =>
         memory.checkout({ user: { id: 'u' }, request: { url: 'http://x/' } }, { product: 'pro' }),

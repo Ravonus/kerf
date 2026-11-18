@@ -36,7 +36,8 @@ export function update(event: string, d: Row, byN: Map<number, Sub>) {
     if (s) s.done.value = true
   } else if (event === 'e') {
     const s = byN.get(d[0])
+    const failure = d[1] as { code?: string; status?: number }
     if (s)
-      s.error.value = new FnError(d[1], (d[1] as { code?: string }).code === 'A002' ? 401 : 500)
+      s.error.value = new FnError(failure, failure.status ?? (failure.code === 'A002' ? 401 : 500))
   }
 }

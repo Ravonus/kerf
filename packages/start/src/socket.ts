@@ -1,14 +1,9 @@
 // The server's half of `channel` and `sharedState` (research 32 §4): one socket per tab, many joins. `attach` knows
 // nothing about crossws, so the same code runs behind `/_kerf/ws` and behind @kerf-js/core/test's fake. A room is a hub channel
 // (`kerf:c:<id>:<params>`), so rings, cursors, gaps and fan-out are the hub's, and a join listens before it replays.
-//
-//   checks       the upgrade: exact Origin (a missing one is refused), a wildcard in `origins` (R004).
-//   authorize    every join, and again every `limits.session` and on a poke of `session:<user>`. A gone user is 4401.
-//   limits       frame size (1009), a token bucket per socket and per channel (1008), joins, sockets, send queue (1013).
-//   shared state last writer wins by `(at, instance)`. Instances hold the value; a new listener asks on the bus.
 
 import type { PublishOptions } from './channel'
-import { enter, fns, FnError, isRedirect, runtime, stable, StartError, type Context } from './data'
+import { enter, fns, isRedirect, runtime, stable, StartError, type Context } from './data'
 import { createScope, type Scope } from './exec'
 import { hub, type Ev, type Hub } from './hub'
 import type { Join, Sock, Hubbed, Value } from './socket/types'
@@ -18,6 +13,7 @@ import { deliver } from './socket/deliver'
 import { sharedWriter } from './socket/shared'
 import { publish } from './socket/publish'
 import { socketRouteWith } from './socket/route'
+import { realtimeFault } from './server/realtime-fault'
 import { SHARE, shareChannel } from './share-server'
 
 /** A socket as this file needs it. `send` takes a whole frame. */
@@ -63,8 +59,8 @@ const send = (c: Sock, out: unknown[]) => {
   if (c.peer.backlog() > hub().limits.queue) gone(hub(), c, 1013)
 }
 
-const refuse = (c: Sock, n: number, e: { code?: string | undefined; message: string }) =>
-  send(c, ['e', n, { code: e.code, message: e.message }])
+const refuse = (c: Sock, n: number, operation: string, error: unknown) =>
+  send(c, ['e', n, realtimeFault(c.options, error, operation)])
 
 async function join(
   h: Hub,
@@ -79,12 +75,14 @@ async function join(
     return refuse(
       c,
       n,
+      id,
       new StartError('Q009', `no channel \`${id}\` (the page is older than the server): reload`),
     )
   if (c.joins.size >= h.limits.subscriptions)
     return refuse(
       c,
       n,
+      id,
       new StartError(
         'R009',
         `this socket already has ${h.limits.subscriptions} joins`,
@@ -108,11 +106,10 @@ async function join(
     if (!(await allowed(fn, c.ctx, j.params))) throw denied(fn)
   } catch (e) {
     c.joins.delete(n)
-    return refuse(c, n, known(c, id, e))
+    return refuse(c, n, id, e)
   }
   if (j.gone) return
-  const name = roomName(id, j.params)
-  const r = (j.room = room(h, st, name, fn.kind === 'shared'))
+  const r = (j.room = room(h, st, roomName(id, j.params), fn.kind === 'shared'))
   const pending: Ev[] = []
   let live = false,
     lost = false
@@ -127,24 +124,40 @@ async function join(
     await r.ch.ready
   } catch (e) {
     leave(h, c, j)
-    return refuse(c, n, new StartError('R011', `\`${id}\`: the bus is down`, undefined))
+    const failure = new StartError(
+      'E_RT',
+      'The realtime bus is unavailable',
+      undefined,
+      { status: 503 },
+      { cause: e },
+    )
+    return refuse(c, n, id, failure)
   }
   if (j.gone) return
-  const back = cursor ? h.replay(r.ch, cursor) : []
-  send(c, ['j', n, h.position()])
-  if (!back || lost) {
-    send(c, ['r', n, h.position()])
-    pending.length = 0
-  } else {
-    const seen = new Set(back.map((e) => e.seq))
-    for (const ev of [...back, ...pending.filter((e) => !seen.has(e.seq))].sort(
-      (a, b) => a.seq - b.seq,
-    ))
-      deliver(c, j, h, ev, send)
-  }
+  replayJoin(h, c, j, pending, { cursor, lost })
   live = true
-  const v = st.values.get(name)
+  const v = st.values.get(r.name)
   if (fn.kind === 'shared' && v) send(c, ['m', n, h.position(), VALUE, v])
+}
+
+function replayJoin(
+  h: Hub,
+  c: Sock,
+  j: Join,
+  pending: Ev[],
+  { cursor, lost }: { cursor?: string | undefined; lost: boolean },
+) {
+  const back = cursor ? h.replay(j.room!.ch, cursor) : []
+  send(c, ['j', j.n, h.position()])
+  if (!back || lost) {
+    send(c, ['r', j.n, h.position()])
+    return
+  }
+  const seen = new Set(back.map((e) => e.seq))
+  for (const ev of [...back, ...pending.filter((e) => !seen.has(e.seq))].sort(
+    (a, b) => a.seq - b.seq,
+  ))
+    deliver(c, j, h, ev, send)
 }
 
 function leave(h: Hub, c: Sock, j: Join) {
@@ -176,23 +189,8 @@ async function left(c: Sock, j: Join) {
       j.fn.def.left!({ id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j) }),
     )
   } catch (e) {
-    known(c, j.fn.$id, e)
+    realtimeFault(c.options, e, j.fn.$id)
   }
-}
-
-const known = (
-  c: Sock,
-  id: string,
-  e: unknown,
-): { code?: string | undefined; message: string; issues?: unknown } => {
-  if (e instanceof StartError || e instanceof FnError)
-    return { code: e.code, message: e.message, ...(e.issues && { issues: e.issues }) }
-  c.options.onDiagnostic?.({
-    code: 'E_RT',
-    severity: 'error',
-    message: `${id}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
-  })
-  return { message: c.options.dev && e instanceof Error ? e.message : 'Message failed.' }
 }
 
 /** A message from the client: validated, its handler run in a fresh scope, the ack sent. In order within a join. */
@@ -241,7 +239,7 @@ async function run(h: Hub, c: Sock, j: Join, call: { ack: number; name: string; 
     if (!j.gone) send(c, ['a', j.n, ack])
   } catch (e) {
     if (isRedirect(e)) return void (!j.gone && send(c, ['a', j.n, ack]))
-    if (!j.gone) send(c, ['a', j.n, ack, known(c, fn.$id, e)])
+    if (!j.gone) send(c, ['a', j.n, ack, realtimeFault(c.options, e, fn.$id)])
   }
 }
 
@@ -282,11 +280,11 @@ function frame(h: Hub, c: Sock, text: string) {
       id: f[2],
       params: f[3],
       cursor: typeof f[4] === 'string' ? f[4] : undefined,
-    })
+    }).catch((error) => refuse(c, f[1], f[2], error))
   const j = c.joins.get(f[1])
   if (f[0] === 'l') return j && leave(h, c, j)
   if (f[0] !== 'm' || typeof f[2] !== 'number' || typeof f[3] !== 'string') return
-  if (!j) return send(c, ['a', f[1], f[2], { code: 'Q009', message: 'not joined' }])
+  if (!j) return send(c, ['a', f[1], f[2], { code: 'R025', message: 'not joined' }])
   const per = j.fn.def.limits?.perSecond
   if (per && !take(j.bucket, per, per * 2)) {
     return slow(h, c, `${per} messages a second to \`${j.fn.$id}\``)
@@ -317,12 +315,11 @@ async function recheck(h: Hub, c: Sock) {
       continue
     }
     leave(h, c, j)
-    refuse(c, j.n, denied(j.fn))
+    refuse(c, j.n, j.fn.$id, denied(j.fn))
   }
 }
 
-/** Open: the hello, the heartbeat watch and the session timer. */
-/** `line`: one tab on a shared socket (mux.ts), which `limits.connections` counted already. */
+/** Open a channel socket. A mux line shares its socket's connection limit. */
 export async function attach(
   peer: Peer,
   request: Request,

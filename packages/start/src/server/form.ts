@@ -1,16 +1,9 @@
-import {
-  decodeForm,
-  fieldsOf,
-  fns,
-  isRedirect,
-  StartError,
-  FnError,
-  type SchemaIssue,
-} from '../data'
+import { decodeForm, fieldsOf, fns, isRedirect, StartError } from '../data'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
 import { bodyLimit, echoed, limited, withHeaders } from './request'
 import type { HandlerOptions } from './types'
+import { functionFault } from './function-fault'
 export function makeForm(
   options: HandlerOptions,
   page: (url: URL, request: Request, scope: Scope) => Promise<Response>,
@@ -67,24 +60,19 @@ export function makeForm(
       return see(url.pathname + url.search)
     } catch (e) {
       if (isRedirect(e)) return see(e.href)
-      const known = e instanceof StartError || e instanceof FnError
-      if (!known)
-        options.onDiagnostic?.({
-          code: 'E_FN',
-          severity: 'error',
-          message: `${id}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
-        })
-      const failure = e as { issues?: SchemaIssue[]; status?: number; message?: string } | null
-      const issues = failure?.issues
+      const failure = await functionFault(e, scope, f, true)
+      const issues = 'issues' in failure ? failure.issues : undefined
       const { errors, message } = fieldsOf(issues)
       const key = fields.get('$form')
       scope.form = {
         id,
         ...(typeof key === 'string' && { key }),
-        values: echoed(input),
+        values: failure.status < 500 ? echoed(input) : {},
         errors,
-        message: issues ? message : (exec.shown(e, scope) as Error).message,
-        status: issues ? 422 : (failure?.status ?? 500),
+        message: issues ? message : failure.message,
+        status: failure.status,
+        code: failure.code,
+        ...('ref' in failure && { ref: failure.ref }),
       }
       return page(url, request, scope)
     }

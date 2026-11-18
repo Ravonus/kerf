@@ -259,6 +259,7 @@
   "R022": "core",
   "R023": "core",
   "R024": "core",
+  "R025": "@kerf-js/start",
   "R101": "core",
   "R102": "core",
   "R103": "core",

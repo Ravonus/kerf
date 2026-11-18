@@ -1,4 +1,7 @@
 import { checkOrigins } from '../hub'
+import { StartError } from '../data'
+import { realtimeFault } from '../server/realtime-fault'
+import { ERROR_HEADER } from '../failure'
 import type { Scope } from '../exec'
 import type { Peer, Attached } from '../socket'
 
@@ -18,12 +21,23 @@ export function socketRouteWith(
 ): Promise<Response> {
   const hooks = (crossws: object) =>
     Promise.resolve(Object.assign(new Response('Upgrade required', { status: 426 }), { crossws }))
-  const turnAway = (code: string, message: string, status: number) => {
-    scope.options.onDiagnostic?.({ code, severity: 'error', message })
+  const turnAway = (code: string, message: string, status: number, cause?: unknown) => {
+    const error = new StartError(code, message, undefined, { status }, { cause })
+    const failure = realtimeFault(scope.options, error, '/_kerf/ws')
+    if (!failure.ref) scope.options.onDiagnostic?.({ code, severity: 'error', message })
     // oxlint-disable only-throw-error -- crossws answers an upgrade with the Response its hook throws
     return hooks({
       upgrade() {
-        throw new Response(message, { status }) /* oxlint-enable only-throw-error */
+        throw Response.json(
+          { e: failure },
+          {
+            status,
+            headers: {
+              'cache-control': 'no-store',
+              ...(failure.ref && { [ERROR_HEADER]: failure.ref }),
+            },
+          },
+        ) /* oxlint-enable only-throw-error */
       },
     })
   }
@@ -34,7 +48,7 @@ export function socketRouteWith(
   try {
     checkOrigins(origins)
   } catch (e) {
-    return turnAway('R004', (e as Error).message, 500)
+    return turnAway('R004', 'Invalid realtime origin configuration', 500, e)
   }
   const origin = request.headers.get('origin')
   if (!origin || (origin !== new URL(request.url).origin && !origins.includes(origin)))
@@ -58,12 +72,8 @@ export function socketRouteWith(
           ? import('../mux').then((m) => m.muxed(p, request, scope))
           : attach(p, request, scope)
         ).catch((e) => {
-          scope.options.onDiagnostic?.({
-            code: 'E_RT',
-            severity: 'error',
-            message: `/_kerf/ws: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
-          })
-          peer.close(1011, 'context failed')
+          const failure = realtimeFault(scope.options, e, '/_kerf/ws')
+          peer.close(1011, failure.ref ? `context failed [${failure.ref}]` : 'context failed')
           return { message() {}, close() {} }
         }),
       )

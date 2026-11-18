@@ -72,7 +72,9 @@ test('a client that goes away closes its connection on the server', async () => 
   await vi.waitFor(() => expect(read()).resolves.toBe(before), { timeout: 5000 })
 })
 
-test("Q009: a stream can't be called as a server function", async () => {
+test("Q010: a stream can't be called as a server function", async () => {
   const feed = frameId(url, 'noteFeed')
-  expect((await fetch(`${url}/_kerf/fn/${feed}`)).status).toBe(405)
+  const response = await fetch(`${url}/_kerf/fn/${feed}`)
+  expect(response.status).toBe(405)
+  expect((await response.json()).e.code).toBe('Q010')
 })

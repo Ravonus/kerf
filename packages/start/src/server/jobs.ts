@@ -32,7 +32,6 @@ function settler(defs: JobDefs, queue: Queue, deps: BackgroundDeps) {
       await inScope(deps, `/_kerf/jobs/${encodeURIComponent(job.name)}`, (ctx) =>
         def.run({ ctx, input: job.input, id: job.id, name: job.name, attempt: job.attempt }),
       )
-      await queue.done(job)
     } catch (e) {
       const error = errorText(e)
       if (job.attempt > retries)
@@ -44,7 +43,10 @@ function settler(defs: JobDefs, queue: Queue, deps: BackgroundDeps) {
         severity: 'warning',
         message: `J003: job \`${job.name}\` (${job.id}) failed attempt ${job.attempt}, retrying in ${Math.round(wait / 1000)}s: ${error}`,
       })
+      return
     }
+    // A failed acknowledgement is a queue fault. Retrying the handler here could repeat its effects.
+    await queue.done(job)
   }
 }
 
@@ -64,12 +66,14 @@ export function startJobs(jobs: Jobs, deps: BackgroundDeps): () => Promise<void>
   const running = new Set<Promise<void>>()
   const failed = (e: unknown) =>
     deps.scopeOptions.onDiagnostic?.({
-      code: 'J004',
+      code: 'J005',
       severity: 'error',
-      message: `J004: the job queue failed: ${errorText(e)}`,
+      message: `J005: the job queue failed: ${errorText(e)}`,
     })
   const live = { stopped: false, claiming: false }
   let timer: ReturnType<typeof setTimeout> | undefined
+  let claimedSettled: (() => void) | undefined
+  let stopping: Promise<void> | undefined
 
   const start = (job: QueuedJob) => {
     const p: Promise<void> = settle(job)
@@ -89,13 +93,14 @@ export function startJobs(jobs: Jobs, deps: BackgroundDeps): () => Promise<void>
         const room = concurrency - running.size
         if (live.stopped || room <= 0) break
         const claimed = await queue.claim(Date.now(), lease, room)
-        if (!claimed.length) break
+        if (live.stopped || !claimed.length) break
         claimed.forEach(start)
       }
     } catch (e) {
       failed(e)
     } finally {
       live.claiming = false
+      claimedSettled?.()
       if (!live.stopped) {
         timer = setTimeout(() => void tick(), poll)
         ;(timer as { unref?: () => void }).unref?.() // the queue never keeps a process alive by itself
@@ -104,9 +109,14 @@ export function startJobs(jobs: Jobs, deps: BackgroundDeps): () => Promise<void>
   }
   queue.onPush?.(() => void tick())
   void tick()
-  return async () => {
-    live.stopped = true
-    clearTimeout(timer)
-    await Promise.allSettled([...running])
-  }
+  return () =>
+    (stopping ??= (async () => {
+      live.stopped = true
+      clearTimeout(timer)
+      if (live.claiming)
+        await new Promise<void>((resolve) => {
+          claimedSettled = resolve
+        })
+      await Promise.allSettled([...running])
+    })())
 }

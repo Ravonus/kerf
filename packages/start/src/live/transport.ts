@@ -47,7 +47,10 @@ export function transports(handover: () => void) {
     },
     async change(body) {
       const res = await post(body)
-      if (!res.ok) throw new FnError({}, res.status)
+      if (!res.ok) {
+        const { e } = await res.json().catch(() => ({ e: {} }))
+        throw new FnError(e, res.status)
+      }
     },
   }
 
@@ -68,8 +71,10 @@ export function transports(handover: () => void) {
           (code, reason) => {
             if (line === l) line = undefined
             if (code === HANDOVER) handover()
-            if (code === 4000 && reason) fail(new FnError(JSON.parse(reason), 429))
-            else done()
+            if (code === 4000 && reason) {
+              const failure = JSON.parse(reason)
+              fail(new FnError(failure, failure.status ?? 429))
+            } else done()
           },
         ))
         signal.addEventListener('abort', () => l.close())

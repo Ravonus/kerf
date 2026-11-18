@@ -63,7 +63,14 @@ test('retries a loader once per click and preserves the document, layout counter
       await new Promise((resolve) => {
         setTimeout(resolve, 200)
       })
-      await route.continue()
+      const answer = await route.fetch()
+      if (requests === 1) {
+        const data = (await answer.json()).m.at(-1).data
+        expect(data.code).toBe('E_ROUTE')
+        expect(data.ref).toBe(data.reference)
+        expect(data.ref).toBe(answer.headers()['x-kerf-error'])
+      }
+      await route.fulfill({ response: answer })
     })
     const retry = tab.locator('#retry-route')
     const secondResponse = tab.waitForResponse((r) =>

@@ -80,14 +80,17 @@ describe('diagnostic lookup', () => {
       expect(page.text).toContain(`Lookup alias for \`${primary}\`.`)
       expect(page.text).toBe(diagnosticPage(code, info, referenceDiagnostics.get(code)))
     }
-    for (const code of ['E_REQUEST', 'E_CHUNK', 'E_STARTUP', 'E_PROCESS', 'E_SHUTDOWN', 'J005'])
-      expect((await docs(fixture, code)).text).toContain('reserved')
+    expect((await docs(fixture, 'E_CHUNK')).text).toContain('reserved')
+    for (const code of ['E_REQUEST', 'E_STARTUP', 'E_PROCESS', 'E_SHUTDOWN', 'J005'])
+      expect((await docs(fixture, code)).text).not.toContain('reserved')
     expect((await docs(fixture, 'E_STREAM')).text).toMatch(/stalled between passes.*chunk loop/)
     expect((await docs(fixture, 'E_HEAD')).text).toMatch(/header count changed.*rendering threw/)
     expect((await docs(fixture, 'Q019')).text).toMatch(
-      /rate limit.*429.*could not be resolved.*404/,
+      /Deprecated legacy meaning.*Q019 with 404.*Q009/,
     )
-    expect((await docs(fixture, 'J004')).text).toMatch(/exhausted its attempts.*queue operation/)
+    expect((await docs(fixture, 'J004')).text).toMatch(
+      /Deprecated legacy meaning.*queue infrastructure failure.*J005/,
+    )
     for (const code of ['D010', 'AGENT005', 'PAY030'])
       expect(diagnosticPage(code, info, referenceDiagnostics.get(code))).toContain(
         'diagnostic manifest',

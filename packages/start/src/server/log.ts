@@ -1,4 +1,5 @@
 import type { Site } from '@kerf-js/core/ssr'
+import { diagnosticLine } from './log-line.mjs'
 
 /** One diagnostic as the server reports it: what `onDiagnostic` receives. */
 export interface Diagnostic {
@@ -12,28 +13,15 @@ export interface Diagnostic {
   reference?: string
 }
 
-/**
- * The server log: one line per diagnostic on stderr. `site.log: 'json'` writes JSON objects (time, level, code, message,
- * route, requestId) for a log collector; the default is a line a person reads.
- */
-export function serverLog(site: Site | undefined): (d: Diagnostic) => void {
-  if (site?.log === 'json')
-    return (d) =>
-      console.warn(
-        JSON.stringify({
-          time: new Date().toISOString(),
-          level: d.severity,
-          code: d.code,
-          message: d.message.replace(/^[A-Z]{1,3}\d{3}:? /, ''),
-          ...(d.route && { route: d.route }),
-          ...(d.requestId && { requestId: d.requestId }),
-          ...(d.reference && { reference: d.reference }),
-        }),
-      )
-  return (d) =>
-    console.warn(
-      `[kerf] ${d.code} ${d.severity}${d.route ? ` (${d.route})` : ''}${d.requestId ? ` [${d.requestId}]` : ''}${d.reference ? ` [reference ${d.reference}]` : ''}: ${d.message.replace(/^[A-Z]{1,3}\d{3}:? /, '')}`,
-    )
+const runtime = globalThis as { process?: { env?: { NODE_ENV?: string } } }
+
+/** Format Start diagnostics for stderr. An explicit site format takes precedence over the server mode. */
+export function serverLog(
+  site: Site | undefined,
+  dev = runtime.process?.env?.NODE_ENV !== 'production',
+) {
+  const format = site?.log ?? (dev ? 'text' : 'json')
+  return (d: Diagnostic) => console.warn(diagnosticLine(d, format))
 }
 
 const GIVEN = /^[\w.:-]{1,128}$/

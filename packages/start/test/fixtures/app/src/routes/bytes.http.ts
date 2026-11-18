@@ -1,4 +1,6 @@
 export function GET(request: Request) {
+  if (new URL(request.url).searchParams.get('fixture') === 'fault')
+    throw new Error('private fixture raw handler detail')
   const range = request.headers.get('range')
   return new Response(range ? '234' : '0123456789', {
     status: range ? 206 : 200,

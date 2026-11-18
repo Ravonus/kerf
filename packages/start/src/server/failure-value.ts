@@ -91,7 +91,8 @@ function approved(error: ApprovedFailure): ApprovedFailure {
   })
 }
 
-function snapshotJson(value: unknown, active = new Set<object>()): JsonValue {
+/** Copy a public JSON value without invoking getters or serializer hooks. */
+export function snapshotJson(value: unknown, active = new Set<object>()): JsonValue {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return value
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value !== 'object' || value === null || active.has(value))

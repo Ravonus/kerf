@@ -2,7 +2,7 @@
 // `r` line is a hub connection, and neither knows it isn't alone, so `id`, `exceptSelf`, `left`, buckets and session
 // re-checks stay per tab. `limits.connections` counts the socket, which is what it was protecting.
 
-import { StartError } from './data'
+import { realtimeFault } from './server/realtime-fault'
 import type { Scope } from './exec'
 import { sessionOf } from './mux-session'
 import { hub, validBody, type Conn, type Hub, type Sink } from './hub'
@@ -55,8 +55,9 @@ function openLines(
     }
     lines.set(id, {
       kind: 'c',
-      a: attach(p, request, scope, h, true).catch(() => {
-        end(id, 1011)
+      a: attach(p, request, scope, h, true).catch((error) => {
+        const failure = realtimeFault(scope.options, error, '/_kerf/ws')
+        end(id, 1011, failure.ref ? `context failed [${failure.ref}]` : 'context failed')
         return { message() {}, close() {} } as unknown as Attached
       }),
     })
@@ -79,11 +80,8 @@ function openLines(
       close: () => end(id, 1000),
     }
     const c = h.connect(request, scope, body, sink, true).catch((e) => {
-      const out =
-        e instanceof StartError
-          ? { code: e.code, message: e.message }
-          : { message: 'Realtime failed.' }
-      end(id, 4000, JSON.stringify(out))
+      const failure = realtimeFault(scope.options, e, '/_kerf/rt')
+      end(id, 4000, JSON.stringify(failure))
       return undefined
     })
     lines.set(id, { kind: 'r', c })

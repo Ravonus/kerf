@@ -1,0 +1,16 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Artwork Frame -------------------------------------------------------------- */
+:where([data-scope="artwork-frame"]) {
+  display: grid; min-inline-size: 0; overflow: clip;
+  border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-sunken);
+}
+:where([data-scope="artwork-frame"] > [data-part="artwork-well"]) { display: grid; min-block-size: 0; }
+:where([data-scope="artwork-frame"] > [data-part="artwork-well"] > [data-part="artwork-image-layer"]) { display: grid; overflow: clip; }
+:where([data-scope="artwork-frame"] > [data-part="artwork-well"] > [data-part="artwork-image-layer"] > [data-part="artwork-image"]) {
+  display: block; inline-size: 100%; block-size: 100%; min-block-size: 0; object-fit: cover;
+}
+:where([data-scope="artwork-frame"][data-fit="contain"] > [data-part="artwork-well"] > [data-part="artwork-image-layer"] > [data-part="artwork-image"]) { object-fit: contain; }
+:where([data-scope="artwork-frame"] > [data-part="artwork-well"] > [data-part="artwork-fallback"]) { display: grid; place-items: center; overflow: clip; }
+:where([data-scope="artwork-frame"] > [data-part="artwork-well"] > [data-part="artwork-fallback"] > div) { inline-size: 100%; }
+}

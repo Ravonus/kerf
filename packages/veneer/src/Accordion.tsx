@@ -9,6 +9,9 @@ export type AccordionItem = {
   value: string
   title: unknown
   content: unknown
+  subtitle?: unknown
+  /** Non-interactive content alongside the title, such as a badge. */
+  trailing?: unknown
   disabled?: boolean | undefined
 }
 /** Props for Accordion. */
@@ -18,10 +21,13 @@ export interface AccordionProps {
   /** More than one open at once. */
   multiple?: boolean
   /** What starts open. */
-  defaultOpen?: string[]
+  defaultOpen?: readonly string[] | undefined
+  /** Open items controlled by the caller. */
+  open?: readonly string[] | undefined
   onChange?: ((open: string[]) => void) | undefined
   /** The heading level of each title: one below the heading the accordion sits under. Default 3, in a page section. */
-  level?: 2 | 3 | 4 | 5 | 6
+  level?: 2 | 3 | 4 | 5 | 6 | undefined
+  [attr: string]: unknown
 }
 
 /**
@@ -33,20 +39,28 @@ export function Accordion({
   variant = 'boxed',
   multiple,
   defaultOpen = [],
+  open: controlled,
   onChange,
   level = 3,
+  ...rest
 }: AccordionProps) {
   const base = uid('acc')
-  const open = state<string[]>(untrack(() => defaultOpen))
+  const local = state<readonly string[]>(untrack(() => defaultOpen))
+  const open = () => controlled ?? local.value
   const toggle = (v: string) => {
-    const on = open.value.includes(v)
-    open.value = on ? open.value.filter((x) => x !== v) : multiple ? [...open.value, v] : [v]
-    onChange?.(open.value)
+    const before = open()
+    const next = before.includes(v)
+      ? before.filter((x) => x !== v)
+      : multiple
+        ? [...before, v]
+        : [v]
+    if (controlled === undefined) local.value = next
+    onChange?.(next)
   }
   const onKey = (e: KeyboardEvent) => {
     const list = [
       ...(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>(
-        '[data-part="trigger"]:not(:disabled)',
+        ':scope > [data-part="item"] > [data-part="heading"] > [data-part="trigger"]:not(:disabled)',
       ),
     ]
     const at = list.indexOf(e.target as HTMLElement)
@@ -58,6 +72,7 @@ export function Accordion({
   }
   return (
     <div
+      {...rest}
       data-scope="accordion"
       data-part="root"
       data-variant={variant === 'line' ? 'line' : undefined}
@@ -70,12 +85,12 @@ export function Accordion({
               type="button"
               data-part="trigger"
               id={`${base}-h${i}`}
-              aria-expanded={open.value.includes(it.value) ? 'true' : 'false'}
+              aria-expanded={open().includes(it.value) ? 'true' : 'false'}
               aria-controls={`${base}-c${i}`}
               disabled={it.disabled}
               onClick={() => toggle(it.value)}
             >
-              {it.title}
+              <AccordionTitle item={it} />
               <DownIcon data-part="chevron" />
             </button>
           </div>
@@ -84,9 +99,12 @@ export function Accordion({
             role="region"
             id={`${base}-c${i}`}
             aria-labelledby={`${base}-h${i}`}
-            data-state={open.value.includes(it.value) ? 'open' : undefined}
+            data-state={open().includes(it.value) ? 'open' : undefined}
           >
-            <div>
+            <div
+              inert={open().includes(it.value) ? undefined : ''}
+              aria-hidden={open().includes(it.value) ? undefined : 'true'}
+            >
               <div>{it.content}</div>
             </div>
           </div>
@@ -94,5 +112,23 @@ export function Accordion({
         </div>
       ))}
     </div>
+  )
+}
+
+function AccordionTitle({ item }: { item: AccordionItem }) {
+  return (
+    <>
+      {item.subtitle != null || item.trailing != null ? (
+        <span data-part="trigger-copy">
+          <span data-part="trigger-title">
+            {item.title}
+            {item.trailing}
+          </span>
+          {item.subtitle != null && <span data-part="subtitle">{item.subtitle}</span>}
+        </span>
+      ) : (
+        item.title
+      )}
+    </>
   )
 }

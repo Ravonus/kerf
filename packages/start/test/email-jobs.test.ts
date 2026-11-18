@@ -287,3 +287,22 @@ test('a job no definition names is dead; stopping waits for running jobs', async
   expect(queue.size()).toBe(0)
   expect(jobsState(jobs)?.queue).toBe(queue)
 })
+
+test('an acknowledgement failure emits J005 without retrying a completed handler', async () => {
+  const codes: string[] = []
+  const queue = memoryQueue()
+  const done = vi.spyOn(queue, 'done').mockRejectedValue(new Error('queue unavailable'))
+  const retry = vi.spyOn(queue, 'retry')
+  const run = vi.fn()
+  const jobs = defineJobs({ work: { run } }, { queue })
+  await jobs.work.enqueue()
+  const stop = startJobs(jobs, deps(codes))
+  try {
+    await vi.waitFor(() => expect(codes).toEqual(['J005']))
+    expect(done).toHaveBeenCalledOnce()
+    expect(run).toHaveBeenCalledOnce()
+    expect(retry).not.toHaveBeenCalled()
+  } finally {
+    await stop()
+  }
+})

@@ -1,0 +1,6 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Celebration Overlay -------------------------------------------------------- */
+:where([data-scope="celebration-overlay"] > [data-scope="dialog"]) { text-align: center; }
+:where([data-scope="celebration-overlay"] > [data-scope="dialog"] > [data-part="body"] > [data-part="celebration-media"]) { pointer-events: none; }
+}

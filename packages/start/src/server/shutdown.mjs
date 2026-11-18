@@ -1,33 +1,12 @@
-// Plain JavaScript: Nitro loads the server plugin that imports this from node_modules, where Node strips no types.
-// Nitro and the SSR entry are separate bundles but share one serving process.
-const key = Symbol.for('kerf.start.shutdown')
-const state = (globalThis[key] ??= {})
+// Nitro and the SSR entry can live in separate bundles in the same serving process.
+export const shutdownKey = Symbol.for('kerf.start.shutdown')
+export const BOOT_REQUEST = Symbol.for('kerf.start.boot')
+const host = () => globalThis[shutdownKey]
 
-export function serverDrained() {
-  state.drained?.()
-}
+/** Whether the owned process has stopped admitting application work. */
+export const isDraining = () => host()?.stopping === true
 
-export function onShutdown(stop) {
-  // The server plugin arms the signals with no handler of its own: it must not replace the app's.
-  if (stop) state.last = stop
-  if (state.listening || typeof process === 'undefined' || !process.on) return
-  state.listening = true
-  let stopping = false
-  for (const signal of ['SIGTERM', 'SIGINT'])
-    process.on(signal, () => {
-      if (stopping) process.exit(0)
-      stopping = true
-      const seconds = Number.parseInt(process.env.SERVER_SHUTDOWN_TIMEOUT || '') || 5
-      const http = new Promise((resolve) => {
-        const timer = setTimeout(resolve, Math.max(0, seconds) * 1000)
-        state.drained = () => {
-          clearTimeout(timer)
-          resolve()
-        }
-      })
-      const services = Promise.resolve()
-        .then(() => state.last?.())
-        .catch(() => {})
-      void Promise.all([http, services]).then(() => process.exit(0))
-    })
+/** A named shutdown step from either bundle. Embedded handlers install no process policy. */
+export function onShutdown(name, stop, phase = 'drain') {
+  host()?.steps.push([name, stop, phase])
 }

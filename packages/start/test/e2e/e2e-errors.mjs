@@ -29,6 +29,8 @@ export default async function errors({ url, log }) {
   const failed = await failure.json()
   assert.equal(failed.s, 500)
   assert.equal(failed.m.at(-1).data.reference, reference(failure))
+  assert.equal(failed.m.at(-1).data.ref, reference(failure))
+  assert.equal(failed.m.at(-1).data.code, 'E_ROUTE')
   assert.notEqual(reference(failure), ref)
   assert.ok(!JSON.stringify(failed).includes(secret))
   const retry = await fetch(url + '/_kerf/data' + path)
@@ -60,5 +62,21 @@ export default async function errors({ url, log }) {
   assert.ok(output.includes(reference(stream)))
   assert.ok(!output.includes(secret) && !output.includes('"stack"'))
   checked('a streamed failure carries the same reference after its 200 shell')
+  const raw = await fetch(url + '/bytes?fixture=fault')
+  const rawFailure = await raw.json()
+  assert.equal(raw.status, 500)
+  assert.deepEqual(rawFailure, {
+    e: {
+      code: 'E_REQUEST',
+      status: 500,
+      message: 'Something went wrong.',
+      ref: reference(raw),
+      reference: reference(raw),
+    },
+  })
+  const head = await fetch(url + '/bytes?fixture=fault', { method: 'HEAD' })
+  assert.equal(head.status, 500)
+  assert.equal(await head.text(), '')
+  checked('a raw exception projects a correlated public failure and HEAD omits its body')
   return { checks }
 }

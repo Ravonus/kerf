@@ -1,0 +1,12 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Progressive Picture -------------------------------------------------------- */
+:where([data-scope="progressive-picture"]) { position: relative; inline-size: 100%; block-size: 100%; overflow: clip; }
+:where([data-scope="progressive-picture"] > [data-part="picture-fallback"]),
+:where([data-scope="progressive-picture"] > [data-part="picture-layer"]) {
+  position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: cover;
+}
+:where([data-scope="progressive-picture"][data-fit="contain"] > [data-part="picture-layer"]) { object-fit: contain; }
+:where([data-scope="progressive-picture"] > [data-part="picture-layer"][data-picture-status="failed"]) { visibility: hidden; }
+:where([data-scope="progressive-picture"]:has(> [data-layer="main"][data-picture-status="ready"]) > :is([data-part="picture-fallback"], [data-layer="preview"])) { visibility: hidden; }
+}

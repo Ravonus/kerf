@@ -10,6 +10,12 @@ import '@kerf-js/veneer-core/styles/inputs/text-field.css'
 interface FieldBase {
   /** The accessible name, drawn as the floating border label (or above, classic). Required. */
   label: string
+  /** Optional decorative label content. The string label still provides the accessible name. */
+  labelContent?: unknown
+  /** Attributes for the shell. Other native attributes go to the input. */
+  attrs?: Record<string, unknown> | undefined
+  /** IDs of additional descriptions, kept alongside the field hint or error. */
+  'aria-describedby'?: string | undefined
   hint?: unknown
   /** Shown instead of the hint; marks the field invalid. */
   error?: unknown
@@ -68,7 +74,6 @@ export function Field(
     control: Control
     end?: unknown
     filled?: boolean
-    attrs?: Record<string, unknown>
     group?: boolean
     /** The control takes its name from `aria-labelledby`, not `for`: a press on the label must not click a button. */ labelled?: boolean
     hold?: boolean
@@ -81,6 +86,8 @@ export function Field(
 
 const OWN = [
   'label',
+  'labelContent',
+  'aria-describedby',
   'hint',
   'error',
   'icon',
@@ -110,6 +117,7 @@ function setupField(p: Parameters<typeof Field>[0]) {
   const missing = state<string | undefined>(undefined)
   const problem = derived(() => p.error ?? missing.value)
   const glyph = derived(() => p.icon)
+  const labelContent = derived(() => ('labelContent' in p ? p.labelContent : undefined))
   // an error can arrive long after mount, so the block and what points at it follow it
   const message = derived(() => p.hint !== undefined || !!problem.value || p.counter !== undefined)
   const msg = derived(() => (message.value ? `${id}-msg` : undefined))
@@ -123,7 +131,7 @@ function setupField(p: Parameters<typeof Field>[0]) {
   const shell = {
     id,
     get describedby() {
-      return msg.value
+      return [p['aria-describedby'], msg.value].filter(Boolean).join(' ') || undefined
     },
     get invalid() {
       return !!problem.value
@@ -151,6 +159,7 @@ function setupField(p: Parameters<typeof Field>[0]) {
     id,
     problem,
     glyph,
+    labelContent,
     message,
     msg,
     chars,
