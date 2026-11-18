@@ -3,6 +3,9 @@ import { limited } from '../server/request'
 import { sessionOf } from '../mux-session'
 import type { Scope } from '../exec'
 import type { Body, Conn, Hub, Sink } from '../hub'
+import { failureMessage } from '../server/public-fault'
+import { realtimeFault } from '../server/realtime-fault'
+import { ERROR_HEADER } from '../failure'
 
 // ---- the HTTP route -------------------------------------------------------------------------------------------------
 
@@ -40,7 +43,15 @@ export async function handleRoute(
   const refuse = (code: string, message: string, status: number) => {
     scope.options.onDiagnostic?.({ code, severity: 'error', message })
     return Response.json(
-      { e: { code, message } },
+      {
+        e: {
+          code,
+          status,
+          message: scope.options.dev
+            ? message
+            : failureMessage(status, 'Realtime operation failed.'),
+        },
+      },
       { status, headers: { 'cache-control': 'no-store' } },
     )
   }
@@ -97,16 +108,10 @@ export async function handleRoute(
     await h.change(c, request, scope.options, body)
     return new Response(null, { status: 204 })
   }
-  return openStream(request, scope, body, h, refuse)
+  return openStream(request, scope, body, h)
 }
 
-async function openStream(
-  request: Request,
-  scope: Scope,
-  body: Body,
-  h: Hub,
-  refuse: (code: string, message: string, status: number) => Response,
-): Promise<Response> {
+async function openStream(request: Request, scope: Scope, body: Body, h: Hub): Promise<Response> {
   let conn: Conn | undefined
   let queued = 0
   let controller!: ReadableStreamDefaultController<Uint8Array>
@@ -144,8 +149,14 @@ async function openStream(
   try {
     conn = await h.connect(request, scope, body, sink)
   } catch (e) {
-    if (e instanceof StartError) return refuse(e.code, e.message, (e.extra.status as number) ?? 500)
-    throw e
+    const error = realtimeFault(scope.options, e, '/_kerf/rt')
+    return Response.json(
+      { e: error },
+      {
+        status: error.status,
+        headers: { 'cache-control': 'no-store', ...(error.ref && { [ERROR_HEADER]: error.ref }) },
+      },
+    )
   }
   if (closed) h.close(conn)
   return new Response(out, {

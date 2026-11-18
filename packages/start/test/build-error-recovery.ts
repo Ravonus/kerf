@@ -4,6 +4,14 @@ import { join } from 'node:path'
 import { chromium } from 'playwright-core'
 import { out, type serve } from './build.setup'
 
+function diagnostics(chunks: string[]) {
+  return chunks
+    .join('')
+    .split('\n')
+    .filter((line) => line.startsWith('{') && line.endsWith('}'))
+    .map((line) => JSON.parse(line))
+}
+
 export function registerProductionRecovery(getServer: () => Awaited<ReturnType<typeof serve>>) {
   test('a built error page has the response and log reference and recovers without private details', async () => {
     const server = getServer()
@@ -16,9 +24,13 @@ export function registerProductionRecovery(getServer: () => Awaited<ReturnType<t
       const header = await response.headerValue('x-kerf-error')
       expect(header).toMatch(/^[a-f0-9]{24}$/)
       expect(await tab.locator('#error-reference').textContent()).toBe(header)
-      expect(server.logs.join('')).toContain(
-        `[reference ${header}]: Error: internal recovery fixture fault`,
-      )
+      const records = diagnostics(server.logs)
+      expect(records.filter((d) => d.reference === header)).toEqual([
+        expect.objectContaining({
+          code: 'E_ROUTE',
+          message: expect.stringContaining('internal recovery fixture fault'),
+        }),
+      ])
       const html = await response.text()
       expect(html).not.toContain('internal recovery fixture fault')
       expect(html).not.toContain('"stack"')

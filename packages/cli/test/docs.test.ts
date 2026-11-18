@@ -79,8 +79,9 @@ describe('diagnostic lookup', () => {
       expect(page.text).toContain(`Lookup alias for \`${primary}\`.`)
       expect(page.text).toBe(diagnosticPage(code, info, referenceDiagnostics.get(code)))
     }
-    for (const code of ['E_REQUEST', 'E_CHUNK', 'E_STARTUP', 'E_PROCESS', 'E_SHUTDOWN'])
-      expect((await docs(fixture, code)).text).toContain('reserved')
+    expect((await docs(fixture, 'E_CHUNK')).text).toContain('reserved')
+    for (const code of ['E_REQUEST', 'E_STARTUP', 'E_PROCESS', 'E_SHUTDOWN', 'J005'])
+      expect((await docs(fixture, code)).text).not.toContain('reserved')
     expect((await docs(fixture, 'E_STREAM')).text).toMatch(/stalled between passes.*chunk loop/)
     expect((await docs(fixture, 'E_HEAD')).text).toMatch(/header count changed.*rendering threw/)
     expect((await docs(fixture, 'Q019')).text).toMatch(

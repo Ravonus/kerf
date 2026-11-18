@@ -1,3 +1,4 @@
+import type { FailureCapture } from '../server/failure-value'
 import type { MediaAsset } from '@kerf-js/core/media'
 import type { ServerExtension } from '../extension'
 import { StartError, type Context } from '../data'
@@ -20,7 +21,12 @@ export interface Scope {
   /** This request's id: the `x-request-id` response header, and on every diagnostic it raises. */
   requestId?: string
   /** Shared by loader frames and stream passes. */
-  failure: { reference?: string; show?: (error: unknown) => Error }
+  failure: {
+    reference?: string
+    capture?: FailureCapture
+    references?: Set<string>
+    show?: (error: unknown) => Error
+  }
   entries: Map<string, ScopeEntry>
   /** Tags a mutation or `invalidate()` dropped during this request. */
   invalidated: Set<string>
@@ -61,6 +67,8 @@ export interface FormFailure {
   errors: Record<string, string>
   message?: string | undefined
   status: number
+  code?: string
+  ref?: string | undefined
 }
 
 /** The `media.server@1` provider (`@kerf-js/media/server`, research 29 §6). */

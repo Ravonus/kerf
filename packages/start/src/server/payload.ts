@@ -81,7 +81,7 @@ export const scrubbed = (r: NonNullable<ReturnType<Stream['data']>>['r'], scope:
   Object.fromEntries(
     Object.entries(r).map(([k, v]) => [
       k,
-      v.e === undefined || (v.reference === scope.failure.reference && v.reference)
+      v.e === undefined || (v.reference && scope.failure.references?.has(v.reference))
         ? v
         : { e: exec.said(v.e, scope) },
     ]),

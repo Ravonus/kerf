@@ -1,5 +1,3 @@
-// Runtime and tooling diagnostics whose descriptions do not come from a compiler probe.
-
 const start = '@kerf-js/start'
 const core = '@kerf-js/core'
 const cli = '@kerf-js/cli'
@@ -49,10 +47,8 @@ function runtime(owner, row, options = {}) {
   }
 }
 
-/** A Start code: code, surface, phase, catches, fix, then optional overrides. */
 const startCode = (...row) => runtime(start, row.slice(0, 5), row[5])
 
-/** @returns {Entry} */
 const coreCode = (code, phase, catches, fix, options) =>
   runtime(core, [code, 'state', phase, catches, fix], options)
 
@@ -62,7 +58,7 @@ const reserved = (code, surface, phase, catches, fix) =>
 
 /** @type {Entry[]} */
 export const runtimeDiagnostics = [
-  reserved(
+  startCode(
     'E_REQUEST',
     'request',
     'dispatch',
@@ -83,21 +79,21 @@ export const runtimeDiagnostics = [
     'A foreground route or island chunk could not be loaded',
     'Check that the deployed assets and the document refer to the same build',
   ),
-  reserved(
+  startCode(
     'E_STARTUP',
     'process',
     'bootstrap',
     'A required initializer failed or hit its startup deadline',
     'Check the named initialization stage and required dependencies',
   ),
-  reserved(
+  startCode(
     'E_PROCESS',
     'process',
     'unowned failure',
     'An unowned exception or rejection reached the process boundary',
     'Identify and fix the failing callback or put the work under an explicit owner',
   ),
-  reserved(
+  startCode(
     'E_SHUTDOWN',
     'process',
     'drain',

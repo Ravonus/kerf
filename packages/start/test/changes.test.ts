@@ -450,10 +450,8 @@ function modeHealthTests(quiet: () => void) {
     const a = await open([[1, 'q', 'c.list']])
     expect(of(a.s, 'h')[0]!.l).toEqual({ m: 'poll' })
     expect(seen.map((d) => d.code)).toEqual(['R016'])
-    expect(console.warn).toHaveBeenCalledOnce()
-    expect(vi.mocked(console.warn).mock.calls[0]![0]).toMatch(
-      /poll \(stats\): no trigger\n {2}fix: run it/,
-    )
+    expect(console.warn).not.toHaveBeenCalled()
+    expect(seen[0]?.message).toMatch(/poll \(stats\): no trigger[\s\S]*fix: run it/)
   })
 
   test('required, with no real feed: R015, and requests are refused rather than served stale', async () => {

@@ -113,10 +113,10 @@ export function registerProductionFailures() {
       expect(diagnostics.join()).toContain('secret_table')
     })
 
-    test('a deliberate message in a deferred field reads the same in the HTML and the data', async () => {
+    test('a deferred FnError cannot leak its message in HTML or streamed data', async () => {
       const { html } = await deferred(new FnError({ message: 'That order has closed' }, 409))
-      expect(html).toContain('That order has closed</b></template>')
-      expect(new Set(failure(html))).toEqual(new Set(['That order has closed']))
+      expect(html).not.toContain('That order has closed')
+      expect(new Set(failure(html))).toEqual(new Set(['Server function failed.']))
     })
 
     registerProductionResourceFailureTests()

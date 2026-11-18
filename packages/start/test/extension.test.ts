@@ -154,6 +154,12 @@ function extensionOptionTests() {
         },
       ],
     })
-    await expect(handler(new Request('http://x/_kerf/x/kit/a'))).rejects.toThrow('not configured')
+    const response = await handler(new Request('http://x/_kerf/x/kit/a'))
+    expect(response.status).toBe(503)
+    expect((await response.json()).e).toMatchObject({
+      code: 'E_STARTUP',
+      ref: response.headers.get('x-kerf-error'),
+      message: 'Something went wrong.',
+    })
   })
 }

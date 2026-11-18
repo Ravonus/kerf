@@ -1,17 +1,11 @@
 import { mergeMeta } from '@kerf-js/core/ssr'
 import { rt } from '@kerf-js/core/internal'
 import type { Scope } from '../exec'
-import {
-  ERROR_ROUTE,
-  FALLBACK_ROUTE,
-  errorData,
-  errorDetails,
-  errorReference,
-  isErrorRoute,
-} from '../failure'
+import { ERROR_ROUTE, FALLBACK_ROUTE, errorReference, isErrorRoute } from '../failure'
 import type { HandlerOptions, Level, Resolved } from './types'
 import { failureDefaults } from './failure-defaults'
-import { presentFailure } from './failure-value'
+import { captureFailure, createFailureCapture } from './failure-value'
+import { projectFault, type FailureReporter, type WireFailure } from './public-fault'
 
 export { captureFailure, createFailureCapture, presentFailure } from './failure-value'
 export type {
@@ -43,6 +37,8 @@ export function renderLevel(depth: number, body: () => unknown) {
 /** Reserve one reference for this response, even if its stream has yet to fail. */
 export const referenceOf = (scope: Scope) => (scope.failure.reference ??= errorReference())
 
+const renderedFailures = new WeakMap<Error, WireFailure>()
+
 /** Give authored Boundaries and resources the same safe representation before serialization. */
 export function showRenderFailures(scope: Scope, options: HandlerOptions, path: string) {
   const safe = new WeakSet<Error>()
@@ -59,14 +55,17 @@ export function showRenderFailures(scope: Scope, options: HandlerOptions, path: 
       stack: data.stack,
     })
     safe.add(shown)
+    renderedFailures.set(shown, data)
     return shown
   }
 }
 
+const reported = new WeakSet<object>()
+
 /** Record the original fault on the server and return its public representation. */
 export function reportFailure(
   scope: Scope,
-  options: HandlerOptions,
+  options: FailureReporter,
   error: unknown,
   {
     status,
@@ -75,23 +74,20 @@ export function reportFailure(
     publicMessage = failureDefaults.E_ROUTE.message,
   }: { status: number; code: string; route?: string | undefined; publicMessage?: string },
 ) {
-  const reference = referenceOf(scope)
-  const details = errorDetails(error)
-  options.onDiagnostic?.({
-    code,
-    severity: 'error',
-    message: details.stack ?? details.message,
-    requestId: scope.requestId,
-    reference,
-    ...(route && { route }),
-  })
-  if (options.dev) return errorData(error, status, reference, true)
-  const projected = presentFailure({
-    publicFailure: { code, status, message: publicMessage },
-    reference,
-    includeReference: true,
-  })
-  return { status: projected.status, message: projected.message, reference }
+  const rendered = error instanceof Error && renderedFailures.get(error)
+  if (rendered && scope.failure.references?.has(rendered.reference)) return rendered
+  const capture = (scope.failure.capture ??= createFailureCapture(referenceOf(scope)))
+  const occurrence = captureFailure(error, capture, { surface: route ?? 'request' })
+  ;(scope.failure.references ??= new Set()).add(occurrence.reference)
+  const first = !reported.has(occurrence)
+  reported.add(occurrence)
+  return projectFault(
+    { ...options, requestId: scope.requestId },
+    error,
+    { status, code, route, message: publicMessage },
+    occurrence.reference,
+    first,
+  )
 }
 
 /** Replace the failed outlet and its descendants with the site's error view. */

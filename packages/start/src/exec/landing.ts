@@ -43,11 +43,12 @@ const FAILED = 'Server function failed.'
 /** A failure as the page may show it. In production a fault's text stays in the diagnostics: a driver's error names tables. */
 export function shown(e: unknown, scope: Scope): unknown {
   const { dev, onDiagnostic } = scope.options
-  const fault = !(
-    e instanceof FnError ||
-    isRedirect(e) ||
-    (e instanceof StartError && Number(e.extra.status ?? 500) < 500)
-  )
+  const expected =
+    (e instanceof FnError || e instanceof StartError) &&
+    (e.status ?? 500) >= 400 &&
+    (e.status ?? 500) < 500
+  if (expected && !dev) return new Error(FAILED)
+  const fault = !expected && !isRedirect(e)
   const { message, code } = (e ?? {}) as { message?: string; code?: string }
   if (fault && scope.failure.show) return scope.failure.show(e)
   if (dev || !fault) {

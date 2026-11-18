@@ -6,7 +6,7 @@ import { fns } from '../src/data/foundation'
 import { FnError, StartError } from '../src/data/primitives'
 import { dbError } from '../src/exec/errors'
 import { createScope } from '../src/exec/scope'
-import { createHandler } from '../src/server'
+import { createHandler, type Diagnostic } from '../src/server'
 import {
   captureFailure,
   createFailureCapture,
@@ -194,7 +194,7 @@ describe('legacy error compatibility', () => {
     expect(Object.keys(error as StartError)).not.toContain('cause')
   })
 
-  it('keeps the exact route payload fields, diagnostic code and reserved reference', () => {
+  it('adds public fields to the route payload and logs a re-observed occurrence once', () => {
     const scope = createScope(new Request('http://localhost'))
     scope.failure.reference = reference
     const reports: string[] = []
@@ -207,20 +207,24 @@ describe('legacy error compatibility', () => {
     const details = { status: 503, code: 'Q016' }
     expect(reportFailure(scope, options, error, details)).toEqual({
       status: 503,
+      code: 'Q016',
       message: 'Something went wrong.',
       reference,
+      ref: reference,
     })
     expect(reportFailure(scope, { ...options, dev: true }, error, details)).toEqual({
       status: 503,
+      code: 'Q016',
       message: secret,
       reference,
+      ref: reference,
       stack: error.stack,
     })
-    expect(reports).toEqual(['Q016', 'Q016'])
+    expect(reports).toEqual(['Q016'])
   })
 })
 
-it('keeps production function failure bytes and the explicit legacy FnError path', async () => {
+it('projects unexpected and legacy 5xx function errors and correlates their logs', async () => {
   const unhandled = query({
     run: () => {
       throw new Error(secret)
@@ -231,10 +235,12 @@ it('keeps production function failure bytes and the explicit legacy FnError path
       throw new FnError({ message: secret, code: 'example' }, 503)
     },
   })
+  const records: Diagnostic[] = []
   const handler = createHandler({
     manifest: { dir: 'src/routes', layouts: [], routes: [] },
     modules: {},
     requestOrigin: false,
+    onDiagnostic: (d) => records.push(d),
   })
   try {
     const call = (id: string) => handler(new Request(`http://localhost/_kerf/fn/${id}`))
@@ -243,11 +249,35 @@ it('keeps production function failure bytes and the explicit legacy FnError path
     const ref = unexpected.headers.get('x-kerf-error')
     expect(ref).toMatch(/^[0-9a-f]{24}$/)
     expect(await unexpected.json()).toEqual({
-      e: { status: 500, message: 'Server function failed.', reference: ref },
+      e: { code: 'E_FN', status: 500, message: 'Server function failed.', reference: ref, ref },
     })
     const explicit = await call(declared.$id)
     expect(explicit.status).toBe(503)
-    expect(await explicit.json()).toEqual({ e: { code: 'example', message: secret } })
+    const other = explicit.headers.get('x-kerf-error')
+    expect(other).toMatch(/^[0-9a-f]{24}$/)
+    expect(other).not.toBe(ref)
+    expect(await explicit.json()).toEqual({
+      e: {
+        code: 'example',
+        status: 503,
+        message: 'Server function failed.',
+        reference: other,
+        ref: other,
+      },
+    })
+    expect(records).toHaveLength(2)
+    expect(records).toEqual([
+      expect.objectContaining({
+        code: 'E_FN',
+        reference: ref,
+        message: expect.stringContaining(secret),
+      }),
+      expect.objectContaining({
+        code: 'example',
+        reference: other,
+        message: expect.stringContaining(secret),
+      }),
+    ])
   } finally {
     fns.delete(unhandled.$id)
     fns.delete(declared.$id)
