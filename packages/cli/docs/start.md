@@ -124,10 +124,16 @@ export const routeData = {
 } satisfies RouteDataSchema
 
 export function load() {
-  return { name: 'Catalog', href: '/catalog', count: Promise.resolve(3) }
+  return {
+    name: 'Catalog',
+    href: '/catalog',
+    count: Promise.resolve(3),
+  }
 }
 
-export const meta: Meta<typeof load> = ({ data }) => ({ title: data.name })
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: data.name,
+})
 
 export default function Catalog(props: RouteProps<typeof load>) {
   return <a href={props.data.href}>{props.data.name}</a>
