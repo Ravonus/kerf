@@ -64,6 +64,9 @@ fn w009_a_scoped_key_requires_one_element_and_a_sync_row_signature() {
         ));
         assert_eq!(codes(&d), ["W009"], "{d:?}");
         assert_eq!(d[0].severity, Severity::Error);
-        assert!(!code.contains("by:") && !code.contains("prepare:"), "{code}");
+        assert!(
+            !code.contains("by:") && !code.contains("prepare:"),
+            "{code}"
+        );
     }
 }
