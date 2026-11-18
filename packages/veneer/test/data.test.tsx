@@ -169,6 +169,34 @@ test('details slide open in place at any width, and leave once closed', async ()
   expect(c.querySelector('tr[data-part="detail"]')).toBeNull()
 })
 
+test('expand can keep the default fields and add after them', async () => {
+  const { container: c } = render(() => (
+    <Table
+      caption="P"
+      rows={rows}
+      columns={[columns[0]!, { ...columns[1]!, priority: 2 }]}
+      expand={(r, fields) => (
+        <>
+          {fields()}
+          <p data-extra>About {r.name}</p>
+        </>
+      )}
+      picker={false}
+    />
+  ))
+  const expand = c.querySelector<HTMLElement>('tr[data-id="a"] [data-part="expand"]')!
+  expand.click()
+  await flush()
+  const slide = c.querySelector(`#${expand.getAttribute('aria-controls')} [data-part="slide"]`)!
+  const list = slide.querySelector('dl[data-scope="desc"]')!
+  expect(list.textContent).toContain('Budget')
+  expect(list.textContent).toContain('3')
+  expect(slide.querySelector('[data-extra]')!.textContent).toBe('About Apollo')
+  expect(list.compareDocumentPosition(slide.querySelector('[data-extra]')!)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  )
+})
+
 test('details="sheet": in place when wide, in a sheet when narrow, Escape returns focus', async () => {
   const { container: c } = render(() => (
     <Table
