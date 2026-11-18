@@ -64,7 +64,7 @@ interface Failure {
 export function dbError(e: unknown): unknown {
   const failure = e as Failure | null | undefined
   const cause = failure?.cause ?? failure
-  if (failure?.answer) return new FnError(failure.answer, failure.answer.status)
+  if (failure?.answer) return new FnError(failure.answer, failure.answer.status, { cause: e })
   if (cause instanceof StartError) return cause // Drizzle wraps what a driver throws, the gate's Q016 included
   if (!(e instanceof StartError) && DOWN.test(String(cause?.code ?? failure?.code ?? '')))
     return unavailable(e)

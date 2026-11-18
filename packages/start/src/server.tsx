@@ -75,7 +75,7 @@ const PASSES = 1024
 /** The app as a `(Request) => Response`: pages, data, functions and cards. */
 export function createHandler(options: HandlerOptions) {
   if (!options.onDiagnostic) {
-    const log = serverLog(options.site)
+    const log = serverLog(options.site, !!options.dev)
     options = {
       ...options,
       onDiagnostic: (d) => {
@@ -146,8 +146,8 @@ export function createHandler(options: HandlerOptions) {
     prerenderList,
     page,
   })
-  const handler = makeHandler(options, als, services, route)
-  lifecycle(options, services, (scope, run) => als.run(scope, run))
+  const workers = lifecycle(options, services, (scope, run) => als.run(scope, run))
+  const handler = makeHandler(options, als, services, route, workers)
   return Object.assign(handler, { resolve, inspect })
 }
 

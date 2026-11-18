@@ -46,7 +46,8 @@ export function makeCors(site?: Site) {
     if (allowed && (!preflight || response.status === 204)) {
       out.headers.set('access-control-allow-origin', config?.origins === '*' ? '*' : origin)
       if (config?.credentials) out.headers.set('access-control-allow-credentials', 'true')
-      if (!preflight) out.headers.append('access-control-expose-headers', ERROR_HEADER)
+      if (!preflight)
+        out.headers.append('access-control-expose-headers', `${ERROR_HEADER}, x-request-id`)
     }
     return out
   }

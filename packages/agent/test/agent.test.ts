@@ -544,6 +544,7 @@ test("an agent's token on a function route is turned away with where to go inste
   expect(res.status).toBe(403)
   expect(body.e).toEqual({
     code: 'AGENT007',
+    status: 403,
     message: 'Agents call tools through /_kerf/x/agent/mcp',
   })
 })

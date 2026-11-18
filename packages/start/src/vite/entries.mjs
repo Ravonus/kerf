@@ -10,7 +10,7 @@ import { chunks, lazy, manifest, modules, routeCss, statics } from '${V.routes}'
 import '${V.fns}'
 import context from '${V.context}'
 import { http, httpModules } from '${V.http}'
-import { handle } from '${V.hooks}'
+import hooks from '${V.hooks}'
 import auth from '${V.auth}'
 import migrations from '${V.migrations}'
 import media from '${V.media}'
@@ -23,9 +23,9 @@ import extensions from '${V.extensions}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'kerf:fonts/preloads'
-${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ manifest: { ...manifest, http }, httpModules, handle, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, store: cache, cron, email, jobs, liveRequired: ${JSON.stringify(scanRequired(root).map((r) => r.name))}, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, hold: app.hold, routeAssetBytes: ${dev ? 'null' : `'${ROUTE_ASSET_BYTES}'`}, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, pieces: ${dev ? 'undefined' : `'${SHEET_PIECES}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
+${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ manifest: { ...manifest, http }, httpModules, handle: hooks.handle, startup: hooks.startup, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, store: cache, cron, email, jobs, liveRequired: ${JSON.stringify(scanRequired(root).map((r) => r.name))}, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, hold: app.hold, routeAssetBytes: ${dev ? 'null' : `'${ROUTE_ASSET_BYTES}'`}, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, pieces: ${dev ? 'undefined' : `'${SHEET_PIECES}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
-  onDiagnostic: serverLog(app.site) })
+  onDiagnostic: serverLog(app.site, app.dev) })
 export default { fetch }
 ${dev ? "import { acceptScopeReruns } from '@kerf-js/core/hmr'\nacceptScopeReruns()\n" : ''}`
 }
@@ -156,9 +156,9 @@ export function httpModule(s, hook, ctx) {
     const file = ['ts', 'mts', 'js', 'mjs']
       .map((x) => `src/hooks.server.${x}`)
       .find((f) => existsSync(s.abs(f)))
-    if (!file) return 'export const handle = undefined'
+    if (!file) return 'export default {}'
     ctx.addWatchFile(s.abs(file))
-    return `export { handle } from ${JSON.stringify(s.abs(file))}`
+    return `import * as hooks from ${JSON.stringify(s.abs(file))}\nexport default hooks`
   }
   s.scan()
   const routes = s.manifest.http

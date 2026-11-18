@@ -6,29 +6,36 @@ import { errorText, inScope, type BackgroundDeps } from './background'
  * the cache store decides which one runs it (a window per job and minute, one call allowed): with `redisStore()`
  * that's exactly one; with the memory store each instance counts alone, so each runs it.
  */
-export function startCron(jobs: CronJobs, deps: BackgroundDeps): () => void {
+export function startCron(jobs: CronJobs, deps: BackgroundDeps): () => Promise<void> {
   const due = Object.entries(jobs).map(([name, job]) => ({
     name,
     job,
     at: matcher(job.schedule, name),
   }))
-  if (!due.length) return () => {}
+  if (!due.length) return () => Promise.resolve()
   let timer: ReturnType<typeof setTimeout> | undefined
-  const tick = async () => {
+  let stopped = false
+  const active = new Set<Promise<void>>()
+  const tick = () => {
     const at = new Date(Math.floor(Date.now() / 60_000) * 60_000)
     arm()
     for (const { name, job, at: matches } of due) {
+      if (stopped) break
       if (!matches(at)) continue
+      track(run(name, job, at))
+    }
+  }
+  const track = (pending: Promise<void>) => {
+    active.add(pending)
+    void pending.finally(() => active.delete(pending))
+  }
+  const run = async (name: string, job: CronJobs[string], at: Date) => {
+    try {
       const claim = await deps.store.consume?.(`cron:${name}:${at.getTime()}`, {
         window: 120,
         max: 1,
       })
-      if (claim && !claim.allowed) continue
-      void run(name, job, at)
-    }
-  }
-  const run = async (name: string, job: CronJobs[string], at: Date) => {
-    try {
+      if (stopped || (claim && !claim.allowed)) return
       await inScope(deps, `/_kerf/cron/${encodeURIComponent(name)}`, (ctx) =>
         job.run({ ctx, name, at }),
       )
@@ -41,9 +48,13 @@ export function startCron(jobs: CronJobs, deps: BackgroundDeps): () => void {
     }
   }
   const arm = () => {
-    timer = setTimeout(() => void tick(), 60_000 - (Date.now() % 60_000) + 50)
+    timer = setTimeout(tick, 60_000 - (Date.now() % 60_000) + 50)
     ;(timer as { unref?: () => void }).unref?.() // a schedule never keeps a process alive by itself
   }
   arm()
-  return () => clearTimeout(timer)
+  return async () => {
+    stopped = true
+    clearTimeout(timer)
+    await Promise.all([...active])
+  }
 }

@@ -133,15 +133,22 @@ function createOperations(deps: View) {
     },
     async shutdown(this: void) {
       feedState.clear()
-      await feed?.stop()
-      for (const fn of closing) fn()
-      for (const c of conns.values()) close(c)
-      for (const ch of channels.values()) {
-        clearTimeout(ch.idle)
-        ch.stop?.()
-      }
+      const stop = [
+        () => feed?.stop(),
+        ...closing,
+        ...[...conns.values()].map((c) => () => close(c)),
+        ...[...channels.values()].map((ch) => () => {
+          clearTimeout(ch.idle)
+          ch.stop?.()
+        }),
+      ]
+      const outcomes = await Promise.allSettled(stop.map((fn) => Promise.resolve().then(fn)))
       channels.clear()
-      await bus.close?.()
+      outcomes.push(...(await Promise.allSettled([Promise.resolve().then(() => bus.close?.())])))
+      const errors = outcomes
+        .filter((outcome) => outcome.status === 'rejected')
+        .map((outcome) => outcome.reason)
+      if (errors.length) throw new AggregateError(errors, errors.map(String).join(' | '))
     },
   }
 }

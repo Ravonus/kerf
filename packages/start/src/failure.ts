@@ -5,6 +5,8 @@ export interface RouteErrorData {
   status: number
   message: string
   reference: string
+  code?: string
+  ref?: string
   stack?: string
 }
 
@@ -28,8 +30,13 @@ export function errorReference(): string {
 }
 
 export function referenceFrom(error: unknown): string | undefined {
-  const value = error instanceof Error && (error as Error & { reference?: unknown }).reference
-  return isErrorReference(value) ? value : undefined
+  try {
+    const value =
+      error instanceof Error && Object.getOwnPropertyDescriptor(error, 'reference')?.value
+    return isErrorReference(value) ? value : undefined
+  } catch {
+    return undefined
+  }
 }
 
 /** The opaque reference format shared by Start's server and browser. */
@@ -37,9 +44,12 @@ export const isErrorReference = (value: unknown): value is string =>
   typeof value === 'string' && /^[0-9a-f]{24}$/.test(value)
 
 export function errorDetails(error: unknown) {
-  if (error instanceof Error)
-    return { message: error.message, ...(error.stack !== undefined && { stack: error.stack }) }
   try {
+    if (error instanceof Error)
+      return {
+        message: typeof error.message === 'string' ? error.message : 'Unknown error',
+        ...(typeof error.stack === 'string' && { stack: error.stack }),
+      }
     return { message: String(error) }
   } catch {
     return { message: 'Unknown error' }

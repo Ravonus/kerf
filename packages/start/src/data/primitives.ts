@@ -39,14 +39,17 @@ export class FnError extends KerfError {
       issues?: SchemaIssue[] | undefined
       data?: unknown
       reference?: string | undefined
+      ref?: string | undefined
       stack?: string | undefined
     },
     status: number,
+    options?: ErrorOptions,
   ) {
-    super(e.message ?? `server function failed (${status})`)
+    super(e.message ?? `server function failed (${status})`, options)
     this.status = status
     Object.assign(this, { code: e.code, issues: e.issues, data: e.data })
-    if (e.reference) Object.assign(this, { reference: e.reference, stack: e.stack })
+    if (e.ref || e.reference)
+      Object.assign(this, { reference: e.ref ?? e.reference, stack: e.stack })
   }
 }
 
@@ -80,12 +83,19 @@ export function raise(code: string, data?: unknown): never {
   throw new StartError(code, `failed: ${code}`, undefined, { status: 400, data, typed: true })
 }
 
+const invalidFields = new WeakSet<StartError>()
+
+/** Only invalid() explicitly approves its field copy for publication. */
+export const hasPublicIssues = (error: StartError) => invalidFields.has(error)
+
 /** Refuse a value the schema can't judge (`email` is taken): `<Form>` shows it next to the field, as a schema issue. */
 export function invalid(fields: Record<string, string>): never {
-  throw new StartError('Q002', Object.keys(fields).join(', '), undefined, {
+  const error = new StartError('Q002', Object.keys(fields).join(', '), undefined, {
     status: 422,
     issues: Object.entries(fields).map(([k, message]) => ({ message, path: k.split('.') })),
   })
+  invalidFields.add(error)
+  throw error
 }
 
 /** Issues as a form shows them: by field (`a.b`), and the ones that name no field. */

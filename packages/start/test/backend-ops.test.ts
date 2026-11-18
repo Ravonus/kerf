@@ -1,7 +1,7 @@
 // Phase-4 basics without a server: the log line, request ids, health, function limits and cron.
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { serverLog, requestIdOf } from '../src/server/log'
-import { health } from '../src/server/health'
+import { probeResponse, readiness } from '../src/server/health'
 import { handles } from '../src/db/core'
 import { limitCall } from '../src/exec/limit'
 import { createScope, memoryStore } from '../src/exec'
@@ -33,8 +33,23 @@ describe('the server log', () => {
 
   test('the default is a readable line carrying the request id', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    serverLog(undefined)(d)
+    serverLog(undefined, true)(d)
     expect(warn.mock.calls[0]![0]).toBe('[kerf] Q019 error (/a) [r1]: too often')
+  })
+
+  test.each([
+    [undefined, false, true],
+    [undefined, true, false],
+    ['text', false, false],
+    ['json', true, true],
+  ] as const)('chooses the log format %s in dev=%s', (log, dev, json) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    serverLog(log ? { log } : undefined, dev)({ ...d, message: 'first\nsecond' })
+    const line = warn.mock.calls[0]?.[0] as string
+    warn.mockRestore()
+    expect(line.split('\n')).toHaveLength(1)
+    if (json) expect(JSON.parse(line)).toMatchObject({ message: 'first\nsecond' })
+    else expect(line).toContain('first\\nsecond')
   })
 
   test("a proxy's x-request-id is kept only behind a trusted proxy, and only when it's plain", () => {
@@ -45,14 +60,18 @@ describe('the server log', () => {
   })
 })
 
-describe('/_kerf/health', () => {
+describe('health and readiness', () => {
+  test('liveness is independent of startup and dependencies', async () => {
+    expect(await probeResponse({ ok: true }).json()).toEqual({ ok: true })
+    expect((await readiness(false, false)).status).toBe(503)
+  })
   afterEach(() => handles.clear())
   const handle = (ping: () => Promise<unknown>) =>
     ({ dialect: 'postgresql', exempt: new Set(), migrate: async () => {}, ping }) as never
 
   test('200 when every database answers', async () => {
     handles.add(handle(() => Promise.resolve()))
-    const res = await health(false)
+    const res = await readiness(false, true)
     expect(res.status).toBe(200)
     expect(res.headers.get('cache-control')).toBe('no-store')
     expect(await res.json()).toMatchObject({ ok: true, db: [{ dialect: 'postgresql', ok: true }] })
@@ -60,11 +79,11 @@ describe('/_kerf/health', () => {
 
   test("503 when one doesn't, and production leaves out the driver's message", async () => {
     handles.add(handle(() => Promise.reject(new Error('connect ECONNREFUSED db.internal:5432'))))
-    const res = await health(false)
+    const res = await readiness(false, true)
     expect(res.status).toBe(503)
     const body = await res.json()
     expect(body.db[0]).toEqual({ dialect: 'postgresql', ok: false })
-    expect((await (await health(true)).json()).db[0].error).toMatch(/ECONNREFUSED/)
+    expect((await (await readiness(true, true)).json()).db[0].error).toMatch(/ECONNREFUSED/)
   })
 })
 
@@ -167,7 +186,7 @@ describe('cron', () => {
       expect(diagnostics).toEqual(['J001'])
       await vi.advanceTimersByTimeAsync(60_000)
       expect(ran).toEqual(['nightly']) // 03:01 isn't due
-      for (const stop of stops) stop()
+      await Promise.all(stops.map((stop) => stop()))
     } finally {
       vi.useRealTimers()
     }

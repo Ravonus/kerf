@@ -941,7 +941,8 @@ export const signIn = mutation({
 | J001                                 | A cron job threw                                                         | Fix the job; it runs again when next due                                |
 | J002                                 | A cron schedule that doesn't parse                                       | Five fields: `minute hour day month weekday`                            |
 | J003                                 | A queued job threw and will run again after its backoff                  | Fix the job; it retries until `retries` runs out                        |
-| J004                                 | A queued job is dead: out of retries, or no job by its name              | Fix it and enqueue again; the queue keeps the dead job and its error    |
+| J004                                 | A queued job is dead                                                      | Inspect the dead job and its last attempt before redriving it           |
+| J005                                 | A queue operation failed                                                  | Restore the queue and check lease ownership                            |
 | J006                                 | `enqueue` got input the job's schema rejects (400)                       | Enqueue what the schema accepts                                         |
 | E001                                 | `sendEmail` in production with no mailer                                 | Set `RESEND_API_KEY` or `SMTP_URL`, or export a mailer                  |
 | E002                                 | An email with no sender                                                  | Set `EMAIL_FROM`, or pass `from`                                        |
@@ -1227,7 +1228,7 @@ export default defineConfig({
 | `site.headers`       | `{ [pattern]: headers }`                       |                | Response headers by route pattern, static files included                                     |
 | `site.security`      | `false` \| `{ [header]: string \| false }`     | see below      | Headers every response gets unless it sets its own; name one to change it, `false` drops it |
 | `site.trustProxy`    | `boolean` \| `number`                          | `false`        | Proxies in front: the client's address comes from `X-Forwarded-For` (rate limits)          |
-| `site.log`           | `'text'` \| `'json'`                          | `'text'`       | The server log's lines: readable, or JSON objects for a log collector                       |
+| `site.log`           | `'text'` \| `'json'`                          | By mode        | Readable text in development, JSON lines in production                       |
 | `site.limits`        | `{ body, upload }` (bytes)                     | 1 MB, 25 MB    | Largest JSON and multipart (file) request body; past it, 413 (Q018) before the rest is read |
 | `site.inlineCss`     | `boolean`                                      | `true`         | First-paint CSS in a `<style>`; `false` for plain links (strict CSP)                         |
 | `site.criticalCss`   | `boolean`                                      | `true`         | One hashed sheet plus first-paint CSS; `false` splits by chunk and inlines up to 48 KB       |
@@ -1252,17 +1253,19 @@ The full key list is [`kerf docs config`](https://github.com/Ravonus/kerf/blob/m
 
 ## Running in production
 
-**Health.** `GET /_kerf/health` answers 200 when every database answers `select 1` (within 2 s) and live data is
-delivered as `live: { required }` needs, and 503 otherwise, as JSON: `{ ok, db: [{ dialect, ok, ms }], live }`. It
-runs before migrations, so a failed one still reports. Point a load balancer or uptime check at it.
+**Probes.** `GET /_kerf/health` is liveness and returns `{ ok: true }` while the listener can answer.
+Use `GET /_kerf/ready` for load-balancer admission. Readiness requires completed startup, an active listener,
+available database probes and any required realtime feed. It returns 503 during drain or when a required check fails.
 
-**Logs.** Problems the server finds go to stderr, one line each. `site.log: 'json'` makes them JSON objects (`time`,
-`level`, `code`, `message`, `route`, `requestId`) for a log collector. Every response carries `x-request-id`, and every
-line from that request names it, so a user's report leads to the line. Behind `site.trustProxy`, a proxy's own
-`x-request-id` is kept.
+**Logs.** Start writes diagnostics to stderr as JSON lines in production and readable text in development.
+Set `site.log` to `'text'` or `'json'` to override. JSON carries `time`, `level`, `code`, `message` and available
+`route`, `requestId` and `reference` fields. Use `x-request-id` to find request activity and the failure reference
+to find the matching diagnostic. With `site.trustProxy`, a valid proxy-provided request ID is retained.
 
-**Shutdown.** On SIGTERM (a deploy or scale-down) the server stops taking requests and finishes the ones it has, the
-schedule stops, queued jobs that are running finish, and realtime connections close as "going away", so open pages reconnect to an instance that's staying.
+**Node startup and shutdown.** The generated Node server awaits Nitro plugins and the optional `startup` hook
+in `src/hooks.server.ts` before listening. A failed initializer exits 1. SIGTERM and SIGINT stop admissions,
+realtime, schedules and queue claims, then allow active work to finish. A clean stop exits 0. Cleanup failure,
+timeout or an unowned process fault exits nonzero. See `kerf docs start` for deadlines and process exit codes.
 
 **Scheduled jobs.** `src/cron.server.ts` default-exports the jobs:
 
@@ -1455,7 +1458,7 @@ from the environment only: one written into the config or a host file is E008. A
 | Q015                                 | `src/db/schema.ts` changed since the last generate                       | `kerf db generate`                                                      |
 | Q016 (503)                           | The database is down, or a migration failed                              | Start it, check `DATABASE_URL`, or fix the migration; no restart needed |
 | Q018 (413)                           | A request body over `site.limits`                                        | Send less, or raise `site.limits.body` / `.upload`                      |
-| Q019 (404)                           | `api.call` / `serverCall` named no query or mutation                     | Call one by its `$id`                                                   |
+| Q009 (404)                           | `api.call` / `serverCall` named no query or mutation                     | Call one by its `$id`                                                   |
 | Q020 (500)                           | `serverCall` outside a request                                           | Call it from a query, mutation, `load` or extension route               |
 | A001                                 | The auth secret is missing or under 32 characters in production          | Set `BETTER_AUTH_SECRET`                                                |
 | A002 (401)                           | `auth: 'user'` (or a mutation in an app with auth) called with no session | Sign in first, or guard the route in a layout's `load`                  |

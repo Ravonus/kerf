@@ -12,6 +12,7 @@ import {
 import type { Source } from '../changes'
 import type { Body, Conn, Limits, Sub, SubEntry } from './types'
 import { RESET, Tracked } from './tracked'
+import { realtimeFault } from '../server/realtime-fault'
 
 interface Dependencies {
   limits: Limits
@@ -19,36 +20,13 @@ interface Dependencies {
   deliver: (c: Conn, s: Sub, raw: string) => boolean
 }
 
-/** A subscription refused before it existed. */
-const refuse = (c: Conn, n: number, e: StartError) =>
-  c.sink.write('e', JSON.stringify([n, { code: e.code, message: e.message }]))
+function refuse(c: Conn, n: number, failure: ReturnType<typeof realtimeFault>) {
+  c.sink.write('e', JSON.stringify([n, failure]))
+}
 
-function fail(c: Conn, s: Sub, e: unknown) {
+function fail(c: Conn, s: Sub, error: unknown) {
   remove(c, s)
-  if (e instanceof StartError)
-    return c.sink.write(
-      'e',
-      JSON.stringify([
-        s.n,
-        {
-          code: e.code,
-          message: e.message,
-          ...(e.extra.issues ? { issues: e.extra.issues } : {}),
-        },
-      ]),
-    )
-  s.options.onDiagnostic?.({
-    code: 'E_RT',
-    severity: 'error',
-    message: `${s.fn.$id}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
-  })
-  c.sink.write(
-    'e',
-    JSON.stringify([
-      s.n,
-      { message: s.options.dev && e instanceof Error ? e.message : 'Subscription failed.' },
-    ]),
-  )
+  refuse(c, s.n, realtimeFault(s.options, error, s.fn.$id))
 }
 
 function remove(c: Conn, s: Sub) {
@@ -72,25 +50,21 @@ async function add(
   const { limits, source } = deps
   const [n, kind, id, input, cursor, buffer] = entry
   const fn = fns.get(id)
-  if (c.subs.size >= limits.subscriptions)
-    return refuse(
-      c,
-      n,
-      new StartError(
-        'R009',
-        `this connection already has ${limits.subscriptions} subscriptions`,
-        'read fewer keys, or raise `limits.subscriptions`',
-      ),
+  if (c.subs.size >= limits.subscriptions) {
+    const error = new StartError(
+      'R009',
+      `this connection already has ${limits.subscriptions} subscriptions`,
+      'read fewer keys, or raise `limits.subscriptions`',
     )
-  if (!fn || fn.kind !== (kind === 'q' ? 'query' : 'stream'))
-    return refuse(
-      c,
-      n,
-      new StartError(
-        'Q009',
-        `no ${kind === 'q' ? 'query' : 'stream'} \`${id}\` (the page is older than the server): reload`,
-      ),
+    return refuse(c, n, realtimeFault(scoped, error, id))
+  }
+  if (!fn || fn.kind !== (kind === 'q' ? 'query' : 'stream')) {
+    const error = new StartError(
+      'Q009',
+      `no ${kind === 'q' ? 'query' : 'stream'} \`${id}\`: reload`,
     )
+    return refuse(c, n, realtimeFault(scoped, error, id))
+  }
   if (c.subs.has(n)) return
   const s: Sub = {
     n,

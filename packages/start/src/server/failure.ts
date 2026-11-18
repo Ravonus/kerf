@@ -4,14 +4,14 @@ import type { Scope } from '../exec'
 import {
   ERROR_ROUTE,
   FALLBACK_ROUTE,
-  errorData,
-  errorDetails,
   errorReference,
   isErrorRoute,
+  referenceFrom,
 } from '../failure'
 import type { HandlerOptions, Level, Resolved } from './types'
 import { failureDefaults } from './failure-defaults'
-import { presentFailure } from './failure-value'
+import { captureFailure, createFailureCapture } from './failure-value'
+import { projectFault, type FailureReporter } from './public-fault'
 
 export { captureFailure, createFailureCapture, presentFailure } from './failure-value'
 export type {
@@ -66,7 +66,7 @@ export function showRenderFailures(scope: Scope, options: HandlerOptions, path: 
 /** Record the original fault on the server and return its public representation. */
 export function reportFailure(
   scope: Scope,
-  options: HandlerOptions,
+  options: FailureReporter,
   error: unknown,
   {
     status,
@@ -75,23 +75,22 @@ export function reportFailure(
     publicMessage = failureDefaults.E_ROUTE.message,
   }: { status: number; code: string; route?: string | undefined; publicMessage?: string },
 ) {
-  const reference = referenceOf(scope)
-  const details = errorDetails(error)
-  options.onDiagnostic?.({
-    code,
-    severity: 'error',
-    message: details.stack ?? details.message,
-    requestId: scope.requestId,
-    reference,
-    ...(route && { route }),
-  })
-  if (options.dev) return errorData(error, status, reference, true)
-  const projected = presentFailure({
-    publicFailure: { code, status, message: publicMessage },
-    reference,
-    includeReference: true,
-  })
-  return { status: projected.status, message: projected.message, reference }
+  const results = (scope.failure.results ??= new Map())
+  // Core can restore a resource error from its SSR record on the next render pass.
+  const ref = referenceFrom(error)
+  const restored = ref && results.get(ref)
+  if (restored) return restored
+  const capture = (scope.failure.capture ??= createFailureCapture(referenceOf(scope)))
+  const occurrence = captureFailure(error, capture, { surface: route ?? 'request' })
+  const data = projectFault(
+    { ...options, requestId: scope.requestId },
+    error,
+    { status, code, route, message: publicMessage },
+    occurrence.reference,
+    !results.has(occurrence.reference),
+  )
+  results.set(data.reference, data)
+  return data
 }
 
 /** Replace the failed outlet and its descendants with the site's error view. */

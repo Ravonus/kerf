@@ -99,6 +99,8 @@ export interface HandlerOptions {
   httpModules?: Record<string, Partial<Record<string, HttpHandler>>>
   /** The named `handle` export of `src/hooks.server.ts`. */
   handle?: RequestHook | undefined
+  /** Initialize the app before serving. May return a cleanup callback. */
+  startup?: (() => unknown) | undefined
   /** Route, layout and card modules by manifest file. */
   modules: Record<string, RouteModule>
   site?: Site

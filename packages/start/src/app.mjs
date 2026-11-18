@@ -10,6 +10,7 @@ import kerf from '@kerf-js/core/vite'
 import { devRunner, devSockets } from './dev-runtime.mjs'
 import { pageSockets } from './live-target.mjs'
 import kerfStart, { startDir } from './vite.mjs'
+import { ownNodePreset } from './server/node-preset.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
 function usesSockets(root) {
@@ -70,15 +71,19 @@ function config({
         // Prerendered cards are static files at content-addressed URLs: immutable. The rule names each file (a
         // `/_kerf/og/**` rule would also override the handler's no-cache for a stale `?v=` on demand). Prerender runs
         // before Nitro bundles the server, so rules added when it is done are in the build. (Dev sends no-store.)
-        ...(command === 'build' && {
-          hooks: immutableCards(),
-        }),
         ...traced(root),
         ...nitroOptions,
         ...(command === 'build' && {
+          hooks: {
+            ...immutableCards(),
+            ...nitroOptions.hooks,
+            async 'build:before'(instance) {
+              await nitroOptions.hooks?.['build:before']?.(instance)
+              ownNodePreset(instance, site)
+            },
+          },
           plugins: [
             fileURLToPath(new URL('./range.mjs', import.meta.url)),
-            fileURLToPath(new URL('./shutdown-plugin.mjs', import.meta.url)),
             ...(nitroOptions.plugins ?? []),
           ],
         }),
@@ -135,8 +140,14 @@ export async function dev(options) {
 /** Build client and server for `preset` (node by default; bun, deno_server…), into `.output/` unless the preset moves it. */
 export async function build(options) {
   process.env.KERF_START_DIR ??= startDir // for the share cards a build draws (og/native.mjs)
-  const builder = await createBuilder(config({ ...options, command: 'build' }))
-  wrote = undefined
-  await builder.buildApp()
-  return { output: wrote ?? join(resolve(options.root), '.output') }
+  const building = process.env.KERF_BUILD
+  process.env.KERF_BUILD ??= '1'
+  try {
+    const builder = await createBuilder(config({ ...options, command: 'build' }))
+    wrote = undefined
+    await builder.buildApp()
+    return { output: wrote ?? join(resolve(options.root), '.output') }
+  } finally {
+    if (building === undefined) delete process.env.KERF_BUILD
+  }
 }

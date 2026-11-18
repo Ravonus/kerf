@@ -78,7 +78,7 @@ export interface SiteConfig {
    * Leave it off when nothing sits in front: a client could write the header itself.
    */
   trustProxy?: boolean | number
-  /** The server log: `'text'` (default), one readable line per problem, or `'json'` objects for a log collector. */
+  /** The server log: Readable text in development and JSON lines in production. Set a format to override. */
   log?: 'text' | 'json'
   name?: string
   /** Absolute `http(s)` origin (and base path) for canonical, og:url and relative images. Without it a relative image is H001. */

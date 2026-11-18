@@ -1,3 +1,4 @@
+import type { PublicFailure } from '@kerf-js/core/errors'
 import { DEV, batch, createRoot, state, untrack, type State } from '@kerf-js/core'
 import { HANDOVER, SOCKETS, openLine, socketDown } from '../link'
 import { FnError, keyOf, net, rt, track, type Fn } from '../data'
@@ -155,15 +156,18 @@ export async function post(j: Join, name: string, message: unknown): Promise<voi
 // ---- the socket ------------------------------------------------------------------------------------------------------
 
 /** What the server sends a channel's client: the first element says which. */
+type FrameFailure = Partial<
+  Pick<PublicFailure, 'code' | 'message' | 'status' | 'ref'> & { reference: string }
+>
+
 export type Frame =
   | ['h', { b?: string }]
   | ['j', number, string | undefined]
   | ['m', number, string | undefined, string, never]
   | ['r', number, string | undefined]
-  | ['e', number, { code?: string; message?: string }]
-  | ['a', number, number, { code?: string; message?: string } | undefined]
+  | ['e', number, FrameFailure]
+  | ['a', number, number, FrameFailure | undefined]
 
-/** One end of a socket, as a channel holds it. */
 export interface SocketLink {
   send(text: string): void
   close(): void
@@ -265,13 +269,13 @@ function frame(d: Frame) {
     } else if (d[0] === 'e' && j) {
       j.joined = false
       j.refused = true
-      j.error.value = new FnError(d[2], d[2].code === 'R011' ? 403 : 400)
+      j.error.value = new FnError(d[2], d[2].status ?? (d[2].code === 'R011' ? 403 : 400))
       j.status.value = d[2].code === 'R011' ? 'unauthorized' : 'closed'
       for (const w of Array.from(j.waiting)) w()
     } else if (d[0] === 'a') {
       const p = acks.get(d[2])
       acks.delete(d[2])
-      if (d[3]) p?.no(new FnError(d[3], d[3].code === 'R011' ? 403 : 400))
+      if (d[3]) p?.no(new FnError(d[3], d[3].status ?? (d[3].code === 'R011' ? 403 : 400)))
       else p?.ok()
     }
   })

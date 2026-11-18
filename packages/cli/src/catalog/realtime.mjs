@@ -185,6 +185,14 @@ export const realtime = [
     fix: '`kerf deploy hosts`, then a server host (`fly`, `render`); or `--unsafe-allow R024` with why, for a demo that may stay offline there',
   },
   {
+    code: 'R025',
+    severity: 'error',
+    by: 'runtime',
+    owner: '@kerf-js/start',
+    catches: 'A realtime message names a connection or join that is no longer active',
+    fix: 'Reconnect and rejoin before sending another message',
+  },
+  {
     code: 'R018',
     severity: 'warning',
     by: 'cli',
