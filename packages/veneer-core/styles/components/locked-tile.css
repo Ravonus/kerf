@@ -1,0 +1,15 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Locked Tile ---------------------------------------------------------------- */
+:where([data-scope="locked-tile"]) {
+  display: grid; gap: var(--veneer-space-related); padding: var(--veneer-pad-surface);
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-raised);
+  color: var(--veneer-color-text);
+}
+:where([data-scope="locked-tile"][data-state="locked"]) { background: var(--veneer-color-surface-sunken); }
+:where([data-scope="locked-tile"] > [data-part="tile-header"]) {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--veneer-space-tight);
+}
+:where([data-scope="locked-tile"] > [data-part="tile-reason"]) { color: var(--veneer-color-text-subtle); }
+}

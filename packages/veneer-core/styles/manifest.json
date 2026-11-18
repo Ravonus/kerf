@@ -48,6 +48,9 @@
  "artifact": [
   "app/artifact.css"
  ],
+ "artwork-frame": [
+  "components/artwork-frame.css"
+ ],
  "assistant": [
   "app/assistant.css"
  ],
@@ -141,13 +144,18 @@
  ],
  "canvas": [
   "layout/canvas.css",
-  "canvas/canvas.css"
+  "canvas/canvas.css",
+  "components/particle-burst.css",
+  "components/particle-field.css"
  ],
  "card": [
   "data/card.css"
  ],
  "card-grid": [
   "data/card-grid.css"
+ ],
+ "celebration-overlay": [
+  "components/celebration-overlay.css"
  ],
  "center": [
   "layout/center.css"
@@ -276,7 +284,8 @@
  ],
  "dialog": [
   "components/dialog.css",
-  "components/sheet.css"
+  "components/sheet.css",
+  "components/celebration-overlay.css"
  ],
  "diff": [
   "rich/diff.css"
@@ -504,6 +513,9 @@
  "lock": [
   "app/lock.css"
  ],
+ "locked-tile": [
+  "components/locked-tile.css"
+ ],
  "log": [
   "rich/log.css"
  ],
@@ -608,6 +620,12 @@
  "panel": [
   "data/panel.css"
  ],
+ "particle-burst": [
+  "components/particle-burst.css"
+ ],
+ "particle-field": [
+  "components/particle-field.css"
+ ],
  "pay-frame": [
   "flows/pay-frame.css"
  ],
@@ -661,6 +679,9 @@
  ],
  "progress": [
   "components/progress.css"
+ ],
+ "progressive-picture": [
+  "components/progressive-picture.css"
  ],
  "prompt": [
   "app/prompt.css"
@@ -735,6 +756,9 @@
  "results": [
   "data/results.css"
  ],
+ "results-toolbar": [
+  "components/results-toolbar.css"
+ ],
  "ring": [
   "data/ring.css"
  ],
@@ -763,6 +787,9 @@
   "flows/save-bar.css",
   "inputs/pickers.css"
  ],
+ "scratch-reveal": [
+  "components/scratch-reveal.css"
+ ],
  "scroll-area": [
   "layout/scroll-area.css"
  ],
@@ -778,11 +805,17 @@
  "section": [
   "layout/section.css"
  ],
+ "section-heading": [
+  "components/section-heading.css"
+ ],
  "section-message": [
   "components/section-message.css"
  ],
  "section-peers": [
   "app/section-peers.css"
+ ],
+ "seeded-placeholder": [
+  "components/seeded-placeholder.css"
  ],
  "segmented": [
   "inputs/field.css",
@@ -915,6 +948,9 @@
  ],
  "stopwatch": [
   "components/countdown.css"
+ ],
+ "streak-indicator": [
+  "components/streak-indicator.css"
  ],
  "strength": [
   "inputs/text.css"

@@ -20,6 +20,26 @@ export const ENTRIES = {
   runtime: ['', '<div />'],
   // the shared foundation every component pulls in once: veneer.css (tokens, base, signature) and the components base
   foundation: ['./src/styles', '<div />'],
+  ArtworkFrame: ['ArtworkFrame', '<ArtworkFrame alt="Sample" src="/sample.png" allowAnalysis />'],
+  CelebrationOverlay: [
+    'CelebrationOverlay',
+    '<CelebrationOverlay title="Done" open={open}>Finished</CelebrationOverlay>',
+  ],
+  LockedTile: [
+    'LockedTile',
+    '<LockedTile label="Archive" reason="Available later">Open</LockedTile>',
+  ],
+  ParticleBurst: ['ParticleBurst', '<ParticleBurst seed="celebration" />'],
+  ParticleField: ['ParticleField', '<ParticleField seed="ambient" />'],
+  ProgressivePicture: [
+    'ProgressivePicture',
+    '<ProgressivePicture alt="Sample" src="/sample.png" />',
+  ],
+  ResultsToolbar: ['ResultsToolbar', '<ResultsToolbar count={12} noun="results" />'],
+  ScratchReveal: ['ScratchReveal', '<ScratchReveal label="Reveal">Surprise</ScratchReveal>'],
+  SectionHeading: ['SectionHeading', '<SectionHeading title="Archive" />'],
+  SeededPlaceholder: ['SeededPlaceholder', '<SeededPlaceholder seed="archive" />'],
+  StreakIndicator: ['StreakIndicator', '<StreakIndicator label="Current streak" value={3} />'],
   Button: ['Button', '<Button>Save</Button>'],
   Toggle: ['Toggle', '<Toggle pressed={false}>Products</Toggle>'],
   Input: ['Input', '<Input label="Name" />'],

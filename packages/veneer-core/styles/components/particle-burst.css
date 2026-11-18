@@ -1,0 +1,10 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Particle Burst ------------------------------------------------------------- */
+:where([data-scope="particle-burst"]) {
+  position: relative; overflow: clip; pointer-events: none; min-block-size: 10rem;
+}
+:where([data-scope="particle-burst"] > [data-scope="canvas"]) {
+  position: absolute; inset: 0; color: var(--veneer-color-accent-solid);
+}
+}

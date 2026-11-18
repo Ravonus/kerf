@@ -16,6 +16,7 @@
     "directory": "packages/veneer"
   },
   "files": [
+    "api.json",
     "src",
     "plugin.mjs",
     "plugin.d.mts",

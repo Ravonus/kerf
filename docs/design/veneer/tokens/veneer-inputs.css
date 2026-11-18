@@ -203,6 +203,10 @@
 :where([data-scope="field"][data-lift] [data-part="input"])::placeholder { color: var(--veneer-color-text-subtle); }
 :where([data-scope="field"][data-invalid] [data-char]) { color: var(--veneer-color-critical-text); }
 
+:where([data-scope="field"][data-custom-label] > [data-part="control"] > [data-part="label"] > [data-part="label-chars"]) {
+  display: none;
+}
+
 /* -- appearance: line (FloatingLineInput) ----------------------------------
    One bottom hairline; the accent line scales in from the left and, with its
    origin flipped on exit, keeps travelling right. No notch, no fill. */

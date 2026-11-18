@@ -1,5 +1,17 @@
 // The components and summaries contributed by the veneer plugin.
 const components = [
+  ['ArtworkFrame', 'An image frame with opt-in pixel corner treatment and a fallback.'],
+  ['CelebrationOverlay', 'A named modal celebration with optional timed dismissal.'],
+  ['LockedTile', 'A tile with locked and unlocked content and optional progress.'],
+  ['ParticleBurst', 'A seeded canvas burst with optional volleys and sprites.'],
+  ['ParticleField', 'A seeded, pausable ambient particle canvas.'],
+  ['ProgressivePicture', 'A fixed-ratio runtime picture with a preview or fallback'],
+  ['ResultsToolbar', 'A responsive result count and list actions.'],
+  ['ScratchReveal', 'A scratch cover with keyboard and tap reveal.'],
+  ['SectionHeading', 'A document heading with optional context and actions.'],
+  ['SeededPlaceholder', 'A deterministic, themeable SVG fallback image.'],
+  ['StreakIndicator', 'A labeled value with threshold-driven intensity.'],
+  ['Accordion', 'Keyboard disclosures with optional subtitle and trailing label content'],
   ['Stack', 'Vertical flow; `gap` is the relationship'],
   ['Row', 'Horizontal cluster that wraps; `justify`, `reflow` to stack below a step'],
   ['Grid', 'Intrinsic columns by `min`, capped by `cols`'],

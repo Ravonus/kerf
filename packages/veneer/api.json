@@ -1,0 +1,116 @@
+{
+  "coverage": "Package export paths and component entries added or extended for visual and disclosure surfaces.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./skeleton": "./src/skeleton-css.ts",
+    "./ui": "./src/ui.ts",
+    "./scenes": "./src/Stage.tsx",
+    "./plugin": "./plugin.mjs",
+    "./theme-parts": "./src/plugin/theme-parts.mjs",
+    "./theme": "./src/plugin/theme.mjs",
+    "./theme-context": "./src/plugin/theme-context.mjs",
+    "./tailwind.css": "./tailwind.css"
+  },
+  "components": {
+    "ArtworkFrame": {
+      "props": [
+        "src",
+        "alt",
+        "fallback",
+        "allowAnalysis",
+        "onAnalysis",
+        "fit",
+        "repair",
+        "aspectRatio",
+        "loading",
+        "crossorigin",
+        "imageClass"
+      ],
+      "reference": "veneer-artwork-frame"
+    },
+    "CelebrationOverlay": {
+      "props": [
+        "open",
+        "title",
+        "description",
+        "media",
+        "duration",
+        "onDismiss",
+        "reducedMotion",
+        "children"
+      ],
+      "reference": "veneer-celebration-overlay"
+    },
+    "LockedTile": {
+      "props": [
+        "locked",
+        "label",
+        "status",
+        "reason",
+        "fallback",
+        "icon",
+        "progress",
+        "progressLabel",
+        "children"
+      ],
+      "reference": "veneer-locked-tile"
+    },
+    "ParticleBurst": {
+      "props": [
+        "seed",
+        "count",
+        "palette",
+        "origin",
+        "duration",
+        "volleys",
+        "volleyGap",
+        "speed",
+        "gravity",
+        "spread",
+        "direction",
+        "replayKey",
+        "particle",
+        "sprites",
+        "active",
+        "reducedMotion"
+      ],
+      "reference": "veneer-particle-burst"
+    },
+    "ParticleField": {
+      "props": ["seed", "density", "velocity", "palette", "paused", "reducedMotion"],
+      "reference": "veneer-particle-field"
+    },
+    "ResultsToolbar": {
+      "props": ["count", "noun", "locale", "leading", "actions", "announce"],
+      "reference": "veneer-results-toolbar"
+    },
+    "ScratchReveal": {
+      "props": ["label", "cover", "threshold", "revealed", "onReveal", "reducedMotion", "children"],
+      "reference": "veneer-scratch-reveal"
+    },
+    "SectionHeading": {
+      "props": ["title", "level", "role", "eyebrow", "description", "actions"],
+      "reference": "veneer-section-heading"
+    },
+    "SeededPlaceholder": {
+      "props": ["seed", "palette", "aspectRatio", "accessibleLabel"],
+      "reference": "veneer-seeded-placeholder"
+    },
+    "StreakIndicator": {
+      "props": ["value", "label", "thresholds", "palette", "detail", "reducedMotion"],
+      "reference": "veneer-streak-indicator"
+    },
+    "Accordion": {
+      "addedProps": ["open", "items[].subtitle", "items[].trailing"],
+      "reference": "veneer-field-and-accordion"
+    },
+    "Field": {
+      "addedProps": ["labelContent", "aria-describedby", "attrs"],
+      "reference": "veneer-field-and-accordion"
+    },
+    "ProgressivePicture": {
+      "props": ["src", "preview", "ratio", "alt", "fit", "eager", "fallback", "transitionName"],
+      "reference": "veneer-progressive-picture"
+    }
+  }
+}

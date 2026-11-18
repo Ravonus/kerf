@@ -1,0 +1,28 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Streak Indicator ----------------------------------------------------------- */
+:where([data-scope="streak-indicator"]) {
+  position: relative; isolation: isolate; display: grid; align-content: center; justify-items: center;
+  min-block-size: 7rem; padding: var(--veneer-pad-surface); color: var(--veneer-color-text);
+}
+:where([data-scope="streak-indicator"] > [data-part="streak-glow"]) {
+  position: absolute; z-index: -1; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse closest-side,
+    color-mix(in oklab, var(--streak-ink, var(--veneer-color-accent-solid)) calc(var(--streak-strength, 0.16) * 100%), transparent),
+    transparent);
+}
+:where([data-scope="streak-indicator"]:not([data-still]) > [data-part="streak-glow"][data-active]) {
+  animation: veneer-streak-breathe 2s ease-in-out infinite alternate;
+}
+:where([data-scope="streak-indicator"] > [data-part="streak-label"], [data-scope="streak-indicator"] > [data-part="streak-detail"]) {
+  color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="streak-indicator"] > [data-part="streak-value"]) {
+  font-size: var(--veneer-text-title-size); font-variant-numeric: tabular-nums;
+}
+@keyframes veneer-streak-breathe { from { opacity: 0.55; } to { opacity: 1; } }
+:where([data-motion="reduce"] [data-scope="streak-indicator"] > [data-part="streak-glow"][data-active]) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  :where([data-scope="streak-indicator"] > [data-part="streak-glow"][data-active]) { animation: none; }
+}
+}

@@ -31,6 +31,7 @@
     "./motion": "./src/motion.ts",
     "./charts": "./src/charts/index.ts",
     "./canvas": "./src/canvas.ts",
+    "./visuals": "./src/visuals/index.ts",
     "./stage": "./src/stage.ts",
     "./scenes": "./src/scenes.ts",
     "./dither": "./src/dither/index.ts",
