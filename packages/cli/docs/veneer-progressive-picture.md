@@ -3,7 +3,10 @@
 Show a runtime image without changing the layout.
 
 ```tsx
-import { ProgressivePicture, SeededPlaceholder } from '@kerf-js/veneer'
+import {
+  ProgressivePicture,
+  SeededPlaceholder,
+} from '@kerf-js/veneer'
 
 <ProgressivePicture
   src="/images/room.png"
