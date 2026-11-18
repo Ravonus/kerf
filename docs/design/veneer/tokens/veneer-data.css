@@ -986,7 +986,9 @@
 
 /* pagination bar -------------------------------------------------------------- */
 :where([data-scope="pagination"]) { container-type: inline-size; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
-:where([data-scope="pagination"] ol) { display: flex; gap: 2px; margin: 0; padding: 0; list-style: none; }
+/* the inline padding is the edge buttons' outward reach (below), so their hit areas stay inside the bar: a full-width
+   bar on a phone never makes its container scroll sideways */
+:where([data-scope="pagination"] ol) { display: flex; gap: 2px; margin: 0; padding: 0 max(1px, calc(var(--veneer-hit-min) - var(--veneer-control-sm) - 1px)); list-style: none; }
 :where([data-scope="pagination"] [data-part="page"]) {
   all: unset; position: relative; box-sizing: border-box; display: grid; place-items: center; min-inline-size: var(--veneer-control-sm); block-size: var(--veneer-control-sm);
   padding-inline: 6px; border-radius: var(--veneer-radius-control); color: var(--veneer-color-text); font-variant-numeric: tabular-nums; cursor: pointer;
