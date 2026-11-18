@@ -38,8 +38,8 @@ function appSource(root, file) {
 }
 
 // Only static runtime import/export edges can lead to a stylesheet here.
-function sources(file) {
-  return shapeBody(file).filter((node) => {
+function sources(file, source) {
+  return shapeBody(file, source).filter((node) => {
     if (node.type === 'ImportDeclaration') {
       return (
         node.importKind !== 'type' &&
@@ -65,8 +65,8 @@ function signature(nodes) {
 }
 
 /** Signature of the static dependency edges relevant to entry styles. */
-export function entryCssSignature(file) {
-  return signature(sources(file))
+export function entryCssSignature(file, source) {
+  return signature(sources(file, source))
 }
 
 /** Collect safely resolvable local entry dependencies and their CSS in source order. */
@@ -167,6 +167,7 @@ export function entryWatchLifecycle(state, server, modes) {
         delete state.shapeEntryCandidates
         delete state.shapeEntryMissing
         delete state.shapeOverrideDependencies
+        delete state.shapeScanLatest
         if (state.vite === server) state.vite = undefined
         modes.clear()
       }

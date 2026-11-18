@@ -72,6 +72,7 @@ const renderedAt = (tab: Page) =>
 
 test('dev recovers from route syntax errors with the document and its state kept', async () => {
   const root = await mkdtemp(join(import.meta.dirname, 'fixtures', 'hmr-'))
+  const connect = Promise.withResolvers<void>()
   let server: Awaited<ReturnType<typeof dev>> | undefined
   let browser: Browser | undefined
   try {
@@ -98,8 +99,17 @@ test('dev recovers from route syntax errors with the document and its state kept
       }, 5000)
       const failing = i === 0 ? await browser.newPage() : undefined
       if (failing) {
-        const response = await failing.goto(address)
+        // Start the error page after the repair with all HMR messages missed.
+        await failing.routeWebSocket('**', () => {})
+        await failing.route('**/@vite/client', async (request) => {
+          await connect.promise
+          await request.continue()
+        })
+        const response = await failing.goto(address, { waitUntil: 'commit' })
         expect(response?.status()).toBe(500)
+        await failing
+          .getByRole('heading', { name: 'This page failed to load' })
+          .waitFor({ timeout: 6000 })
         expect(await failing.title()).toBe('This page failed to load')
         expect(await failing.locator('#kerf-route').count()).toBe(0)
       }
@@ -111,6 +121,7 @@ test('dev recovers from route syntax errors with the document and its state kept
         5000,
       )
       if (failing) {
+        connect.resolve()
         await failing.getByRole('heading', { name: title, exact: true }).waitFor({ timeout: 6000 })
         expect(await renderedAt(failing)).toBe('/hot')
         await failing.close()
@@ -127,6 +138,7 @@ test('dev recovers from route syntax errors with the document and its state kept
       await rewritten.evaluate(() => performance.getEntriesByType('navigation')[0]?.name),
     ).toBe(alias)
   } finally {
+    connect.resolve()
     try {
       await Promise.all([browser?.close(), server?.close()])
     } finally {

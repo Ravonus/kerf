@@ -56,14 +56,13 @@ function setup(t) {
 void test('older delayed scan cannot replace newer metadata or ownership', async (t) => {
   const p = setup(t)
   const old = p.load(p.context(true))
-  const oldResult = assert.rejects(old, /superseded/)
   await p.waiting
   p.page('new')
   const current = await p.load(p.context())
   assert.ok(current.includes(`${p.file('new.css')}?inline`))
   assert.ok(p.state.shapeOverrideDependencies.has(p.file('new.tsx')))
   p.release({ id: p.file('old.tsx') })
-  await oldResult
+  assert.equal(await old, current)
   assert.ok(p.state.shapeOverrideDependencies.has(p.file('new.tsx')))
   assert.ok(!p.state.shapeOverrideDependencies.has(p.file('old.tsx')))
   assert.ok(p.state.shapeEntryCandidates.has(p.file('new.css')))
@@ -86,7 +85,7 @@ void test('an older failed scan cannot disturb a newer success', async (t) => {
 void test('a newer failed scan still prevents an older scan publishing', async (t) => {
   const p = setup(t)
   const old = p.load(p.context(true))
-  const oldResult = assert.rejects(old, /superseded/)
+  const oldResult = assert.rejects(old, /new resolver failure/)
   await p.waiting
   p.page('new')
   const broken = p.context()
@@ -100,20 +99,23 @@ void test('a newer failed scan still prevents an older scan publishing', async (
   await p.server.close()
 })
 
-void test('a client edit invalidates a scan even before its dependencies are published', async (t) => {
+void test('an edit supersedes a shape scan without forcing a document reload', async (t) => {
   const p = setup(t)
   const old = p.load(p.context(true))
-  const oldResult = assert.rejects(old, /superseded/)
   await p.waiting
   const calls = []
   const graph = { getModuleById: () => 'routes', invalidateModule: (m) => calls.push(m) }
+  p.server.ws.send = (message) => calls.push(message)
   const handler = shapeHotUpdate(p.state, new Map(), () => ['unchanged'])
   const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
-  await handler.call(context, { file: p.file('old.tsx'), type: 'update' })
+  p.page('new')
+  assert.deepEqual(await handler.call(context, { file: p.file('old.tsx'), type: 'update' }), [
+    'unchanged',
+  ])
   p.release({ id: p.file('old.tsx') })
-  await oldResult
+  assert.ok((await old).includes(`${p.file('new.css')}?inline`))
   assert.deepEqual(calls, ['routes'])
-  assert.equal(p.state.shapeOverrideDependencies, undefined)
+  assert.ok(p.state.shapeOverrideDependencies.has(p.file('new.tsx')))
   await p.server.close()
 })
 
@@ -142,7 +144,7 @@ void test('closing fences an in-flight scan before the close promise settles', a
   const next = { watcher: { add() {} }, close: () => close }
   entryWatchLifecycle(p.state, next, new Map())
   const old = p.load(p.context(true))
-  const oldResult = assert.rejects(old, /superseded/)
+  const oldResult = assert.rejects(old, /outlived its server/)
   await p.waiting
   const closing = next.close()
   await assert.rejects(p.load(p.context()), /outlived its server/)
