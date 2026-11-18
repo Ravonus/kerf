@@ -1,5 +1,5 @@
 {
-  "coverage": "Export paths and conditions only. See packages/cli/docs/start.md for the shell-mode protocol and trust boundary.",
+  "coverage": "Export paths and conditions only. See packages/cli/docs/start.md for the shell mode, operation admission, startup data and redirects.",
   "exports": {
     ".": "./src/index.ts",
     "./data": "./src/data.ts",
