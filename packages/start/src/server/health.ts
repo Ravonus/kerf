@@ -20,17 +20,21 @@ async function probe(handle: { dialect: string; ping?: () => Promise<unknown> })
 }
 
 /**
- * `/_kerf/health`, for a load balancer or uptime check: 200 when every database answers and live data is delivered
- * as required, 503 otherwise, with what each part said. It runs before migrations, so a failed one still reports.
+ * Readiness includes the required dependencies and startup state. Liveness performs no dependency work.
  */
-export async function health(dev: boolean | undefined): Promise<Response> {
+export async function readiness(dev: boolean | undefined, started: boolean): Promise<Response> {
+  if (!started) return probeResponse({ ok: false })
   const db = await Promise.all([...handles].map(probe))
   const live = liveHealth()
   const ok = db.every((d) => d.ok) && live.ok
   // A database's error can name its host: production says only that it's down.
   const shown = dev ? db : db.map(({ error: _error, ...d }) => d)
-  return Response.json(
-    { ok, db: shown, live: { ok: live.ok, mode: live.mode } },
-    { status: ok ? 200 : 503, headers: { 'cache-control': 'no-store' } },
-  )
+  return probeResponse({ ok, db: shown, live: { ok: live.ok, mode: live.mode } })
 }
+
+/** A dependency-free liveness response, or an uncached readiness result. */
+export const probeResponse = <T extends { ok: boolean }>(body: T) =>
+  Response.json(body, {
+    status: body.ok ? 200 : 503,
+    headers: { 'cache-control': 'no-store' },
+  })

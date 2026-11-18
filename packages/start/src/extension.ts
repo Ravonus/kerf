@@ -38,7 +38,7 @@ export interface ServerExtension {
   /** The `ctx` keys that differ per user, which a shared cache may not read (Q006). */
   personal?: readonly string[]
   /** Before the first request, never in a build: throw for a server that can't run safely. */
-  check?(dev?: boolean): void
+  check?(dev?: boolean): void | Promise<void>
 }
 
 /** One extension in the generated list, loaded when first asked for. */

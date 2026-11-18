@@ -146,8 +146,8 @@ export function createHandler(options: HandlerOptions) {
     prerenderList,
     page,
   })
-  const handler = makeHandler(options, als, services, route)
-  lifecycle(options, services, (scope, run) => als.run(scope, run))
+  const workers = lifecycle(options, services, (scope, run) => als.run(scope, run))
+  const handler = makeHandler(options, als, services, route, workers)
   return Object.assign(handler, { resolve, inspect })
 }
 

@@ -1,7 +1,9 @@
 import { runtime } from '../data'
 import * as exec from '../exec'
 import type { MediaServer } from '../exec'
-import { configure } from '../hub'
+import { configure, hub } from '../hub'
+import { StartError } from '../data'
+import { isDraining, onShutdown } from './shutdown.mjs'
 import type { ServerExtension } from '../extension'
 import type { HandlerOptions } from './types'
 
@@ -45,7 +47,7 @@ export function makeServices(options: HandlerOptions) {
     const list = options.migrations?.() ?? []
     if (applied !== list.length) {
       options.auth?.$kerf?.check()
-      for (const e of extensions.values()) e.check?.(options.dev)
+      for (const e of extensions.values()) await e.check?.(options.dev)
       applied = list.length
       const report = (e: unknown) =>
         options.onDiagnostic?.({
@@ -65,5 +67,42 @@ export function makeServices(options: HandlerOptions) {
       exec.checkTags((d) => options.onDiagnostic?.(d))
     }
   }
-  return { mediaServer, scopeOptions, authBase, extensions, loadExtensions, boot, check }
+  let starting: Promise<void> | undefined
+  let started = false
+  const start = (workers: () => void) =>
+    (starting ??= (async () => {
+      await loadExtensions()
+      check()
+      await boot()
+      if (process.env.KERF_BUILD || options.requestOrigin === false) {
+        started = true
+        return
+      }
+      if (options.liveRequired?.length) {
+        const live = hub()
+        await live.probed
+        if (live.refused) throw live.refused
+        if (!options.realtime?.changes)
+          throw new StartError('R015', 'Required live data has no configured feed.', undefined, {
+            status: 503,
+          })
+      }
+      if (isDraining()) return
+      const cleanup = await options.startup?.()
+      if (typeof cleanup === 'function') onShutdown('application cleanup', () => cleanup())
+      if (isDraining()) return
+      workers()
+      started = true
+    })())
+  return {
+    mediaServer,
+    scopeOptions,
+    authBase,
+    extensions,
+    loadExtensions,
+    boot,
+    check,
+    start,
+    started: () => started,
+  }
 }

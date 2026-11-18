@@ -1,13 +1,13 @@
 import type { AsyncLocalStorage } from 'node:async_hooks'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
-import { hub } from '../hub'
 import { compressed, whole } from './compression'
 import { rawResponses } from './http'
 import { stamped } from './request'
 import { secured } from './security'
 import { requestIdOf } from './log'
-import { health } from './health'
+import { probeResponse, readiness } from './health'
+import { BOOT_REQUEST, isDraining } from './shutdown.mjs'
 import type { makeServices } from './services'
 import type { HandlerOptions } from './types'
 import { ERROR_HEADER } from '../failure'
@@ -18,8 +18,16 @@ export function makeHandler(
   als: AsyncLocalStorage<Scope>,
   services: ReturnType<typeof makeServices>,
   route: (request: Request, scope: Scope) => Promise<Response>,
+  workers: () => void,
 ) {
   return async (incoming: Request): Promise<Response> => {
+    if (Reflect.get(incoming, BOOT_REQUEST)) {
+      await services.start(workers)
+      return new Response(null, { status: 204 })
+    }
+    const { pathname } = new URL(incoming.url)
+    if (pathname === '/_kerf/health') return probeResponse({ ok: true })
+    if (isDraining()) return probeResponse({ ok: false })
     const request = stamped(incoming, options.site?.trustProxy)
     let routed: Response | undefined
     const next = async (replacement = request) => {
@@ -50,26 +58,23 @@ export function makeHandler(
     return secured(out, request, options)
   }
   async function handle(request: Request): Promise<Response> {
-    await services.loadExtensions()
-    services.check()
     const scope = exec.createScope(request, services.scopeOptions)
     scope.requestId = requestIdOf(request, options.site)
     const { pathname } = new URL(request.url)
-    if (pathname === '/_kerf/health') return health(options.dev)
     // The build's prerender only lists cards: it holds no secrets and may have no database.
     if (pathname === '/_kerf/og-routes') return als.run(scope, () => route(request, scope))
-    await services.boot()
-    if (options.liveRequired?.length) await hub().probed
-    if (hub().refused)
-      return Response.json(
-        {
-          e: {
-            code: 'R015',
-            message: options.dev ? hub().refused!.message : 'Live data is unavailable.',
-          },
-        },
-        { status: 503, headers: { 'cache-control': 'no-store' } },
-      )
+    if (pathname === '/_kerf/ready' && !services.started()) {
+      try {
+        await services.start(workers)
+      } catch {
+        return probeResponse({ ok: false })
+      }
+    }
+    if (pathname === '/_kerf/ready')
+      return readiness(options.dev, services.started() && !isDraining())
+    await services.start(workers)
+    if (options.dev) await services.boot()
+    if (isDraining()) return probeResponse({ ok: false })
     let response: Response
     try {
       response = await als.run(scope, () => route(request, scope))

@@ -8,6 +8,7 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseEnv } from 'node:util'
+import { constants } from 'node:os'
 import { dbLayer } from './db-layer.mjs'
 import { diagnostic } from './diag.mjs'
 import { routeDiagnostics, routeTable } from './start/routes.mjs'
@@ -228,12 +229,17 @@ export async function startCommand(root, { runtime } = {}) {
     [...flags, join('.output', 'server', 'index.mjs')],
     { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } },
   )
-  process.once('SIGINT', () => child.kill('SIGINT'))
-  process.once('SIGTERM', () => child.kill('SIGTERM'))
+  const interrupt = () => child.kill('SIGINT')
+  const terminate = () => child.kill('SIGTERM')
+  process.on('SIGINT', interrupt)
+  process.on('SIGTERM', terminate)
   return new Promise((ok) => {
-    child.on('close', (code) => {
+    child.on('error', (error) => console.error(`[kerf] E_STARTUP: ${error.message}`))
+    child.on('close', (code, signal) => {
+      process.off('SIGINT', interrupt)
+      process.off('SIGTERM', terminate)
       sidecars.close()
-      ok(code ?? 0)
+      ok(code !== null && code >= 0 ? code : signal ? 128 + constants.signals[signal] : 1)
     })
   })
 }

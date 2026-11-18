@@ -1,0 +1,5 @@
+{
+  "name": "kerf-production-host-fixture",
+  "private": true,
+  "type": "module"
+}

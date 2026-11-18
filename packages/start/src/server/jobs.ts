@@ -72,6 +72,8 @@ export function startJobs(jobs: Jobs, deps: BackgroundDeps): () => Promise<void>
     })
   const live = { stopped: false, claiming: false }
   let timer: ReturnType<typeof setTimeout> | undefined
+  let claimedSettled: (() => void) | undefined
+  let stopping: Promise<void> | undefined
 
   const start = (job: QueuedJob) => {
     const p: Promise<void> = settle(job)
@@ -91,13 +93,14 @@ export function startJobs(jobs: Jobs, deps: BackgroundDeps): () => Promise<void>
         const room = concurrency - running.size
         if (live.stopped || room <= 0) break
         const claimed = await queue.claim(Date.now(), lease, room)
-        if (!claimed.length) break
+        if (live.stopped || !claimed.length) break
         claimed.forEach(start)
       }
     } catch (e) {
       failed(e)
     } finally {
       live.claiming = false
+      claimedSettled?.()
       if (!live.stopped) {
         timer = setTimeout(() => void tick(), poll)
         ;(timer as { unref?: () => void }).unref?.() // the queue never keeps a process alive by itself
@@ -106,9 +109,11 @@ export function startJobs(jobs: Jobs, deps: BackgroundDeps): () => Promise<void>
   }
   queue.onPush?.(() => void tick())
   void tick()
-  return async () => {
-    live.stopped = true
-    clearTimeout(timer)
-    await Promise.allSettled([...running])
-  }
+  return () =>
+    (stopping ??= (async () => {
+      live.stopped = true
+      clearTimeout(timer)
+      if (live.claiming) await new Promise<void>((resolve) => (claimedSettled = resolve))
+      await Promise.allSettled([...running])
+    })())
 }

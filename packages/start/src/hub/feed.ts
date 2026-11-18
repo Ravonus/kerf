@@ -4,7 +4,7 @@ import { defaultStore } from '../exec'
 import type { Channel, Conn, HubOptions, Limits, LiveState } from './types'
 
 const proc = globalThis as unknown as {
-  process?: { env: Record<string, string | undefined>; exit(code: number): void }
+  process?: { env: Record<string, string | undefined> }
 }
 const unref = <T>(t: T) => ((t as { unref?(): void } | null | undefined)?.unref?.(), t)
 interface FeedState {
@@ -62,10 +62,13 @@ async function settle(state: FeedState, src: Source) {
   }
   const line = `live: ${state.live.mode} (${state.live.via})${how.why ? `: ${how.why}` : ''}`
   if (how.mode === 'feed') console.info(`kerf ${line}`)
-  else {
-    console.warn(`kerf ${line}${how.fix ? `\n  fix: ${how.fix}` : ''}`)
-    report(state, 'R016', 'warning', `${line}. \`.live()\` shows \`degraded\``)
-  }
+  else if (!options.required?.length)
+    report(
+      state,
+      'R016',
+      'warning',
+      `${line}. \`.live()\` shows \`degraded\`${how.fix ? `\n  fix: ${how.fix}` : ''}`,
+    )
   if (how.mode === 'feed' || !options.required?.length) return how
   state.refused = new StartError(
     'R015',
@@ -73,8 +76,6 @@ async function settle(state: FeedState, src: Source) {
     how.fix ?? 'see `kerf doctor`',
     { status: 503 },
   )
-  console.error(`kerf ${state.refused.message}`)
-  if (!options.dev) proc.process?.exit(1)
   return how
 }
 
