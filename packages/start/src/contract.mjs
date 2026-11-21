@@ -233,7 +233,7 @@ async function withFns({ root, site = {} }, fn) {
       configFile: false,
       logLevel: 'silent',
       appType: 'custom',
-      server: { middlewareMode: true, hmr: false, ws: false },
+      server: { middlewareMode: true, hmr: false, ws: false, watch: null },
       plugins: [kerf({ hydratable: true, csp: site?.csp }), kerfStart({ root, site })],
     })
     await server.ssrLoadModule('virtual:kerf/fns')
