@@ -129,6 +129,9 @@ npm install -D vitest jsdom \
   @testing-library/dom @testing-library/user-event
 ```
 
+`@kerf-js/core/test` needs Vitest 5 or later: its matcher types extend Vitest 5's `Assertion<R, T>`, which Vitest 4
+declares with one type parameter, so they don't compile against Vitest 4.
+
 ### What installing runs
 
 Nothing. No Kerf package has an `install` or `postinstall` script, and
