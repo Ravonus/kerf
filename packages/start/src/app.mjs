@@ -93,11 +93,7 @@ function config({
             },
             async 'rollup:before'(instance, bundle) {
               await nitroOptions.hooks?.['rollup:before']?.(instance, bundle)
-              bundle.plugins.push(nitroOutput(instance, production.date))
-              // the prerender bundle resolves without tracing; the server's bundle traces the addon into `.output`
-              if (instance.options.preset === 'nitro-prerender')
-                bundle.plugins.push(externalAddons())
-              labelChunkGroups(bundle, 'nitro')
+              shapeBundle(instance, bundle, production.date)
             },
           },
           plugins: [
@@ -108,6 +104,14 @@ function config({
       }),
     ],
   }
+}
+
+/** What Start adds to each bundle Nitro builds: the prerender's and the server's. */
+function shapeBundle(instance, bundle, date) {
+  bundle.plugins.push(nitroOutput(instance, date))
+  // the prerender bundle resolves without tracing; the server's bundle traces the addon into `.output`
+  if (instance.options.preset === 'nitro-prerender') bundle.plugins.push(externalAddons())
+  labelChunkGroups(bundle, 'nitro')
 }
 
 function immutableCards() {
