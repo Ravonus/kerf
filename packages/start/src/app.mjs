@@ -13,6 +13,7 @@ import kerfStart, { startDir } from './vite.mjs'
 import { ownNodePreset } from './server/node-preset.mjs'
 import { buildDate, finalizeBuild, nitroOutput } from './vite/nitro-output.mjs'
 import { labelChunkGroups } from './vite/shared.mjs'
+import { traceDeps } from './vite/trace-deps.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
 function usesSockets(root) {
@@ -76,7 +77,7 @@ function config({
         // Prerendered cards are static files at content-addressed URLs: immutable. The rule names each file (a
         // `/_kerf/og/**` rule would also override the handler's no-cache for a stale `?v=` on demand). Prerender runs
         // before Nitro bundles the server, so rules added when it is done are in the build. (Dev sends no-store.)
-        ...traced(root),
+        ...traceDeps(root),
         ...nitroOptions,
         ...(command === 'build' && {
           hooks: {
@@ -104,20 +105,6 @@ function config({
       }),
     ],
   }
-}
-
-/**
- * Packages the server loads by name at runtime, which Nitro can't see to copy into the build: the media route's sharp
- * (and css-tree and csso, under svgo, read JSON from their packages), and nodemailer for SMTP when the app has it.
- */
-function traced(root) {
-  const deps = [
-    ...(existsSync(join(root, '.kerf/slots/media.server.ts'))
-      ? ['css-tree*', 'csso*', 'sharp*']
-      : []),
-    ...(existsSync(join(root, 'node_modules/nodemailer')) ? ['nodemailer*'] : []),
-  ]
-  return deps.length ? { traceDeps: deps } : {}
 }
 
 function immutableCards() {
