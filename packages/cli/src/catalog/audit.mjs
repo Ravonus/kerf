@@ -6,8 +6,8 @@ export const audit = [
     severity: 'warning',
     by: 'cli',
     catches:
-      "The built pages weren't audited: no Chrome or Chromium on this machine, or no prerendered pages",
-    fix: 'Install Chrome, or set `KERF_CHROME`; `kerf audit --url <deploy>` audits a running site',
+      "Some or all of the built pages weren't audited: no Chrome or Chromium on this machine, no build, a server-rendered build whose server can't run here, or a page that answered 5xx at build time",
+    fix: 'The message names which: install Chrome or set `KERF_CHROME`; run `kerf build`; give the build what its pages read (`.env`); or `kerf audit --url <deploy>` to audit a running site',
   },
   {
     code: 'L001',
