@@ -62,15 +62,16 @@ export function traceDeps(root) {
 }
 
 /**
- * Takumi's addon, which every server's share cards import by name (`og/native.mjs`), as an external of Nitro's
- * prerender bundle. Under pnpm it sits beside @kerf-js/start and not in the app's node_modules, and that bundle
- * resolves without tracing, so it called the import UNRESOLVED_IMPORT; the prerender's `native()` loads
- * @kerf-js/start's own copy. The server's bundle is left to Nitro, which traces the addon into `.output`.
+ * Takumi's addon, which every server's share cards import by name (`og/native.mjs`), and Bun's built-in modules
+ * (`bun:sqlite`, imported only under Bun), as externals of Nitro's prerender bundle. That bundle resolves without
+ * tracing and on Node, so it called each import UNRESOLVED_IMPORT: Takumi sits beside @kerf-js/start under pnpm (the
+ * prerender's `native()` loads that copy), and Node has no `bun:` modules. The server's bundle is left to Nitro, which
+ * traces the addon into `.output`.
  */
 export const externalAddons = () => ({
   name: 'kerf:start:external-addons',
   resolveId: {
-    filter: { id: /^@takumi-rs\/core$/ },
+    filter: { id: /^(?:@takumi-rs\/core|bun:[\w/-]+)$/ },
     handler: (id) => ({ id, external: true }),
   },
 })

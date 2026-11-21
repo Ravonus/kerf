@@ -3,10 +3,19 @@
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { build, type Plugin } from 'vite'
+import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
+import type { Plugin } from 'vite'
 import { afterEach, describe, expect, it } from 'vitest'
 import { externalAddons, traceDeps } from '../src/vite/trace-deps.mjs'
 
+const require = createRequire(import.meta.url)
+/** Rolldown's entry, as far as this test calls it: it isn't one of this package's own dependencies. */
+type Rolldown = (options: {
+  input: string
+  plugins: never
+  onLog: (level: string, log: { code?: string; message: string }) => void
+}) => Promise<{ generate: (o: object) => Promise<unknown>; close: () => Promise<void> }>
 const made: string[] = []
 const tmp = (prefix: string) => {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), prefix)))
@@ -54,30 +63,35 @@ describe('traceDeps', () => {
   })
 })
 
-describe("Takumi's addon", () => {
-  // the share-card renderer's import, in an app where pnpm keeps the package beside @kerf-js/start (og/native.mjs)
+describe("Takumi's addon and Bun's modules", () => {
+  // the share-card renderer's import, in an app where pnpm keeps the package beside @kerf-js/start (og/native.mjs),
+  // and SQLite's under Bun (db/sqlite.ts), which Node can't resolve
   const bundle = async (plugins: Plugin[]) => {
     const root = tmp('kerf-addon-')
-    write(root, { 'entry.js': "export const card = () => import('@takumi-rs/core')\n" })
-    const logs: string[] = []
-    await build({
-      configFile: false,
-      root,
-      logLevel: 'silent',
-      plugins,
-      build: {
-        write: false,
-        rolldownOptions: {
-          input: join(root, 'entry.js'),
-          onLog: (_level, log) => void logs.push(`${log.code}: ${log.message}`),
-        },
-      },
+    write(root, {
+      'entry.js':
+        "export const card = () => import('@takumi-rs/core')\nexport const db = () => import('bun:sqlite')\n",
     })
-    return logs.filter((l) => l.includes('@takumi-rs/core'))
+    const logs: string[] = []
+    // Rolldown as Nitro's prerender bundle runs it: no Vite resolver in front, which treats `bun:` ids itself
+    const { rolldown } = (await import(
+      pathToFileURL(createRequire(require.resolve('vite')).resolve('rolldown')).href
+    )) as { rolldown: Rolldown }
+    const bundled = await rolldown({
+      input: join(root, 'entry.js'),
+      plugins: plugins as never,
+      onLog: (_level, log) => void logs.push(`${log.code}: ${log.message}`),
+    })
+    await bundled.generate({})
+    await bundled.close()
+    return logs.filter((l) => /@takumi-rs\/core|bun:sqlite/.test(l))
   }
 
   it('is unresolved in a bundle that has no copy of its own', async () => {
-    expect(await bundle([])).toEqual([expect.stringMatching(/^UNRESOLVED_IMPORT/)])
+    expect(await bundle([])).toEqual([
+      expect.stringMatching(/^UNRESOLVED_IMPORT.*@takumi-rs\/core/),
+      expect.stringMatching(/^UNRESOLVED_IMPORT.*bun:sqlite/),
+    ])
   })
 
   it("is an external of Nitro's prerender bundle, so the build doesn't call it unresolved", async () => {
