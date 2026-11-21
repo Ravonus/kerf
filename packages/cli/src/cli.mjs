@@ -91,7 +91,8 @@ const usage = `usage: kerf <command> [--json] [--root <dir>]
   tsc                 type-check the whole project with inferred props (tsc or tsgo; for CI)
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
   build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .kerf/contract.json; then the
-                      built pages are audited (L-codes) and an error fails the build
+                      built pages are audited (L-codes): an error in a prerendered page fails the build, one in a
+                      server-rendered page warns (\`kerf audit\` fails on both)
                       [--unsafe-allow <codes>]  go past these codes (R002, L003, a family like L, or all): forces a deploy
   audit [routes…] [--url <u>] [--indexing public|private|auto] [--all] [--max <n>]  the built pages, or a running site, in a clean Chrome at a phone's
                       and a desktop's width: axe-core's WCAG rules, console, deprecations, head, sideways scroll, shift

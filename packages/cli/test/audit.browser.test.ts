@@ -15,6 +15,7 @@ import {
   staticRoutes,
 } from '../src/audit.mjs'
 import { findChrome } from '../src/browser/client.mjs'
+import { buildAuditFindings } from '../src/start/build.mjs'
 import { unsafeAllowed } from '../src/start.mjs'
 
 const head = (title = 'A page', extra = '') =>
@@ -136,6 +137,26 @@ describe('a build whose pages render on request', () => {
   })
 })
 
+describe("a server-rendered build's findings in `kerf build`", () => {
+  // read from the built server, such a build's pages were never audited at build time: they warn, not fail
+  const found = [
+    { code: 'L022', severity: 'error', why: '`<html>` has no `lang`.' },
+    { code: 'L021', severity: 'warning', why: 'No description.' },
+  ]
+  it('warns where `kerf audit` would fail, and says so', () => {
+    const got = buildAuditFindings({ onRequest: true, diagnostics: found })
+    expect(got.map((d: { severity: string }) => d.severity)).toEqual(['warning', 'warning'])
+    expect(got[0].why).toMatch(
+      /server-rendered page: a warning in `kerf build`, an error in `kerf audit`/,
+    )
+    expect(got[1]).toBe(found[1])
+  })
+
+  it('leaves prerendered pages failing the build', () => {
+    expect(buildAuditFindings({ diagnostics: found })).toBe(found)
+  })
+})
+
 describe('--unsafe-allow', () => {
   const d = (code: string) => ({ code, severity: 'error', why: 'x' })
   it('lets named codes, a family or everything through, as warnings that say so', () => {
@@ -162,6 +183,7 @@ const chrome = findChrome()
 type Audited = {
   pages: string[]
   ok: boolean
+  onRequest?: boolean
   skipped?: string
   diagnostics: { code: string; why: string; file: string; fix: { text: string } }[]
 }
@@ -276,6 +298,7 @@ createServer((req, res) => {
       )
       const got = (await audit(ssrRoot)) as Audited
       expect(got.skipped).toBeUndefined()
+      expect(got.onRequest).toBe(true)
       expect(got.pages).toEqual(['/', '/about'])
       expect(got.ok).toBe(true)
       const skipped = got.diagnostics.filter((d) => d.code === 'L000')

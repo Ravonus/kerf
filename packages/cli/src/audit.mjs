@@ -228,7 +228,8 @@ async function target(root, options) {
  * @param {string} root project root
  * @param {{ url?: string, dir?: string, routes?: string[], all?: boolean, max?: number, forms?: (keyof FORMS)[], concurrency?: number, indexing?: 'auto' | 'public' | 'private' }} [options]
  *   `url`: audit a running site (a deploy, `kerf start`); else `dir`, a build's public directory (found when left out)
- * @returns {Promise<{ ok: boolean, skipped?: string, base: string, pages: string[], diagnostics: object[], ms: number }>}
+ *   `onRequest`: the pages were read from the built server of a build whose pages render on request
+ * @returns {Promise<{ ok: boolean, skipped?: string, base: string, onRequest?: boolean, pages: string[], diagnostics: object[], ms: number }>}
  */
 export async function audit(root, options = {}) {
   const t = performance.now()
@@ -296,6 +297,7 @@ export async function audit(root, options = {}) {
   return {
     ok: !diagnostics.some((d) => d.severity === 'error'),
     base: options.url ?? base,
+    onRequest: !statics && !options.url,
     pages: routes,
     diagnostics,
     ms: Math.round(performance.now() - t),
