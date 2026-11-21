@@ -60,3 +60,17 @@ export function traceDeps(root) {
   if (existsSync(join(root, 'node_modules/nodemailer'))) deps.push('nodemailer*')
   return deps.length ? { traceDeps: deps } : {}
 }
+
+/**
+ * Takumi's addon, which every server's share cards import by name (`og/native.mjs`), as an external of Nitro's
+ * prerender bundle. Under pnpm it sits beside @kerf-js/start and not in the app's node_modules, and that bundle
+ * resolves without tracing, so it called the import UNRESOLVED_IMPORT; the prerender's `native()` loads
+ * @kerf-js/start's own copy. The server's bundle is left to Nitro, which traces the addon into `.output`.
+ */
+export const externalAddons = () => ({
+  name: 'kerf:start:external-addons',
+  resolveId: {
+    filter: { id: /^@takumi-rs\/core$/ },
+    handler: (id) => ({ id, external: true }),
+  },
+})

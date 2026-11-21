@@ -1,9 +1,11 @@
-// Nitro's `traceDeps` for an app: nothing the app doesn't have, which nf3 warns it can't resolve.
+// What Nitro bundles and traces for a server: no `traceDeps` entry the app doesn't have, which nf3 warns it can't
+// resolve, and Takumi's addon as an external that pnpm doesn't hoist, which a bundle couldn't resolve by name.
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { build, type Plugin } from 'vite'
 import { afterEach, describe, expect, it } from 'vitest'
-import { traceDeps } from '../src/vite/trace-deps.mjs'
+import { externalAddons, traceDeps } from '../src/vite/trace-deps.mjs'
 
 const made: string[] = []
 const tmp = (prefix: string) => {
@@ -49,5 +51,36 @@ describe('traceDeps', () => {
     expect(traceDeps(root)).toEqual({
       traceDeps: ['css-tree*', 'sharp*'],
     })
+  })
+})
+
+describe("Takumi's addon", () => {
+  // the share-card renderer's import, in an app where pnpm keeps the package beside @kerf-js/start (og/native.mjs)
+  const bundle = async (plugins: Plugin[]) => {
+    const root = tmp('kerf-addon-')
+    write(root, { 'entry.js': "export const card = () => import('@takumi-rs/core')\n" })
+    const logs: string[] = []
+    await build({
+      configFile: false,
+      root,
+      logLevel: 'silent',
+      plugins,
+      build: {
+        write: false,
+        rolldownOptions: {
+          input: join(root, 'entry.js'),
+          onLog: (_level, log) => void logs.push(`${log.code}: ${log.message}`),
+        },
+      },
+    })
+    return logs.filter((l) => l.includes('@takumi-rs/core'))
+  }
+
+  it('is unresolved in a bundle that has no copy of its own', async () => {
+    expect(await bundle([])).toEqual([expect.stringMatching(/^UNRESOLVED_IMPORT/)])
+  })
+
+  it("is an external of Nitro's prerender bundle, so the build doesn't call it unresolved", async () => {
+    expect(await bundle([externalAddons() as Plugin])).toEqual([])
   })
 })
