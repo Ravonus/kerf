@@ -12,6 +12,7 @@ import { pageSockets } from './live-target.mjs'
 import kerfStart, { startDir } from './vite.mjs'
 import { ownNodePreset } from './server/node-preset.mjs'
 import { buildDate, finalizeBuild, nitroOutput } from './vite/nitro-output.mjs'
+import { labelChunkGroups } from './vite/shared.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
 function usesSockets(root) {
@@ -92,6 +93,7 @@ function config({
             async 'rollup:before'(instance, bundle) {
               await nitroOptions.hooks?.['rollup:before']?.(instance, bundle)
               bundle.plugins.push(nitroOutput(instance, production.date))
+              labelChunkGroups(bundle, 'nitro')
             },
           },
           plugins: [

@@ -29,7 +29,7 @@ export const configHook = (s) =>
           build: {
             rollupOptions: {
               input: s.clientEntry(),
-              output: { advancedChunks: { groups: KIT_CHUNKS } },
+              output: { codeSplitting: { groups: KIT_CHUNKS } },
             },
           },
         },

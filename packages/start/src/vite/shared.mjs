@@ -72,8 +72,25 @@ const kitGroup = (name) => (id, ctx) => (packageLazy(id, (m) => ctx.getModuleInf
 export const KIT_CHUNKS = [
   {
     name: kitGroup('icons'),
+    debugName: 'icons',
     test: /[\\/]node_modules[\\/]@kerf-js[\\/]veneer-icons[\\/]/,
     priority: 2,
   },
-  { name: kitGroup('kit'), test: OWN, minShareCount: 2, priority: 1 },
+  { name: kitGroup('kit'), debugName: 'kit', test: OWN, minShareCount: 2, priority: 1 },
 ]
+
+/**
+ * A `debugName` for each code-splitting group named by a function, which Rolldown wants for its timing report and
+ * warns about without. Nitro's server build has one (a chunk per package) and names it no other way.
+ */
+export function labelChunkGroups(config, prefix) {
+  const outputs = [config?.output ?? []].flat()
+  for (const output of outputs) {
+    const groups = output?.codeSplitting?.groups
+    if (!Array.isArray(groups)) continue
+    for (const [i, group] of groups.entries())
+      if (typeof group?.name === 'function' && group.debugName === undefined)
+        group.debugName = `${prefix} ${i}`
+  }
+  return config
+}
