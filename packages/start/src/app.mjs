@@ -12,6 +12,8 @@ import { pageSockets } from './live-target.mjs'
 import kerfStart, { startDir } from './vite.mjs'
 import { ownNodePreset } from './server/node-preset.mjs'
 import { buildDate, finalizeBuild, nitroOutput } from './vite/nitro-output.mjs'
+import { labelChunkGroups } from './vite/shared.mjs'
+import { externalAddons, traceDeps } from './vite/trace-deps.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
 function usesSockets(root) {
@@ -75,7 +77,7 @@ function config({
         // Prerendered cards are static files at content-addressed URLs: immutable. The rule names each file (a
         // `/_kerf/og/**` rule would also override the handler's no-cache for a stale `?v=` on demand). Prerender runs
         // before Nitro bundles the server, so rules added when it is done are in the build. (Dev sends no-store.)
-        ...traced(root),
+        ...traceDeps(root),
         ...nitroOptions,
         ...(command === 'build' && {
           hooks: {
@@ -91,7 +93,7 @@ function config({
             },
             async 'rollup:before'(instance, bundle) {
               await nitroOptions.hooks?.['rollup:before']?.(instance, bundle)
-              bundle.plugins.push(nitroOutput(instance, production.date))
+              shapeBundle(instance, bundle, production.date)
             },
           },
           plugins: [
@@ -104,18 +106,12 @@ function config({
   }
 }
 
-/**
- * Packages the server loads by name at runtime, which Nitro can't see to copy into the build: the media route's sharp
- * (and css-tree and csso, under svgo, read JSON from their packages), and nodemailer for SMTP when the app has it.
- */
-function traced(root) {
-  const deps = [
-    ...(existsSync(join(root, '.kerf/slots/media.server.ts'))
-      ? ['css-tree*', 'csso*', 'sharp*']
-      : []),
-    ...(existsSync(join(root, 'node_modules/nodemailer')) ? ['nodemailer*'] : []),
-  ]
-  return deps.length ? { traceDeps: deps } : {}
+/** What Start adds to each bundle Nitro builds: the prerender's and the server's. */
+function shapeBundle(instance, bundle, date) {
+  bundle.plugins.push(nitroOutput(instance, date))
+  // the prerender bundle resolves without tracing; the server's bundle traces the addon into `.output`
+  if (instance.options.preset === 'nitro-prerender') bundle.plugins.push(externalAddons())
+  labelChunkGroups(bundle, 'nitro')
 }
 
 function immutableCards() {

@@ -5,8 +5,17 @@ import { get } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { appRoutes, audit, pagesIn, samplePages, serveStatic } from '../src/audit.mjs'
+import {
+  appRoutes,
+  audit,
+  builtServer,
+  pagesIn,
+  samplePages,
+  serveStatic,
+  staticRoutes,
+} from '../src/audit.mjs'
 import { findChrome } from '../src/browser/client.mjs'
+import { buildAuditFindings } from '../src/start/build.mjs'
 import { unsafeAllowed } from '../src/start.mjs'
 
 const head = (title = 'A page', extra = '') =>
@@ -82,6 +91,72 @@ describe('a build served as files', () => {
   })
 })
 
+describe('a build whose pages render on request', () => {
+  it('lists the pages a server answers without parameters, leaving out the not-found page and raw routes', () => {
+    const root = mkdtempSync(join(tmpdir(), 'kerf-static-routes-'))
+    try {
+      for (const f of [
+        'index.tsx',
+        '404.tsx',
+        '_error.tsx',
+        '_layout.tsx',
+        'about.tsx',
+        'docs/[slug].tsx',
+        'docs/index.tsx',
+        '(app)/settings.tsx',
+        'feed.http.ts',
+        'notes.server.ts',
+      ]) {
+        mkdirSync(join(root, 'src/routes', f, '..'), { recursive: true })
+        writeFileSync(join(root, 'src/routes', f), '')
+      }
+      expect(staticRoutes(root)).toEqual(['/', '/about', '/docs', '/settings'])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it("finds the built server a local runtime can start, and says when a host's can't", () => {
+    const root = mkdtempSync(join(tmpdir(), 'kerf-built-server-'))
+    const nitro = (preset: string) =>
+      writeFileSync(
+        join(root, '.output/nitro.json'),
+        JSON.stringify({ preset, serverEntry: 'server/index.mjs' }),
+      )
+    try {
+      expect(builtServer(root)).toBeNull()
+      mkdirSync(join(root, '.output/server'), { recursive: true })
+      writeFileSync(join(root, '.output/server/index.mjs'), '')
+      nitro('node-server')
+      expect(builtServer(root)?.run?.[1]).toContain(join(root, '.output/server/index.mjs'))
+      nitro('netlify')
+      expect(builtServer(root)).toEqual({ preset: 'netlify', run: null })
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe("a server-rendered build's findings in `kerf build`", () => {
+  // read from the built server, such a build's pages were never audited at build time: they warn, not fail
+  const found = [
+    { code: 'L022', severity: 'error', why: '`<html>` has no `lang`.' },
+    { code: 'L021', severity: 'warning', why: 'No description.' },
+  ]
+  it('warns where `kerf audit` would fail, and says so', () => {
+    const got = buildAuditFindings({ onRequest: true, diagnostics: found })
+    expect(got.map((d: { severity: string }) => d.severity)).toEqual(['warning', 'warning'])
+    expect(got[0].why).toMatch(
+      /server-rendered page: a warning in `kerf build`, an error in `kerf audit`/,
+    )
+    expect(got[1]).toBe(found[1])
+  })
+
+  it('leaves prerendered pages failing the build', () => {
+    expect(buildAuditFindings({ diagnostics: found })).toBe(found)
+  })
+})
+
 describe('--unsafe-allow', () => {
   const d = (code: string) => ({ code, severity: 'error', why: 'x' })
   it('lets named codes, a family or everything through, as warnings that say so', () => {
@@ -105,6 +180,13 @@ describe('--unsafe-allow', () => {
 })
 
 const chrome = findChrome()
+type Audited = {
+  pages: string[]
+  ok: boolean
+  onRequest?: boolean
+  skipped?: string
+  diagnostics: { code: string; why: string; file: string; fix: { text: string } }[]
+}
 
 // skipped without Chrome: CI machines and containers may not have it
 describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
@@ -184,4 +266,47 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
       rmSync(foregroundRoot, { recursive: true, force: true })
     }
   }, 30_000)
+})
+
+// A server-rendered build prerenders no page, only its share cards: the audit runs the built server, as `kerf start`.
+describe.skipIf(!chrome)('a server-rendered build, in Chrome', () => {
+  it('audits a server-rendered build through its own server, and names a page that failed there', async () => {
+    const ssrRoot = mkdtempSync(join(tmpdir(), 'kerf-audit-ssr-'))
+    const good = `${head('Rendered')}<body><main><h1>Rendered</h1><p>On request.</p></main></body></html>`
+    const server = `import { createServer } from 'node:http'
+const pages = { '/': ${JSON.stringify(good)}, '/about': ${JSON.stringify(good)} }
+createServer((req, res) => {
+  const path = new URL(req.url, 'http://x').pathname
+  if (path === '/broken') return res.writeHead(500).end('no database')
+  const page = pages[path]
+  res.writeHead(page ? 200 : 404, { 'content-type': 'text/html; charset=utf-8' })
+  res.end(page ?? '<!doctype html><title>Not found</title>')
+}).listen(Number(process.env.PORT), process.env.HOST)
+`
+    try {
+      for (const f of ['index.tsx', 'about.tsx', 'broken.tsx', '404.tsx', 'docs/[slug].tsx']) {
+        mkdirSync(join(ssrRoot, 'src/routes', f, '..'), { recursive: true })
+        writeFileSync(join(ssrRoot, 'src/routes', f), '')
+      }
+      mkdirSync(join(ssrRoot, '.output/server'), { recursive: true })
+      mkdirSync(join(ssrRoot, '.output/public/_kerf/og-routes'), { recursive: true })
+      writeFileSync(join(ssrRoot, '.output/public/_kerf/og-routes/index.json'), '{}')
+      writeFileSync(join(ssrRoot, '.output/server/index.mjs'), server)
+      writeFileSync(
+        join(ssrRoot, '.output/nitro.json'),
+        JSON.stringify({ preset: 'node-server', serverEntry: 'server/index.mjs' }),
+      )
+      const got = (await audit(ssrRoot)) as Audited
+      expect(got.skipped).toBeUndefined()
+      expect(got.onRequest).toBe(true)
+      expect(got.pages).toEqual(['/', '/about'])
+      expect(got.ok).toBe(true)
+      const skipped = got.diagnostics.filter((d) => d.code === 'L000')
+      expect(skipped).toHaveLength(1)
+      expect(skipped[0]!.why).toMatch(/\/broken \(500\)/)
+      expect(got.diagnostics.filter((d) => d.code !== 'L000')).toEqual([])
+    } finally {
+      rmSync(ssrRoot, { recursive: true, force: true })
+    }
+  }, 60_000)
 })

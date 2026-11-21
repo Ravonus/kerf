@@ -31,7 +31,8 @@ export async function finishBuild({
   for (const refused of contract.diagnostics.filter((d) => d.severity === 'error')) refuse(refused)
   if (running) shipSidecars(root)
   await writeMap(root)
-  // Last, the pages as built, in a clean Chrome at a phone's width and a desktop's (audit.mjs): an error fails the build.
+  // Last, the pages as built, in a clean Chrome at a phone's width and a desktop's (audit.mjs): an error in a prerendered
+  // page fails the build.
   const settings = (await loadConfig(root)).config?.build?.audit ?? true
   const audited =
     settings === false
@@ -49,7 +50,7 @@ export async function finishBuild({
           dir: builtPublic(root),
           ...(typeof settings === 'object' && settings),
         })
-  const pages = audited.diagnostics.map((d) =>
+  const pages = buildAuditFindings(audited).map((d) =>
     d.severity === 'error' && unsafe.allows(d) ? unsafe.let(d) : d,
   )
   const kept = [
@@ -72,6 +73,24 @@ export async function finishBuild({
     diagnostics,
     ms: Math.round(performance.now() - t),
   }
+}
+
+/**
+ * The audit's findings as `kerf build` reports them. Pages read from the built server of a build that renders on
+ * request were never audited at build time before, so their findings warn there rather than fail a build that used
+ * to pass; `kerf audit` still fails on them, as a prerendered page's fail both.
+ */
+export function buildAuditFindings(audited) {
+  if (!audited.onRequest) return audited.diagnostics
+  return audited.diagnostics.map((d) =>
+    d.severity === 'error'
+      ? {
+          ...d,
+          severity: 'warning',
+          why: `${d.why} A server-rendered page: a warning in \`kerf build\`, an error in \`kerf audit\`.`,
+        }
+      : d,
+  )
 }
 
 export async function startBuildSidecars({
