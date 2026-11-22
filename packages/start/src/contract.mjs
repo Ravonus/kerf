@@ -6,8 +6,6 @@ import { scanRoutes } from './routes.mjs'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { createServer } from 'vite'
-import kerf from '@kerf-js/core/vite'
 import {
   holdsSockets,
   literalSecrets,
@@ -20,7 +18,8 @@ import {
 import { readMigrations } from './migrations.mjs'
 import { shapeTree } from './shape.mjs'
 import { describe } from './contract/describe.mjs'
-import kerfStart, { startDir } from './vite.mjs'
+import { startDir } from './vite.mjs'
+import { inspectionServer } from './inspect/server.mjs'
 
 export { describe }
 
@@ -228,15 +227,7 @@ async function withFns({ root, site = {} }, fn) {
   const env = process.env.NODE_ENV
   let server
   try {
-    server = await createServer({
-      root,
-      configFile: false,
-      logLevel: 'silent',
-      appType: 'custom',
-      optimizeDeps: { noDiscovery: true },
-      server: { middlewareMode: true, hmr: false, ws: false, watch: null },
-      plugins: [kerf({ hydratable: true, csp: site?.csp }), kerfStart({ root, site })],
-    })
+    server = await inspectionServer(root, site)
     await server.ssrLoadModule('virtual:kerf/fns')
     const { fns } = await server.ssrLoadModule(join(startDir, 'data.ts'))
     return await fn(fns, server)

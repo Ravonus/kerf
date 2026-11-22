@@ -6,13 +6,13 @@
 
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { createServer, parseSync } from 'vite'
-import kerf from '@kerf-js/core/vite'
-import kerfStart, { startDir } from './vite.mjs'
+import { parseSync } from 'vite'
+import { startDir } from './vite.mjs'
 import { deployUrl } from './derive.mjs'
 import { compare } from './inspect/compare.mjs'
 import { inspectRoutes } from './inspect/routes.mjs'
 import { inspectSamples, inspectCards } from './inspect/samples.mjs'
+import { inspectionServer } from './inspect/server.mjs'
 import { filePath, scanRoutes } from './routes.mjs'
 
 const quote = (s) => JSON.stringify(s)
@@ -133,16 +133,7 @@ function makeTaker(found, run, seen, manifest, pages) {
  */
 export async function routesMeta({ root, site = {}, preset }) {
   root = resolve(root)
-  const server = await createServer({
-    root,
-    configFile: false,
-    logLevel: 'silent',
-    appType: 'custom',
-    // Route inspection loads SSR modules only. Leave the running dev server's dependency cache alone.
-    optimizeDeps: { noDiscovery: true },
-    server: { middlewareMode: true, hmr: false, ws: false, watch: null },
-    plugins: [kerf({ hydratable: true, csp: site?.csp }), kerfStart({ root, site })],
-  })
+  const server = await inspectionServer(root, site)
   try {
     const { manifest, modules } = await server.ssrLoadModule('virtual:kerf/routes')
     const { createHandler, cardPath } = await server.ssrLoadModule(join(startDir, 'server.tsx'))
