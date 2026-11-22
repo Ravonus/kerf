@@ -16,7 +16,12 @@ import { diagnostic } from './diag.mjs'
 import { fail, sleep } from './audit/utils.mjs'
 import { auditPage } from './audit/page.mjs'
 import { reportFindings } from './audit/report.mjs'
+import { appRoutes } from './audit/routes.mjs'
+import { serveBuild, unansweredPages } from './audit/server.mjs'
 import { loadConfig } from './load-config.mjs'
+
+export { appRoutes, staticRoutes } from './audit/routes.mjs'
+export { builtServer } from './audit/server.mjs'
 
 /** The two widths Lighthouse's defaults stand for: its mobile run (a Moto G Power) and its desktop run. */
 export const FORMS = {
@@ -191,51 +196,40 @@ async function chrome(exe) {
 }
 
 /**
- * The app's own pages as a test on a path (`src/routes`, `[id]` and `[...rest]` included). A build served as files has
- * only its prerendered pages: a request for one of the others is the server's to answer, not a missing file.
+ * Where the audit's Chrome reads the pages, and which: a running site (`url`), the prerendered pages served as files,
+ * or the built server of a build whose pages render on request; or `skip`, why there is nothing to read.
  */
-export function appRoutes(root) {
-  const dir = join(root, 'src', 'routes')
-  if (!existsSync(dir)) return () => false
-  const tests = []
-  const walk = (at, prefix) => {
-    for (const e of readdirSync(at, { withFileTypes: true })) {
-      const name = e.name.replace(/^\(.*\)$/, '')
-      if (e.isDirectory()) {
-        walk(join(at, e.name), name ? `${prefix}/${name}` : prefix)
-        continue
-      }
-      if (
-        !/\.[jt]sx?$/.test(e.name) ||
-        /\.(server|test|spec)\./.test(e.name) ||
-        e.name.startsWith('_')
-      )
-        continue
-      const leaf = e.name.replace(/\.[jt]sx?$/, '')
-      const path = leaf === 'index' ? prefix : `${prefix}/${leaf}`
-      const re = path
-        .split('/')
-        .map((seg) =>
-          /^\[\.\.\.\w+\]$/.test(seg)
-            ? '\0'
-            : /^\[\w+\]$/.test(seg)
-              ? '[^/]+'
-              : seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        )
-        .join('/')
-        .replace(/\/\0/g, '(?:/.+)?')
-      tests.push(new RegExp(`^${re || ''}/?$`))
+async function target(root, options) {
+  if (options.url)
+    return {
+      base: options.url.replace(/\/$/, ''),
+      statics: false,
+      routes: options.routes ?? ['/'],
+      unanswered: [],
     }
+  const dir = options.dir ?? builtPublic(root)
+  const pages = dir ? pagesIn(dir) : []
+  const pick = (found) => (options.all ? found : samplePages(found, options.max))
+  if (pages.length) {
+    const server = await serveStatic(dir)
+    const routes = options.routes ?? pick(pages)
+    return { base: server.url, server, statics: true, routes, unanswered: [] }
   }
-  walk(dir, '')
-  return (path) => tests.some((t) => t.test(path))
+  // A build whose pages render on request prerenders none (or only its share cards): its own server answers them.
+  const served = await serveBuild(root, dir && relative(root, dir), {
+    routes: options.routes,
+    pick,
+  })
+  if (served.skip) return served
+  return { base: served.server.url, ...served, statics: false }
 }
 
 /**
  * @param {string} root project root
  * @param {{ url?: string, dir?: string, routes?: string[], all?: boolean, max?: number, forms?: (keyof FORMS)[], concurrency?: number, indexing?: 'auto' | 'public' | 'private' }} [options]
  *   `url`: audit a running site (a deploy, `kerf start`); else `dir`, a build's public directory (found when left out)
- * @returns {Promise<{ ok: boolean, skipped?: string, base: string, pages: string[], diagnostics: object[], ms: number }>}
+ *   `onRequest`: the pages were read from the built server of a build whose pages render on request
+ * @returns {Promise<{ ok: boolean, skipped?: string, base: string, onRequest?: boolean, pages: string[], diagnostics: object[], ms: number }>}
  */
 export async function audit(root, options = {}) {
   const t = performance.now()
@@ -261,24 +255,14 @@ export async function audit(root, options = {}) {
     return skip(
       'No Chrome or Chromium here, so the built pages were not audited (L001–L030). Set `KERF_CHROME`, or run `kerf audit --url <deploy>` where there is one.',
     )
-  let base = options.url?.replace(/\/$/, '')
-  let server
-  let routes = options.routes
-  if (!base) {
-    const dir = options.dir ?? builtPublic(root)
-    if (!dir) return skip('No built pages to audit: run `kerf build` first, or pass `--url`.')
-    const pages = pagesIn(dir)
-    if (!pages.length)
-      return skip(
-        `No prerendered pages in ${relative(root, dir)} to audit: pass \`--url\` to audit a running server.`,
-      )
-    routes ??= options.all ? pages : samplePages(pages, options.max)
-    server = await serveStatic(dir)
-    base = server.url
-  }
-  routes ??= ['/']
+  const at = await target(root, options)
+  if (at.skip) return skip(at.skip)
+  const { base, server, statics, routes, unanswered } = at
   const served = appRoutes(root)
-  const browser = await chrome(exe)
+  const browser = await chrome(exe).catch((e) => {
+    server?.close()
+    throw e
+  })
   const findings = new Map()
   try {
     const jobs = routes.flatMap((route) => forms.map((form) => ({ route, form })))
@@ -289,7 +273,7 @@ export async function audit(root, options = {}) {
           browser,
           url: `${base}${job.route}`,
           form: job.form,
-          statics: !!server,
+          statics,
           served,
           forms: FORMS,
         })) {
@@ -309,9 +293,11 @@ export async function audit(root, options = {}) {
     server?.close()
   }
   const diagnostics = reportFindings(findings, routes, forms, indexing)
+  if (unanswered.length) diagnostics.push(unansweredPages(unanswered))
   return {
     ok: !diagnostics.some((d) => d.severity === 'error'),
     base: options.url ?? base,
+    onRequest: !statics && !options.url,
     pages: routes,
     diagnostics,
     ms: Math.round(performance.now() - t),
