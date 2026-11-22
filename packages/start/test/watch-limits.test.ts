@@ -34,7 +34,7 @@ const settle = () =>
   })
 
 describe('a watcher the environment refuses', () => {
-  it('`kerf check`\'s route inspection opens none', async () => {
+  it("`kerf check`'s route inspection opens none", async () => {
     const r = await routesMeta({ root, site })
     await settle()
     expect(r.routes.map((x) => x.path)).toContain('/')
