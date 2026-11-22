@@ -3,7 +3,10 @@ import { render } from '@kerf-js/core/test'
 import userEvent from '@testing-library/user-event'
 import { NumberField } from '../src/NumberField'
 
-const tick = () => new Promise<void>((resolve) => queueMicrotask(resolve))
+const tick = () =>
+  new Promise<void>((resolve) => {
+    queueMicrotask(resolve)
+  })
 afterEach(() => {
   document.body.innerHTML = ''
 })
@@ -43,7 +46,7 @@ async function replace(
 }
 
 describe('NumberField drafts', () => {
-  test('human digit input18 stays18 with min4 and primitive controlled props', async () => {
+  test('NumberField keeps 18 with a minimum of 4 and a controlled value', async () => {
     const { value, heard, input } = mount(),
       user = userEvent.setup()
     await tick()
@@ -71,6 +74,9 @@ describe('NumberField drafts', () => {
     expect(value.value).toBe(18)
     expect(document.activeElement).toBe(input)
   })
+})
+
+describe('NumberField commits and controls', () => {
   test('out-of-range drafts emit no invalid values and clamp on Enter or blur', async () => {
     const { value, heard, input } = mount(),
       user = userEvent.setup()
