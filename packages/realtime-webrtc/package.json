@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/realtime-webrtc",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "@kerf-js/realtime-webrtc: cursors over WebRTC data channels, signalled through the room",
   "license": "MIT",
   "repository": {

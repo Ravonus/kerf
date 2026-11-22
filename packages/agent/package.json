@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/agent",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "@kerf-js/agent: an assistant that runs your app. Server functions become its tools by opting in, with grants per role and per token, conversations, usage, and bridges to Claude, the Claude CLI or your own Rust",
   "keywords": [
     "agent",

@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/realtime-nats",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "@kerf-js/realtime-nats: the realtime.bus provider for core NATS",
   "license": "MIT",
   "repository": {

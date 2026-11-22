@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/db",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "kerf's data layers and list sources in one package: each driver is an optional peer, and a subpath loads only its own",
   "license": "MIT",
   "repository": {

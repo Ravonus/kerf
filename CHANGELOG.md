@@ -3,7 +3,7 @@
 Every `@kerf-js` package is released together, at one version. Early releases (0.1.x) can change APIs between minor
 versions.
 
-## Unreleased
+## 0.1.3
 
 - **Breaking.** A missing function is Q009 (404), including `serverCall` and extension calls. Q019 is reserved for rate
   limits (429). Queue infrastructure errors are J005. J004 identifies a job recorded as dead.
@@ -18,6 +18,13 @@ versions.
 - **Breaking.** Production Start responses suppress exception and validator details. Use the public
   reference to find the server log. Raw throws use the Kerf JSON error envelope, and declared function
   errors publish only schema-validated JSON data.
+- **Breaking.** The `@kerf-js/core/test` matchers require Vitest 5.
+- Start supports a release-owned shell, browser-rendered routes, and shell operations. Production output is
+  reproducible, and development recovers from route edits, refused file watchers, and Nitro runner restarts.
+- `kerf build` audits server-rendered pages and reports findings as warnings. `kerf audit` still fails on errors.
+- Start uses configured trusted proxy hops when checking the public origin for mutations and form submissions.
+- Veneer adds reusable navigation and data components, keeps a Table's default fields in expanded rows, and
+  preserves NumberField drafts while typing.
 
 ## 0.1.0
 

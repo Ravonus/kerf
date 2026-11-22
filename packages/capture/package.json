@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/capture",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "@kerf-js/capture: drive a built kerf page in headless Chrome on the GPU for repeatable stills at scroll stops, frame-time runs and contact sheets, and bake scene posters at build time. Dev only.",
   "keywords": [
     "capture",

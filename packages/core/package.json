@@ -1,6 +1,6 @@
 {
   "name": "@kerf-js/core",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "kerf: a fine-grained reactive TSX framework. Runtime, compiler binding, Vite plugin and test utilities.",
   "keywords": [
     "kerf"
@@ -131,14 +131,14 @@
     }
   },
   "optionalDependencies": {
-    "@kerf-js/compiler-darwin-arm64": "0.1.1",
-    "@kerf-js/compiler-darwin-x64": "0.1.1",
-    "@kerf-js/compiler-linux-arm64-gnu": "0.1.1",
-    "@kerf-js/compiler-linux-arm64-musl": "0.1.1",
-    "@kerf-js/compiler-linux-x64-gnu": "0.1.1",
-    "@kerf-js/compiler-linux-x64-musl": "0.1.1",
-    "@kerf-js/compiler-win32-arm64": "0.1.1",
-    "@kerf-js/compiler-win32-x64": "0.1.1"
+    "@kerf-js/compiler-darwin-arm64": "0.1.3",
+    "@kerf-js/compiler-darwin-x64": "0.1.3",
+    "@kerf-js/compiler-linux-arm64-gnu": "0.1.3",
+    "@kerf-js/compiler-linux-arm64-musl": "0.1.3",
+    "@kerf-js/compiler-linux-x64-gnu": "0.1.3",
+    "@kerf-js/compiler-linux-x64-musl": "0.1.3",
+    "@kerf-js/compiler-win32-arm64": "0.1.3",
+    "@kerf-js/compiler-win32-x64": "0.1.3"
   },
   "engines": {
     "node": ">=24"
