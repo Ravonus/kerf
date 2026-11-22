@@ -50,6 +50,7 @@ describe('a watcher the environment refuses', () => {
       configFile: false,
       customLogger: logger,
       appType: 'custom',
+      optimizeDeps: { noDiscovery: true },
       server: { middlewareMode: true, hmr: false, ws: false },
       plugins: [kerfStart({ root })],
     })

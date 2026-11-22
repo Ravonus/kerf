@@ -138,6 +138,8 @@ export async function routesMeta({ root, site = {}, preset }) {
     configFile: false,
     logLevel: 'silent',
     appType: 'custom',
+    // Route inspection loads SSR modules only. Leave the running dev server's dependency cache alone.
+    optimizeDeps: { noDiscovery: true },
     server: { middlewareMode: true, hmr: false, ws: false, watch: null },
     plugins: [kerf({ hydratable: true, csp: site?.csp }), kerfStart({ root, site })],
   })
