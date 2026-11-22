@@ -1,4 +1,4 @@
-// `kerf dev` and `kerf build` for an app with src/routes (research 25 §6): Vite 8 with kerf() (hydratable output),
+// `kerf dev` and `kerf build` for an app with src/routes: Vite 8 with kerf() (hydratable output),
 // kerfStart() and Nitro's Vite plugin. A vite.config in the app is merged in. The CLI passes the config's `site`.
 
 import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
@@ -7,13 +7,13 @@ import { fileURLToPath } from 'node:url'
 import { createBuilder, createServer } from 'vite'
 import { nitro } from 'nitro/vite'
 import kerf from '@kerf-js/core/vite'
-import { devRunner, devSockets } from './dev-runtime.mjs'
+import { devRunner, devRuntime } from './dev-runtime.mjs'
 import { pageSockets } from './live-target.mjs'
 import kerfStart, { startDir } from './vite.mjs'
 import { ownNodePreset } from './server/node-preset.mjs'
 import { buildDate, finalizeBuild, nitroOutput } from './vite/nitro-output.mjs'
 
-/** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
+/** Enable crossws only for apps that declare a channel or shared state. */
 function usesSockets(root) {
   const src = join(root, 'src')
   if (!existsSync(src)) return false
@@ -35,6 +35,7 @@ function config({
   command,
   nitro: nitroOptions = {},
   production,
+  refreshPlugins,
 }) {
   root = command === 'build' ? realpathSync(root) : resolve(root)
   const sockets = usesSockets(root)
@@ -56,7 +57,7 @@ function config({
     plugins: [
       kerf({ hydratable: site?.render !== 'shell', csp: site?.csp }),
       kerfStart({ root, site, hydration }),
-      runner && devSockets(),
+      refreshPlugins && devRuntime(refreshPlugins),
       nitro({
         preset,
         // Every app gets this: built assets ship as .br and .gz next to the file, and Nitro picks by Accept-Encoding.
@@ -68,7 +69,7 @@ function config({
         }),
         ...(sockets && { features: { websocket: true } }),
         ...(runner && { devServer: { runner } }),
-        // Build mode for share cards (research 20 §4.3): the server lists them and Nitro's prerender writes the PNGs.
+        // The server lists share cards so Nitro can prerender the PNGs.
         ...(site?.render !== 'shell' && {
           prerender: { routes: ['/_kerf/og-routes'], failOnError: true },
         }),
@@ -139,9 +140,15 @@ function immutableCards() {
 
 /** Start the dev server; resolves with it once it listens. */
 export async function dev(options) {
-  const server = await createServer(config(options))
-  await server.listen()
-  return server
+  const refreshPlugins = () => config({ ...options, refreshPlugins }).plugins
+  const server = await createServer(config({ ...options, refreshPlugins }))
+  try {
+    await server.listen()
+    return server
+  } catch (error) {
+    await server.close()
+    throw error
+  }
 }
 
 /** Build client and server for `preset` (node by default; bun, deno_server…), into `.output/` unless the preset moves it. */

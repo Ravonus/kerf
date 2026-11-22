@@ -1,38 +1,7 @@
-// kerfStart() for Vite 8 (research 25 §6): file routes as virtual modules, the server and client entries Nitro's Vite
-// plugin builds (`nitro()` from `nitro/vite` goes next to it), and route modules without their server exports in
-// the client build. Used through `kerf dev` / `kerf build`, which add kerf() and nitro() and pass the config's `site`.
-//
-//   virtual:kerf/routes         server: the manifest, every route, layout and card module, and each one's stylesheets
-//                               client: the route table and a chunk loader per route id (load/meta/prerender stripped)
-//   virtual:kerf/app            server: site config, build id, card fonts (bytes, so every preset can read them)
-//   virtual:kerf/entry-server   the Nitro SSR entry: `export default { fetch }`
-//   virtual:kerf/entry-client   the client entry: `start()`, unless the app has src/entry.client.ts
-//   virtual:kerf/fns            server: imports every server module, so `/_kerf/fn/<id>` knows every function
-//   virtual:kerf/context        server: `src/context.server.ts`'s default export (the app's part of `ctx`)
-//   virtual:kerf/auth           server: `src/auth.server.ts`'s default export, mounted at its base path
-//   virtual:kerf/migrations     server: `drizzle/`'s migrations, embedded (a bundle can't read a folder on every preset)
-//   virtual:kerf/media          server: the `media.server` provider when one is bound (research 29 §6)
-//   virtual:kerf/realtime       server: `src/realtime.server.ts`'s default export (the bus, origins and limits)
-//   virtual:kerf/cache          server: `src/cache.server.ts`'s default export (the shared cache's store)
-//   virtual:kerf/cron           server: `src/cron.server.ts`'s default export (jobs on a schedule)
-//   virtual:kerf/email          server: `src/email.server.ts`'s default export (the mailer)
-//   virtual:kerf/jobs           server: `src/jobs.server.ts`'s default export (the job queue)
-//   virtual:kerf/extensions     server: each `server.extension` provider with its `src/<key>.server.ts` (extension.ts)
-//
-// Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation`/`stream`/`channel` export
-// gets an `$id` on both sides; the client build replaces the module with stubs that keep only `optimistic`, the
-// query's shape and a shared state's `initial`.
-//
-// Stylesheets: routes are chunks the entry only reaches through `import()`, so `?assets=client` names just the entry's
-// CSS. Each route and layout's own CSS comes from Nitro's assets manifest (build) or the client module graph (dev);
-// the server links the entry's and those of the levels it matched, so nothing paints before its styles and other
-// routes' CSS stays out of the page. In dev the links stand in for Vite's injected `<style>`s and HMR updates them.
-// A build keeps each chunk's sheet for client navigation and writes a shared sheet (what every route has) and one sheet
-// per route for the rest, hashed and cached for good. Each page carries the part of those its first paint needs
-// (`firstPaint`) and links them at the end of its shell, where they block nothing above and hold whatever streams after.
-// `site: { criticalCss: false }` splits by chunk and puts them in the HTML (`inlineSheets`, inline.mjs): whole while the
-// document fits the first flight, else the rules the page's HTML reaches, with the sheets behind them as links that
-// don't hold the paint. `site: { inlineCss: false }` keeps plain links.
+// Start supplies Nitro's virtual entries and the file-routes manifest. Client modules reach
+// routes through dynamic imports and drop server-only exports and function bodies.
+// Route CSS follows the matched layouts and routes from the client graph in dev, or Nitro's
+// asset manifest in a build. Dev links let Vite swap the existing sheets during HMR.
 
 import { existsSync } from 'node:fs'
 import { relative } from 'node:path'
@@ -196,6 +165,9 @@ export default function kerfStart(options = {}) {
         const configured = configure(server)
         entryWatchLifecycle(state, server, modes)
         return configured
+      },
+      closeServer() {
+        state.closeRoutes?.()
       },
       hotUpdate: shapeHotUpdate(state, modes, hotUpdate(state)),
     },

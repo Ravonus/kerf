@@ -1,46 +1,115 @@
-// `kerf dev` for an app with sockets on Bun and Deno. Nitro's dev server assumes a Node worker for websockets: its
-// entry takes crossws's Node adapter, which refuses to load there, and a worker on either runtime can't take the
-// upgrade. So the app runs in Vite's own process (the `self` runner), where Vite's HTTP server hands the upgrade over
-// and the adapter works. Node, and any app without a channel or sharedState, gets none of this.
+// Nitro starts evaluating each entry as soon as it receives the environment registration.
+// Vite creates environments before running configureServer, buildStart and the optimizer's init.
+// If the SSR stylesheet crawl reaches the client graph then, Vite can replace the dependency
+// metadata for an optimized import while the crawl is still waiting for that import to load.
 
 const alternate = Boolean(process.versions.bun || process.versions.deno)
 
+/** Use Vite's own HTTP server for WebSocket upgrades on Bun and Deno. */
 export const devRunner = (sockets) => (alternate && sockets ? 'self' : undefined)
 
 const GUARD = /if \("Deno" in globalThis \|\| "Bun" in globalThis\) throw new Error\([^)]*\);?/
+const WORKER_TIMEOUT = 30_000
 
-export const devSockets = () => ({
-  name: 'kerf:dev-sockets',
-  apply: 'serve',
-  enforce: 'post',
-  configResolved(config) {
-    for (const [name, environment] of Object.entries(config.environments)) {
-      const create = environment.dev?.createEnvironment
-      if (!create || environment.consumer !== 'server') continue
-      const release = hold(name)
-      environment.dev.createEnvironment = async (...args) => release(await create(...args))
-    }
-  },
-  transform: {
-    filter: { id: /crossws/, code: 'incompatible environment' },
-    handler: (code) => code.replace(GUARD, ''),
-  },
-})
-
-// Nitro can name an environment to the runner before Vite has made it. Across a process that takes long enough, but
-// `self` answers at once: the first request goes to nothing and the environment hangs for good. So each one is held
-// until it exists, and `init` names it again. (The worker keeps these on globalThis, and `self` is this process.)
-const HELD = {
-  hasEvaluated: () => false,
-  reload: async () => {},
-  fetch: () => Promise.resolve(new Response('starting', { status: 503 })),
+/** Register Nitro entries after the environments they import through are ready. */
+export function devRuntime(refreshPlugins) {
+  let nitro
+  let register
+  let useSelf
+  return {
+    name: 'kerf:dev-runtime',
+    apply: 'serve',
+    enforce: 'post',
+    nitro: {
+      setup(instance) {
+        nitro = instance
+      },
+    },
+    configResolved(config) {
+      useSelf = (nitro.options.devServer.runner || process.env.NITRO_DEV_RUNNER) === 'self'
+      const dev = config.environments.nitro.dev
+      const createNitro = dev.createEnvironment
+      const held = Promise.withResolvers()
+      dev.createEnvironment = async (...args) => {
+        try {
+          const env = await createNitro(...args)
+          register = holdRegistrations(env.devServer, useSelf)
+          return env
+        } finally {
+          held.resolve()
+        }
+      }
+      // Nitro can resend registrations as soon as the worker reports ready, including services
+      // still under construction. Install the gate before Nitro starts creating those services.
+      for (const [name, environment] of Object.entries(config.environments)) {
+        if (name === 'nitro' || environment.consumer !== 'server') continue
+        const create = environment.dev.createEnvironment
+        environment.dev.createEnvironment = async (...args) => {
+          await held.promise
+          return create(...args)
+        }
+      }
+    },
+    configureServer(server) {
+      // Vite creates the replacement server before closing the current one. Nitro's plugin
+      // retains its RunnerManager across configs; each server needs to own the runner it closes.
+      server.config.inlineConfig.plugins = refreshPlugins()
+      const environments = Object.values(server.environments)
+      let remaining = environments.length
+      for (const environment of environments) {
+        const listen = environment.listen.bind(environment)
+        environment.listen = async (...args) => {
+          await listen(...args)
+          if (--remaining === 0) await register()
+        }
+      }
+    },
+    closeServer: () => nitro.close(),
+    transform: {
+      filter: { id: /crossws/, code: 'incompatible environment' },
+      handler: (code) => (alternate && useSelf ? code.replace(GUARD, '') : undefined),
+    },
+  }
 }
 
-function hold(name) {
-  const environments = (globalThis.__nitro_vite_envs__ ??= {})
-  environments[name] = HELD
-  return (environment) => {
-    environments[name] = undefined
-    return environment
+function holdRegistrations(worker, useSelf) {
+  const send = worker.sendMessage
+  const entries = new Map()
+  worker.sendMessage = (message) => {
+    if (message?.type === 'custom' && message.event === 'nitro:vite-env')
+      entries.set(message.data.name, message)
+    else send.call(worker, message)
+  }
+  return async () => {
+    await worker.waitForReady(WORKER_TIMEOUT)
+    worker.sendMessage = send
+    for (const [name, message] of entries) {
+      // A self runner reuses Nitro's module and its global table across Vite restarts.
+      if (useSelf && globalThis.__nitro_vite_envs__)
+        globalThis.__nitro_vite_envs__[name] = undefined
+      worker.sendMessage(message)
+    }
+    await registrationsReceived(worker)
+  }
+}
+
+async function registrationsReceived(worker) {
+  const token = 'kerf:dev-registered'
+  const settled = Promise.withResolvers()
+  const timer = setTimeout(
+    () =>
+      settled.reject(new Error('Nitro did not register the Vite environments within 30 seconds')),
+    WORKER_TIMEOUT,
+  )
+  const onMessage = (message) => {
+    if (message?.type === 'pong' && message.data === token) settled.resolve()
+  }
+  worker.onMessage(onMessage)
+  try {
+    worker.sendMessage({ type: 'ping', data: token })
+    await settled.promise
+  } finally {
+    clearTimeout(timer)
+    worker.offMessage(onMessage)
   }
 }

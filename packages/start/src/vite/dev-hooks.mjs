@@ -57,9 +57,7 @@ export const configureServer = (s) =>
       server.watcher.on(event, (file) => {
         if (file.startsWith(dir)) changed(relative(dir, file))
       })
-    // Close with the server (middleware mode, as `kerf routes --meta` runs it, has no httpServer to listen on).
-    const close = server.close.bind(server)
-    server.close = () => (w.close(), close())
+    s.closeRoutes = () => w.close()
   }
 
 export const hotUpdate = (s) =>
