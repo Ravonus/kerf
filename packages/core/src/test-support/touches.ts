@@ -69,6 +69,8 @@ export function installTouchMatcher() {
   })
 }
 
+// Vitest 5's shape: `Assertion<R, T>`. Vitest 4 declares `Assertion<T>`, and TypeScript merges only identical type
+// parameters, hence the peer range `vitest >=5`.
 declare module 'vitest' {
   interface Assertion<R, T> {
     toTouchAtMost(mutations: number, budget?: { runs?: number }): Promise<void>

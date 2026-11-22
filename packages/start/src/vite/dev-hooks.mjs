@@ -1,9 +1,10 @@
-import { existsSync, readFileSync, watch } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { waitingForAFix, reaches, refresh } from './dev.mjs'
 import { serverExports } from './syntax.mjs'
 import { isServerModule } from './server-functions.mjs'
 import { SHEET, ASSETS, V } from './shared.mjs'
+import { watchFailure, watchTree } from '../watch-tree.mjs'
 
 export const configureServer = (s) =>
   function (server) {
@@ -21,7 +22,8 @@ export const configureServer = (s) =>
     server.middlewares.use(waitingForAFix)
     // A route file added or removed changes the virtual modules; edits to existing ones are ordinary HMR/reloads.
     const dir = join(s.root, 'src')
-    if (!existsSync(dir)) return
+    // A one-shot server (`kerf check`, `kerf routes --meta`, a build's contract) asks Vite to watch nothing: so does this.
+    if (!existsSync(dir) || server.config.server.watch === null) return
     const routesDir = relative(dir, join(s.root, s.manifest.dir)).split('\\').join('/')
     const shape = () =>
       JSON.stringify([
@@ -49,9 +51,17 @@ export const configureServer = (s) =>
       )
       server.ws.send({ type: 'full-reload' })
     }
-    const w = watch(dir, { recursive: true }, (event, file) => {
-      if (event === 'rename' && file) changed(file)
-    })
+    const w = watchTree(
+      dir,
+      (event, file) => {
+        if (event === 'rename' && file) changed(file)
+      },
+      (error) =>
+        server.config.logger.warn(
+          `kerf: can't watch src/ (${watchFailure(error)}): Vite's own watcher still sees routes added or removed`,
+          { timestamp: true },
+        ),
+    )
     // Not every runtime's recursive watch reports a new file, and Vite's watcher does.
     for (const event of ['add', 'unlink'])
       server.watcher.on(event, (file) => {
@@ -59,7 +69,7 @@ export const configureServer = (s) =>
       })
     // Close with the server (middleware mode, as `kerf routes --meta` runs it, has no httpServer to listen on).
     const close = server.close.bind(server)
-    server.close = () => (w.close(), close())
+    server.close = () => (w?.close(), close())
   }
 
 export const hotUpdate = (s) =>

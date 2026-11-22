@@ -1,7 +1,8 @@
-import { existsSync, watch } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { isServerModule } from '../vite.mjs'
 import { buildable, crateDir, isNative, urlVariable } from './common.mjs'
+import { watchFailure, watchTree } from '../watch-tree.mjs'
 
 export async function watchServices(deps) {
   const {
@@ -42,11 +43,8 @@ export async function watchServices(deps) {
     }
     if (!first.blocked) await rebuild(service)
     const changed = debounce(() => rebuild(service))
-    watchers.push(
-      watch(dir, { recursive: true }, (_, file) => {
-        if (file && !/^target([\\/]|$)/.test(file) && !file.endsWith('.lock')) changed()
-      }),
-    )
+    const crate = watchCrate(dir, service, changed, log)
+    if (crate) watchers.push(crate)
   }
 
   // A server module's edit may change a schema: the contract is regenerated, and only a change to a service's hash
@@ -69,12 +67,8 @@ export async function watchServices(deps) {
       log(`[kerf] the contract couldn't be regenerated: ${e.message.split('\n')[0]}`)
     }
   })
-  if (existsSync(src))
-    watchers.push(
-      watch(src, { recursive: true }, (_, file) => {
-        if (file && isServerModule(`src/${file.replaceAll('\\', '/')}`)) contractChanged()
-      }),
-    )
+  const server = existsSync(src) ? watchServerModules(src, contractChanged, log) : null
+  if (server) watchers.push(server)
 
   return watchers
 }
@@ -86,3 +80,29 @@ const debounce = (fn, ms = 200) => {
     t = setTimeout(() => fn(), ms)
   }
 }
+
+/** A crate's sources, for a rebuild on an edit; its `target` and lockfile are cargo's own writes. */
+const watchCrate = (dir, service, changed, log) =>
+  watchTree(
+    dir,
+    (_, file) => {
+      if (file && !/^target([\\/]|$)/.test(file) && !file.endsWith('.lock')) changed()
+    },
+    (error) =>
+      log(
+        `[kerf] can't watch crates/${service} (${watchFailure(error)}): restart dev after an edit`,
+      ),
+  )
+
+/** The app's server modules, whose edits may change the contract a service is built from. */
+const watchServerModules = (src, changed, log) =>
+  watchTree(
+    src,
+    (_, file) => {
+      if (file && isServerModule(`src/${file.replaceAll('\\', '/')}`)) changed()
+    },
+    (error) =>
+      log(
+        `[kerf] can't watch src/ (${watchFailure(error)}): restart dev after a server module's schema changes`,
+      ),
+  )
