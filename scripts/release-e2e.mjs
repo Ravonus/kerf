@@ -188,7 +188,7 @@ try {
       'npm',
       [
         'create',
-        `@kerf-js@${version}`,
+        `kerf@${version}`,
         '--',
         'demo',
         '--yes',
