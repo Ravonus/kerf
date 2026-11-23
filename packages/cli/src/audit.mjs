@@ -1,7 +1,5 @@
-// `kerf audit` and the last step of `kerf build`: the built pages in a clean headless Chrome, at a phone's width and a
-// desktop's, read the way a crawler, a screen reader and Lighthouse read them. `kerf check` reads source; some failures
-// only exist once CSS and a breakpoint have had their say (a button whose text a phone hides has no name), so this
-// looks at the rendered page. No automation library: the DevTools protocol over the WebSocket Node already has.
+// `kerf audit` and the last step of `kerf build` read rendered pages in headless Chrome at phone and desktop widths.
+// The built-in WebSocket connects to DevTools for checks that depend on CSS, breakpoints or browser behavior.
 //
 // L001–L004 axe-core's rules, the ones Lighthouse grades (names, images, contrast, the rest), L010–L013 console and issues,
 // L020–L025 the head a crawler reads, L030–L031 sideways scroll on a phone and layout shift.
@@ -230,8 +228,7 @@ async function target(root, options) {
 /**
  * @param {string} root project root
  * @param {{ url?: string, dir?: string, routes?: string[], all?: boolean, max?: number, forms?: (keyof FORMS)[], concurrency?: number, indexing?: 'auto' | 'public' | 'private' }} [options]
- *   `url`: audit a running site (a deploy, `kerf start`); else `dir`, a build's public directory (found when left out)
- *   `onRequest`: the pages were read from the built server of a build whose pages render on request
+ *   `url` audits a running site. `dir` selects the public directory.
  * @returns {Promise<{ ok: boolean, skipped?: string, base: string, onRequest?: boolean, pages: string[], diagnostics: object[], ms: number }>}
  */
 export async function audit(root, options = {}) {

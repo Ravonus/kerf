@@ -268,8 +268,8 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
   }, 30_000)
 })
 
-// A server-rendered build prerenders no page, only its share cards: the audit runs the built server, as `kerf start`.
-describe.skipIf(!chrome)('a server-rendered build, in Chrome', () => {
+// The shell must execute in Chrome to check its rendered page.
+describe.skipIf(!chrome)('an emitted shell, in Chrome', () => {
   it('serves the emitted shell on page routes and sends assets and operations to the peer', async () => {
     const root = mkdtempSync(join(tmpdir(), 'kerf-audit-shell-'))
     const shell = `${head('Shell')}<body><div id="app"></div><script type="module" src="/entry.mjs"></script></body></html>`
@@ -309,7 +309,10 @@ createServer((req, res) => {
       rmSync(root, { recursive: true, force: true })
     }
   }, 30_000)
+})
 
+// A server-rendered build prerenders no page, only its share cards: the audit runs the built server, as `kerf start`.
+describe.skipIf(!chrome)('a server-rendered build, in Chrome', () => {
   it('audits a server-rendered build through its own server, and names a page that failed there', async () => {
     const ssrRoot = mkdtempSync(join(tmpdir(), 'kerf-audit-ssr-'))
     const good = `${head('Rendered')}<body><main><h1>Rendered</h1><p>On request.</p></main></body></html>`
