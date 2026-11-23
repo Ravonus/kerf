@@ -51,16 +51,16 @@ const TYPES = {
   '.webmanifest': 'application/manifest+json',
 }
 
+const SHELL_FILE = 'kerf-shell.html'
+
 /** The public directory a build wrote: the newer of `.output/public` (server presets) and `dist` (Netlify, Vercel static). */
 export function builtPublic(root) {
-  const found = ['.output/public', 'dist']
-    .map((d) => join(root, d))
-    .filter((d) => existsSync(join(d, 'index.html')))
-  return (
-    found.sort(
-      (a, b) => statSync(join(b, 'index.html')).mtimeMs - statSync(join(a, 'index.html')).mtimeMs,
-    )[0] ?? null
-  )
+  const found = ['.output/public', 'dist'].flatMap((d) => {
+    const directory = join(root, d)
+    const document = [SHELL_FILE, 'index.html'].find((file) => existsSync(join(directory, file)))
+    return document ? [{ directory, mtime: statSync(join(directory, document)).mtimeMs }] : []
+  })
+  return found.sort((a, b) => b.mtime - a.mtime)[0]?.directory ?? null
 }
 
 /** Every prerendered page under `dir`, as its URL path. */
@@ -208,7 +208,9 @@ async function target(root, options) {
       unanswered: [],
     }
   const dir = options.dir ?? builtPublic(root)
-  const pages = dir ? pagesIn(dir) : []
+  const shell =
+    dir && existsSync(join(dir, SHELL_FILE)) ? readFileSync(join(dir, SHELL_FILE)) : null
+  const pages = dir && !shell ? pagesIn(dir) : []
   const pick = (found) => (options.all ? found : samplePages(found, options.max))
   if (pages.length) {
     const server = await serveStatic(dir)
@@ -219,6 +221,7 @@ async function target(root, options) {
   const served = await serveBuild(root, dir && relative(root, dir), {
     routes: options.routes,
     pick,
+    shell,
   })
   if (served.skip) return served
   return { base: served.server.url, ...served, statics: false }

@@ -70,7 +70,10 @@ chunks and the retry table, from the trusted release. Serve that
 same document at every app page URL, including deep links and
 unknown page URLs. Keep the browser address. A production Start
 peer returns an empty 404 for its application document routes.
-`kerf dev` serves the shell locally.
+`kerf dev` serves the shell locally. The build audit opens that
+document on the sampled page URLs and uses the built peer for
+assets and operations. Audit the deployed URL to check its host
+configuration too.
 
 The shell contains the document element and locale, charset and
 viewport, release entry, entry CSS and static module preloads,

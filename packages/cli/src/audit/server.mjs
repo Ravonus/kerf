@@ -3,6 +3,7 @@
 
 import { spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
+import { createServer as createHttpServer, request } from 'node:http'
 import { createServer } from 'node:net'
 import { join } from 'node:path'
 import { parseEnv } from 'node:util'
@@ -86,7 +87,7 @@ export async function runBuiltServer(root, [cmd, args], { timeout = 20_000 } = {
 
 /** The status each route answers with, 0 for none. */
 const statusOf = (url) =>
-  fetch(url, { signal: AbortSignal.timeout(15_000) }).then(
+  fetch(url, { headers: { accept: 'text/html' }, signal: AbortSignal.timeout(15_000) }).then(
     (r) =>
       r.arrayBuffer().then(
         () => r.status,
@@ -95,13 +96,63 @@ const statusOf = (url) =>
     () => 0,
   )
 
+// A shell build's Nitro peer handles assets and operations while its document belongs to the host.
+async function shellPreview(peer, shell, routes) {
+  const paths = new Set(routes.map((route) => new URL(route, peer.url).pathname))
+  const preview = createHttpServer((req, res) => {
+    const path = new URL(req.url, peer.url).pathname
+    if (
+      paths.has(path) &&
+      (req.method === 'GET' || req.method === 'HEAD') &&
+      (req.headers['sec-fetch-dest'] === 'document' || req.headers.accept?.includes('text/html'))
+    ) {
+      return res
+        .writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+        .end(req.method === 'HEAD' ? undefined : shell)
+    }
+    const upstream = request(
+      peer.url,
+      { path: req.url, method: req.method, headers: req.headers },
+      (reply) => {
+        res.writeHead(reply.statusCode, reply.headers)
+        reply.once('error', (error) => res.destroy(error))
+        reply.pipe(res)
+      },
+    )
+    upstream.once('error', (error) => {
+      if (res.headersSent) res.destroy(error)
+      else res.writeHead(502).end()
+    })
+    res.once('close', () => upstream.destroy())
+    req.pipe(upstream)
+  })
+  try {
+    await new Promise((ok, no) => {
+      preview.once('error', no)
+      preview.listen(0, '127.0.0.1', ok)
+    })
+  } catch (error) {
+    peer.close()
+    throw error
+  }
+  const { port } = /** @type {import('node:net').AddressInfo} */ (preview.address())
+  return {
+    url: `http://127.0.0.1:${port}`,
+    close() {
+      preview.close()
+      preview.closeAllConnections()
+      peer.close()
+    },
+  }
+}
+
 /**
  * The built server, started, and the pages to audit on it (`routes`, else `pick` of the app's static pages); or `skip`,
  * why there is nothing to audit. A page that needs
  * what the build's environment lacks (a database, a secret) answers 5xx here and not in production: it is left out and
  * named, not failed.
  */
-export async function serveBuild(root, dir, { routes, pick }) {
+export async function serveBuild(root, dir, { routes, pick, shell }) {
   const built = builtServer(root)
   if (!built)
     return {
@@ -113,12 +164,13 @@ export async function serveBuild(root, dir, { routes, pick }) {
     return {
       skip: `The pages render on request, and the \`${built.preset}\` build's server doesn't run on this machine: \`kerf audit --url <deploy>\` audits it running.`,
     }
-  const server = await runBuiltServer(root, built.run)
-  if (server.error)
+  const peer = await runBuiltServer(root, built.run)
+  if (peer.error)
     return {
-      skip: `The pages render on request, and the built server didn't start here: ${server.error}. Run it with \`kerf start\`, then \`kerf audit --url http://localhost:3000\`.`,
+      skip: `The pages render on request, and the built server didn't start here: ${peer.error}. Run it with \`kerf start\`, then \`kerf audit --url http://localhost:3000\`.`,
     }
   const listed = routes ?? pick(staticRoutes(root))
+  const server = shell ? await shellPreview(peer, shell, listed) : peer
   const answered = []
   const unanswered = []
   for (const route of listed) {
