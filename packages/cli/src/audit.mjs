@@ -1,7 +1,5 @@
-// `kerf audit` and the last step of `kerf build`: the built pages in a clean headless Chrome, at a phone's width and a
-// desktop's, read the way a crawler, a screen reader and Lighthouse read them. `kerf check` reads source; some failures
-// only exist once CSS and a breakpoint have had their say (a button whose text a phone hides has no name), so this
-// looks at the rendered page. No automation library: the DevTools protocol over the WebSocket Node already has.
+// `kerf audit` and the last step of `kerf build` read rendered pages in headless Chrome at phone and desktop widths.
+// The built-in WebSocket connects to DevTools for checks that depend on CSS, breakpoints or browser behavior.
 //
 // L001–L004 axe-core's rules, the ones Lighthouse grades (names, images, contrast, the rest), L010–L013 console and issues,
 // L020–L025 the head a crawler reads, L030–L031 sideways scroll on a phone and layout shift.
@@ -51,16 +49,16 @@ const TYPES = {
   '.webmanifest': 'application/manifest+json',
 }
 
+const SHELL_FILE = 'kerf-shell.html'
+
 /** The public directory a build wrote: the newer of `.output/public` (server presets) and `dist` (Netlify, Vercel static). */
 export function builtPublic(root) {
-  const found = ['.output/public', 'dist']
-    .map((d) => join(root, d))
-    .filter((d) => existsSync(join(d, 'index.html')))
-  return (
-    found.sort(
-      (a, b) => statSync(join(b, 'index.html')).mtimeMs - statSync(join(a, 'index.html')).mtimeMs,
-    )[0] ?? null
-  )
+  const found = ['.output/public', 'dist'].flatMap((d) => {
+    const directory = join(root, d)
+    const document = [SHELL_FILE, 'index.html'].find((file) => existsSync(join(directory, file)))
+    return document ? [{ directory, mtime: statSync(join(directory, document)).mtimeMs }] : []
+  })
+  return found.sort((a, b) => b.mtime - a.mtime)[0]?.directory ?? null
 }
 
 /** Every prerendered page under `dir`, as its URL path. */
@@ -208,7 +206,9 @@ async function target(root, options) {
       unanswered: [],
     }
   const dir = options.dir ?? builtPublic(root)
-  const pages = dir ? pagesIn(dir) : []
+  const shell =
+    dir && existsSync(join(dir, SHELL_FILE)) ? readFileSync(join(dir, SHELL_FILE)) : null
+  const pages = dir && !shell ? pagesIn(dir) : []
   const pick = (found) => (options.all ? found : samplePages(found, options.max))
   if (pages.length) {
     const server = await serveStatic(dir)
@@ -219,6 +219,7 @@ async function target(root, options) {
   const served = await serveBuild(root, dir && relative(root, dir), {
     routes: options.routes,
     pick,
+    shell,
   })
   if (served.skip) return served
   return { base: served.server.url, ...served, statics: false }
@@ -227,8 +228,7 @@ async function target(root, options) {
 /**
  * @param {string} root project root
  * @param {{ url?: string, dir?: string, routes?: string[], all?: boolean, max?: number, forms?: (keyof FORMS)[], concurrency?: number, indexing?: 'auto' | 'public' | 'private' }} [options]
- *   `url`: audit a running site (a deploy, `kerf start`); else `dir`, a build's public directory (found when left out)
- *   `onRequest`: the pages were read from the built server of a build whose pages render on request
+ *   `url` audits a running site. `dir` selects the public directory.
  * @returns {Promise<{ ok: boolean, skipped?: string, base: string, onRequest?: boolean, pages: string[], diagnostics: object[], ms: number }>}
  */
 export async function audit(root, options = {}) {
