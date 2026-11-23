@@ -268,6 +268,49 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
   }, 30_000)
 })
 
+// The shell must execute in Chrome to check its rendered page.
+describe.skipIf(!chrome)('an emitted shell, in Chrome', () => {
+  it('serves the emitted shell on page routes and sends assets and operations to the peer', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'kerf-audit-shell-'))
+    const shell = `${head('Shell')}<body><div id="app"></div><script type="module" src="/entry.mjs"></script></body></html>`
+    const entry = `const data = await fetch('/operation').then((response) => response.json())
+document.title = data.title
+document.querySelector('#app').append(document.createElement('main'))
+const button = document.createElement('button')
+document.querySelector('main').append(button)
+`
+    try {
+      mkdirSync(join(root, 'src/routes'), { recursive: true })
+      for (const page of ['index.tsx', 'about.tsx'])
+        writeFileSync(join(root, 'src/routes', page), '')
+      mkdirSync(join(root, '.output/public'), { recursive: true })
+      mkdirSync(join(root, '.output/server'), { recursive: true })
+      writeFileSync(join(root, '.output/public/kerf-shell.html'), shell)
+      writeFileSync(
+        join(root, '.output/nitro.json'),
+        JSON.stringify({ preset: 'node-server', serverEntry: 'server/index.mjs' }),
+      )
+      writeFileSync(
+        join(root, '.output/server/index.mjs'),
+        `import { createServer } from 'node:http'
+createServer((req, res) => {
+  if (req.url === '/entry.mjs') return res.writeHead(200, { 'content-type': 'text/javascript' }).end(${JSON.stringify(entry)})
+  if (req.url === '/operation') return res.writeHead(200, { 'content-type': 'application/json' }).end('{"title":"Rendered by the shell"}')
+  res.writeHead(404).end()
+}).listen(Number(process.env.PORT), process.env.HOST)
+`,
+      )
+      const result = (await audit(root)) as Audited
+      expect(result.skipped).toBeUndefined()
+      expect(result.pages).toEqual(['/', '/about'])
+      // An unnamed button can only be found after the browser has loaded and run the entry.
+      expect(result.diagnostics.map(({ code }) => code)).toEqual(['L001'])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  }, 30_000)
+})
+
 // A server-rendered build prerenders no page, only its share cards: the audit runs the built server, as `kerf start`.
 describe.skipIf(!chrome)('a server-rendered build, in Chrome', () => {
   it('audits a server-rendered build through its own server, and names a page that failed there', async () => {
