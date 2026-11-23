@@ -165,7 +165,11 @@ targets two seconds ahead and caps the target at four seconds. A whole segment
 may exceed the one MiB byte target. Keep native HLS and the qualified native
 file as failure fallbacks. No quality reset is needed when pausing or returning.
 
-Start prefetches the code for priority-image pages and starts it after the
-server-rendered artwork decodes and paints. User interaction wakes startup
-immediately; a five-second deadline bounds a stalled-image wait. Other pages
-keep their ordinary eager startup. No app-owned loading timer is needed.
+Start loads a native module entry independently of priority artwork. A stalled
+poster must never delay hydration, the viewport lifecycle or source attachment.
+Custom players must also mount without waiting for poster load/decode and set
+native muted, inline and autoplay attributes before attaching a source. Tie
+autoplay to the existing viewport, manual-pause and accessibility policy. Keep
+the sharp picture until the selected video frame is presented. Verify cold
+no-click playback with poster responses held pending, plus explicit Play when
+the browser blocks autoplay. No app-owned loading timer is needed.

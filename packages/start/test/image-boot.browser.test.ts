@@ -49,12 +49,14 @@ async function open() {
   await page.getByRole('heading', { name: 'Artwork' }).waitFor()
   return { page, release }
 }
-test('prefetches code but lets the priority artwork decode and paint before startup', async () => {
+test('starts the media lifecycle without waiting for a pending priority artwork', async () => {
   const { page, release } = await open()
-  expect(await page.evaluate(() => Object.hasOwn(window, '__mediaBoot'))).toBe(false)
-  release()
-  await page.waitForFunction(() => Object.hasOwn(window, '__mediaBoot'))
-  expect(await page.evaluate(() => Reflect.get(window, '__mediaBoot').complete)).toBe(true)
+  try {
+    await page.waitForFunction(() => Object.hasOwn(window, '__mediaBoot'), null, { timeout: 2000 })
+    expect(await page.evaluate(() => Reflect.get(window, '__mediaBoot').complete)).toBe(false)
+  } finally {
+    release()
+  }
 })
 test('starts immediately on intent while the artwork is still pending', async () => {
   const { page, release } = await open()
@@ -70,4 +72,9 @@ test('scroll intent starts the viewport lifecycle before a pending opening image
   await page.waitForFunction(() => Object.hasOwn(window, '__mediaBoot'))
   expect(await page.evaluate(() => Reflect.get(window, '__mediaBoot').complete)).toBe(false)
   release()
+})
+
+test('ordinary and streaming pages keep a native module entry', () => {
+  expect(entryScript('/entry.js', false)).toContain('type="module" src="/entry.js"')
+  expect(entryScript('/entry.js', true, true)).toContain('type="module" async src="/entry.js"')
 })
