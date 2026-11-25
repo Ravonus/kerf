@@ -5,10 +5,15 @@ import { readFileSync } from 'node:fs'
 
 const read = (name: string) => readFileSync(new URL(`../styles/${name}`, import.meta.url), 'utf8')
 
-test('floating field labels default to uppercase at rest and floated with customizable case tokens', () => {
+test('floating field labels default to compact mono uppercase at rest and floated with customizable tokens', () => {
   const base = read('veneer.css')
+  expect(base).toContain('--veneer-label-font: var(--veneer-font-mono)')
+  expect(base).toContain(
+    '--veneer-label-size: max(11px, calc(var(--veneer-text-control-size) * 0.78))',
+  )
   expect(base).toContain('--veneer-label-case: uppercase')
   expect(base).toContain('--veneer-label-float-case: var(--veneer-label-case)')
+  expect(base).toContain('font-size: var(--veneer-label-size)')
   expect(base).toContain('text-transform: var(--veneer-label-case)')
   expect(base).toContain('text-transform: var(--veneer-label-float-case)')
   for (const mode of ['upper', 'lower', 'title', 'sentence', 'none']) {
