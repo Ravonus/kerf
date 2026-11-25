@@ -754,7 +754,7 @@
   /* the full accent at every stop: the dial never makes the stroke faint.
      Pinned between the ink base and the surface so both edges read (≥ 3:1 each). */
   --veneer-color-sweep: light-dark(
-    oklch(0.50 min(max(calc(var(--_ac) * 1.25), 0.12), 0.13) var(--_ah)),
+    oklch(0.515 min(max(calc(var(--_ac) * 1.25), 0.12), 0.13) var(--_ah)),
     oklch(0.60 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
   --veneer-color-sweep-base: var(--veneer-ref-sweep-base);
   /* frame button (§1b): track = ink (#050505-strength) in light, ink at 62% in dark */
