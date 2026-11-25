@@ -5,10 +5,10 @@
 export const PALETTES = [
   { name: 'kerf', label: 'Kerf', swatch: '#2f9e6a' },
   {
-    name: 'ember',
-    label: 'Ember',
-    swatch: '#e8590c',
-    theme: { seed: { accent: '#e8590c' }, colors: { brand: '#e8590c' } },
+    name: 'orange',
+    label: 'Orange',
+    swatch: '#f04e23',
+    theme: { seed: { accent: '#f04e23' }, colors: { brand: '#f04e23' } },
   },
   {
     name: 'ocean',

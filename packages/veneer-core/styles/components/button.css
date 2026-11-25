@@ -89,8 +89,8 @@
   --_fa: calc(var(--_fr) * (var(--_x) + 7%) * var(--veneer-lead-a, 1));
   --_fb: calc(var(--_fr) * (107% - var(--_x)) * var(--veneer-lead-b, 1));
   --_fu: calc(var(--_fb) * 0.1 + var(--_fr) * 5%);
-  /* the under-layer rises with the blobs, so nothing shows between them mid-frame */
-  background-color: color-mix(in oklab, var(--veneer-tone-layer, var(--_layer)) calc((1 - var(--veneer-btn-fill)) * 100%), color-mix(in oklab, var(--_pa) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
+  /* the under-layer rises with the blobs, so nothing shows between them mid-frame; custom --veneer-tone-layer wins over --_pa/--_pb */
+  background-color: color-mix(in oklab, var(--veneer-tone-layer, var(--_layer)) calc((1 - var(--veneer-btn-fill)) * 100%), color-mix(in oklab, var(--veneer-tone-layer, var(--_pa)) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
   opacity: calc(var(--veneer-btn-fill) + (1 - var(--veneer-btn-fill)) * var(--_layer-a));
   /* the wipe is a clip, not a scale: a scaled layer squashed its own rounded corners and a thin sliver stood past the
      button's curve. A rectangle cut from the unscaled rounded layer never leaves the shape. --_wp is how much shows,
@@ -100,11 +100,11 @@
   background-origin: border-box;
   background-image:
     radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),
-      var(--_pb) 0 58%, color-mix(in oklab, var(--_pb) 50%, transparent) 80%, transparent 100%),
+      var(--veneer-tone-layer, var(--_pb)) 0 58%, color-mix(in oklab, var(--veneer-tone-layer, var(--_pb)) 50%, transparent) 80%, transparent 100%),
     radial-gradient(ellipse calc(var(--_fb) * 0.5) 185% at calc(var(--_x) + var(--_fb) * 0.5 + var(--_fo) * var(--_fb)) var(--_y),
-      var(--_pb) 0 62%, color-mix(in oklab, var(--_pb) 50%, transparent) 82%, transparent 100%),
+      var(--veneer-tone-layer, var(--_pb)) 0 62%, color-mix(in oklab, var(--veneer-tone-layer, var(--_pb)) 50%, transparent) 82%, transparent 100%),
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
-      var(--_pa) 0 66%, color-mix(in oklab, var(--_pa) 50%, transparent) 84%, transparent 100%);
+      var(--veneer-tone-layer, var(--_pa)) 0 66%, color-mix(in oklab, var(--veneer-tone-layer, var(--_pa)) 50%, transparent) 84%, transparent 100%);
   transition:
     --_wp var(--veneer-sweep-duration) var(--veneer-sweep-ease),         /* the wipe runs on the stroke's clock, both ways */
     --_fo var(--_D) var(--veneer-sweep-ease-in),                 /* both ways: the exit is the enter */
@@ -169,37 +169,45 @@
 :where([data-scope="button"]:is(:active)),
 :where([data-scope="button"]:is([data-press])) { scale: var(--veneer-press); transition-duration: 0ms; }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
-/* vivid: a solid rests flat, its offset folded away under it (0 0, so the hover can grow it out), and the press puts
-   it back down: it never sinks into the page */
+/* solid, soft & outline buttons rest with their hard offset folded invisibly underneath (0 0 0 var(--_off)) so the
+   under-part never peeks out until hover, plus a crisp 0-blur top bevel; hover lifts into the harsh 0-blur offset
+   under-part while keeping the two-blob split fill (zero per-frame Gaussian blur rasterization), and press snaps flush */
 :where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) {
-  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--veneer-btn-fill) * 22%), transparent);
-  background-image: linear-gradient(180deg, color-mix(in oklab, white calc(var(--veneer-btn-fill) * 10%), transparent), transparent 62%, color-mix(in oklab, black calc(var(--veneer-btn-fill) * 7%), transparent));
+  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--veneer-btn-fill) * 24%), transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, white calc(var(--veneer-btn-fill) * 10%), transparent), transparent 62%, color-mix(in oklab, black calc(var(--veneer-btn-fill) * 8%), transparent));
 }
-:where([data-scope="button"]:not([data-emphasis]):active) {
-  translate: 0 0; box-shadow: 0 0 0 var(--_off);
+:where([data-scope="button"][data-emphasis="soft"]) {
+  --_fill: var(--_soft); --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--veneer-state-hover);
+  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 light-dark(rgb(255 255 255 / 0.65), rgb(255 255 255 / 0.06));
+}
+:where([data-scope="button"][data-emphasis="outline"]) {
+  --_fill: var(--veneer-color-surface-raised); --_ink: var(--_text); --_edge: var(--veneer-color-border-strong);
+  --_layer: currentColor; --_layer-a: var(--veneer-state-hover);
+  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 light-dark(rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.07));
+}
+:where([data-scope="button"][data-emphasis="outline"]:hover) { --_edge: var(--veneer-color-border-control); }
+:where([data-scope="button"]:not([data-emphasis="frame"], [data-emphasis="link"]):active) {
+  translate: 0 0;
+  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 transparent;
 }
 :where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--veneer-btn-fill) + (1 - var(--veneer-btn-fill)) * var(--_layer-a) * 1.55); }
-/* Keel's pull-out: the button rests flat and, under the hand, comes up and left off a hard offset that grows in behind
-   it. It sits after the rest so its offset wins; the press sets it back down, and focus never lifts */
+/* Keel's pull-out: sits after the resting rules so Solid, Soft, and Outline all grow out their crisp 0-blur hard
+   offset under-part on hover while keeping the two-blob split fill */
 @media (hover: hover) {
   :where([data-scope="button"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
     translate: calc(-2px * var(--veneer-btn-fill) * var(--veneer-motion-scale)) calc(-2px * var(--veneer-btn-fill) * var(--veneer-motion-scale));
-    box-shadow: calc((var(--veneer-offset) + 1px) * var(--veneer-btn-fill)) calc((var(--veneer-offset) + 2px) * var(--veneer-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--veneer-btn-fill) * 22%), transparent);
+    box-shadow:
+      calc((var(--veneer-offset) + 1px) * var(--veneer-btn-fill)) calc((var(--veneer-offset) + 2px) * var(--veneer-btn-fill)) 0 var(--_off),
+      inset 0 1px 0 color-mix(in oklab, white calc(var(--veneer-btn-fill) * 24%), transparent);
   }
   /* a step back (data-wipe="back") pulls out the other way: up and toward the start, its offset behind on the end side */
   :where([data-scope="button"][data-wipe="back"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
     translate: calc(2px * var(--veneer-btn-fill) * var(--veneer-motion-scale)) calc(-2px * var(--veneer-btn-fill) * var(--veneer-motion-scale));
-    box-shadow: calc((var(--veneer-offset) + 1px) * var(--veneer-btn-fill) * -1) calc((var(--veneer-offset) + 2px) * var(--veneer-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--veneer-btn-fill) * 22%), transparent);
+    box-shadow:
+      calc((var(--veneer-offset) + 1px) * var(--veneer-btn-fill) * -1) calc((var(--veneer-offset) + 2px) * var(--veneer-btn-fill)) 0 var(--_off),
+      inset 0 1px 0 color-mix(in oklab, white calc(var(--veneer-btn-fill) * 24%), transparent);
   }
 }
-:where([data-scope="button"][data-emphasis="soft"]) {
-  --_fill: var(--_soft); --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--veneer-state-hover);
-}
-:where([data-scope="button"][data-emphasis="outline"]) {
-  --_fill: transparent; --_ink: var(--_text); --_edge: var(--veneer-color-border-strong);
-  --_layer: currentColor; --_layer-a: var(--veneer-state-hover);
-}
-:where([data-scope="button"][data-emphasis="outline"]:hover) { --_edge: var(--veneer-color-border-control); }
 :where([data-scope="button"][data-emphasis="ghost"]) {
   --_fill: transparent; --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--veneer-state-hover);
 }

@@ -6,7 +6,7 @@ import type { Cfg } from './rows'
 
 const PRESETS: { name: string; swatch: string; config: StudioConfig }[] = [
   { name: 'Kerf', swatch: '#2f9e6a', config: {} },
-  { name: 'Ember', swatch: '#e8590c', config: { seed: { accent: '#e8590c' } } },
+  { name: 'Orange', swatch: '#f04e23', config: { seed: { accent: '#f04e23' } } },
   {
     name: 'Ocean',
     swatch: '#0b7285',

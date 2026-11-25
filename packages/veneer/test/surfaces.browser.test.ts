@@ -99,8 +99,12 @@ for (const expression of ['quiet', 'balanced', 'vivid']) {
   })
 }
 
-test('data-flair="sweep" still lights the surfaces the kit marks', async () => {
+test('data-flair="sweep" keeps surfaces calm by default; data-flair="sweep-all" opts them all in', async () => {
   await dial('balanced', 'sweep')
+  const sweepOnly = await gates()
+  for (const [id] of SURFACES) expect([id, sweepOnly[`${id}-surface`]]).toEqual([id, '0'])
+  expect(sweepOnly.btn).toBe('1')
+  await dial('balanced', 'sweep-all')
   const on = await gates()
   for (const [id] of SURFACES) expect([id, on[`${id}-surface`]]).toEqual([id, '1'])
   await dial('balanced', 'none')
