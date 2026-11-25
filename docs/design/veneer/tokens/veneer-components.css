@@ -254,8 +254,8 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_fa: calc(var(--_fr) * (var(--_x) + 7%) * var(--veneer-lead-a, 1));
   --_fb: calc(var(--_fr) * (107% - var(--_x)) * var(--veneer-lead-b, 1));
   --_fu: calc(var(--_fb) * 0.1 + var(--_fr) * 5%);
-  /* the under-layer rises with the blobs, so nothing shows between them mid-frame */
-  background-color: color-mix(in oklab, var(--veneer-tone-layer, var(--_layer)) calc((1 - var(--veneer-btn-fill)) * 100%), color-mix(in oklab, var(--_pa) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
+  /* the under-layer rises with the blobs, so nothing shows between them mid-frame; custom --veneer-tone-layer wins over --_pa/--_pb */
+  background-color: color-mix(in oklab, var(--veneer-tone-layer, var(--_layer)) calc((1 - var(--veneer-btn-fill)) * 100%), color-mix(in oklab, var(--veneer-tone-layer, var(--_pa)) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
   opacity: calc(var(--veneer-btn-fill) + (1 - var(--veneer-btn-fill)) * var(--_layer-a));
   /* the wipe is a clip, not a scale: a scaled layer squashed its own rounded corners and a thin sliver stood past the
      button's curve. A rectangle cut from the unscaled rounded layer never leaves the shape. --_wp is how much shows,
@@ -265,11 +265,11 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   background-origin: border-box;
   background-image:
     radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),
-      var(--_pb) 0 58%, color-mix(in oklab, var(--_pb) 50%, transparent) 80%, transparent 100%),
+      var(--veneer-tone-layer, var(--_pb)) 0 58%, color-mix(in oklab, var(--veneer-tone-layer, var(--_pb)) 50%, transparent) 80%, transparent 100%),
     radial-gradient(ellipse calc(var(--_fb) * 0.5) 185% at calc(var(--_x) + var(--_fb) * 0.5 + var(--_fo) * var(--_fb)) var(--_y),
-      var(--_pb) 0 62%, color-mix(in oklab, var(--_pb) 50%, transparent) 82%, transparent 100%),
+      var(--veneer-tone-layer, var(--_pb)) 0 62%, color-mix(in oklab, var(--veneer-tone-layer, var(--_pb)) 50%, transparent) 82%, transparent 100%),
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
-      var(--_pa) 0 66%, color-mix(in oklab, var(--_pa) 50%, transparent) 84%, transparent 100%);
+      var(--veneer-tone-layer, var(--_pa)) 0 66%, color-mix(in oklab, var(--veneer-tone-layer, var(--_pa)) 50%, transparent) 84%, transparent 100%);
   transition:
     --_wp var(--veneer-sweep-duration) var(--veneer-sweep-ease),         /* the wipe runs on the stroke's clock, both ways */
     --_fo var(--_D) var(--veneer-sweep-ease-in),                 /* both ways: the exit is the enter */
