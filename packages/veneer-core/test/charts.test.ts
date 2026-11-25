@@ -8,6 +8,7 @@ import {
   type Form,
   type Scene,
   bar,
+  candlestick,
   chart,
   labelWindow,
   line,
@@ -166,6 +167,17 @@ test('bars stay the same nodes across a layout swap', () => {
   expect(fig.querySelector('[data-xi="1"][data-si="1"]')).toBe(m)
   action.destroy()
   fig.remove()
+})
+
+test('a flat candlestick series labels each price tick once', () => {
+  const day = (label: string) => ({ label, open: 103, high: 103, low: 103, close: 103 })
+  const ctx = { id: 'c', hidden: new Set<number>(), r: 3 }
+  const p = candlestick.plot({ title: 'T', data: [day('Mon'), day('Tue')] }, 640, ctx)
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.innerHTML = toHTML(p.body)
+  const labels = [...svg.querySelectorAll('text[text-anchor="end"]')].map((t) => t.textContent)
+  expect(labels).toEqual(['103.0', '103.2', '103.4', '103.6', '103.8', '104.0'])
+  expect(new Set(labels).size).toBe(labels.length)
 })
 
 test('a sparkline ends on its last value', () => {

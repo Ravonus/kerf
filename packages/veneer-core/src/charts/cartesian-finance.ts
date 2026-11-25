@@ -8,6 +8,12 @@ export type Ohlc = { label: string; open: number; high: number; low: number; clo
 /** Config for a candlestick or OHLC chart. */
 export type CandleConfig = Base<Ohlc[]> & { variant?: 'candle' | 'ohlc'; format?: Fmt | undefined }
 const pf = (v: number) => v.toFixed(2)
+/** Price-axis labels with as many decimals as the tick step needs, so a flat price's ticks (103, 103.2…) stay distinct. */
+const tickFormat = (t: number[]) => {
+  const step = t.length > 1 ? t[1]! - t[0]! : 1,
+    dp = Math.max(0, Math.min(10, -Math.floor(Math.log10(step) + 1e-9)))
+  return (v: number) => v.toFixed(dp)
+}
 /** Candlestick and OHLC charts. */
 export const candlestick: Form<CandleConfig> = {
   kind: 'candlestick chart',
@@ -36,7 +42,7 @@ export const candlestick: Form<CandleConfig> = {
     return {
       h: H,
       body: [
-        axisY(t, y, ml, W - 4, (v) => v.toFixed(0)),
+        axisY(t, y, ml, W - 4, tickFormat(t)),
         candleMarks({ C, ml, band, bw, tone, f, c, y }),
         s(
           'g',
