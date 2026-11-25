@@ -131,9 +131,9 @@
 
 :root {
   color-scheme: light dark;
-  /* seed: the brand accent as hue + base chroma (default: the field green) */
+  /* seed: the brand accent as hue + base chroma (default: the instrument field green) */
   --veneer-seed-accent-h: 152;
-  --veneer-seed-accent-c: 0.115;
+  --veneer-seed-accent-c: 0.128;
   /* environment inputs (overridden by media / attributes below) */
   --veneer-target-min: 0px;          /* 44px on coarse pointers */
   --veneer-input-font-min: 0px;      /* 16px on coarse pointers (no iOS zoom) */
@@ -148,14 +148,14 @@
 :root, [data-expression="balanced"] {
   --veneer-x: 0.5;
   --veneer-icon-o: inline; --veneer-icon-q: none; --veneer-icon-b: inline; --veneer-icon-v: none; --veneer-icon-kerf: 2; /* @kerf-js/veneer-icons' tier, 10 §8 */
-  --veneer-ref-neutral-h: 80;  --veneer-ref-neutral-c: 0.0015;  /* true graphite: the dial reads cool · none · warm */
-  --veneer-ref-accent-k: 1;    --veneer-ref-tone-k: 1;
-  --veneer-ref-depth: 0.7;     --veneer-ref-depth-rest: 0;  --veneer-ref-rest-ambient: 0;   /* flat at rest: hairlines layer, shadows only on overlays */
+  --veneer-ref-neutral-h: 82;  --veneer-ref-neutral-c: 0.006;   /* machined matte carbon / ceramic aluminum */
+  --veneer-ref-accent-k: 1.05; --veneer-ref-tone-k: 1.05;
+  --veneer-ref-depth: 1;       --veneer-ref-depth-rest: 0.9; --veneer-ref-rest-ambient: 0.75; /* shadow-driven tactile depth */
   --veneer-ref-air: 0.85;      --veneer-ref-control-step: -2px;   /* the drafting table: tight */
-  --veneer-btn-fill: 0;
+  --veneer-btn-fill: 1;
   --veneer-ref-primary-solid: var(--veneer-color-accent-solid); --veneer-ref-primary-solid-hover: var(--veneer-color-accent-solid-hover); --veneer-ref-primary-on-solid: var(--veneer-color-accent-on-solid);
   --veneer-ref-surface-line: var(--veneer-color-border);
-  --veneer-ref-hair: -0.03;    --veneer-ref-page: 0;              /* crisper hairline */
+  --veneer-ref-hair: -0.04;    --veneer-ref-page: 0;              /* harsher machined hairline */
   --veneer-ref-body-leading: 1.5;
   --veneer-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --veneer-font-display: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -193,7 +193,7 @@
   /* the two clocks (redesign §2-3): how this stop feels in the hand */
   --veneer-ref-spring: linear(0, 0.085, 0.261, 0.454, 0.625, 0.761, 0.86, 0.927, 0.969, 0.993, 1.005, 1.01, 1.011, 1);   /* ζ 0.82: settles once, 1.1% over */
   --veneer-ref-spring-ms: 380ms; --veneer-ref-press: 0.97; --veneer-ref-touch-out: 160ms;
-  --veneer-ref-shuttle-head: 180ms; --veneer-ref-shuttle-tail: 300ms; --veneer-ref-offset: 0px;
+  --veneer-ref-shuttle-head: 180ms; --veneer-ref-shuttle-tail: 300ms; --veneer-ref-offset: 3px;
   --veneer-ref-sweep: 620ms;     --veneer-ref-sweep-k: 1;
   --veneer-ref-frame: 620ms;     /* frame button: on the sweep's clock, so every stroke draws at one speed */
   --veneer-sweep-buttons: 1;     --veneer-sweep-surfaces: 0;
@@ -268,14 +268,14 @@
 [data-expression="vivid"] {
   --veneer-x: 1;
   --veneer-icon-o: none; --veneer-icon-q: none; --veneer-icon-b: none; --veneer-icon-v: inline; --veneer-icon-fine: inline; --veneer-icon-kerf: 2;
-  --veneer-ref-neutral-h: 85;  --veneer-ref-neutral-c: 0.012;   /* warm paper / ink */
+  --veneer-ref-neutral-h: 82;  --veneer-ref-neutral-c: 0.008;   /* warm anodized carbon / OP-1 matte aluminum */
   --veneer-ref-accent-k: 1.2;  --veneer-ref-tone-k: 1.1;
-  --veneer-ref-depth: 0.35;    --veneer-ref-depth-rest: 0.35; --veneer-ref-rest-ambient: 0;
+  --veneer-ref-depth: 1.15;    --veneer-ref-depth-rest: 1.05; --veneer-ref-rest-ambient: 0.85; /* harsh shadow-driven chassis */
   --veneer-ref-air: 1;         --veneer-ref-control-step: 0px;
-  --veneer-btn-fill: 1;   /* vivid: Keel's two-colour fill, lift and offset */
+  --veneer-btn-fill: 1;   /* two-blob split hover fill, tactile lift and hard offset */
   --veneer-ref-primary-solid: var(--veneer-color-accent-solid); --veneer-ref-primary-solid-hover: var(--veneer-color-accent-solid-hover); --veneer-ref-primary-on-solid: var(--veneer-color-accent-on-solid);
   --veneer-ref-surface-line: var(--veneer-color-border);
-  --veneer-ref-hair: 0;        --veneer-ref-page: 0;
+  --veneer-ref-hair: -0.025;   --veneer-ref-page: 0;
   --veneer-ref-body-leading: 1.55;
   --veneer-font-sans: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
   --veneer-font-display: "Instrument Serif", "Instrument Serif Fallback", "Fraunces", Georgia, serif;
@@ -316,7 +316,7 @@
   /* the two clocks (redesign §2-3): how this stop feels in the hand */
   --veneer-ref-spring: linear(0, 0.154, 0.44, 0.701, 0.883, 0.985, 1.029, 1.038, 1.032, 1.021, 1.011, 1.004, 1, 0.999, 1);
   --veneer-ref-spring-ms: 520ms; --veneer-ref-press: 0.96; --veneer-ref-touch-out: 200ms;
-  --veneer-ref-shuttle-head: 150ms; --veneer-ref-shuttle-tail: 420ms; --veneer-ref-offset: 3px;
+  --veneer-ref-shuttle-head: 150ms; --veneer-ref-shuttle-tail: 420ms; --veneer-ref-offset: 4px;
   --veneer-ref-sweep: 700ms;     --veneer-ref-sweep-k: 1;
   --veneer-ref-frame: 700ms;     /* frame: on the sweep's clock, top of the vivid range */
   --veneer-sweep-buttons: 1;     --veneer-sweep-surfaces: 0;   /* the sweep answers a click target; a static surface keeps its hairline */
@@ -329,9 +329,12 @@
   --veneer-ref-numeric-font: var(--veneer-font-sans);
   --veneer-ref-emphasis-style: italic;                   /* Instrument Serif ships a real italic */
 }
-/* flair widens or narrows WHERE the sweep runs; inputs and controls always sweep */
-[data-flair="sweep"] { --veneer-sweep-buttons: 1; --veneer-sweep-surfaces: 1; }
-[data-flair="none"]  { --veneer-sweep-buttons: 0; --veneer-sweep-surfaces: 0; --veneer-btn-fill: 0; }
+/* flair widens or narrows WHERE the sweep runs; inputs and controls always sweep.
+   Static panels/cards stay off by default even under data-flair="sweep" so they never compete with
+   inner inputs — opt in per card with `<Card sweep>` or globally with `data-flair="sweep-all"`. */
+[data-flair="sweep"]     { --veneer-sweep-buttons: 1; --veneer-sweep-surfaces: 0; }
+[data-flair="sweep-all"] { --veneer-sweep-buttons: 1; --veneer-sweep-surfaces: 1; }
+[data-flair="none"]      { --veneer-sweep-buttons: 0; --veneer-sweep-surfaces: 0; --veneer-btn-fill: 0; }
 
 /* -- density ------------------------------------------------------------- */
 :root, [data-density="cozy"] {
@@ -452,25 +455,25 @@
   --_ac: calc(var(--veneer-seed-accent-c) * var(--veneer-ref-accent-k));
   --_tk: var(--veneer-ref-tone-k);
 
-  /* -- colour · page + surfaces (light | dark) -------------------------- */
-  --veneer-color-page:            light-dark(oklch(calc(0.972 + var(--veneer-ref-page)) var(--_cl) var(--_h)), oklch(0.155 var(--_c) var(--_h)));
-  --veneer-color-surface:         light-dark(oklch(0.993 var(--_cl) var(--_h)), oklch(0.188 var(--_c) var(--_h)));
-  --veneer-color-surface-raised:  light-dark(oklch(0.998 calc(var(--_cl) * 0.5) var(--_h)), oklch(0.215 var(--_c) var(--_h)));
-  --veneer-color-surface-overlay: light-dark(oklch(1 0 0), oklch(0.235 var(--_c) var(--_h)));
-  --veneer-color-surface-sunken:  light-dark(oklch(0.955 var(--_cl) var(--_h)), oklch(0.135 var(--_c) var(--_h)));
-  --veneer-color-surface-hover:   light-dark(oklch(0.948 var(--_cl) var(--_h)), oklch(0.255 var(--_c) var(--_h)));
-  --veneer-color-surface-active:  light-dark(oklch(0.922 var(--_cl) var(--_h)), oklch(0.285 var(--_c) var(--_h)));
-  --veneer-color-surface-inverse: light-dark(oklch(0.245 var(--_c) var(--_h)), oklch(0.93 var(--_c) var(--_h)));
-  --veneer-color-on-inverse:      light-dark(oklch(0.975 var(--_cl) var(--_h)), oklch(0.19 var(--_c) var(--_h)));
-  --veneer-color-scrim:           light-dark(oklch(0.2 var(--_c) var(--_h) / 0.36), oklch(0.05 0 0 / 0.62));
+  /* -- colour · page + surfaces (light | dark): matte OP-1 ceramic aluminum / anodized carbon -- */
+  --veneer-color-page:            light-dark(oklch(calc(0.952 + var(--veneer-ref-page)) var(--_cl) var(--_h)), oklch(0.142 var(--_c) var(--_h)));
+  --veneer-color-surface:         light-dark(oklch(0.982 var(--_cl) var(--_h)), oklch(0.18 var(--_c) var(--_h)));
+  --veneer-color-surface-raised:  light-dark(oklch(0.996 calc(var(--_cl) * 0.4) var(--_h)), oklch(0.212 var(--_c) var(--_h)));
+  --veneer-color-surface-overlay: light-dark(oklch(1 0 0), oklch(0.24 var(--_c) var(--_h)));
+  --veneer-color-surface-sunken:  light-dark(oklch(0.922 var(--_cl) var(--_h)), oklch(0.112 var(--_c) var(--_h)));
+  --veneer-color-surface-hover:   light-dark(oklch(0.935 var(--_cl) var(--_h)), oklch(0.255 var(--_c) var(--_h)));
+  --veneer-color-surface-active:  light-dark(oklch(0.905 var(--_cl) var(--_h)), oklch(0.285 var(--_c) var(--_h)));
+  --veneer-color-surface-inverse: light-dark(oklch(0.22 var(--_c) var(--_h)), oklch(0.94 var(--_c) var(--_h)));
+  --veneer-color-on-inverse:      light-dark(oklch(0.98 var(--_cl) var(--_h)), oklch(0.16 var(--_c) var(--_h)));
+  --veneer-color-scrim:           light-dark(oklch(0.15 var(--_c) var(--_h) / 0.44), oklch(0.03 0 0 / 0.72));
 
   /* -- colour · text, borders, focus ----------------------------------- */
-  --veneer-color-text:            light-dark(oklch(0.235 var(--_c) var(--_h)), oklch(0.935 var(--_c) var(--_h)));
-  --veneer-color-text-subtle:     light-dark(oklch(0.475 var(--_c) var(--_h)), oklch(0.735 var(--_c) var(--_h)));
-  --veneer-color-text-faint:      light-dark(oklch(0.53 var(--_c) var(--_h)), oklch(0.625 var(--_c) var(--_h)));  /* meta ink: AA (≥ 4.5:1) on every surface, still lighter than subtle */
-  --veneer-color-border:          light-dark(oklch(calc(0.905 + var(--veneer-ref-hair)) var(--_cl) var(--_h)), oklch(calc(0.29 - var(--veneer-ref-hair)) var(--_c) var(--_h)));
-  --veneer-color-border-strong:   light-dark(oklch(0.84 var(--_c) var(--_h)), oklch(0.38 var(--_c) var(--_h)));
-  --veneer-color-border-control:  light-dark(oklch(0.625 var(--_c) var(--_h)), oklch(0.545 var(--_c) var(--_h)));
+  --veneer-color-text:            light-dark(oklch(0.21 var(--_c) var(--_h)), oklch(0.945 var(--_c) var(--_h)));
+  --veneer-color-text-subtle:     light-dark(oklch(0.455 var(--_c) var(--_h)), oklch(0.745 var(--_c) var(--_h)));
+  --veneer-color-text-faint:      light-dark(oklch(0.51 var(--_c) var(--_h)), oklch(0.635 var(--_c) var(--_h)));  /* meta ink: AA (≥ 4.5:1) on every surface, still lighter than subtle */
+  --veneer-color-border:          light-dark(oklch(calc(0.865 + var(--veneer-ref-hair)) var(--_cl) var(--_h)), oklch(calc(0.305 - var(--veneer-ref-hair)) var(--_c) var(--_h)));
+  --veneer-color-border-strong:   light-dark(oklch(0.755 var(--_c) var(--_h)), oklch(0.42 var(--_c) var(--_h)));
+  --veneer-color-border-control:  light-dark(oklch(0.57 var(--_c) var(--_h)), oklch(0.56 var(--_c) var(--_h)));
   --veneer-color-focus:           light-dark(oklch(0.52 min(calc(var(--_ac) * 1.1), 0.135) var(--_ah)), oklch(0.8 calc(var(--_ac) * 1.15) var(--_ah)));
 
   /* -- colour · tones: solid, solid-hover, on-solid, soft, text, border --
@@ -554,19 +557,25 @@
   --veneer-focus-width: 2px;
   --veneer-focus-offset: 2px;
 
-  /* -- elevation (alpha × depth; vivid is near-flat and leans on borders) -- */
+  /* -- elevation (crisp 0-blur machined bevel + hard contact ledge + tight drop shadow for fast GPU paint) -- */
   --_sa: var(--veneer-ref-depth);
   --veneer-elevation-0: none;
-  --_rest: var(--veneer-ref-depth-rest);                          /* resting surfaces: 1.2 · 0 · 0.35 */
+  --_rest: var(--veneer-ref-depth-rest);                          /* resting surfaces: 1.2 · 0.9 · 1.05 */
+  --veneer-elevation-inset:
+    inset 0 1px 0 light-dark(oklch(0.14 0.01 var(--_h) / 0.14), oklch(0 0 0 / 0.55)),
+    inset 0 2px 3px light-dark(oklch(0.14 0.01 var(--_h) / 0.08), oklch(0 0 0 / 0.35));
   --veneer-elevation-1:
-    0 1px 2px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_rest))), oklch(0 0 0 / calc(0.4 * var(--_rest)))),
-    0 6px 18px -6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.12 * var(--veneer-ref-rest-ambient))), oklch(0 0 0 / calc(0.5 * var(--veneer-ref-rest-ambient))));
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.07)),
+    0 2px 0 light-dark(oklch(0.14 0.01 var(--_h) / calc(0.15 * var(--_rest))), oklch(0 0 0 / calc(0.62 * var(--_rest)))),
+    0 4px 8px -2px light-dark(oklch(0.14 0.01 var(--_h) / calc(0.14 * var(--veneer-ref-rest-ambient))), oklch(0 0 0 / calc(0.55 * var(--veneer-ref-rest-ambient))));
   --veneer-elevation-2:
-    0 1px 3px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.06 * var(--_sa))), oklch(0 0 0 / calc(0.35 * var(--_sa)))),
-    0 6px 16px -4px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.1 * var(--_sa))), oklch(0 0 0 / calc(0.5 * var(--_sa))));
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.09)),
+    0 4px 0 light-dark(oklch(0.14 0.01 var(--_h) / calc(0.17 * var(--_sa))), oklch(0 0 0 / calc(0.68 * var(--_sa)))),
+    0 8px 14px -4px light-dark(oklch(0.14 0.01 var(--_h) / calc(0.18 * var(--_sa))), oklch(0 0 0 / calc(0.64 * var(--_sa))));
   --veneer-elevation-3:
-    0 2px 6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_sa))), oklch(0 0 0 / calc(0.4 * var(--_sa)))),
-    0 18px 40px -8px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.16 * var(--_sa))), oklch(0 0 0 / calc(0.6 * var(--_sa))));
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.92), rgb(255 255 255 / 0.1)),
+    0 6px 0 light-dark(oklch(0.14 0.01 var(--_h) / calc(0.18 * var(--_sa))), oklch(0 0 0 / calc(0.74 * var(--_sa)))),
+    0 16px 28px -6px light-dark(oklch(0.14 0.01 var(--_h) / calc(0.24 * var(--_sa))), oklch(0 0 0 / calc(0.76 * var(--_sa))));
   --veneer-blur-overlay: calc(12px * (1 - var(--veneer-x)));      /* 12 · 6 · 0 */
 
   /* -- space (relationships; density-scaled except section/page) -------- */
@@ -745,8 +754,8 @@
   /* the full accent at every stop: the dial never makes the stroke faint.
      Pinned between the ink base and the surface so both edges read (≥ 3:1 each). */
   --veneer-color-sweep: light-dark(
-    oklch(0.515 min(max(calc(var(--_ac) * 1.25), 0.12), 0.13) var(--_ah)),
-    oklch(0.6 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
+    oklch(0.50 min(max(calc(var(--_ac) * 1.25), 0.12), 0.13) var(--_ah)),
+    oklch(0.60 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
   --veneer-color-sweep-base: var(--veneer-ref-sweep-base);
   /* frame button (§1b): track = ink (#050505-strength) in light, ink at 62% in dark */
   --veneer-frame-track: light-dark(var(--veneer-color-text), color-mix(in oklab, var(--veneer-color-text) 62%, transparent));
@@ -783,7 +792,7 @@
     oklch(0.4 min(calc(var(--_ac) * 0.85), 0.1) var(--_ah)),
     oklch(0.72 calc(var(--_ac) * 0.55) var(--_ah)));
   --veneer-color-label-active: light-dark(                              /* hover/focus: the sweep's own accent, */
-    var(--veneer-color-sweep),                                         /* lifted in dark to stay ≥ 4.5:1 as text */
+    oklch(0.47 min(max(calc(var(--_ac) * 1.25), 0.12), 0.13) var(--_ah)), /* darkened slightly in light to stay ≥ 4.5:1 on matte sunken */
     oklch(0.7 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
   --veneer-message-duration: calc(180ms * var(--veneer-motion-scale));
 
@@ -1443,8 +1452,9 @@
     block-size: var(--veneer-field-height);
     border-radius: var(--veneer-radius-control); --veneer-sweep-radius: var(--veneer-radius-control);
     background: var(--veneer-color-field);
+    box-shadow: var(--veneer-elevation-inset);
     font-family: var(--veneer-text-body-font);
-    transition: background-color var(--veneer-duration-base) var(--veneer-ease-out);
+    transition: background-color var(--veneer-duration-base) var(--veneer-ease-out), box-shadow var(--veneer-duration-fast) var(--veneer-ease-out);
   }
   :where([data-scope="field"] > [data-part="control"]:has(> [data-part="icon"])) { --_lead: calc(var(--veneer-pad-control) + 28px); }
   /* the accent tint arrives with the sweep: hover, focus, or an open picker */

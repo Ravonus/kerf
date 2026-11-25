@@ -5,14 +5,14 @@
   position: relative; display: grid; gap: var(--veneer-space-related); padding: var(--veneer-pad-surface);
   background: var(--veneer-color-surface-raised); border: var(--veneer-border-hairline) solid var(--veneer-color-surface-line);
   border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-1); color: var(--veneer-color-text);
-  transition: box-shadow var(--veneer-touch-out) var(--veneer-ease-out), scale var(--veneer-spring-duration) var(--veneer-ease-spring);
+  transition: box-shadow var(--veneer-touch-out) var(--veneer-ease-out), border-color var(--veneer-touch-out) var(--veneer-ease-out), translate var(--veneer-spring-duration) var(--veneer-ease-spring), scale var(--veneer-spring-duration) var(--veneer-ease-spring);
 }
 :where(a[data-scope="surface"]),
 :where(button[data-scope="surface"]) { text-decoration: none; text-align: start; font: inherit; cursor: pointer; }
 :where(a[data-scope="surface"]:hover),
-:where(button[data-scope="surface"]:hover) { box-shadow: var(--veneer-elevation-2); transition-duration: 0ms, var(--veneer-spring-duration); }
+:where(button[data-scope="surface"]:hover) { border-color: var(--veneer-color-border-strong); box-shadow: var(--veneer-elevation-2); translate: 0 calc(-2px * var(--veneer-motion-scale)); transition-duration: 0ms, 0ms, var(--veneer-spring-duration), var(--veneer-spring-duration); }
 :where(a[data-scope="surface"]:active),
-:where(button[data-scope="surface"]:active) { scale: calc((1 + var(--veneer-press) * 3) / 4 + 0.0025); transition-duration: 0ms; }
+:where(button[data-scope="surface"]:active) { translate: 0 1px; box-shadow: var(--veneer-elevation-1); scale: calc((1 + var(--veneer-press) * 3) / 4 + 0.0025); transition-duration: 0ms; }
 :where([data-scope="surface"] [data-part="eyebrow"]:not([data-scope="surface"] [data-scope="page-header"] *:not([data-scope="surface"] [data-scope="page-header"] [data-scope="surface"] *))) {
   font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); font-weight: 500;
   letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle);
