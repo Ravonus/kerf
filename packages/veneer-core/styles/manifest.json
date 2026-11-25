@@ -342,6 +342,7 @@
  "field": [
   "app/field.css",
   "components/dialog.css",
+  "components/accordion.css",
   "inputs/field.css",
   "inputs/text.css",
   "inputs/choice.css",

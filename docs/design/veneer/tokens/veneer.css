@@ -1286,11 +1286,13 @@
   :where([data-scope="segmented"] > [data-part="indicator"]) {
     translate: var(--veneer-a) var(--veneer-ca); inline-size: calc(var(--veneer-b) - var(--veneer-a)); block-size: calc(var(--veneer-cb) - var(--veneer-ca));
     transition: --veneer-a var(--veneer-shuttle-tail) var(--veneer-ease-spring), --veneer-b var(--veneer-shuttle-head) var(--veneer-ease-spring),
-                --veneer-ca var(--veneer-shuttle-head) var(--veneer-ease-out), --veneer-cb var(--veneer-shuttle-head) var(--veneer-ease-out);
+                --veneer-ca var(--veneer-shuttle-head) var(--veneer-ease-out), --veneer-cb var(--veneer-shuttle-head) var(--veneer-ease-out),
+                border-radius var(--veneer-sweep-duration) var(--veneer-ease-out);
   }
   :where([data-scope="segmented"] > [data-part="indicator"][data-dir="back"]) {
     transition: --veneer-a var(--veneer-shuttle-head) var(--veneer-ease-spring), --veneer-b var(--veneer-shuttle-tail) var(--veneer-ease-spring),
-                --veneer-ca var(--veneer-shuttle-head) var(--veneer-ease-out), --veneer-cb var(--veneer-shuttle-head) var(--veneer-ease-out);
+                --veneer-ca var(--veneer-shuttle-head) var(--veneer-ease-out), --veneer-cb var(--veneer-shuttle-head) var(--veneer-ease-out),
+                border-radius var(--veneer-sweep-duration) var(--veneer-ease-out);
   }
   :where([data-scope="segmented"] > [data-part="indicator"][data-instant]) { transition: none; }
   /* the shuttle in a list: frequent, so short and without overshoot */
@@ -1455,10 +1457,11 @@
   :where([data-scope="field"] [data-part="icon"] svg) { inline-size: 16px; block-size: 16px; display: block; }
   :where([data-scope="field"] [data-part="icon"] > [data-part="sweep-base"]) { color: var(--veneer-color-text-subtle); }
 
-  /* label at rest: inside, at the field's own text size */
+  /* label at rest: inside, at the field's own text size; z-index: 20 keeps the floated border notch above
+     sibling controls and sweep borders while remaining below sticky/menu/modal chrome (--veneer-z-sticky: 100) */
   :where([data-scope="field"] [data-part="label"]) {
     /* block, not flex: flex items are blockified, which spells the accessible name letter by letter */
-    position: absolute; z-index: 5; display: block; pointer-events: none; user-select: none; white-space: nowrap;
+    position: absolute; z-index: 20; display: block; pointer-events: none; user-select: none; white-space: nowrap;
     inset-block-start: 50%; inset-inline-start: var(--_lead); transform: translateY(-50%);
     padding-inline: 0; line-height: 1;
     font-family: var(--veneer-label-font); font-size: var(--veneer-text-control-size); font-weight: 400; letter-spacing: 0;

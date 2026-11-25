@@ -1459,6 +1459,8 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="accordion"] [data-part="content"] > div),
 :where([data-scope="disclosure"][data-part="content"] > div) { overflow: clip; min-block-size: 0; }
 :where([data-scope="accordion"] [data-part="content"] > div > div) { padding-block-end: var(--veneer-space-group); color: var(--veneer-color-text-subtle); }
+:where([data-scope="accordion"] [data-part="content"] > div > div:has([data-scope="field"])),
+:where([data-scope="disclosure"][data-part="content"] > div > div:has([data-scope="field"])) { padding-block-start: max(0px, calc(-1 * var(--veneer-label-float-offset))); }
 :where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="trigger"]),
 :where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="content"] > div > div) { padding-inline: var(--veneer-space-tight); }
 
