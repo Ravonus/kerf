@@ -130,6 +130,28 @@
    cells, so each strokes its whole box. */
 
 
+/* active-adjacent liquid merge: when hovering or focusing an unselected item directly beside the active
+   selection, the growing sweep rails cross the 2px track gap and fuse into the active indicator with concave
+   meniscus fillets. Zero nested :has() (valid Selectors Level 4). Override --veneer-segmented-merge-radius
+   (e.g. var(--veneer-radius-control)) to preserve the active curve, or --veneer-segmented-merge-fillet: 0px
+   to omit the fillets while keeping the border bridge. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* chips (toggle group): pill, swept border; pressed pins the sweep on accent-soft */
 
