@@ -12,7 +12,7 @@ use crate::diag::{Diagnostic, Edit, Fix, Severity, line_col};
 use crate::project::KeyedProp;
 
 use super::{
-    Analyzer, ListPlan, MemberUse, Rewrite, RowStep, binding_symbol, chain_root_member,
+    Analyzer, ListPlan, MemberUse, Rewrite, RowStep, SpanKey, binding_symbol, chain_root_member,
     is_key_attr, key, params_of, returned, row_roots, static_key, symbol_of,
 };
 
@@ -21,15 +21,17 @@ impl Analyzer<'_> {
     pub(super) fn bind_row(
         &mut self,
         pattern: &BindingPattern<'_>,
+        row: SpanKey,
         path: &mut Vec<RowStep>,
         plan: &mut ListPlan,
     ) {
         match pattern {
             BindingPattern::BindingIdentifier(id) => {
                 if let Some(sym) = binding_symbol(id) {
+                    let path = path.clone();
                     self.plan
                         .rewrites
-                        .insert(sym, Rewrite::AccessorPath { path: path.clone() });
+                        .insert(sym, Rewrite::AccessorPath { row, path });
                     plan.item_syms.push(sym);
                 }
             }
@@ -40,7 +42,7 @@ impl Analyzer<'_> {
                         continue;
                     };
                     path.push(RowStep::Key(k));
-                    self.bind_row(&p.value, path, plan);
+                    self.bind_row(&p.value, row, path, plan);
                     path.pop();
                 }
                 if let Some(rest) = &obj.rest {
@@ -51,13 +53,13 @@ impl Analyzer<'_> {
                 for (index, el) in arr.elements.iter().enumerate() {
                     if let Some(el) = el {
                         path.push(RowStep::Index(index as u32));
-                        self.bind_row(el, path, plan);
+                        self.bind_row(el, row, path, plan);
                         path.pop();
                     }
                 }
                 if let Some(rest) = &arr.rest {
                     path.push(RowStep::From(arr.elements.len() as u32));
-                    self.bind_row(&rest.argument, path, plan);
+                    self.bind_row(&rest.argument, row, path, plan);
                     path.pop();
                 }
             }
@@ -113,7 +115,7 @@ impl Analyzer<'_> {
                 pattern @ (BindingPattern::ObjectPattern(_) | BindingPattern::ArrayPattern(_)) => {
                     destructured = true;
                     self.plan.destructured_rows.insert(key(cb.span()));
-                    self.bind_row(pattern, &mut Vec::new(), &mut plan);
+                    self.bind_row(pattern, key(cb.span()), &mut Vec::new(), &mut plan);
                 }
                 _ => {}
             }

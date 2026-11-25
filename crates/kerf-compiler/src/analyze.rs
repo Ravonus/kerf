@@ -68,8 +68,9 @@ pub enum Rewrite {
     /// A keyed-list item or index: `p` → `p()`.
     Accessor,
     /// A destructured keyed-list item, any depth: `name` → `_item().name`, `v` → `_item()[1]`, `...more` →
-    /// `_item().slice(2)`.
-    AccessorPath { path: Vec<RowStep> },
+    /// `_item().slice(2)`. `row` is the row callback's span: a row nested in another destructured row reads its own
+    /// item (`_item2()`), so an outer row's names stay readable inside the inner list.
+    AccessorPath { row: SpanKey, path: Vec<RowStep> },
 }
 
 /// One step from a keyed-list item to a name bound in its destructuring pattern.
@@ -98,7 +99,7 @@ pub struct Plan {
     pub components: HashMap<SpanKey, String>,
     /// `.map(…)` call span → keyed list.
     pub lists: HashMap<SpanKey, ListPlan>,
-    /// Row callbacks whose destructured item parameter becomes `_item`.
+    /// Row callbacks whose destructured item parameter becomes `_item` (`_item2`, … when nested in another).
     pub destructured_rows: HashSet<SpanKey>,
     /// Component span → memoised children: `const <local> = memo(() => <props>.children)` at the top of its body.
     pub children: HashMap<SpanKey, ChildrenPlan>,

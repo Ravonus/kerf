@@ -54,6 +54,8 @@ pub fn apply<'a>(
         rest_used: HashSet::new(),
         needs_memo: false,
         needs_rest_of: false,
+        rows: Vec::new(),
+        row_names: HashMap::new(),
     };
     t.visit_program(program);
     let mut imports = Vec::new();
@@ -98,6 +100,9 @@ struct Transformer<'a, 'p> {
     rest_used: HashSet<SpanKey>,
     needs_memo: bool,
     needs_rest_of: bool,
+    /// Destructured rows open around the node being walked, and each row callback's item name.
+    rows: Vec<SpanKey>,
+    row_names: HashMap<SpanKey, String>,
 }
 
 fn has_optional_link(e: &Expression<'_>) -> bool {

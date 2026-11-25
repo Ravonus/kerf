@@ -16,10 +16,18 @@ impl<'a> Transformer<'a, '_> {
     /// Before walking a component: move its prop defaults out of the pattern (rewritten, in declaration order so
     /// `b = a` sees `a`'s live read), then replace the pattern with the props parameter.
     pub(super) fn enter_params(&mut self, params: &mut FormalParameters<'a>, span: SpanKey) {
+        let row_name;
         let name = if let Some(props) = self.plan.components.get(&span) {
             props.as_str()
         } else if self.plan.destructured_rows.contains(&span) {
-            "_item"
+            // Each enclosing destructured row keeps its own item, so a nested row can't shadow an outer one's names.
+            self.rows.push(span);
+            row_name = match self.rows.len() {
+                1 => "_item".to_string(),
+                depth => format!("_item{depth}"),
+            };
+            self.row_names.insert(span, row_name.clone());
+            row_name.as_str()
         } else {
             return;
         };
@@ -30,6 +38,13 @@ impl<'a> Transformer<'a, '_> {
             self.take_defaults(&mut first.pattern);
         }
         first.pattern = self.binding(name);
+    }
+
+    /// After walking a function: close its destructured row, if it is one.
+    pub(super) fn leave_row(&mut self, span: SpanKey) {
+        if self.rows.last() == Some(&span) {
+            self.rows.pop();
+        }
     }
 
     pub(super) fn take_defaults(&mut self, pattern: &mut BindingPattern<'a>) {

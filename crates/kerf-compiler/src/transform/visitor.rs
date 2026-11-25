@@ -144,6 +144,7 @@ impl<'a> VisitMut<'a> for Transformer<'a, '_> {
         let span = key(it.span);
         self.enter_params(&mut it.params, span);
         walk_mut::walk_function(self, it, flags);
+        self.leave_row(span);
         if let Some(body) = it.body.as_mut() {
             self.exit_component(span, body);
         }
@@ -153,6 +154,7 @@ impl<'a> VisitMut<'a> for Transformer<'a, '_> {
         let span = key(it.span);
         self.enter_params(&mut it.params, span);
         walk_mut::walk_arrow_function_expression(self, it);
+        self.leave_row(span);
         if self.declares(span) {
             // `({ children }) => <div>{children}</div>`: the memo needs a statement, so the body becomes a block.
             if let Some(e) = it.body.as_expression_mut() {

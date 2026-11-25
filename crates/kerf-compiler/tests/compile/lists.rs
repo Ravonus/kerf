@@ -249,6 +249,20 @@ fn destructured_row_rest_and_nested() {
 }
 
 #[test]
+fn nested_destructured_rows_keep_their_own_item() {
+    // The inner row's item must not shadow the outer one: `chain` is the outer row's, `[currency, amount]` the inner.
+    let (code, d) = run(
+        "export function L({ groups }) { return <ul>{groups.map(({ chain, totals }) => <li key={chain}>{Object.entries(totals).map(([currency, amount]) => <p key={currency}>{chain}:{amount}</p>)}</li>)}</ul> }",
+    );
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("_item().totals"), "{code}");
+    assert!(code.contains("_item2()[1]"), "{code}");
+    assert!(code.contains("_item().chain"), "{code}");
+    assert!(!code.contains("_item2().chain"), "{code}");
+    assert!(code.contains("children: (_item2) =>"), "{code}");
+}
+
+#[test]
 fn destructured_row_it_cant_bind_is_w019() {
     for row in [
         "({ id, ...more })",

@@ -86,9 +86,10 @@ impl<'a, 'p> Transformer<'a, 'p> {
             }
             // The identifier itself becomes the callee, so it keeps its span and reference.
             Rewrite::Accessor => self.call(original, []),
-            Rewrite::AccessorPath { path } => {
+            Rewrite::AccessorPath { row, path } => {
+                let item = self.row_names.get(row).map_or("_item", String::as_str);
                 path.iter()
-                    .fold(self.call(self.ident("_item"), []), |at, step| match step {
+                    .fold(self.call(self.ident(item), []), |at, step| match step {
                         RowStep::Key(key) => self.member(at, key),
                         RowStep::Index(index) => Expression::new_computed_member_expression(
                             SPAN,
