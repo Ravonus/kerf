@@ -28,9 +28,11 @@ async function fixture(root: string) {
   prepare(root)
 }
 
-async function prime(tab: Page, address: string) {
+async function prime(tab: Page, address: string, cold = false) {
   tab.setDefaultTimeout(6000)
-  const response = await tab.goto(address)
+  // A cold dev server compiles the route and its graph on this first load, alongside the other browser suites; the
+  // packed hot-reload gate gives the same first hydration 60 s. Recovery steps below keep the 6 s budget.
+  const response = await tab.goto(address, cold ? { timeout: 30_000 } : {})
   expect(response?.status()).toBe(200)
   // Exercise the same counter as the packed gate, since the generated entry has no hydration probe.
   await tab.waitForFunction(() => {
@@ -84,7 +86,7 @@ test('dev recovers from route syntax errors with the document and its state kept
     const address = new URL('hot', local).href
     browser = await chromium.launch()
     const tab = await browser.newPage()
-    const kept = await prime(tab, address)
+    const kept = await prime(tab, address, true)
     expect(await renderedAt(tab)).toBe('/hot')
     const file = join(root, 'src/routes/hot.tsx')
     const good = await readFile(file, 'utf8')

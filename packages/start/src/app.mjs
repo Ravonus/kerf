@@ -27,6 +27,9 @@ function usesSockets(root) {
   )
 }
 
+/** Nitro reads a falsy port as 3000. `port: 0` asks the OS for a free one, so dev servers can run side by side. */
+const anyPort = { name: 'kerf:any-port', config: () => ({ server: { port: 0 } }) }
+
 function config({
   root,
   site,
@@ -103,6 +106,7 @@ function config({
           ],
         }),
       }),
+      port === 0 && anyPort,
     ],
   }
 }
