@@ -14,7 +14,7 @@ function Artwork(props: { data: { source: string } }) {
     </main>
   )
 }
-test('each response preloads its current image before modules, never a remembered media URL', async () => {
+test('each response preloads its current image before modules and starts its entry natively, never a remembered media URL', async () => {
   const handle = createHandler({
     manifest: {
       dir: 'src/routes',
@@ -44,7 +44,9 @@ test('each response preloads its current image before modules, never a remembere
     expect(head.indexOf('as="image"')).toBeLessThan(head.indexOf('rel="modulepreload"'))
     expect(head).toContain('rel="modulepreload" href="/runtime.js" fetchpriority="low"')
     expect(head).toContain('href="/client.js" fetchpriority="low"')
-    expect(head).toContain('import("/client.js")')
+    // The entry loads natively; it must not wait on the artwork's decode or a timer.
+    expect(head).toContain('<script type="module" src="/client.js"></script>')
+    expect(head).not.toContain('import("/client.js")')
     for (const old of ['/first.avif', '/second.avif', '/third.avif'].filter((p) => p !== image))
       expect(head).not.toContain(old)
   }
