@@ -757,17 +757,21 @@
   --veneer-color-field-active: var(--veneer-ref-field-fill-active);    /* hover / focus, with the sweep */
   --veneer-color-field-invalid: var(--veneer-color-critical-soft);
   --veneer-field-height: max(calc(var(--veneer-ref-control-md) + var(--veneer-ref-control-step) + 4px), var(--veneer-target-min)); /* cozy: 44 · 38 · 40 */
-  --veneer-label-font: var(--veneer-ref-float-font);
-  /* floating field label casing: uppercase at rest and floated by default so the text never snaps case mid-slide.
-     Override --veneer-label-case (uppercase · capitalize · lowercase · none) globally or per field, or override
-     --veneer-label-float-case independently for the floated border label. */
+  --veneer-label-font: var(--veneer-font-mono);
+  /* floating field label typography & casing: crisp compact monospace uppercase at rest and floated by default
+     so labels read like precision panel legends instead of oversized body caps, and never snap case mid-slide.
+     Override --veneer-label-font / --veneer-label-size / --veneer-label-case (uppercase · capitalize · lowercase · none)
+     globally or per field, or override --veneer-label-float-* independently for the floated border label. */
+  --veneer-label-size: max(11px, calc(var(--veneer-text-control-size) * 0.78));
+  --veneer-label-weight: 500;
+  --veneer-label-tracking: 0.08em;
   --veneer-label-case: uppercase;
   --veneer-label-float-case: var(--veneer-label-case);
-  /* the one sub-11px caps exception (00 §4): 10px on fine pointers, 11px on coarse (16px × 0.6875).
+  /* the one sub-11px caps exception (00 §4): 10px on fine pointers, 10.4px on coarse (16px × 0.65).
      The label is the field's real <label for>; its name comes from the hidden label-text copy. */
-  --veneer-label-float-size: max(10px, calc(var(--veneer-input-font-min) * 0.6875));
+  --veneer-label-float-size: max(10px, calc(var(--veneer-input-font-min) * 0.65));
   --veneer-label-float-weight: 600;
-  --veneer-label-float-tracking: 0.12em;
+  --veneer-label-float-tracking: 0.1em;
   --veneer-label-float-offset: -7px;        /* top of the floated label vs the top border */
   --veneer-label-float-duration: calc(520ms * var(--veneer-motion-scale));
   --veneer-label-float-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -1439,7 +1443,7 @@
     block-size: var(--veneer-field-height);
     border-radius: var(--veneer-radius-control); --veneer-sweep-radius: var(--veneer-radius-control);
     background: var(--veneer-color-field);
-    font-family: var(--veneer-label-font);
+    font-family: var(--veneer-text-body-font);
     transition: background-color var(--veneer-duration-base) var(--veneer-ease-out);
   }
   :where([data-scope="field"] > [data-part="control"]:has(> [data-part="icon"])) { --_lead: calc(var(--veneer-pad-control) + 28px); }
@@ -1469,7 +1473,7 @@
     position: absolute; z-index: 20; display: block; pointer-events: none; user-select: none; white-space: nowrap;
     inset-block-start: 50%; inset-inline-start: var(--_lead); transform: translateY(-50%);
     padding-inline: 0; line-height: 1;
-    font-family: var(--veneer-label-font); font-size: var(--veneer-text-control-size); font-weight: 400; letter-spacing: 0;
+    font-family: var(--veneer-label-font); font-size: var(--veneer-label-size); font-weight: var(--veneer-label-weight); letter-spacing: var(--veneer-label-tracking);
     text-transform: var(--veneer-label-case);
     background: transparent;
     transition-property: inset-block-start, inset-inline-start, transform, padding, font-size, letter-spacing, background-color;
