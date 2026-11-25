@@ -758,6 +758,11 @@
   --veneer-color-field-invalid: var(--veneer-color-critical-soft);
   --veneer-field-height: max(calc(var(--veneer-ref-control-md) + var(--veneer-ref-control-step) + 4px), var(--veneer-target-min)); /* cozy: 44 · 38 · 40 */
   --veneer-label-font: var(--veneer-ref-float-font);
+  /* floating field label casing: uppercase at rest and floated by default so the text never snaps case mid-slide.
+     Override --veneer-label-case (uppercase · capitalize · lowercase · none) globally or per field, or override
+     --veneer-label-float-case independently for the floated border label. */
+  --veneer-label-case: uppercase;
+  --veneer-label-float-case: var(--veneer-label-case);
   /* the one sub-11px caps exception (00 §4): 10px on fine pointers, 11px on coarse (16px × 0.6875).
      The label is the field's real <label for>; its name comes from the hidden label-text copy. */
   --veneer-label-float-size: max(10px, calc(var(--veneer-input-font-min) * 0.6875));
@@ -1465,6 +1470,7 @@
     inset-block-start: 50%; inset-inline-start: var(--_lead); transform: translateY(-50%);
     padding-inline: 0; line-height: 1;
     font-family: var(--veneer-label-font); font-size: var(--veneer-text-control-size); font-weight: 400; letter-spacing: 0;
+    text-transform: var(--veneer-label-case);
     background: transparent;
     transition-property: inset-block-start, inset-inline-start, transform, padding, font-size, letter-spacing, background-color;
     transition-duration: var(--veneer-label-float-duration);
@@ -1477,7 +1483,7 @@
     inset-block-start: var(--veneer-label-float-offset); inset-inline-start: calc(var(--veneer-pad-control) - 4px);
     transform: none; padding-inline: 4px;
     font-size: var(--veneer-label-float-size); font-weight: var(--veneer-label-float-weight);
-    letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase;
+    letter-spacing: var(--veneer-label-float-tracking); text-transform: var(--veneer-label-float-case);
     /* the notch: a pixel-aligned window onto whatever is behind the field.
        floatingLabel() writes --_notch-*; --veneer-field-notch is the static override. */
     background-color: var(--_notch-color, var(--veneer-field-notch, var(--veneer-color-surface)));
@@ -1486,6 +1492,24 @@
     background-repeat: no-repeat;
     animation-name: veneer-label-b;
   }
+  /* optional casing shortcuts on a field or any ancestor: upper · lower · title · sentence · none
+     (data-label-float-case overrides only the floated border state independently) */
+  :where([data-label-case="upper"]) { --veneer-label-case: uppercase; }
+  :where([data-label-case="lower"]) { --veneer-label-case: lowercase; }
+  :where([data-label-case="title"]) { --veneer-label-case: capitalize; }
+  :where([data-label-case="none"]) { --veneer-label-case: none; }
+  :where([data-label-case="sentence"]) { --veneer-label-case: lowercase; }
+  :where([data-label-case="sentence"] [data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-part="label-chars"] > [data-char]:first-child),
+  :where([data-scope="field"][data-label-case="sentence"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-part="label-chars"] > [data-char]:first-child) { text-transform: uppercase; }
+  :where([data-label-float-case="upper"]) { --veneer-label-float-case: uppercase; }
+  :where([data-label-float-case="lower"]) { --veneer-label-float-case: lowercase; }
+  :where([data-label-float-case="title"]) { --veneer-label-float-case: capitalize; }
+  :where([data-label-float-case="none"]) { --veneer-label-float-case: none; }
+  :where([data-label-float-case="sentence"]) { --veneer-label-float-case: lowercase; }
+  :where([data-label-float-case="sentence"] [data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-part="label-chars"] > [data-char]:first-child),
+  :where([data-scope="field"][data-label-float-case="sentence"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-part="label-chars"] > [data-char]:first-child) { text-transform: uppercase; }
+  :where([data-label-float-case]:not([data-label-float-case="sentence"]) [data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-part="label-chars"] > [data-char]:first-child),
+  :where([data-scope="field"][data-label-float-case]:not([data-label-float-case="sentence"]) > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-part="label-chars"] > [data-char]:first-child) { text-transform: inherit; }
   :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="input"])::placeholder,
   :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="input"])::placeholder {
     color: var(--veneer-color-text-subtle);

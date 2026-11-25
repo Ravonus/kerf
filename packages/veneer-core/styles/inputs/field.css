@@ -153,7 +153,7 @@
   inset-block-start: var(--veneer-label-float-offset); inset-inline-start: calc(var(--veneer-pad-control) - 4px);
   transform: none; padding-inline: 4px;
   font-size: var(--veneer-label-float-size); font-weight: var(--veneer-label-float-weight);
-  letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase;
+  letter-spacing: var(--veneer-label-float-tracking); text-transform: var(--veneer-label-float-case);
   background-color: var(--_notch-color, var(--veneer-field-notch, var(--veneer-color-surface)));
   background-image: var(--_notch-image, none); background-size: var(--_notch-size, auto); background-position: var(--_notch-pos, 0 0); background-repeat: no-repeat;
 }

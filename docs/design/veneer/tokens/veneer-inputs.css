@@ -194,7 +194,7 @@
   inset-block-start: var(--veneer-label-float-offset); inset-inline-start: calc(var(--veneer-pad-control) - 4px);
   transform: none; padding-inline: 4px;
   font-size: var(--veneer-label-float-size); font-weight: var(--veneer-label-float-weight);
-  letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase;
+  letter-spacing: var(--veneer-label-float-tracking); text-transform: var(--veneer-label-float-case);
   background-color: var(--_notch-color, var(--veneer-field-notch, var(--veneer-color-surface)));
   background-image: var(--_notch-image, none); background-size: var(--_notch-size, auto); background-position: var(--_notch-pos, 0 0); background-repeat: no-repeat;
 }
@@ -467,7 +467,7 @@
 :where([data-scope="group"] > legend) {
   padding: 0; margin-block-end: var(--veneer-space-tight);
   font-family: var(--veneer-label-font); font-size: var(--veneer-label-float-size); font-weight: var(--veneer-label-float-weight);
-  letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase; color: var(--veneer-color-label-rest);
+  letter-spacing: var(--veneer-label-float-tracking); text-transform: var(--veneer-label-float-case); color: var(--veneer-color-label-rest);
 }
 :where([data-fields="classic"] [data-scope="group"]:not([data-variant="floating"]), [data-scope="group"][data-variant="classic"]) > legend {
   font-family: var(--veneer-text-label-font); font-size: var(--veneer-text-label-size); font-weight: var(--veneer-text-label-weight); letter-spacing: 0; text-transform: none; color: var(--veneer-color-text);
@@ -831,7 +831,7 @@
 :where([data-scope="listbox"] [data-part="group-label"]),
 :where([data-scope="popup"] [data-part="group-label"]) {
   padding: 8px var(--veneer-space-related) 4px; font-family: var(--veneer-label-font); font-size: var(--veneer-label-float-size);
-  letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase; color: var(--veneer-color-label-rest); font-weight: var(--veneer-label-float-weight);
+  letter-spacing: var(--veneer-label-float-tracking); text-transform: var(--veneer-label-float-case); color: var(--veneer-color-label-rest); font-weight: var(--veneer-label-float-weight);
 }
 :where([data-scope="popup"] [data-part="empty"]) { padding: 10px var(--veneer-space-related); color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
 :where([data-scope="popup"][data-stale] [data-scope="listbox"]) { opacity: 0.55; transition: opacity var(--veneer-duration-fast); }
