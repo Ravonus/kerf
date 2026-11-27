@@ -10,6 +10,7 @@ import {
   type SegmentedOption,
 } from '@kerf-js/veneer'
 import { derived, onCleanup, onMount, state } from '@kerf-js/core'
+import { EXPRESSION } from '../expression'
 import files from '../generated/icons.json'
 
 type Tier = 'quiet' | 'balanced' | 'vivid'
@@ -47,7 +48,7 @@ const svg = (inner: string) =>
 function iconBrowserState(getBox: () => HTMLDivElement) {
   const set = state<Set | undefined>(undefined)
   const query = state('')
-  const tier = state<Tier>('balanced')
+  const tier = state<Tier>(EXPRESSION)
   onMount(() => {
     tier.value = getDial('expression')
   })

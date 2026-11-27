@@ -83,30 +83,41 @@ function config({
         // before Nitro bundles the server, so rules added when it is done are in the build. (Dev sends no-store.)
         ...traceDeps(root),
         ...nitroOptions,
-        ...(command === 'build' && {
-          hooks: {
-            ...(site?.render !== 'shell' && immutableCards()),
-            ...nitroOptions.hooks,
-            async compiled(instance) {
-              production.output = instance.options.output
-              await nitroOptions.hooks?.compiled?.(instance)
-            },
-            async 'build:before'(instance) {
-              await nitroOptions.hooks?.['build:before']?.(instance)
-              ownNodePreset(instance, site)
-            },
-            async 'rollup:before'(instance, bundle) {
-              await nitroOptions.hooks?.['rollup:before']?.(instance, bundle)
-              shapeBundle(instance, bundle, production.date)
-            },
-          },
-          plugins: [
-            fileURLToPath(new URL('./range.mjs', import.meta.url)),
-            ...(nitroOptions.plugins ?? []),
-          ],
-        }),
+        ...(command === 'build' && productionHooks(nitroOptions, site, production)),
       }),
       port === 0 && anyPort,
+    ],
+  }
+}
+
+/** Add Start's build bookkeeping without replacing the host preset's publication finalizer. */
+function productionHooks(nitroOptions, site, production) {
+  const { compiled, ...buildHooks } = nitroOptions.hooks ?? {}
+  return {
+    modules: [
+      ...(nitroOptions.modules ?? []),
+      (instance) => {
+        instance.hooks.hook('compiled', async (built) => {
+          production.output = built.options.output
+          await compiled?.(built)
+        })
+      },
+    ],
+    hooks: {
+      ...(site?.render !== 'shell' && immutableCards()),
+      ...buildHooks,
+      async 'build:before'(instance) {
+        await buildHooks['build:before']?.(instance)
+        ownNodePreset(instance, site)
+      },
+      async 'rollup:before'(instance, bundle) {
+        await buildHooks['rollup:before']?.(instance, bundle)
+        shapeBundle(instance, bundle, production.date)
+      },
+    },
+    plugins: [
+      fileURLToPath(new URL('./range.mjs', import.meta.url)),
+      ...(nitroOptions.plugins ?? []),
     ],
   }
 }

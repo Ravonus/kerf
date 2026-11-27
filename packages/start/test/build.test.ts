@@ -1,4 +1,4 @@
-// `kerf build` (research 25 §6): Vite + Nitro to `.output`, run as the production server it makes. Node end to end
+// `kerf build`: Vite + Nitro to `.output`, run as the production server it makes. Node end to end
 // (pages, prerendered and on-demand cards, hydration in Chrome); Bun runs its build when `bun` is on PATH; Deno's
 // build is checked to complete (no deno here).
 import { spawnSync } from 'node:child_process'
@@ -16,6 +16,7 @@ import { createRequire } from 'node:module'
 import type * as Playwright from 'playwright-core'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { fnId, inlineSheets, sheetPieces } from '../src/vite.mjs'
 import { INLINE_CSS_MAX } from '../src/inline.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
@@ -45,7 +46,8 @@ declare global {
 }
 
 afterAll(() => {
-  for (const p of ['node', 'bun', 'deno_server']) rmSync(out(p), { recursive: true, force: true })
+  for (const p of ['node', 'bun', 'deno_server', 'netlify'])
+    rmSync(out(p), { recursive: true, force: true })
 })
 
 function registerGateThePagePaintsWithoutTheSheetHolds(
@@ -710,4 +712,28 @@ test('deno_server preset builds', () => {
   const entry = readFileSync(join(out('deno_server'), 'server/index.mjs'), 'utf8')
   expect(entry).toMatch(/Deno\.serve|deno/i)
   expect(existsSync(join(out('deno_server'), 'public/_kerf/og/users/1.png'))).toBe(true)
+}, 120_000)
+
+test('Netlify keeps the deploy entry and serves client navigation', async () => {
+  const dir = out('netlify')
+  build({
+    root: fixture,
+    site,
+    preset: 'netlify',
+    nitro: { output: { dir, publicDir: join(dir, 'public') } },
+  })
+  const entry = pathToFileURL(join(dir, 'server/server.mjs')).href
+  const { default: handle, config } = (await import(entry)) as {
+    default: (request: Request) => Promise<Response>
+    config: { path: string; preferStatic: boolean }
+  }
+  expect(config).toMatchObject({ path: '/*', preferStatic: true })
+  const data = await handle(
+    new Request('https://example.test/_kerf/data/users/1', {
+      headers: { accept: 'application/json' },
+    }),
+  )
+  expect(data.status).toBe(200)
+  expect(data.headers.get('content-type')).toMatch(/^application\/json/)
+  expect(await data.json()).toMatchObject({ p: '/users/1', s: 200 })
 }, 120_000)
